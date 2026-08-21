@@ -39,7 +39,9 @@ export const matchPoolMembershipTable = pgTable("match_pool_membership", {
   status: varchar("status").notNull().default("off"),
   readyAt: timestamp("ready_at", { withTimezone: true }),
   pausedReason: varchar("paused_reason"),
-  // 'free' | 'reset' | 'wingman'
+  // Snapshot of the canonical commercial plan at pool opt-in. Historical rows
+  // may contain 'free', 'reset', or 'wingman'. Account assignment remains the
+  // source of truth; this value is operational context for founder review.
   tier: varchar("tier"),
   // When true, the member has agreed to share their curated reveal card (name +
   // photos + a few prompts) with a counterpart once they are a mutual match.
@@ -55,7 +57,9 @@ export const matchPoolMembershipTable = pgTable("match_pool_membership", {
 export const matchProposalsTable = pgTable(
   "match_proposals",
   {
-    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     userId: varchar("user_id").notNull(),
     proposedToUserId: varchar("proposed_to_user_id"),
     // 'internal' | 'external_paste' | 'concierge'
@@ -104,7 +108,17 @@ export const insertMatchPoolMembershipSchema = createInsertSchema(
   {
     status: z.enum(["off", "building", "ready", "paused", "concierge_only"]),
     pausedReason: z.string().trim().max(280).nullish(),
-    tier: z.enum(["free", "reset", "wingman"]).nullish(),
+    tier: z
+      .enum([
+        "member",
+        "insight",
+        "match",
+        "guided",
+        "free",
+        "reset",
+        "wingman",
+      ])
+      .nullish(),
   },
 ).omit({ userId: true, readyAt: true, updatedAt: true });
 
@@ -128,8 +142,12 @@ export const insertMatchProposalSchema = createInsertSchema(
 ).omit({ id: true, createdAt: true, updatedAt: true });
 
 export type MatchPreferences = typeof matchPreferencesTable.$inferSelect;
-export type InsertMatchPreferences = z.infer<typeof insertMatchPreferencesSchema>;
+export type InsertMatchPreferences = z.infer<
+  typeof insertMatchPreferencesSchema
+>;
 export type MatchPoolMembership = typeof matchPoolMembershipTable.$inferSelect;
-export type InsertMatchPoolMembership = z.infer<typeof insertMatchPoolMembershipSchema>;
+export type InsertMatchPoolMembership = z.infer<
+  typeof insertMatchPoolMembershipSchema
+>;
 export type MatchProposal = typeof matchProposalsTable.$inferSelect;
 export type InsertMatchProposal = z.infer<typeof insertMatchProposalSchema>;

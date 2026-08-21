@@ -62,35 +62,97 @@ The webhook route `POST /api/receipts/inbound` is already live. To actually rece
 
 The endpoint resolves the recipient handle back to its owning row and accumulates one header-only entry. It returns `202` even for unknown handles, so it never leaks which handles exist. Until an MX record and provider are configured, the manual paste path on `/receipts` works standalone.
 
-## Stripe checkout operations
+## Stripe subscription operations
 
-Checkout (`/checkout/:product`) renders a Stripe Payment Link button when the corresponding env var is set, and falls back to a "save your spot" purchase-interest form when it isn't. Wiring is in `artifacts/nldc/src/pages/Checkout.tsx` (`PaidForm` reads `import.meta.env[config.stripeEnvKey]`).
+The canonical commercial ladder is Member, Insight, Match, and Guided. The
+subscription lifecycle now runs server-side against signed Stripe events and
+Stripe's current customer state. The older signal-audit, Dating Reset, and
+Wingman Payment Links remain legacy purchase-interest paths; they do not assign
+the canonical beta packages.
 
-### Required env vars (frontend, `shared` environment, prefixed `VITE_` so Vite exposes them)
+### Required connected-beta environment
 
-| Product | Price | Env var | Stripe URL shape |
-| --- | --- | --- | --- |
-| `signal-audit` | $29 one-time | `VITE_STRIPE_SIGNAL_AUDIT_LINK` | `https://buy.stripe.com/...` |
-| `dating-reset` | $97 one-time | `VITE_STRIPE_DATING_RESET_LINK` | `https://buy.stripe.com/...` |
-| `wingman` | $197/mo | `VITE_STRIPE_WINGMAN_LINK` | `https://buy.stripe.com/...` |
+| Variable                         | Purpose                                                                                       |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `CONNECTED_BETA`                 | Set to `true` to enforce the complete fail-closed beta startup contract.                       |
+| `NODE_ENV`                       | Must be `production` when `CONNECTED_BETA=true`.                                               |
+| `DATABASE_URL`                   | Postgres connection used by application data, sessions, and entitlement state.                |
+| `STRIPE_SECRET_KEY`              | Server-side Stripe API key. Never expose it to Vite or the browser.                           |
+| `STRIPE_WEBHOOK_SECRET`          | Verifies the raw body received at `/api/stripe/webhook`.                                      |
+| `API_PUBLIC_URL`                 | Public API origin used for OIDC callbacks and webhook registration.                           |
+| `WEB_PUBLIC_URL`                 | Approved web origin used for post-auth, Checkout, Portal, and cancellation returns.           |
+| `OIDC_CLIENT_ID`                 | Portable OIDC client identifier; `REPL_ID` remains a migration fallback only.                 |
+| `ANON_CLAIM_HANDOFF_SECRET`      | Explicit HMAC key for cross-device anonymous claim handoff; no Replit-derived beta fallback.   |
+| `ALLOW_DEV_AUTH`                 | Leave unset in beta. Seeded test-login requires explicit `true` outside production only.       |
+| `STRIPE_WEBHOOK_URL`             | Optional exact webhook URL override.                                                          |
+| `STRIPE_PRICE_INSIGHT_MONTHLY`   | Maps the monthly Insight Stripe Price to `insight`.                                           |
+| `STRIPE_PRICE_INSIGHT_ANNUAL`    | Maps the annual Insight Stripe Price to `insight`.                                            |
+| `STRIPE_PRICE_MATCH_MONTHLY`     | Maps the monthly Match Stripe Price to `match`.                                               |
+| `STRIPE_PRICE_MATCH_QUARTERLY`   | Maps the quarterly Match Stripe Price to `match`.                                             |
+| `STRIPE_RECONCILE_MAX_CUSTOMERS` | Optional startup recovery cap; defaults to 500 for the controlled beta.                       |
+| `STRIPE_ENABLE_GUIDED`           | Must remain unset until Guided capacity and support limits are approved.                      |
 
-When all three are present, customers go straight to Stripe-hosted checkout. When any are missing, that product silently falls back to the email-capture form — safe to ship partially configured.
+Explicit runtime credentials are the beta/production path. The Replit Stripe
+connector remains a compatibility fallback only while migration is unfinished.
 
-### Creating the Payment Links in Stripe
+### Connected-beta startup preflight
 
-1. Stripe Dashboard → Products → create one product per row above (one-time for the first two, monthly subscription for Wingman).
-2. Products → product → "Create payment link". Set quantity = 1, allow promotion codes, collect customer name + email.
-3. Under "After payment", set the success URL to `https://<your-domain>/checkout/success?product=<slug>` and (optionally) a cancel URL to `https://<your-domain>/checkout/cancel?product=<slug>` (use the `signal-audit` / `dating-reset` / `wingman` slug).
-4. Copy the resulting `https://buy.stripe.com/...` URL into the matching env var on Replit (Secrets → Environment variables, "shared").
-5. Restart the `artifacts/nldc: web` workflow so Vite re-reads the env.
+When `CONNECTED_BETA=true`, the API exits before listening unless all of the
+following agree:
 
-### Stripe webhook + reconciliation (live)
+- `NODE_ENV=production`, a positive `PORT`, and a non-empty `DATABASE_URL`;
+- valid HTTPS `API_PUBLIC_URL` and `WEB_PUBLIC_URL`, with the exact web origin in
+  `APP_ORIGINS`;
+- explicit non-Replit `ISSUER_URL` and `OIDC_CLIENT_ID`;
+- secure cookies, explicit `ANON_CLAIM_HANDOFF_SECRET`, and development auth off;
+- Stripe test-mode secret and webhook keys plus all four canonical Price IDs;
+- Guided billing disabled.
 
-The Stripe webhook is wired through the **Replit Stripe integration** (no key needed from the user) plus the `stripe-replit-sync` package. There is nothing to paste manually:
+This is deliberately provider-neutral. It prevents a half-configured deployment
+from looking healthy, but it does not replace the live signup, Checkout, Portal
+cancellation, webhook, and payment-recovery acceptance journey.
 
-- **Connection + credentials** — `artifacts/api-server/src/lib/stripeClient.ts` reads the integration's secret key and webhook secret at runtime from the Replit connectors endpoint (never stored). `isStripeConnected()` is the guard; when no connection exists, every Stripe path is a no-op and the server boots normally.
-- **Startup init** — `artifacts/api-server/src/lib/initStripe.ts` runs `stripe-replit-sync` migrations (creates the `stripe` schema), registers a managed webhook at `/api/stripe/webhook`, then backfills and reconciles in the background. Guarded: it logs and returns if there is no connection or `DATABASE_URL`, so it never blocks or crashes startup. Called fire-and-forget from `index.ts`.
-- **Webhook route** — registered in `app.ts` **before** `express.json()` with `express.raw()` so the raw body Buffer reaches signature verification. The CSRF origin guard lets it through (Stripe is server-to-server, no Origin header); the Stripe signature is the real auth. Handler lives in `artifacts/api-server/src/lib/webhookHandlers.ts`, which delegates to `stripe-replit-sync`'s `processWebhook` to verify and sync the event into the `stripe` schema.
-- **Reconciliation** — `artifacts/api-server/src/lib/stripeReconcile.ts` runs read-only against `stripe.checkout_sessions` (managed by the sync package; we never write to the `stripe.*` schema), matches paid sessions to our `purchase_interest` rows by case-insensitive email, and stamps `status = "paid"` + `stripe_session_id` on our own table. Runs automatically on startup after backfill, and on demand via `POST /api/purchase-interest/reconcile` (founder-only).
+### Entitlement policy
 
-Refunds and disputes are still handled entirely in the Stripe Dashboard. To reconcile on demand after a payment, a founder can hit the reconcile endpoint (or just restart the API server, which reconciles on boot).
+| Stripe state                                         | MatchLab behavior                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `active`, `trialing`                                 | Grant the highest recognized canonical package.                                      |
+| `past_due`                                           | Preserve an existing assignment during retries, but never grant or upgrade.          |
+| `paused`, `unpaid`, `canceled`, `incomplete_expired` | Revoke a Stripe-managed assignment to Member.                                        |
+| Active with `cancel_at_period_end`                   | Retain access through the paid period; the terminal event revokes it.                |
+| Refund or credit event                               | Reconcile current subscription truth; a refund alone is not treated as cancellation. |
+| Unrecognized product                                 | Ignore it; never rewrite legacy customer history.                                    |
+| Founder beta grant                                   | Preserve it as an explicit override regardless of billing events.                    |
+
+Webhook delivery is intentionally treated as at-least-once and potentially out
+of order. After the signed event is persisted by the managed Stripe sync,
+MatchLab retrieves all current subscriptions for that customer and recalculates
+one result. Duplicate events therefore converge on the same state. Startup
+backfill performs the same bounded reconciliation to recover missed webhooks.
+
+### Stripe setup and verification
+
+1. Create the four canonical Stripe Prices for Insight monthly/annual and Match
+   monthly/quarterly. Do not create a public Guided checkout yet.
+2. Set the server environment variables above. Price IDs begin with `price_`;
+   never use Product IDs in the mapping.
+   Configure the Billing Portal in Stripe for cancellation, payment-method
+   recovery, invoice history, and any permitted Insight-to-Match change.
+3. Configure the public API URL and confirm the managed webhook targets
+   `/api/stripe/webhook` over HTTPS.
+4. Start Checkout only through authenticated `POST /api/billing/checkout`; the
+   legacy public Payment Links are purchase-interest history, not beta package
+   assignment. Ensure subscription or Checkout metadata contains
+   `matchlabUserId=<users.id>` and `matchlabPlan=insight|match`. Email matching
+   is a compatibility fallback, not the preferred identity key.
+5. In Stripe test mode, exercise initial payment, renewal, failed payment,
+   recovery, cancel-at-period-end, terminal cancellation, pause, and refund.
+6. Confirm founder-granted beta users retain their explicit override throughout
+   the same event sequence.
+
+Authenticated endpoints now create canonical Insight/Match Checkout Sessions,
+return billing status, and open Stripe Billing Portal sessions. They require a
+signed-in member, use only server-owned Price IDs, attach member/package metadata,
+block duplicate live or recovery subscriptions, preserve founder grants, and do
+not sell Guided. The approved account/checkout UI hookup and the connected
+web/API/auth/Postgres/Stripe test-mode journey remain open evidence gates.

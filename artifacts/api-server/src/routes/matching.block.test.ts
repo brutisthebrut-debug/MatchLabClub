@@ -16,6 +16,7 @@ import {
   matchPreferencesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
+  usersTable,
   userBlocksTable,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
@@ -62,6 +63,19 @@ const USER_A = `block-a-${suffix}`;
 const USER_B = `block-b-${suffix}`;
 const ALL_USERS = [USER_A, USER_B];
 
+
+async function grantPlan(
+  userId: string,
+  tier: "member" | "insight" | "match",
+): Promise<void> {
+  await db
+    .insert(usersTable)
+    .values({ id: userId, tier, tierGrantedAt: new Date() })
+    .onConflictDoUpdate({
+      target: usersTable.id,
+      set: { tier, tierGrantedAt: new Date() },
+    });
+}
 async function seedMember(
   userId: string,
   opts: {
@@ -129,6 +143,7 @@ async function cleanup(): Promise<void> {
       .delete(userBlocksTable)
       .where(eq(userBlocksTable.blockedUserId, u));
   }
+  await db.delete(usersTable).where(inArray(usersTable.id, ALL_USERS));
 }
 
 beforeAll(() => {
@@ -146,6 +161,7 @@ afterAll(async () => {
 
 describe("matching respects symmetric blocks", () => {
   it("never proposes a member the caller has blocked", async () => {
+    await grantPlan(USER_A, "match");
     await seedMember(USER_A, {
       age: 30,
       gender: "woman",
@@ -175,6 +191,7 @@ describe("matching respects symmetric blocks", () => {
   });
 
   it("excludes a member who has blocked the caller (reverse direction)", async () => {
+    await grantPlan(USER_A, "match");
     await seedMember(USER_A, {
       age: 30,
       gender: "woman",

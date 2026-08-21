@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { desc, eq } from "drizzle-orm";
 import { db, scenarioResponsesTable } from "@workspace/db";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 import { CreateScenarioResponseBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -57,6 +58,11 @@ router.post("/me/scenarios", async (req, res): Promise<void> => {
       set: { optionId: parsed.data.optionId, updatedAt: new Date() },
     })
     .returning();
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: req.user.id,
+    props: { source: "scenario-reel", scenarioId: parsed.data.scenarioId },
+  });
   res.status(201).json(serialize(row));
 });
 

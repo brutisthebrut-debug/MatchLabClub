@@ -15,6 +15,7 @@ import {
   userReportsTable,
   userBlocksTable,
 } from "@workspace/db";
+import { isDevAuthEnabled } from "./runtimeSafety";
 
 /**
  * Development-only test-user seeding.
@@ -63,12 +64,12 @@ export const DEV_TEST_USERS: Record<TestUserState, TestUserProfile> = {
 };
 
 /**
- * True when the server is running anywhere other than production. The api-server
- * production build sets NODE_ENV=production explicitly (see artifact.toml), so
- * an unset or non-production value always means a development/test context.
+ * True only when development auth is explicitly enabled outside production.
+ * NODE_ENV alone is not a sufficient guard because a deployed process can be
+ * misconfigured or omit it entirely.
  */
 export function isDevEnvironment(): boolean {
-  return process.env.NODE_ENV !== "production";
+  return isDevAuthEnabled();
 }
 
 /** Remove every signal row owned by a seeded test user so re-seeding is clean. */

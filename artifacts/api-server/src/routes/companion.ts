@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from "express";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   db,
   companionStateTable,
@@ -8,6 +8,11 @@ import {
   companionCommitmentsTable,
   companionNotificationsTable,
   companionChannelPrefsTable,
+  matchProposalsTable,
+  matchConnectionsTable,
+  connectionMessagesTable,
+  wellnessInferencesTable,
+  postDateNotesTable,
   type CompanionState as CompanionStateRow,
   type CompanionChannelPrefs as CompanionChannelPrefsRow,
 } from "@workspace/db";
@@ -41,6 +46,7 @@ import {
   clampCandor,
   personaLabel,
   buildReaction,
+  chooseEchoNextMove,
   type CompanionPersona,
   type MessageDirection,
 } from "../lib/companionEngine";
@@ -88,7 +94,9 @@ async function loadPortrait(userId: string): Promise<MirrorPortrait> {
 
 // The per-lane coverage map (lane key -> derived 0-100 coverage) used as the
 // reaction baseline. Holds only derived numbers, never raw content.
-function coverageFromPortrait(portrait: MirrorPortrait): Record<string, number> {
+function coverageFromPortrait(
+  portrait: MirrorPortrait,
+): Record<string, number> {
   return Object.fromEntries(portrait.known.map((k) => [k.key, k.coverage]));
 }
 
@@ -124,9 +132,7 @@ async function getPrefs(
 // A short, derived self-summary Echo keeps so its replies feel like they
 // remember you. Built only from aggregate portrait lines, never raw content.
 function buildEvolvingSummary(portrait: MirrorPortrait): string {
-  const topLanes = portrait.known
-    .slice(0, 2)
-    .map((k) => k.label.toLowerCase());
+  const topLanes = portrait.known.slice(0, 2).map((k) => k.label.toLowerCase());
   const seen =
     topLanes.length > 0
       ? `I can see you most clearly through your ${topLanes.join(" and ")}.`
@@ -147,7 +153,8 @@ async function refreshObservations(
   state: CompanionStateRow | null,
 ): Promise<void> {
   const prevScore = state?.lastSeenScore ?? null;
-  const scoreChanged = prevScore === null || prevScore !== portrait.readinessScore;
+  const scoreChanged =
+    prevScore === null || prevScore !== portrait.readinessScore;
 
   const summary = buildEvolvingSummary(portrait);
   const now = new Date();
@@ -249,6 +256,111 @@ function settingsPayload(
   };
 }
 
+async function loadEchoJourneyState(userId: string): Promise<{
+  pendingProposal: boolean;
+  unreadConnection: { id: string; unreadCount: number } | null;
+  pendingDebriefConnectionId: string | null;
+  pendingLearning: boolean;
+}> {
+  const [proposal] = await db
+    .select({ id: matchProposalsTable.id })
+    .from(matchProposalsTable)
+    .where(
+      and(
+        eq(matchProposalsTable.userId, userId),
+        eq(matchProposalsTable.status, "proposed"),
+      ),
+    )
+    .orderBy(desc(matchProposalsTable.createdAt))
+    .limit(1);
+
+  const [pendingLearning] = await db
+    .select({ id: wellnessInferencesTable.id })
+    .from(wellnessInferencesTable)
+    .where(
+      and(
+        eq(wellnessInferencesTable.userId, userId),
+        eq(wellnessInferencesTable.status, "pending"),
+      ),
+    )
+    .orderBy(desc(wellnessInferencesTable.createdAt))
+    .limit(1);
+
+  const connections = await db
+    .select({
+      id: matchConnectionsTable.id,
+      dateCompletedAt: matchConnectionsTable.dateCompletedAt,
+    })
+    .from(matchConnectionsTable)
+    .where(
+      and(
+        eq(matchConnectionsTable.status, "active"),
+        or(
+          eq(matchConnectionsTable.userLowId, userId),
+          eq(matchConnectionsTable.userHighId, userId),
+        ),
+      ),
+    )
+    .orderBy(
+      desc(matchConnectionsTable.lastMessageAt),
+      desc(matchConnectionsTable.createdAt),
+    )
+    .limit(50);
+
+  for (const connection of connections) {
+    const [unread] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(connectionMessagesTable)
+      .where(
+        and(
+          eq(connectionMessagesTable.connectionId, connection.id),
+          ne(connectionMessagesTable.senderUserId, userId),
+          isNull(connectionMessagesTable.readAt),
+        ),
+      );
+    const unreadCount = Number(unread?.count ?? 0);
+    if (unreadCount > 0) {
+      return {
+        pendingProposal: Boolean(proposal),
+        unreadConnection: { id: connection.id, unreadCount },
+        pendingDebriefConnectionId: null,
+        pendingLearning: Boolean(pendingLearning),
+      };
+    }
+  }
+
+  for (const connection of connections) {
+    if (!connection.dateCompletedAt) continue;
+    const [debrief] = await db
+      .select({ id: postDateNotesTable.id })
+      .from(postDateNotesTable)
+      .where(
+        and(
+          eq(postDateNotesTable.connectionId, connection.id),
+          eq(postDateNotesTable.userId, userId),
+          isNull(postDateNotesTable.deletedAt),
+          gte(postDateNotesTable.createdAt, connection.dateCompletedAt),
+        ),
+      )
+      .limit(1);
+    if (!debrief) {
+      return {
+        pendingProposal: Boolean(proposal),
+        unreadConnection: null,
+        pendingDebriefConnectionId: connection.id,
+        pendingLearning: Boolean(pendingLearning),
+      };
+    }
+  }
+
+  return {
+    pendingProposal: Boolean(proposal),
+    unreadConnection: null,
+    pendingDebriefConnectionId: null,
+    pendingLearning: Boolean(pendingLearning),
+  };
+}
+
 router.get("/me/companion", async (req, res): Promise<void> => {
   const userId = req.user?.id;
   if (!userId) {
@@ -264,7 +376,10 @@ router.get("/me/companion", async (req, res): Promise<void> => {
   const persona = normalizePersona(state?.persona);
   const candor = clampCandor(state?.candor);
 
-  const openCommitments = await loadOpenCommitments(userId);
+  const [openCommitments, journeyState] = await Promise.all([
+    loadOpenCommitments(userId),
+    loadEchoJourneyState(userId),
+  ]);
   const now = Date.now();
   const view = buildCompanionView({
     portrait,
@@ -279,6 +394,24 @@ router.get("/me/companion", async (req, res): Promise<void> => {
             ? new Date(c.dueAt).getTime() < now
             : false,
     })),
+  });
+
+  const overdueCommitment =
+    openCommitments.find((commitment) => {
+      if (!commitment.dueAt) return false;
+      const dueAt =
+        commitment.dueAt instanceof Date
+          ? commitment.dueAt.getTime()
+          : new Date(commitment.dueAt).getTime();
+      return dueAt < now;
+    })?.body ?? null;
+  const nextMove = chooseEchoNextMove({
+    pendingProposal: journeyState.pendingProposal,
+    unreadConnection: journeyState.unreadConnection,
+    pendingDebriefConnectionId: journeyState.pendingDebriefConnectionId,
+    overdueCommitment,
+    pendingLearning: journeyState.pendingLearning,
+    profileMove: view.oneThing,
   });
 
   const observations = await db
@@ -309,7 +442,7 @@ router.get("/me/companion", async (req, res): Promise<void> => {
       greeting: view.greeting,
       read: view.read,
       challenge: view.challenge,
-      nextMove: view.oneThing,
+      nextMove,
       readinessScore: view.readinessScore,
       threshold: view.threshold,
       eligible: view.eligible,
@@ -412,7 +545,11 @@ router.post("/me/companion/say", async (req, res): Promise<void> => {
   if (deterministic.detectedCommitment) {
     const [row] = await db
       .insert(companionCommitmentsTable)
-      .values({ userId, body: deterministic.detectedCommitment, status: "open" })
+      .values({
+        userId,
+        body: deterministic.detectedCommitment,
+        status: "open",
+      })
       .returning();
     if (row) {
       commitment = {
@@ -505,69 +642,71 @@ router.post("/me/companion/pulse", async (req, res): Promise<void> => {
   // portrait and the deterministic build happen inside the lock; Claude
   // enrichment runs AFTER the transaction so we never hold the lock across a
   // network call.
-  const { deterministic, persona, candor } = await db.transaction(async (tx) => {
-    await tx.execute(
-      sql`select pg_advisory_xact_lock(hashtext(${reactionLockKey(userId)})::bigint)`,
-    );
+  const { deterministic, persona, candor } = await db.transaction(
+    async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${reactionLockKey(userId)})::bigint)`,
+      );
 
-    // Derive the portrait inside the lock so the score we react to and the
-    // baseline we read/advance are taken at the same serialized point. If we
-    // computed it before the lock, a concurrent pulse could advance the
-    // baseline past our stale score and we would react to a phantom dip and
-    // regress the baseline.
-    const portrait = await loadPortrait(userId);
+      // Derive the portrait inside the lock so the score we react to and the
+      // baseline we read/advance are taken at the same serialized point. If we
+      // computed it before the lock, a concurrent pulse could advance the
+      // baseline past our stale score and we would react to a phantom dip and
+      // regress the baseline.
+      const portrait = await loadPortrait(userId);
 
-    const [state] = await tx
-      .select()
-      .from(companionStateTable)
-      .where(eq(companionStateTable.userId, userId))
-      .limit(1);
+      const [state] = await tx
+        .select()
+        .from(companionStateTable)
+        .where(eq(companionStateTable.userId, userId))
+        .limit(1);
 
-    const persona = normalizePersona(state?.persona);
-    const candor = clampCandor(state?.candor);
-    const previousScore = state?.lastReactedScore ?? null;
-    const previousCoverageByKey = state?.lastReactedCoverage ?? null;
+      const persona = normalizePersona(state?.persona);
+      const candor = clampCandor(state?.candor);
+      const previousScore = state?.lastReactedScore ?? null;
+      const previousCoverageByKey = state?.lastReactedCoverage ?? null;
 
-    const deterministic = buildReaction({
-      portrait,
-      previousScore,
-      previousCoverageByKey,
-      persona,
-      candor,
-    });
+      const deterministic = buildReaction({
+        portrait,
+        previousScore,
+        previousCoverageByKey,
+        persona,
+        candor,
+      });
 
-    // Advance the baseline only when we reacted to a real move (or when no
-    // baseline existed yet). A flat read leaves the baseline untouched so a
-    // later move is still measured against the right starting point. Advancing
-    // here, under the lock, is what makes a concurrent duplicate pulse read the
-    // new baseline and compute moved=false.
-    if (deterministic.moved || previousScore === null) {
-      const now = new Date();
-      const coverage = coverageFromPortrait(portrait);
-      await tx
-        .insert(companionStateTable)
-        .values({
-          userId,
-          lastReactedScore: portrait.readinessScore,
-          lastReactedCoverage: coverage,
-          lastReactedAt: now,
-          persona: state?.persona ?? "best_friend",
-          candor: state?.candor ?? 2,
-          updatedAt: now,
-        })
-        .onConflictDoUpdate({
-          target: companionStateTable.userId,
-          set: {
+      // Advance the baseline only when we reacted to a real move (or when no
+      // baseline existed yet). A flat read leaves the baseline untouched so a
+      // later move is still measured against the right starting point. Advancing
+      // here, under the lock, is what makes a concurrent duplicate pulse read the
+      // new baseline and compute moved=false.
+      if (deterministic.moved || previousScore === null) {
+        const now = new Date();
+        const coverage = coverageFromPortrait(portrait);
+        await tx
+          .insert(companionStateTable)
+          .values({
+            userId,
             lastReactedScore: portrait.readinessScore,
             lastReactedCoverage: coverage,
             lastReactedAt: now,
+            persona: state?.persona ?? "best_friend",
+            candor: state?.candor ?? 2,
             updatedAt: now,
-          },
-        });
-    }
+          })
+          .onConflictDoUpdate({
+            target: companionStateTable.userId,
+            set: {
+              lastReactedScore: portrait.readinessScore,
+              lastReactedCoverage: coverage,
+              lastReactedAt: now,
+              updatedAt: now,
+            },
+          });
+      }
 
-    return { deterministic, persona, candor };
-  });
+      return { deterministic, persona, candor };
+    },
+  );
 
   const { reaction, isFallback } = await echoReact({
     userId,
@@ -719,7 +858,8 @@ router.patch("/me/companion/settings", async (req, res): Promise<void> => {
   if (channelTouched) {
     const phone =
       body.phone !== undefined ? body.phone : (existingPrefs?.phone ?? null);
-    const sms = body.sms !== undefined ? body.sms : (existingPrefs?.sms ?? false);
+    const sms =
+      body.sms !== undefined ? body.sms : (existingPrefs?.sms ?? false);
     if (sms && (!phone || phone.trim().length < 7)) {
       res
         .status(400)
@@ -727,7 +867,8 @@ router.patch("/me/companion/settings", async (req, res): Promise<void> => {
       return;
     }
     const wasOn = existingPrefs?.sms ?? false;
-    const smsConsentAt = sms && !wasOn ? now : (existingPrefs?.smsConsentAt ?? null);
+    const smsConsentAt =
+      sms && !wasOn ? now : (existingPrefs?.smsConsentAt ?? null);
     await db
       .insert(companionChannelPrefsTable)
       .values({
@@ -754,7 +895,9 @@ router.patch("/me/companion/settings", async (req, res): Promise<void> => {
 
   const state = await getState(userId);
   const prefs = await getPrefs(userId);
-  res.json(UpdateCompanionSettingsResponse.parse(settingsPayload(state, prefs)));
+  res.json(
+    UpdateCompanionSettingsResponse.parse(settingsPayload(state, prefs)),
+  );
 });
 
 router.post(

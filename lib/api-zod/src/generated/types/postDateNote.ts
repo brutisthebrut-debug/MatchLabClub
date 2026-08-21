@@ -10,6 +10,8 @@ import type { PostDateOutcome } from './postDateOutcome';
 export interface PostDateNote {
   id: number;
   /** @nullable */
+  connectionId: string | null;
+  /** @nullable */
   dateAt?: Date | null;
   /** @nullable */
   personLabel?: string | null;

@@ -27,7 +27,7 @@ interface NextBestActionCoachViewProps {
   testId?: string;
 }
 
-const COACH_EYEBROW = "Your coach";
+const COACH_EYEBROW = "Echo's suggestion";
 
 export function NextBestActionCoachView({
   action,
@@ -36,8 +36,8 @@ export function NextBestActionCoachView({
   className,
   testId = "next-best-action",
 }: NextBestActionCoachViewProps) {
-  // Nothing to recommend and not yet match ready: stay quiet rather than show
-  // an empty shell. This is also the anonymous and still-loading state.
+  // Nothing to recommend and no qualitative review state: stay quiet rather
+  // than show an empty shell. This is also the anonymous and loading state.
   if (!action && !eligible) return null;
 
   const isPanel = variant === "panel";
@@ -58,7 +58,8 @@ export function NextBestActionCoachView({
     </div>
   );
 
-  // Match ready: the payoff is live, so the one move is to open matching.
+  // Profile evidence is broad enough for a review. This never implies that
+  // matching access, market availability, or another person has been earned.
   if (!action) {
     return (
       <div className={shellClass} data-testid={testId}>
@@ -73,21 +74,20 @@ export function NextBestActionCoachView({
             </span>
             <div>
               <p className="font-serif text-lg font-semibold text-foreground">
-                You are match ready
+                Echo has enough for a real profile read
               </p>
               <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                Your signals are deep enough to make intros worth your time. Open
-                your matching list whenever you want, or keep feeding signals to
-                sharpen who you meet.
+                I can explain what I see and what remains uncertain. This does
+                not promise a match or change who is available.
               </p>
             </div>
           </div>
           <Link
-            href="/matching"
+            href="/echo"
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition-transform hover:translate-x-0.5"
             data-testid={`${testId}-cta`}
           >
-            Open matching
+            Talk with Echo
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
@@ -99,8 +99,8 @@ export function NextBestActionCoachView({
     <div className={shellClass} data-testid={testId}>
       {Eyebrow}
       <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
-        One focused move this week. Feed this signal and the machine gets closer
-        to matching you with people you would not find on your own.
+        One focused move. This would replace one of Echo's guesses with
+        member-confirmed evidence.
       </p>
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
@@ -115,14 +115,6 @@ export function NextBestActionCoachView({
               <p className="font-serif text-lg font-semibold text-foreground">
                 {action.label}
               </p>
-              {action.points > 0 ? (
-                <span
-                  className="rounded-full bg-[hsl(326_100%_60%/0.12)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[hsl(326_100%_45%)]"
-                  data-testid={`${testId}-gain`}
-                >
-                  +{action.points} readiness
-                </span>
-              ) : null}
             </div>
             <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
               {action.detail}

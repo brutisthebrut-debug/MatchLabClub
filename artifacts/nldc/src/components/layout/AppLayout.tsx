@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { MatchPathBar } from "@/components/layout/MatchPathBar";
 import { EchoPresence } from "@/components/layout/EchoPresence";
 import { GuestWorkBanner } from "@/components/auth/GuestWorkBanner";
 import { ReactNode, useState } from "react";
@@ -57,7 +56,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-1">
-      <AppSidebar mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      <AppSidebar
+        mobileOpen={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile top bar (sidebar is a drawer on small screens) */}
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-foreground/8 bg-background/95 px-4 py-3 backdrop-blur-xl md:hidden">
@@ -70,12 +72,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link href="/your-mirror" className="flex items-center gap-2">
-            <img src="/matchlab-logo.png" alt="MatchLab Club" className="h-8 w-auto" />
+          <Link href="/today" className="flex items-center gap-2">
+            <img
+              src="/matchlab-logo.png"
+              alt="MatchLab Club"
+              className="h-8 w-auto"
+            />
           </Link>
           <ThemeToggle />
         </header>
-        <MatchPathBar />
         <main className="flex-1 flex flex-col">{children}</main>
       </div>
       <EchoPresence />

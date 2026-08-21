@@ -2,12 +2,15 @@
  * Quiz Lab, short, fun, archetype-based quizzes that double as a low-friction
  * way for people to surface their wellness dimensions without filling out a
  * questionnaire. Each result is a "badge" with a tagline + 2-3 sentences of
- * insight. Results persist to localStorage; when signed in (and consent on),
- * answers are also written to `wellness_answers` via the existing endpoint.
+ * insight. A browser cache keeps the reveal responsive, while the derived
+ * result is also written to the server for signed-in and anonymous owners. The
+ * raw choices never enter that record. When signed in, the member may separately
+ * choose to write the quiz's mapped details into `wellness_answers`.
  *
- * Anonymous-first by design: no account required to take a quiz or see the
- * result. The whole funnel is: take quiz → see badge + AI-personalised
- * insight → "save this to your dating second-brain" upsell.
+ * Anonymous-first by design: no account is required to take a quiz or see the
+ * result. The whole funnel is: take quiz → see badge + AI-personalised insight →
+ * carry the derived result into the member record → optionally save deeper
+ * wellness mappings.
  */
 
 export interface QuizOption {

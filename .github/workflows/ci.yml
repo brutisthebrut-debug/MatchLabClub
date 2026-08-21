@@ -1,0 +1,111 @@
+name: MatchLab CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matchlab-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Typecheck, lint, schema, voice, and web
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.1
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Check schema drift
+        run: pnpm --filter @workspace/db run check-schema-drift
+
+      - name: Voice lint
+        run: pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
+
+      - name: Web tests
+        run: pnpm --filter @workspace/nldc run test
+
+      - name: Build reviewable web artifact
+        run: pnpm --filter @workspace/nldc run build
+
+      - name: Upload reviewable web artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: matchlab-web-${{ github.sha }}
+          path: artifacts/nldc/dist/public
+          if-no-files-found: error
+          retention-days: 3
+
+  api-tests:
+    name: API tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: matchlab_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d matchlab_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/matchlab_test
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.1
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare test database
+        run: pnpm --filter @workspace/db run push-force
+
+      - name: Run API tests
+        run: pnpm --filter @workspace/api-server run test

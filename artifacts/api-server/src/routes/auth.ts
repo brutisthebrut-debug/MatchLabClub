@@ -7,9 +7,9 @@ import {
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
 import { db, usersTable, referralsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
 import {
   clearSession,
+  getOidcClientId,
   getOidcConfig,
   getSessionId,
   createSession,
@@ -19,23 +19,40 @@ import {
   ISSUER_URL,
   type SessionData,
 } from "../lib/auth";
+import {
+  normalizeHttpOrigin,
+  resolvePublicApiOrigin,
+  resolvePublicWebOrigin,
+  useSecureSessionCookies,
+} from "../lib/runtimeConfig";
 import { notifySignInIfNew, extractClientIp } from "../lib/loginNotifications";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
 const router: IRouter = Router();
 
-function getOrigin(req: Request): string {
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  const host =
-    req.headers["x-forwarded-host"] || req.headers["host"] || "localhost";
-  return `${proto}://${host}`;
+function requestOrigin(req: Request): string {
+  const proto = String(req.headers["x-forwarded-proto"] || "https").split(
+    ",",
+  )[0];
+  const host = String(
+    req.headers["x-forwarded-host"] || req.headers["host"] || "localhost",
+  ).split(",")[0];
+  return normalizeHttpOrigin(`${proto}://${host}`) ?? "http://localhost";
+}
+
+function apiOrigin(req: Request): string {
+  return resolvePublicApiOrigin() ?? requestOrigin(req);
+}
+
+function webOrigin(req: Request): string {
+  return resolvePublicWebOrigin() ?? apiOrigin(req);
 }
 
 function setSessionCookie(res: Response, sid: string) {
   res.cookie(SESSION_COOKIE, sid, {
     httpOnly: true,
-    secure: true,
+    secure: useSecureSessionCookies(),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_TTL,
@@ -45,7 +62,7 @@ function setSessionCookie(res: Response, sid: string) {
 function setOidcCookie(res: Response, name: string, value: string) {
   res.cookie(name, value, {
     httpOnly: true,
-    secure: true,
+    secure: useSecureSessionCookies(),
     sameSite: "lax",
     path: "/",
     maxAge: OIDC_COOKIE_TTL,
@@ -53,7 +70,11 @@ function setOidcCookie(res: Response, name: string, value: string) {
 }
 
 function getSafeReturnTo(value: unknown): string {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//")
+  ) {
     return "/";
   }
   return value;
@@ -66,15 +87,15 @@ async function upsertUser(
   const userData = {
     id: claims.sub as string,
     email: (claims.email as string) || null,
-    firstName: (claims.first_name as string) || null,
-    lastName: (claims.last_name as string) || null,
+    firstName:
+      (claims.first_name as string) || (claims.given_name as string) || null,
+    lastName:
+      (claims.last_name as string) || (claims.family_name as string) || null,
     profileImageUrl: (claims.profile_image_url || claims.picture) as
       | string
       | null,
   };
 
-  // Parse Echo referral cookie (`mlc_ref=user-<inviterId>` or just `<inviterId>`).
-  // First-touch attribution, only set on row INSERT, never overwritten.
   let inviterId: string | null = null;
   if (refCookie) {
     const stripped = refCookie.startsWith("user-")
@@ -94,8 +115,6 @@ async function upsertUser(
     .values(insertValues)
     .onConflictDoUpdate({
       target: usersTable.id,
-      // Intentionally do NOT touch invited_by_user_id / invited_at on conflict
-      //, first-touch attribution wins, returning users keep their original.
       set: {
         ...userData,
         updatedAt: new Date(),
@@ -103,13 +122,6 @@ async function upsertUser(
     })
     .returning();
 
-  // Record the attributed signup in the referrals table so both the founder
-  // analytics views and the inviter's own "who you pulled in" reflection have
-  // real data. We key off the persisted `invitedByUserId` (first-touch, never
-  // overwritten) rather than the raw cookie. The unique index on
-  // `invitee_user_id` plus `onConflictDoNothing` guarantees exactly one row per
-  // invitee even if two sign-in upserts race, so a returning user logging in
-  // again (or a concurrent double sign-in) never duplicates attribution.
   if (user?.invitedByUserId && user.invitedByUserId !== user.id) {
     try {
       await db
@@ -122,8 +134,7 @@ async function upsertUser(
         })
         .onConflictDoNothing({ target: referralsTable.inviteeUserId });
     } catch {
-      // Attribution is best-effort. A failure here must never block sign-in;
-      // `users.invitedByUserId` remains the authoritative attribution record.
+      // Attribution is best-effort and never blocks sign-in.
     }
   }
 
@@ -140,25 +151,10 @@ router.get("/auth/user", (req: Request, res: Response) => {
 
 router.get("/login", async (req: Request, res: Response) => {
   const config = await getOidcConfig();
-  const callbackUrl = `${getOrigin(req)}/api/callback`;
-
+  const callbackUrl = `${apiOrigin(req)}/api/callback`;
   const returnTo = getSafeReturnTo(req.query.returnTo);
 
   const stateNonce = oidc.randomState();
-  // Embed returnTo inside the OIDC state parameter so it survives as a URL
-  // query param on the callback. The return_to cookie (Secure/SameSite=Lax)
-  // can be silently dropped by Chromium in the test runner's HTTP context or
-  // after a cross-origin redirect; the state param is not subject to that
-  // restriction and is always echoed back verbatim by every OIDC provider
-  // (including the Replit testing fake issuer). Format: "<nonce>:<returnTo>".
-  //
-  // IMPORTANT: returnTo is embedded RAW (not encodeURIComponent'd). Using
-  // encodeURIComponent causes a double-encoding problem: the OIDC provider
-  // echoes the state back without re-encoding it, so Express URL-decodes
-  // "%2F" to "/" when parsing req.query.state. This makes the CSRF state
-  // check fail (cookie stores "%2F" but the URL has "/"), breaking the flow.
-  // The raw path is safe because getSafeReturnTo guarantees it starts with "/"
-  // and contains no colons, so the separator ":" is unambiguous.
   const state = `${stateNonce}:${returnTo}`;
   const nonce = oidc.randomNonce();
   const codeVerifier = oidc.randomPKCECodeVerifier();
@@ -177,18 +173,14 @@ router.get("/login", async (req: Request, res: Response) => {
   setOidcCookie(res, "code_verifier", codeVerifier);
   setOidcCookie(res, "nonce", nonce);
   setOidcCookie(res, "state", state);
-  // return_to cookie kept as a secondary fallback for cases where the state
-  // param is unavailable (e.g. provider strips unknown state characters).
   setOidcCookie(res, "return_to", returnTo);
 
   res.redirect(redirectTo.href);
 });
 
-// Query params are not validated because the OIDC provider may include
-// parameters not expressed in the schema.
 router.get("/callback", async (req: Request, res: Response) => {
   const config = await getOidcConfig();
-  const callbackUrl = `${getOrigin(req)}/api/callback`;
+  const callbackUrl = `${apiOrigin(req)}/api/callback`;
 
   const codeVerifier = req.cookies?.code_verifier;
   const nonce = req.cookies?.nonce;
@@ -216,11 +208,6 @@ router.get("/callback", async (req: Request, res: Response) => {
     return;
   }
 
-  // Primary: extract returnTo from the echoed state URL param, resilient to
-  // Secure-cookie drops in the Playwright test environment (see /login above).
-  // Secondary fallback: return_to cookie (works in production browsers).
-  // The state format is "<nonce>:<returnTo>" with the raw path (no extra
-  // URI-encoding) so we read it directly without decodeURIComponent.
   let returnTo = getSafeReturnTo(req.cookies?.return_to);
   const stateParam = typeof req.query.state === "string" ? req.query.state : "";
   const colonIdx = stateParam.indexOf(":");
@@ -281,22 +268,27 @@ router.get("/callback", async (req: Request, res: Response) => {
     req.log.error({ err, userId: dbUser.id }, "Sign-in notification failed");
   }
 
-  res.redirect(returnTo);
+  res.redirect(`${webOrigin(req)}${returnTo}`);
 });
 
 router.get("/logout", async (req: Request, res: Response) => {
   const config = await getOidcConfig();
-  const origin = getOrigin(req);
+  const returnOrigin = webOrigin(req);
 
   const sid = getSessionId(req);
   await clearSession(res, sid);
 
-  const endSessionUrl = oidc.buildEndSessionUrl(config, {
-    client_id: process.env.REPL_ID!,
-    post_logout_redirect_uri: origin,
-  });
-
-  res.redirect(endSessionUrl.href);
+  try {
+    const endSessionUrl = oidc.buildEndSessionUrl(config, {
+      client_id: getOidcClientId(),
+      post_logout_redirect_uri: returnOrigin,
+    });
+    res.redirect(endSessionUrl.href);
+  } catch {
+    // Providers without an end-session endpoint still get a complete local
+    // logout rather than failing the request.
+    res.redirect(returnOrigin);
+  }
 });
 
 router.post(
@@ -352,7 +344,10 @@ router.post(
       };
 
       const userAgent = (req.headers["user-agent"] as string) || "";
-      const ip = extractClientIp(req.headers as Record<string, unknown>, req.ip);
+      const ip = extractClientIp(
+        req.headers as Record<string, unknown>,
+        req.ip,
+      );
       const sid = await createSession(sessionData, {
         userAgent,
         ip,

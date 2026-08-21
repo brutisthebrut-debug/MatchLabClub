@@ -25,7 +25,9 @@ export const COMPANION_PERSONAS: CompanionPersona[] = [
   "calm_mentor",
 ];
 
-export function normalizePersona(raw: string | null | undefined): CompanionPersona {
+export function normalizePersona(
+  raw: string | null | undefined,
+): CompanionPersona {
   if (raw && (COMPANION_PERSONAS as string[]).includes(raw)) {
     return raw as CompanionPersona;
   }
@@ -33,7 +35,8 @@ export function normalizePersona(raw: string | null | undefined): CompanionPerso
 }
 
 export function clampCandor(raw: number | null | undefined): number {
-  const n = typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : 2;
+  const n =
+    typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : 2;
   return Math.min(3, Math.max(1, n));
 }
 
@@ -89,7 +92,7 @@ export interface CompanionView {
   headline: string;
   greeting: string;
   read: string;
-  oneThing: { label: string; detail: string; href: string; points: number } | null;
+  oneThing: EchoNextMove | null;
   challenge: string | null;
   readinessScore: number;
   threshold: number;
@@ -101,6 +104,88 @@ export interface CompanionViewInput {
   persona: CompanionPersona;
   candor: number;
   openCommitments?: { body: string; overdue: boolean }[];
+}
+
+export interface EchoNextMove {
+  label: string;
+  detail: string;
+  href: string;
+  points: number;
+}
+
+export interface EchoJourneyState {
+  pendingProposal: boolean;
+  unreadConnection: { id: string; unreadCount: number } | null;
+  pendingDebriefConnectionId: string | null;
+  overdueCommitment: string | null;
+  pendingLearning: boolean;
+  profileMove: EchoNextMove | null;
+}
+
+// Echo owns the one move surfaced across the signed-in experience. Relationship
+// activity comes first, followed by promises the member asked Echo to remember,
+// then the single profile uncertainty that would improve Echo's understanding.
+export function chooseEchoNextMove(input: EchoJourneyState): EchoNextMove {
+  if (input.pendingProposal) {
+    return {
+      label: "Consider your proposal",
+      detail:
+        "I have a real proposal ready for you. Nothing reveals unless both people choose yes.",
+      href: "/matches",
+      points: 0,
+    };
+  }
+
+  if (input.unreadConnection) {
+    const count = input.unreadConnection.unreadCount;
+    return {
+      label: "Return to your conversation",
+      detail: `${count} unread ${count === 1 ? "message" : "messages"} in a mutual introduction.`,
+      href: `/matches/${input.unreadConnection.id}`,
+      points: 0,
+    };
+  }
+
+  if (input.pendingDebriefConnectionId) {
+    return {
+      label: "Tell me how the date felt",
+      detail:
+        "The date happened. Give me the honest version while it is still fresh, and I will show you what I think it means before anything becomes profile truth.",
+      href: `/copilot/debrief?connectionId=${input.pendingDebriefConnectionId}`,
+      points: 0,
+    };
+  }
+
+  if (input.overdueCommitment) {
+    return {
+      label: "Keep the promise you made",
+      detail: `You asked me to remember that you would ${input.overdueCommitment.replace(/\.$/, "")}. Let us deal with it honestly.`,
+      href: "/echo",
+      points: 0,
+    };
+  }
+
+  if (input.pendingLearning) {
+    return {
+      label: "Check what Echo thinks it learned",
+      detail:
+        "I noticed a possible pattern in your own words. It stays tentative until you confirm it, correct it, or set it aside.",
+      href: "/echo#echo-learning",
+      points: 0,
+    };
+  }
+
+  if (input.profileMove) {
+    return { ...input.profileMove, points: 0 };
+  }
+
+  return {
+    label: "Tell Echo what is happening",
+    detail:
+      "A short check-in gives me something real to work with instead of making you browse for a task.",
+    href: "/echo",
+    points: 0,
+  };
 }
 
 // The single highest-leverage, honest challenge Echo can make from the portrait.
@@ -119,7 +204,7 @@ function buildChallenge(input: CompanionViewInput): string | null {
   if (portrait.blindSpots.length > 0) {
     const spot = portrait.blindSpots[0];
     if (candor >= 3) {
-      return `Straight up: the machine still cannot see your ${spot.label.toLowerCase()}. You keep skipping it. That is the gap holding your matches back, not bad luck.`;
+      return `Straight up: I still do not understand your ${spot.label.toLowerCase()}. You keep skipping it, so I am left guessing. Let us stop doing that.`;
     }
     if (candor <= 1) {
       return `One soft nudge: we have never looked at your ${spot.label.toLowerCase()} together. When you are ready, that is the piece that would teach me the most about you.`;
@@ -128,7 +213,7 @@ function buildChallenge(input: CompanionViewInput): string | null {
   }
 
   if (!portrait.eligible && portrait.nextSignal) {
-    return `You are ${Math.max(0, portrait.threshold - portrait.readinessScore)} points from matching and I know exactly what would move it. Do not tell me you are too busy, this one is small.`;
+    return "I still have a meaningful gap in how I understand you. The next step is small, but it would replace a guess with evidence.";
   }
 
   return null;
@@ -144,7 +229,7 @@ export function buildCompanionView(input: CompanionViewInput): CompanionView {
         label: next.label,
         detail: next.detail,
         href: next.href,
-        points: next.points,
+        points: 0,
       }
     : null;
 
@@ -193,14 +278,14 @@ export function deriveObservations(
       out.push({
         kind: "readiness_rise",
         severity: "praise",
-        body: `Your readiness climbed ${delta} points since I last looked. That is real momentum, not noise.`,
+        body: "I have a clearer read than the last time I looked. That is real progress, not a number pretending to know you.",
         signalId: null,
       });
     } else if (delta <= -4) {
       out.push({
         kind: "readiness_dip",
         severity: "challenge",
-        body: `Your readiness slipped ${Math.abs(delta)} points. Something went quiet. I would rather name it than pretend it did not happen.`,
+        body: "Part of the picture became less certain. Something went quiet, and I would rather name it than pretend I still know.",
         signalId: null,
       });
     }
@@ -265,7 +350,12 @@ export interface ReadinessReaction {
   headline: string;
   nowSee: string | null;
   lanesMoved: ReactionLaneMove[];
-  nextMove: { label: string; detail: string; href: string; points: number } | null;
+  nextMove: {
+    label: string;
+    detail: string;
+    href: string;
+    points: number;
+  } | null;
 }
 
 export interface BuildReactionInput {
@@ -290,71 +380,65 @@ function riseHeadline(
   delta: number,
 ): string {
   const size = riseSize(delta);
-  const plus = `plus ${delta}`;
   if (persona === "tough_coach") {
     if (size === "big")
-      return `Good. ${capitalize(plus)}. That is what real work looks like. Do not coast on it.`;
+      return "Good. That gave me a much clearer read. Do not coast on it.";
     if (size === "solid")
-      return `${capitalize(plus)}. Earned, not handed to you. Keep going.`;
-    return `${capitalize(plus)}. It counts, but I want a bigger one from you next.`;
+      return "That mattered. Keep going while the thread is honest.";
+    return "I caught something useful there. Now give me enough context to trust it.";
   }
   if (persona === "witty_sibling") {
-    if (size === "big") return `Look at you. ${capitalize(plus)} in one move. I am almost impressed.`;
-    if (size === "solid") return `${capitalize(plus)}. Not bad at all, honestly.`;
-    return `${capitalize(plus)}. I saw it. Barely, but I saw it.`;
+    if (size === "big")
+      return "Look at you. The picture just got a lot clearer. I am almost impressed.";
+    if (size === "solid") return "Not bad at all. I can actually use that.";
+    return "I saw it. Give me a little more before I act like I know the whole story.";
   }
   if (persona === "calm_mentor") {
     if (size === "big")
-      return `That mattered. ${capitalize(plus)}, and the picture of you just came into clearer focus.`;
-    if (size === "solid") return `${capitalize(plus)}. The kind of steady progress that lasts.`;
-    return `${capitalize(plus)}. Small, and still a real step toward who you are becoming.`;
+      return "That mattered. The picture of you just came into much clearer focus.";
+    if (size === "solid")
+      return "That is the kind of steady learning that lasts.";
+    return "Small, and still a real step toward understanding the pattern.";
   }
   // best_friend
-  if (size === "big") return `That was a real jump. ${capitalize(plus)}, and I felt the picture of you sharpen.`;
-  if (size === "solid") return `${capitalize(plus)}. That nudged you up and I can see you a little better now.`;
-  const soft = candor <= 1 ? " No pressure, just keep stacking these." : " Keep stacking these.";
-  return `${capitalize(plus)}, small but it counts.${soft}`;
+  if (size === "big")
+    return "That changed my read in a real way. The picture of you just sharpened.";
+  if (size === "solid")
+    return "That helped. I can see you a little better now.";
+  const soft =
+    candor <= 1
+      ? "No pressure. Give me a little more when you are ready."
+      : "It is useful, and I still want the fuller story.";
+  return soft;
 }
 
-function crossingHeadline(
-  persona: CompanionPersona,
-  toScore: number,
-  threshold: number,
-): string {
+function crossingHeadline(persona: CompanionPersona): string {
   switch (persona) {
     case "tough_coach":
-      return `There it is. ${toScore}, past ${threshold}. Matching is open. Now the real work starts.`;
+      return "I have enough breadth for a real profile review now. That is evidence, not a promise about another person.";
     case "witty_sibling":
-      return `Well, well. ${toScore}. You crossed it. Matching is open, try to act surprised.`;
+      return "Well, well. I finally have enough context to give you a proper read. No, that does not mean I know everything.";
     case "calm_mentor":
-      return `You reached it. ${toScore}, past the line. Matching is open. Take a breath, then keep building.`;
+      return "The picture has enough breadth for a thoughtful review now. We can still keep learning without rushing certainty.";
     case "best_friend":
     default:
-      return `You did it. Readiness ${toScore}, past ${threshold}. Matching is open now, and I have been waiting to tell you.`;
+      return "I can give you a real profile read now. That does not promise a match, but it means I can be honest about what I see and what I still do not.";
   }
 }
 
-function dipHeadline(
-  persona: CompanionPersona,
-  candor: number,
-  drop: number,
-): string {
+function dipHeadline(persona: CompanionPersona, candor: number): string {
   const word = candorWord(candor);
   switch (persona) {
     case "tough_coach":
-      return `Down ${drop}. Something went quiet. I am telling you ${word} so it does not become a trend.`;
+      return `Something went quiet. I am telling you ${word} so I do not build advice on stale evidence.`;
     case "witty_sibling":
-      return `Minus ${drop}. I noticed. I always notice. Want to fix it?`;
+      return "Something went fuzzy. I noticed. I always notice. Want to sort it out?";
     case "calm_mentor":
-      return `You slipped ${drop}. It happens. Let us look at what went quiet, no judgment.`;
+      return "Part of the picture became less certain. It happens. Let us look at what changed, no judgment.";
     case "best_friend":
     default:
-      return `Heads up, you slipped ${drop}. I would rather name it ${word} than let it slide. Want to climb back?`;
+      return `Heads up, part of my read got less certain. I would rather name it ${word} than fake confidence.`;
   }
-}
-
-function capitalize(s: string): string {
-  return s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
 function reactionNowSee(
@@ -389,7 +473,8 @@ function reactionNowSee(
  * real change.
  */
 export function buildReaction(input: BuildReactionInput): ReadinessReaction {
-  const { portrait, previousScore, previousCoverageByKey, persona, candor } = input;
+  const { portrait, previousScore, previousCoverageByKey, persona, candor } =
+    input;
   const toScore = portrait.readinessScore;
   const threshold = portrait.threshold;
   const eligible = portrait.eligible;
@@ -419,7 +504,12 @@ export function buildReaction(input: BuildReactionInput): ReadinessReaction {
     ? portrait.known
         .map((dim) => {
           const prev = previousCoverageByKey[dim.key] ?? 0;
-          return { key: dim.key, label: dim.label, from: prev, to: dim.coverage };
+          return {
+            key: dim.key,
+            label: dim.label,
+            from: prev,
+            to: dim.coverage,
+          };
         })
         .filter((m) => m.to - m.from >= 1)
         .sort((a, b) => b.to - b.from - (a.to - a.from))
@@ -437,22 +527,22 @@ export function buildReaction(input: BuildReactionInput): ReadinessReaction {
   const moved = tone !== "steady" || lanesMoved.length > 0;
 
   let headline: string;
-  if (tone === "crossing") headline = crossingHeadline(persona, toScore, threshold);
-  else if (tone === "dip") headline = dipHeadline(persona, candor, Math.abs(delta));
+  if (tone === "crossing") headline = crossingHeadline(persona);
+  else if (tone === "dip") headline = dipHeadline(persona, candor);
   else if (tone === "rise") headline = riseHeadline(persona, candor, delta);
   else if (lanesMoved.length > 0) {
     // Score held flat but a lane deepened; still worth a quiet, honest note.
     headline =
       persona === "tough_coach"
         ? "The number held, but you did feed me something. I logged it."
-        : "Your score held steady, and I still picked up something new about you.";
+        : "The overall picture held steady, and I still picked up something new about you.";
   } else {
     headline = "";
   }
 
   const next = portrait.nextSignal;
   const nextMove = next
-    ? { label: next.label, detail: next.detail, href: next.href, points: next.points }
+    ? { label: next.label, detail: next.detail, href: next.href, points: 0 }
     : null;
 
   return {
@@ -522,8 +612,11 @@ export function answerCompanion(
 
   const asksWhereStand =
     /(where|how).*(stand|doing|at)|ready|progress|score|readiness/.test(q);
-  const asksWhatNext = /(what|next|should i|do now|improve|better|move)/.test(q);
-  const asksAboutMe = /(who am i|about me|see in me|know about me|read on me)/.test(q);
+  const asksWhatNext = /(what|next|should i|do now|improve|better|move)/.test(
+    q,
+  );
+  const asksAboutMe =
+    /(who am i|about me|see in me|know about me|read on me)/.test(q);
 
   if (asksAboutMe || (!asksWhereStand && !asksWhatNext)) {
     lines.push(view.read);
@@ -533,14 +626,14 @@ export function answerCompanion(
   if (asksWhereStand) {
     if (view.eligible) {
       lines.push(
-        `You are past the line. Readiness is ${view.readinessScore} and matching opens at ${view.threshold}. You earned it.`,
+        "I have enough profile breadth to give you a meaningful review. That does not promise a match, change market availability, or give anyone access to a person.",
       );
     } else {
       lines.push(
-        `You are at ${view.readinessScore} out of ${view.threshold}. ${Math.max(0, view.threshold - view.readinessScore)} points to go before I can start matching you.`,
+        "I still have meaningful gaps in how I understand you. I will show you the clearest next question, but I will not pretend profile work earns access to another person.",
       );
     }
-    grounding.push("readiness score");
+    grounding.push("profile evidence");
   }
 
   if (asksWhatNext && view.oneThing) {
@@ -602,46 +695,71 @@ export function reviewMessage(
   const hasQuestion = /\?/.test(trimmed);
   const exclaimCount = (trimmed.match(/!/g) ?? []).length;
   const lower = trimmed.toLowerCase();
-  const lowEffort = /^(hey|hi|hello|sup|yo|wyd|hbu|nm u)[.!? ]*$/i.test(trimmed);
+  const lowEffort = /^(hey|hi|hello|sup|yo|wyd|hbu|nm u)[.!? ]*$/i.test(
+    trimmed,
+  );
   const allCaps =
-    trimmed.length > 12 && trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed);
+    trimmed.length > 12 &&
+    trimmed === trimmed.toUpperCase() &&
+    /[A-Z]/.test(trimmed);
   const apologyOpen = /^(sorry|sry|apolog)/i.test(trimmed);
 
   if (direction === "sending") {
     if (hasQuestion) {
-      strengths.push("You asked a question, which gives them a real reason to reply.");
+      strengths.push(
+        "You asked a question, which gives them a real reason to reply.",
+      );
     } else {
-      risks.push("There is no question here, so the burden to keep it going falls on them.");
+      risks.push(
+        "There is no question here, so the burden to keep it going falls on them.",
+      );
     }
     if (lowEffort) {
-      risks.push("This reads as low effort. It tells them almost nothing about you.");
+      risks.push(
+        "This reads as low effort. It tells them almost nothing about you.",
+      );
     }
     if (wordCount > 90) {
-      risks.push("It is long. Early on, a wall of text can feel like pressure.");
+      risks.push(
+        "It is long. Early on, a wall of text can feel like pressure.",
+      );
     } else if (wordCount >= 8 && wordCount <= 60) {
-      strengths.push("The length is in a good range, enough to land, not so much it overwhelms.");
+      strengths.push(
+        "The length is in a good range, enough to land, not so much it overwhelms.",
+      );
     }
     if (exclaimCount >= 3) {
-      risks.push("The exclamation marks are doing a lot of work. Let the words carry it.");
+      risks.push(
+        "The exclamation marks are doing a lot of work. Let the words carry it.",
+      );
     }
     if (allCaps) {
       risks.push("All caps reads as shouting. Drop it to normal case.");
     }
     if (apologyOpen) {
-      risks.push("Opening with an apology puts you on the back foot before you have said anything.");
+      risks.push(
+        "Opening with an apology puts you on the back foot before you have said anything.",
+      );
     }
   } else {
     if (hasQuestion) {
-      strengths.push("They asked you something, which means there is interest and an easy opening.");
+      strengths.push(
+        "They asked you something, which means there is interest and an easy opening.",
+      );
     } else {
-      risks.push("They did not ask anything, so you will have to create the next thread yourself.");
+      risks.push(
+        "They did not ask anything, so you will have to create the next thread yourself.",
+      );
     }
     if (lowEffort) {
-      risks.push("Their message is thin. Match a little above their effort, not below it.");
+      risks.push(
+        "Their message is thin. Match a little above their effort, not below it.",
+      );
     }
   }
 
-  const verdictWord = candor >= 3 ? "Straight read" : candor <= 1 ? "Soft read" : "Honest read";
+  const verdictWord =
+    candor >= 3 ? "Straight read" : candor <= 1 ? "Soft read" : "Honest read";
   let verdict: string;
   if (risks.length === 0) {
     verdict = `${verdictWord}: this is solid. I would send it close to as-is.`;

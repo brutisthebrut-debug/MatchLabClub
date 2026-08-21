@@ -5,89 +5,93 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary Get the currently authenticated user
  */
 export const GetCurrentAuthUserHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetCurrentAuthUserResponse = zod.object({
-  "user": zod.union([zod.object({
-  "id": zod.string(),
-  "email": zod.string().email().nullable(),
-  "firstName": zod.string().nullable(),
-  "lastName": zod.string().nullable(),
-  "profileImageUrl": zod.string().nullable()
-}),zod.null()])
-})
-
+  user: zod.union([
+    zod.object({
+      id: zod.string(),
+      email: zod.string().email().nullable(),
+      firstName: zod.string().nullable(),
+      lastName: zod.string().nullable(),
+      profileImageUrl: zod.string().nullable(),
+    }),
+    zod.null(),
+  ]),
+});
 
 /**
  * @summary Start the browser OIDC login flow
  */
 export const BeginBrowserLoginQueryParams = zod.object({
-  "returnTo": zod.coerce.string().optional()
-})
-
+  returnTo: zod.coerce.string().optional(),
+});
 
 /**
  * @summary Complete the browser OIDC login flow
  */
 export const HandleBrowserLoginCallbackQueryParams = zod.object({
-  "code": zod.coerce.string().optional(),
-  "state": zod.coerce.string().optional(),
-  "iss": zod.coerce.string().url().optional()
-})
-
+  code: zod.coerce.string().optional(),
+  state: zod.coerce.string().optional(),
+  iss: zod.coerce.string().url().optional(),
+});
 
 /**
  * @summary Clear the session and begin OIDC logout
  */
 export const LogoutBrowserSessionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 /**
  * @summary Exchange a mobile OIDC code for a session token
  */
 
-
-
-
-
-
-
-
 export const ExchangeMobileAuthorizationCodeBody = zod.object({
-  "code": zod.string().min(1),
-  "code_verifier": zod.string().min(1),
-  "redirect_uri": zod.string().url().min(1),
-  "state": zod.string().min(1),
-  "nonce": zod.string().min(1).optional(),
-  "push_token": zod.string().min(1).optional().describe('Expo push token for the signing-in device, if available. When\nprovided, this token is excluded from the recipients of the\nnew-sign-in push notification so the device performing the\nsign-in doesn\'t notify itself.\n')
-})
+  code: zod.string().min(1),
+  code_verifier: zod.string().min(1),
+  redirect_uri: zod.string().url().min(1),
+  state: zod.string().min(1),
+  nonce: zod.string().min(1).optional(),
+  push_token: zod
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Expo push token for the signing-in device, if available. When\nprovided, this token is excluded from the recipients of the\nnew-sign-in push notification so the device performing the\nsign-in doesn't notify itself.\n",
+    ),
+});
 
 export const ExchangeMobileAuthorizationCodeResponse = zod.object({
-  "token": zod.string()
-})
-
+  token: zod.string(),
+});
 
 /**
  * @summary Delete a mobile session token
  */
 export const LogoutMobileSessionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const LogoutMobileSessionResponse = zod.object({
-  "success": zod.boolean()
-})
-
+  success: zod.boolean(),
+});
 
 /**
  * Reassigns rows with `userId IS NULL` whose IDs are passed in the body to the
@@ -97,31 +101,33 @@ localStorage) are eligible. Requires an authenticated session.
  * @summary Claim audits, profiles, message sessions, and insights created anonymously in this browser
  */
 export const ClaimAnonymousDataHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ClaimAnonymousDataBody = zod.object({
-  "auditIds": zod.array(zod.number()).optional(),
-  "profileIds": zod.array(zod.number()).optional(),
-  "messageSessionIds": zod.array(zod.number()).optional(),
-  "insightIds": zod.array(zod.number()).optional(),
-  "followUpIds": zod.array(zod.number()).optional(),
-  "journalEntryIds": zod.array(zod.number()).optional(),
-  "postDateNoteIds": zod.array(zod.number()).optional()
-})
+  auditIds: zod.array(zod.number()).optional(),
+  profileIds: zod.array(zod.number()).optional(),
+  messageSessionIds: zod.array(zod.number()).optional(),
+  insightIds: zod.array(zod.number()).optional(),
+  followUpIds: zod.array(zod.number()).optional(),
+  journalEntryIds: zod.array(zod.number()).optional(),
+  postDateNoteIds: zod.array(zod.number()).optional(),
+});
 
 export const ClaimAnonymousDataResponse = zod.object({
-  "claimed": zod.object({
-  "audits": zod.number(),
-  "profiles": zod.number(),
-  "messages": zod.number(),
-  "insights": zod.number(),
-  "followUps": zod.number(),
-  "journalEntries": zod.number(),
-  "postDateNotes": zod.number()
-})
-})
-
+  claimed: zod.object({
+    audits: zod.number(),
+    profiles: zod.number(),
+    messages: zod.number(),
+    insights: zod.number(),
+    followUps: zod.number(),
+    journalEntries: zod.number(),
+    postDateNotes: zod.number(),
+  }),
+});
 
 /**
  * Issues a short-lived, HMAC-signed token derived from the caller's
@@ -136,10 +142,13 @@ claim nulls the underlying anonymous token).
  * @summary Mint a signed cross-device handoff token for the current anonymous browser
  */
 export const IssueAnonymousClaimHandoffResponse = zod.object({
-  "handoff": zod.string().describe('Opaque signed token. Treat as a secret — anyone holding it can claim the underlying anonymous data after signing in before it expires.'),
-  "expiresAt": zod.coerce.date()
-})
-
+  handoff: zod
+    .string()
+    .describe(
+      "Opaque signed token. Treat as a secret — anyone holding it can claim the underlying anonymous data after signing in before it expires.",
+    ),
+  expiresAt: zod.coerce.date(),
+});
 
 /**
  * Verifies the handoff token's signature and expiry, then runs the same
@@ -151,35 +160,34 @@ cookie. Requires an authenticated session. Only rows whose
  * @summary Claim anonymous data using a signed handoff token instead of the browser cookie
  */
 export const RedeemAnonymousClaimHandoffHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
-
-
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const RedeemAnonymousClaimHandoffBody = zod.object({
-  "handoff": zod.string().min(1),
-  "auditIds": zod.array(zod.number()).optional(),
-  "profileIds": zod.array(zod.number()).optional(),
-  "messageSessionIds": zod.array(zod.number()).optional(),
-  "insightIds": zod.array(zod.number()).optional(),
-  "followUpIds": zod.array(zod.number()).optional(),
-  "journalEntryIds": zod.array(zod.number()).optional(),
-  "postDateNoteIds": zod.array(zod.number()).optional()
-})
+  handoff: zod.string().min(1),
+  auditIds: zod.array(zod.number()).optional(),
+  profileIds: zod.array(zod.number()).optional(),
+  messageSessionIds: zod.array(zod.number()).optional(),
+  insightIds: zod.array(zod.number()).optional(),
+  followUpIds: zod.array(zod.number()).optional(),
+  journalEntryIds: zod.array(zod.number()).optional(),
+  postDateNoteIds: zod.array(zod.number()).optional(),
+});
 
 export const RedeemAnonymousClaimHandoffResponse = zod.object({
-  "claimed": zod.object({
-  "audits": zod.number(),
-  "profiles": zod.number(),
-  "messages": zod.number(),
-  "insights": zod.number(),
-  "followUps": zod.number(),
-  "journalEntries": zod.number(),
-  "postDateNotes": zod.number()
-})
-})
-
+  claimed: zod.object({
+    audits: zod.number(),
+    profiles: zod.number(),
+    messages: zod.number(),
+    insights: zod.number(),
+    followUps: zod.number(),
+    journalEntries: zod.number(),
+    postDateNotes: zod.number(),
+  }),
+});
 
 /**
  * Lightweight, idempotent status check for a handoff token. Verifies the
@@ -193,18 +201,28 @@ token — calling this never blocks a future redeem.
  * @summary Check whether a previously issued handoff link has been redeemed yet
  */
 
-
-
 export const GetAnonymousClaimHandoffStatusBody = zod.object({
-  "handoff": zod.string().min(1)
-})
+  handoff: zod.string().min(1),
+});
 
 export const GetAnonymousClaimHandoffStatusResponse = zod.object({
-  "redeemed": zod.boolean().describe('True once the handoff token\'s `jti` has been recorded in `handoff_token_redemptions` (i.e. the other device successfully claimed the data).'),
-  "expired": zod.boolean().describe('True once the token\'s TTL has passed. Mutually compatible with `redeemed` — a token may be both redeemed and expired.'),
-  "expiresAt": zod.coerce.date().optional().describe('The token\'s expiry timestamp. Omitted if the token can\'t be verified.')
-})
-
+  redeemed: zod
+    .boolean()
+    .describe(
+      "True once the handoff token's `jti` has been recorded in `handoff_token_redemptions` (i.e. the other device successfully claimed the data).",
+    ),
+  expired: zod
+    .boolean()
+    .describe(
+      "True once the token's TTL has passed. Mutually compatible with `redeemed` — a token may be both redeemed and expired.",
+    ),
+  expiresAt: zod.coerce
+    .date()
+    .optional()
+    .describe(
+      "The token's expiry timestamp. Omitted if the token can't be verified.",
+    ),
+});
 
 /**
  * Returns a single JSON document containing the authenticated user's
@@ -215,199 +233,408 @@ session, and email insight tied to that user. Intended to power a
  * @summary Download all of the signed-in user's data as JSON
  */
 export const ExportMyDataHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const exportMyDataResponseJournalEntriesItemMoodMax = 5;
 
-
-
 export const ExportMyDataResponse = zod.object({
-  "exportedAt": zod.string().describe('ISO timestamp of when the export was generated.'),
-  "user": zod.object({
-  "id": zod.string(),
-  "email": zod.string().email().nullable(),
-  "firstName": zod.string().nullable(),
-  "lastName": zod.string().nullable(),
-  "profileImageUrl": zod.string().nullable(),
-  "createdAt": zod.string()
-}),
-  "audits": zod.array(zod.object({
-  "id": zod.number(),
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string().optional(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
-  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
-  "source": zod.enum(['manual', 'screenshot']),
-  "readinessScore": zod.number().nullish(),
-  "report": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
-  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "previousReport": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
-  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
-  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
-  "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
-  "matchContext": zod.union([zod.object({
-  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
-  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
-}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
-})),
-  "profiles": zod.array(zod.object({
-  "id": zod.number(),
-  "platform": zod.string(),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})),
-  "messages": zod.array(zod.object({
-  "id": zod.number(),
-  "matchName": zod.string(),
-  "conversationContext": zod.string(),
-  "yourLastMessage": zod.string(),
-  "goal": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").'),
-  "status": zod.enum(['pending', 'complete']),
-  "createdAt": zod.string()
-})),
-  "insights": zod.array(zod.object({
-  "id": zod.number(),
-  "sourceLabel": zod.string(),
-  "sourceApp": zod.string().nullish().describe('Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").'),
-  "pastedContent": zod.string(),
-  "consentGiven": zod.boolean().optional(),
-  "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
-  "createdAt": zod.string()
-})),
-  "journalEntries": zod.array(zod.object({
-  "id": zod.number(),
-  "prompt": zod.string().nullish(),
-  "body": zod.string(),
-  "tags": zod.array(zod.string()),
-  "mood": zod.number().min(1).max(exportMyDataResponseJournalEntriesItemMoodMax).nullish(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})),
-  "postDateNotes": zod.array(zod.object({
-  "id": zod.number(),
-  "dateAt": zod.coerce.date().nullish(),
-  "personLabel": zod.string().nullish(),
-  "platform": zod.string().nullish(),
-  "summary": zod.string(),
-  "whatWentWell": zod.string(),
-  "whatDidnt": zod.string(),
-  "followUpPlanned": zod.boolean(),
-  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-}))
-})
-
+  exportedAt: zod
+    .string()
+    .describe("ISO timestamp of when the export was generated."),
+  user: zod.object({
+    id: zod.string(),
+    email: zod.string().email().nullable(),
+    firstName: zod.string().nullable(),
+    lastName: zod.string().nullable(),
+    profileImageUrl: zod.string().nullable(),
+    createdAt: zod.string(),
+  }),
+  audits: zod.array(
+    zod.object({
+      id: zod.number(),
+      firstName: zod.string(),
+      age: zod.number(),
+      gender: zod.string(),
+      orientation: zod.string().optional(),
+      datingGoal: zod.string(),
+      currentApps: zod.array(zod.string()),
+      bio: zod.string(),
+      prompts: zod.string().nullish(),
+      recentMessageSample: zod.string().nullish(),
+      photoCount: zod.number().nullish(),
+      relationshipHistory: zod.string().nullish(),
+      biggestChallenge: zod.string().nullish(),
+      sourceApp: zod
+        .string()
+        .nullish()
+        .describe(
+          'Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.',
+        ),
+      status: zod.enum(["pending", "generating", "complete", "error"]),
+      source: zod.enum(["manual", "screenshot"]),
+      readinessScore: zod.number().nullish(),
+      report: zod
+        .union([
+          zod.object({
+            auditId: zod.number(),
+            readinessScore: zod.number(),
+            overallGrade: zod.string(),
+            strengths: zod.array(zod.string()),
+            risks: zod.array(zod.string()),
+            bioAudit: zod.string(),
+            rewrittenBio: zod.string(),
+            rewrittenPrompts: zod.array(
+              zod.object({
+                original: zod.string(),
+                rewritten: zod.string(),
+                tip: zod.string(),
+              }),
+            ),
+            photoGuidance: zod.array(
+              zod.object({
+                category: zod.string(),
+                status: zod.enum(["good", "needs_work", "missing"]),
+                advice: zod.string(),
+              }),
+            ),
+            actionPlan: zod.array(
+              zod.object({
+                priority: zod.number(),
+                title: zod.string(),
+                description: zod.string(),
+                timeframe: zod.string(),
+              }),
+            ),
+            messagingStyle: zod.string(),
+            coachingCta: zod.string(),
+            engineVersion: zod
+              .string()
+              .nullish()
+              .describe(
+                "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+              ),
+            changeSummary: zod
+              .union([
+                zod.object({
+                  scoreDelta: zod
+                    .number()
+                    .describe(
+                      "newScore minus previousScore (negative when the score dropped).",
+                    ),
+                  previousScore: zod.number(),
+                  newScore: zod.number(),
+                  addedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths present in the new report but not in the prior one.",
+                    ),
+                  removedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths from the prior report that no longer appear.",
+                    ),
+                  addedRisks: zod.array(zod.string()),
+                  removedRisks: zod.array(zod.string()),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+              ),
+            photoAnalysis: zod
+              .union([
+                zod.object({
+                  summary: zod
+                    .string()
+                    .describe(
+                      "One or two sentence overall read of the photos actually seen.",
+                    ),
+                  observations: zod.array(
+                    zod.object({
+                      aspect: zod
+                        .string()
+                        .describe(
+                          "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                        ),
+                      assessment: zod.enum(["strong", "okay", "needs_work"]),
+                      detail: zod
+                        .string()
+                        .describe(
+                          "Specific, grounded note referencing what is visible in the photo.",
+                        ),
+                    }),
+                  ),
+                  topFix: zod
+                    .string()
+                    .describe(
+                      "The single highest-impact change to make to the photos.",
+                    ),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+              ),
+          }),
+          zod.null(),
+        ])
+        .optional()
+        .describe(
+          "The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n",
+        ),
+      reportGeneratedAt: zod
+        .string()
+        .nullish()
+        .describe(
+          "ISO timestamp the stored report was generated. Null if no report has been generated yet.",
+        ),
+      previousReport: zod
+        .union([
+          zod.object({
+            auditId: zod.number(),
+            readinessScore: zod.number(),
+            overallGrade: zod.string(),
+            strengths: zod.array(zod.string()),
+            risks: zod.array(zod.string()),
+            bioAudit: zod.string(),
+            rewrittenBio: zod.string(),
+            rewrittenPrompts: zod.array(
+              zod.object({
+                original: zod.string(),
+                rewritten: zod.string(),
+                tip: zod.string(),
+              }),
+            ),
+            photoGuidance: zod.array(
+              zod.object({
+                category: zod.string(),
+                status: zod.enum(["good", "needs_work", "missing"]),
+                advice: zod.string(),
+              }),
+            ),
+            actionPlan: zod.array(
+              zod.object({
+                priority: zod.number(),
+                title: zod.string(),
+                description: zod.string(),
+                timeframe: zod.string(),
+              }),
+            ),
+            messagingStyle: zod.string(),
+            coachingCta: zod.string(),
+            engineVersion: zod
+              .string()
+              .nullish()
+              .describe(
+                "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+              ),
+            changeSummary: zod
+              .union([
+                zod.object({
+                  scoreDelta: zod
+                    .number()
+                    .describe(
+                      "newScore minus previousScore (negative when the score dropped).",
+                    ),
+                  previousScore: zod.number(),
+                  newScore: zod.number(),
+                  addedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths present in the new report but not in the prior one.",
+                    ),
+                  removedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths from the prior report that no longer appear.",
+                    ),
+                  addedRisks: zod.array(zod.string()),
+                  removedRisks: zod.array(zod.string()),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+              ),
+            photoAnalysis: zod
+              .union([
+                zod.object({
+                  summary: zod
+                    .string()
+                    .describe(
+                      "One or two sentence overall read of the photos actually seen.",
+                    ),
+                  observations: zod.array(
+                    zod.object({
+                      aspect: zod
+                        .string()
+                        .describe(
+                          "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                        ),
+                      assessment: zod.enum(["strong", "okay", "needs_work"]),
+                      detail: zod
+                        .string()
+                        .describe(
+                          "Specific, grounded note referencing what is visible in the photo.",
+                        ),
+                    }),
+                  ),
+                  topFix: zod
+                    .string()
+                    .describe(
+                      "The single highest-impact change to make to the photos.",
+                    ),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+              ),
+          }),
+          zod.null(),
+        ])
+        .optional()
+        .describe(
+          "The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n",
+        ),
+      previousReadinessScore: zod
+        .number()
+        .nullish()
+        .describe(
+          "Readiness score from the prior regeneration (null if never regenerated).",
+        ),
+      previousReportGeneratedAt: zod
+        .string()
+        .nullish()
+        .describe(
+          "ISO timestamp of the prior regeneration's report (null if never regenerated).",
+        ),
+      createdAt: zod.string(),
+      deletedAt: zod
+        .string()
+        .nullish()
+        .describe(
+          "ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n",
+        ),
+      matchContext: zod
+        .union([
+          zod.object({
+            matchedField: zod
+              .enum(["name", "bio"])
+              .describe("The field that best matched the search query."),
+            snippet: zod
+              .string()
+              .nullish()
+              .describe(
+                "A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n",
+              ),
+          }),
+          zod.null(),
+        ])
+        .optional()
+        .describe(
+          "Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n",
+        ),
+    }),
+  ),
+  profiles: zod.array(
+    zod.object({
+      id: zod.number(),
+      platform: zod.string(),
+      bio: zod.string(),
+      prompts: zod.string().nullish(),
+      photoCount: zod.number().nullish(),
+      notes: zod.string().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+  messages: zod.array(
+    zod.object({
+      id: zod.number(),
+      matchName: zod.string(),
+      conversationContext: zod.string(),
+      yourLastMessage: zod.string(),
+      goal: zod.string().nullish(),
+      sourceApp: zod
+        .string()
+        .nullish()
+        .describe(
+          'Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").',
+        ),
+      status: zod.enum(["pending", "complete"]),
+      createdAt: zod.string(),
+    }),
+  ),
+  insights: zod.array(
+    zod.object({
+      id: zod.number(),
+      sourceLabel: zod.string(),
+      sourceApp: zod
+        .string()
+        .nullish()
+        .describe(
+          'Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").',
+        ),
+      pastedContent: zod.string(),
+      consentGiven: zod.boolean().optional(),
+      status: zod.enum(["pending", "analyzing", "complete", "error"]),
+      createdAt: zod.string(),
+    }),
+  ),
+  journalEntries: zod.array(
+    zod.object({
+      id: zod.number(),
+      prompt: zod.string().nullish(),
+      body: zod.string(),
+      tags: zod.array(zod.string()),
+      mood: zod
+        .number()
+        .min(1)
+        .max(exportMyDataResponseJournalEntriesItemMoodMax)
+        .nullish(),
+      linkedAuditId: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+      deletedAt: zod.coerce.date().nullish(),
+    }),
+  ),
+  postDateNotes: zod.array(
+    zod.object({
+      id: zod.number(),
+      connectionId: zod.string().uuid().nullable(),
+      dateAt: zod.coerce.date().nullish(),
+      personLabel: zod.string().nullish(),
+      platform: zod.string().nullish(),
+      summary: zod.string(),
+      whatWentWell: zod.string(),
+      whatDidnt: zod.string(),
+      followUpPlanned: zod.boolean(),
+      outcome: zod
+        .union([
+          zod.enum(["another_date", "no_more", "unsure", "ghosted"]),
+          zod.null(),
+        ])
+        .optional(),
+      linkedAuditId: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+      deletedAt: zod.coerce.date().nullish(),
+    }),
+  ),
+  datasets: zod
+    .record(zod.string(), zod.array(zod.record(zod.string(), zod.unknown())))
+    .describe(
+      "Registry-backed first-party datasets keyed by database table. Security secrets and ephemeral credentials are omitted or sanitized.",
+    ),
+});
 
 /**
  * Returns counts of the authenticated user's audits, dating profiles,
@@ -417,18 +644,20 @@ exactly what they'd lose before confirming account deletion.
  * @summary Get counts of the signed-in user's data
  */
 export const GetAccountSummaryHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetAccountSummaryResponse = zod.object({
-  "audits": zod.number(),
-  "profiles": zod.number(),
-  "messages": zod.number(),
-  "insights": zod.number(),
-  "journalEntries": zod.number(),
-  "postDateNotes": zod.number()
-})
-
+  audits: zod.number(),
+  profiles: zod.number(),
+  messages: zod.number(),
+  insights: zod.number(),
+  journalEntries: zod.number(),
+  postDateNotes: zod.number(),
+});
 
 /**
  * Returns a flat envelope of the signed-in user's content-sharing
@@ -441,14 +670,23 @@ grant and revoke timestamps for audit views.
  * @summary Get the signed-in user's consent envelope
  */
 export const GetMeConsentHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetMeConsentResponse = zod.object({
-  "aiContent": zod.boolean().describe('Whether the user has opted in to sending their own content\n(bios, messages, journal text, pastes) to the hosted LLM. False\nby default. Mirrors `AiContentConsentState.granted` but exposed\nin a flatter envelope alongside a single updated-at timestamp.\n'),
-  "aiContentUpdatedAt": zod.coerce.date().nullable().describe('Last time the user flipped the AI content consent boolean.')
-})
-
+  aiContent: zod
+    .boolean()
+    .describe(
+      "Whether the user has opted in to sending their own content\n(bios, messages, journal text, pastes) to the hosted LLM. False\nby default. Mirrors `AiContentConsentState.granted` but exposed\nin a flatter envelope alongside a single updated-at timestamp.\n",
+    ),
+  aiContentUpdatedAt: zod.coerce
+    .date()
+    .nullable()
+    .describe("Last time the user flipped the AI content consent boolean."),
+});
 
 /**
  * Persists a paste of the caller's Instagram bio plus a handful of
@@ -462,8 +700,11 @@ persisted row; this endpoint only handles capture.
  * @summary Capture a copy-paste of the user's Instagram bio and captions
  */
 export const CreateInstagramPasteHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createInstagramPasteBodyBioMax = 500;
 
@@ -471,13 +712,17 @@ export const createInstagramPasteBodyRecentCaptionsItemMax = 800;
 
 export const createInstagramPasteBodyRecentCaptionsMax = 10;
 
-
-
 export const CreateInstagramPasteBody = zod.object({
-  "bio": zod.string().min(1).max(createInstagramPasteBodyBioMax).describe('The user\'s current Instagram bio text.'),
-  "recentCaptions": zod.array(zod.string().max(createInstagramPasteBodyRecentCaptionsItemMax)).max(createInstagramPasteBodyRecentCaptionsMax).describe('Five to ten recent Instagram captions, one per array item.')
-})
-
+  bio: zod
+    .string()
+    .min(1)
+    .max(createInstagramPasteBodyBioMax)
+    .describe("The user's current Instagram bio text."),
+  recentCaptions: zod
+    .array(zod.string().max(createInstagramPasteBodyRecentCaptionsItemMax))
+    .max(createInstagramPasteBodyRecentCaptionsMax)
+    .describe("Five to ten recent Instagram captions, one per array item."),
+});
 
 /**
  * Generic capture surface for paste-based Connection Center connectors
@@ -495,8 +740,11 @@ claim token cookie so it can be merged into the account later.
  * @summary Capture a consent-first paste for a registry-backed connector
  */
 export const CreateSourcePasteHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createSourcePasteBodySourceMax = 32;
 
@@ -506,14 +754,27 @@ export const createSourcePasteBodyItemsMax = 30;
 
 export const createSourcePasteBodyNoteMax = 1000;
 
-
-
 export const CreateSourcePasteBody = zod.object({
-  "source": zod.string().min(1).max(createSourcePasteBodySourceMax).describe('The connector\'s source key. Must be one of the registry\'s\npaste-capturable sources (for example `taste-paste`,\n`lifestyle-paste`). Unknown values are rejected with a 400.\n'),
-  "items": zod.array(zod.string().min(1).max(createSourcePasteBodyItemsItemMax)).min(1).max(createSourcePasteBodyItemsMax).describe('The pasted items, one per array entry. Empty entries are dropped\nserver-side. Only the count drives scoring; the raw text is stored\nagainst the row and never sent to any prompt.\n'),
-  "note": zod.string().max(createSourcePasteBodyNoteMax).optional().describe('Optional free-text context the user adds about the source.')
-})
-
+  source: zod
+    .string()
+    .min(1)
+    .max(createSourcePasteBodySourceMax)
+    .describe(
+      "The connector's source key. Must be one of the registry's\npaste-capturable sources (for example `taste-paste`,\n`lifestyle-paste`). Unknown values are rejected with a 400.\n",
+    ),
+  items: zod
+    .array(zod.string().min(1).max(createSourcePasteBodyItemsItemMax))
+    .min(1)
+    .max(createSourcePasteBodyItemsMax)
+    .describe(
+      "The pasted items, one per array entry. Empty entries are dropped\nserver-side. Only the count drives scoring; the raw text is stored\nagainst the row and never sent to any prompt.\n",
+    ),
+  note: zod
+    .string()
+    .max(createSourcePasteBodyNoteMax)
+    .optional()
+    .describe("Optional free-text context the user adds about the source."),
+});
 
 /**
  * Records that the user recorded a short spoken intro and stores ONLY the
@@ -534,8 +795,11 @@ the account later.
  * @summary Capture derived acoustic metrics from a spoken voice intro
  */
 export const CreateVoiceIntroHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createVoiceIntroBodyDurationSecMin = 0;
 export const createVoiceIntroBodyDurationSecMax = 600;
@@ -552,16 +816,41 @@ export const createVoiceIntroBodyPaceMax = 10;
 export const createVoiceIntroBodySpeechRatioMin = 0;
 export const createVoiceIntroBodySpeechRatioMax = 1;
 
-
-
 export const CreateVoiceIntroBody = zod.object({
-  "durationSec": zod.number().min(createVoiceIntroBodyDurationSecMin).max(createVoiceIntroBodyDurationSecMax).describe('How many seconds the user spoke. Derived in the browser.'),
-  "energy": zod.number().min(createVoiceIntroBodyEnergyMin).max(createVoiceIntroBodyEnergyMax).describe('Average loudness of the speech, normalized 0-1. A derived acoustic metric only; the audio it came from is never uploaded.'),
-  "dynamics": zod.number().min(createVoiceIntroBodyDynamicsMin).max(createVoiceIntroBodyDynamicsMax).describe('How much the loudness varies over time, normalized 0-1 (expressive vs flat). Derived in the browser.'),
-  "pace": zod.number().min(createVoiceIntroBodyPaceMin).max(createVoiceIntroBodyPaceMax).describe('Speech onsets per second, a proxy for how fast and animated the delivery is. Derived in the browser.'),
-  "speechRatio": zod.number().min(createVoiceIntroBodySpeechRatioMin).max(createVoiceIntroBodySpeechRatioMax).describe('Fraction of the take that was speech rather than silence, 0-1. Derived in the browser.')
-})
-
+  durationSec: zod
+    .number()
+    .min(createVoiceIntroBodyDurationSecMin)
+    .max(createVoiceIntroBodyDurationSecMax)
+    .describe("How many seconds the user spoke. Derived in the browser."),
+  energy: zod
+    .number()
+    .min(createVoiceIntroBodyEnergyMin)
+    .max(createVoiceIntroBodyEnergyMax)
+    .describe(
+      "Average loudness of the speech, normalized 0-1. A derived acoustic metric only; the audio it came from is never uploaded.",
+    ),
+  dynamics: zod
+    .number()
+    .min(createVoiceIntroBodyDynamicsMin)
+    .max(createVoiceIntroBodyDynamicsMax)
+    .describe(
+      "How much the loudness varies over time, normalized 0-1 (expressive vs flat). Derived in the browser.",
+    ),
+  pace: zod
+    .number()
+    .min(createVoiceIntroBodyPaceMin)
+    .max(createVoiceIntroBodyPaceMax)
+    .describe(
+      "Speech onsets per second, a proxy for how fast and animated the delivery is. Derived in the browser.",
+    ),
+  speechRatio: zod
+    .number()
+    .min(createVoiceIntroBodySpeechRatioMin)
+    .max(createVoiceIntroBodySpeechRatioMax)
+    .describe(
+      "Fraction of the take that was speech rather than silence, 0-1. Derived in the browser.",
+    ),
+});
 
 /**
  * Returns the user's private receipts forwarding address, the running count
@@ -577,20 +866,47 @@ null and the count is zero.
  * @summary Read the user's real-life receipts inbox
  */
 export const GetReceiptsInboxHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetReceiptsInboxResponse = zod.object({
-  "handle": zod.string().nullable().describe('The user\'s forwarding handle, or null before activation.'),
-  "address": zod.string().nullable().describe('The full forwarding address, or null before activation.'),
-  "count": zod.number().describe('Running count of confirmations captured. Drives the receipts lane.'),
-  "recent": zod.array(zod.object({
-  "sender": zod.string().nullish().describe('The sender shown on the confirmation, if known. Never the body.'),
-  "subject": zod.string().describe('The subject line of the confirmation. Never the body.'),
-  "receivedAt": zod.coerce.date().describe('When the confirmation was received.')
-})).describe('Capped, most-recent confirmations (headers only, never bodies).')
-})
-
+  handle: zod
+    .string()
+    .nullable()
+    .describe("The user's forwarding handle, or null before activation."),
+  address: zod
+    .string()
+    .nullable()
+    .describe("The full forwarding address, or null before activation."),
+  count: zod
+    .number()
+    .describe(
+      "Running count of confirmations captured. Drives the receipts lane.",
+    ),
+  recent: zod
+    .array(
+      zod.object({
+        sender: zod
+          .string()
+          .nullish()
+          .describe(
+            "The sender shown on the confirmation, if known. Never the body.",
+          ),
+        subject: zod
+          .string()
+          .describe("The subject line of the confirmation. Never the body."),
+        receivedAt: zod.coerce
+          .date()
+          .describe("When the confirmation was received."),
+      }),
+    )
+    .describe(
+      "Capped, most-recent confirmations (headers only, never bodies).",
+    ),
+});
 
 /**
  * Manually adds one or more real-life confirmations by their headers only
@@ -605,8 +921,11 @@ the anonymous claim token cookie.
  * @summary Add receipts manually by pasting their headers
  */
 export const AddReceiptsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const addReceiptsBodyEntriesItemSubjectMax = 300;
 
@@ -614,16 +933,33 @@ export const addReceiptsBodyEntriesItemSenderMax = 200;
 
 export const addReceiptsBodyEntriesMax = 50;
 
-
-
 export const AddReceiptsBody = zod.object({
-  "entries": zod.array(zod.object({
-  "subject": zod.string().min(1).max(addReceiptsBodyEntriesItemSubjectMax).describe('The subject line of the confirmation. The body is never accepted.'),
-  "sender": zod.string().max(addReceiptsBodyEntriesItemSenderMax).optional().describe('Optional sender shown on the confirmation.'),
-  "receivedAt": zod.coerce.date().optional().describe('Optional time the confirmation was received; defaults to now.')
-})).min(1).max(addReceiptsBodyEntriesMax)
-})
-
+  entries: zod
+    .array(
+      zod.object({
+        subject: zod
+          .string()
+          .min(1)
+          .max(addReceiptsBodyEntriesItemSubjectMax)
+          .describe(
+            "The subject line of the confirmation. The body is never accepted.",
+          ),
+        sender: zod
+          .string()
+          .max(addReceiptsBodyEntriesItemSenderMax)
+          .optional()
+          .describe("Optional sender shown on the confirmation."),
+        receivedAt: zod.coerce
+          .date()
+          .optional()
+          .describe(
+            "Optional time the confirmation was received; defaults to now.",
+          ),
+      }),
+    )
+    .min(1)
+    .max(addReceiptsBodyEntriesMax),
+});
 
 /**
  * Mints a private forwarding handle for the user if they do not already
@@ -635,20 +971,47 @@ the inbox can be merged into the account on login.
  * @summary Activate the user's receipts forwarding inbox
  */
 export const ActivateReceiptsInboxHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ActivateReceiptsInboxResponse = zod.object({
-  "handle": zod.string().nullable().describe('The user\'s forwarding handle, or null before activation.'),
-  "address": zod.string().nullable().describe('The full forwarding address, or null before activation.'),
-  "count": zod.number().describe('Running count of confirmations captured. Drives the receipts lane.'),
-  "recent": zod.array(zod.object({
-  "sender": zod.string().nullish().describe('The sender shown on the confirmation, if known. Never the body.'),
-  "subject": zod.string().describe('The subject line of the confirmation. Never the body.'),
-  "receivedAt": zod.coerce.date().describe('When the confirmation was received.')
-})).describe('Capped, most-recent confirmations (headers only, never bodies).')
-})
-
+  handle: zod
+    .string()
+    .nullable()
+    .describe("The user's forwarding handle, or null before activation."),
+  address: zod
+    .string()
+    .nullable()
+    .describe("The full forwarding address, or null before activation."),
+  count: zod
+    .number()
+    .describe(
+      "Running count of confirmations captured. Drives the receipts lane.",
+    ),
+  recent: zod
+    .array(
+      zod.object({
+        sender: zod
+          .string()
+          .nullish()
+          .describe(
+            "The sender shown on the confirmation, if known. Never the body.",
+          ),
+        subject: zod
+          .string()
+          .describe("The subject line of the confirmation. Never the body."),
+        receivedAt: zod.coerce
+          .date()
+          .describe("When the confirmation was received."),
+      }),
+    )
+    .describe(
+      "Capped, most-recent confirmations (headers only, never bodies).",
+    ),
+});
 
 /**
  * Captures a completed quiz as derived signal feeding Match Readiness, the
@@ -665,8 +1028,11 @@ deterministic write; there is no AI call here.
  * @summary Record a completed quiz as a derived Mirror signal
  */
 export const CreateQuizResultHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createQuizResultBodySlugMax = 64;
 
@@ -678,15 +1044,32 @@ export const createQuizResultBodyDimensionsItemMax = 80;
 
 export const createQuizResultBodyDimensionsMax = 12;
 
-
-
 export const CreateQuizResultBody = zod.object({
-  "slug": zod.string().min(1).max(createQuizResultBodySlugMax).describe('The quiz\'s stable slug, e.g. `attachment-style`.'),
-  "archetypeKey": zod.string().min(1).max(createQuizResultBodyArchetypeKeyMax).describe('The scored archetype key for this completion.'),
-  "archetypeName": zod.string().min(1).max(createQuizResultBodyArchetypeNameMax).describe('Human-readable archetype name, stored for the user\'s own review.'),
-  "dimensions": zod.array(zod.string().min(1).max(createQuizResultBodyDimensionsItemMax)).max(createQuizResultBodyDimensionsMax).optional().describe('The wellness or matching dimensions this quiz informs, taught to the\nMirror. Derived signal only; the user\'s raw answer choices are never\nstored or sent here.\n')
-})
-
+  slug: zod
+    .string()
+    .min(1)
+    .max(createQuizResultBodySlugMax)
+    .describe("The quiz's stable slug, e.g. `attachment-style`."),
+  archetypeKey: zod
+    .string()
+    .min(1)
+    .max(createQuizResultBodyArchetypeKeyMax)
+    .describe("The scored archetype key for this completion."),
+  archetypeName: zod
+    .string()
+    .min(1)
+    .max(createQuizResultBodyArchetypeNameMax)
+    .describe(
+      "Human-readable archetype name, stored for the user's own review.",
+    ),
+  dimensions: zod
+    .array(zod.string().min(1).max(createQuizResultBodyDimensionsItemMax))
+    .max(createQuizResultBodyDimensionsMax)
+    .optional()
+    .describe(
+      "The wellness or matching dimensions this quiz informs, taught to the\nMirror. Derived signal only; the user's raw answer choices are never\nstored or sent here.\n",
+    ),
+});
 
 /**
  * Returns the user's Care Dialect profile: the give and receive dialects
@@ -699,28 +1082,103 @@ never the raw quiz answers.
  * @summary Get the signed-in user's Care Dialect profile, or a demo example
  */
 export const GetCareDialectHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
-export const GetCareDialectResponse = zod.object({
-  "hasProfile": zod.boolean().describe('True when the user has completed the quiz and tested data exists.'),
-  "isDemo": zod.boolean().describe('True when this is the signed-out demo example, not real data.'),
-  "selfGive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they primarily give.'),
-  "selfReceive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they most want to receive.'),
-  "testedGiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
-  "testedGiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored give dialect, or null when untested.'),
-  "testedReceiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
-  "testedReceiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored receive dialect, or null when untested.'),
-  "comparison": zod.object({
-  "giveMatch": zod.boolean().nullable(),
-  "receiveMatch": zod.boolean().nullable(),
-  "alignment": zod.enum(['aligned', 'partial', 'surprising', 'unknown']),
-  "insight": zod.string()
-}).describe('Deterministic self-vs-tested read. giveMatch \/ receiveMatch are null when either the self pick or the tested top for that axis is missing.'),
-  "narrative": zod.string().nullable().describe('Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.'),
-  "updatedAt": zod.coerce.date().nullable()
-}).describe('A user\'s Care Dialect profile. The give\/receive distributions and top keys are server-scored from the quiz; the self picks are what the user guessed. When no tested data exists the distributions are all-zero and the top keys are null. `isDemo` flags the anon demo example, which never reflects a real person.')
-
+export const GetCareDialectResponse = zod
+  .object({
+    hasProfile: zod
+      .boolean()
+      .describe(
+        "True when the user has completed the quiz and tested data exists.",
+      ),
+    isDemo: zod
+      .boolean()
+      .describe(
+        "True when this is the signed-out demo example, not real data.",
+      ),
+    selfGive: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The dialect the user guessed they primarily give."),
+    selfReceive: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The dialect the user guessed they most want to receive."),
+    testedGiveDistribution: zod
+      .record(zod.string(), zod.number())
+      .describe(
+        "Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.",
+      ),
+    testedGiveTop: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The top scored give dialect, or null when untested."),
+    testedReceiveDistribution: zod
+      .record(zod.string(), zod.number())
+      .describe(
+        "Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.",
+      ),
+    testedReceiveTop: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The top scored receive dialect, or null when untested."),
+    comparison: zod
+      .object({
+        giveMatch: zod.boolean().nullable(),
+        receiveMatch: zod.boolean().nullable(),
+        alignment: zod.enum(["aligned", "partial", "surprising", "unknown"]),
+        insight: zod.string(),
+      })
+      .describe(
+        "Deterministic self-vs-tested read. giveMatch \/ receiveMatch are null when either the self pick or the tested top for that axis is missing.",
+      ),
+    narrative: zod
+      .string()
+      .nullable()
+      .describe(
+        "Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.",
+      ),
+    updatedAt: zod.coerce.date().nullable(),
+  })
+  .describe(
+    "A user's Care Dialect profile. The give\/receive distributions and top keys are server-scored from the quiz; the self picks are what the user guessed. When no tested data exists the distributions are all-zero and the top keys are null. `isDemo` flags the anon demo example, which never reflects a real person.",
+  );
 
 /**
  * Accepts the user's self-identified give and receive dialects plus their
@@ -733,41 +1191,164 @@ authentication; anonymous callers get 401.
  * @summary Score and save the signed-in user's Care Dialect from quiz answers
  */
 export const SaveCareDialectHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const saveCareDialectBodyGiveAnswersMax = 30;
 
 export const saveCareDialectBodyReceiveAnswersMax = 30;
 
+export const SaveCareDialectBody = zod
+  .object({
+    selfGive: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullish(),
+    selfReceive: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullish(),
+    giveAnswers: zod
+      .array(
+        zod.enum([
+          "spokenWarmth",
+          "helpingHands",
+          "thoughtfulTokens",
+          "undividedTime",
+          "closeContact",
+          "steadyPresence",
+        ]),
+      )
+      .min(1)
+      .max(saveCareDialectBodyGiveAnswersMax)
+      .describe("Per-answer chosen dialect for the give axis."),
+    receiveAnswers: zod
+      .array(
+        zod.enum([
+          "spokenWarmth",
+          "helpingHands",
+          "thoughtfulTokens",
+          "undividedTime",
+          "closeContact",
+          "steadyPresence",
+        ]),
+      )
+      .min(1)
+      .max(saveCareDialectBodyReceiveAnswersMax)
+      .describe("Per-answer chosen dialect for the receive axis."),
+  })
+  .describe(
+    "The user's self picks plus per-answer dialect choices for each axis. Scoring is server-side; the server tallies these into distributions and stores only the derived result.",
+  );
 
-
-export const SaveCareDialectBody = zod.object({
-  "selfGive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullish(),
-  "selfReceive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullish(),
-  "giveAnswers": zod.array(zod.enum(['spokenWarmth', 'helpingHands', 'thoughtfulTokens', 'undividedTime', 'closeContact', 'steadyPresence'])).min(1).max(saveCareDialectBodyGiveAnswersMax).describe('Per-answer chosen dialect for the give axis.'),
-  "receiveAnswers": zod.array(zod.enum(['spokenWarmth', 'helpingHands', 'thoughtfulTokens', 'undividedTime', 'closeContact', 'steadyPresence'])).min(1).max(saveCareDialectBodyReceiveAnswersMax).describe('Per-answer chosen dialect for the receive axis.')
-}).describe('The user\'s self picks plus per-answer dialect choices for each axis. Scoring is server-side; the server tallies these into distributions and stores only the derived result.')
-
-export const SaveCareDialectResponse = zod.object({
-  "hasProfile": zod.boolean().describe('True when the user has completed the quiz and tested data exists.'),
-  "isDemo": zod.boolean().describe('True when this is the signed-out demo example, not real data.'),
-  "selfGive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they primarily give.'),
-  "selfReceive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they most want to receive.'),
-  "testedGiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
-  "testedGiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored give dialect, or null when untested.'),
-  "testedReceiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
-  "testedReceiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored receive dialect, or null when untested.'),
-  "comparison": zod.object({
-  "giveMatch": zod.boolean().nullable(),
-  "receiveMatch": zod.boolean().nullable(),
-  "alignment": zod.enum(['aligned', 'partial', 'surprising', 'unknown']),
-  "insight": zod.string()
-}).describe('Deterministic self-vs-tested read. giveMatch \/ receiveMatch are null when either the self pick or the tested top for that axis is missing.'),
-  "narrative": zod.string().nullable().describe('Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.'),
-  "updatedAt": zod.coerce.date().nullable()
-}).describe('A user\'s Care Dialect profile. The give\/receive distributions and top keys are server-scored from the quiz; the self picks are what the user guessed. When no tested data exists the distributions are all-zero and the top keys are null. `isDemo` flags the anon demo example, which never reflects a real person.')
-
+export const SaveCareDialectResponse = zod
+  .object({
+    hasProfile: zod
+      .boolean()
+      .describe(
+        "True when the user has completed the quiz and tested data exists.",
+      ),
+    isDemo: zod
+      .boolean()
+      .describe(
+        "True when this is the signed-out demo example, not real data.",
+      ),
+    selfGive: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The dialect the user guessed they primarily give."),
+    selfReceive: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The dialect the user guessed they most want to receive."),
+    testedGiveDistribution: zod
+      .record(zod.string(), zod.number())
+      .describe(
+        "Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.",
+      ),
+    testedGiveTop: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The top scored give dialect, or null when untested."),
+    testedReceiveDistribution: zod
+      .record(zod.string(), zod.number())
+      .describe(
+        "Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.",
+      ),
+    testedReceiveTop: zod
+      .union([
+        zod.literal("spokenWarmth"),
+        zod.literal("helpingHands"),
+        zod.literal("thoughtfulTokens"),
+        zod.literal("undividedTime"),
+        zod.literal("closeContact"),
+        zod.literal("steadyPresence"),
+        zod.literal(null),
+      ])
+      .nullable()
+      .describe("The top scored receive dialect, or null when untested."),
+    comparison: zod
+      .object({
+        giveMatch: zod.boolean().nullable(),
+        receiveMatch: zod.boolean().nullable(),
+        alignment: zod.enum(["aligned", "partial", "surprising", "unknown"]),
+        insight: zod.string(),
+      })
+      .describe(
+        "Deterministic self-vs-tested read. giveMatch \/ receiveMatch are null when either the self pick or the tested top for that axis is missing.",
+      ),
+    narrative: zod
+      .string()
+      .nullable()
+      .describe(
+        "Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.",
+      ),
+    updatedAt: zod.coerce.date().nullable(),
+  })
+  .describe(
+    "A user's Care Dialect profile. The give\/receive distributions and top keys are server-scored from the quiz; the self picks are what the user guessed. When no tested data exists the distributions are all-zero and the top keys are null. `isDemo` flags the anon demo example, which never reflects a real person.",
+  );
 
 /**
  * Returns one entry per data connector the product can hold (currently the
@@ -782,28 +1363,94 @@ separate founder endpoints; this endpoint is read-only status.
  * @summary List the data connectors and their live status for the signed-in user
  */
 export const GetConnectorsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
-export const GetConnectorsResponse = zod.object({
-  "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
-  "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
-  "connectors": zod.array(zod.object({
-  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist', 'oura', 'trakt', 'github', 'reddit', 'discord']).describe('Stable provider key.'),
-  "laneId": zod.string().describe('The readiness lane this connector feeds.'),
-  "label": zod.string().describe('Human label for the connector.'),
-  "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
-  "live": zod.boolean().describe('True when a live connection currently holds derived signal.'),
-  "founderOnly": zod.boolean().describe('True when the live connect\/sync\/disconnect controls are founder-gated.'),
-  "configured": zod.boolean().describe('True when the connector\'s credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.'),
-  "derivedCount": zod.number().nullable().describe('Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.'),
-  "lastSyncAt": zod.coerce.date().nullable().describe('ISO timestamp of the last sync attempt.'),
-  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO timestamp of the last successful sync.'),
-  "lastErrorCode": zod.string().nullable().describe('Machine-readable code for the last error, null when healthy.'),
-  "description": zod.string().describe('One-line summary of what this connector returns.')
-}).describe('One data connector\'s product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.'))
-}).describe('The signed-in user\'s data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.')
-
+export const GetConnectorsResponse = zod
+  .object({
+    generatedAt: zod.coerce
+      .date()
+      .describe("ISO timestamp the status was generated."),
+    isDemo: zod
+      .boolean()
+      .describe(
+        "True when this is the anon demo, not a real account's connectors.",
+      ),
+    connectors: zod.array(
+      zod
+        .object({
+          provider: zod
+            .enum([
+              "google-calendar",
+              "spotify",
+              "instagram-oauth",
+              "strava",
+              "fitbit",
+              "exist",
+              "oura",
+              "trakt",
+              "github",
+              "reddit",
+              "discord",
+            ])
+            .describe("Stable provider key."),
+          laneId: zod
+            .string()
+            .describe("The readiness lane this connector feeds."),
+          label: zod.string().describe("Human label for the connector."),
+          status: zod
+            .enum(["available", "connected", "error", "disconnected"])
+            .describe("Lifecycle of the live connection."),
+          live: zod
+            .boolean()
+            .describe(
+              "True when a live connection currently holds derived signal.",
+            ),
+          founderOnly: zod
+            .boolean()
+            .describe(
+              "True when the live connect\/sync\/disconnect controls are founder-gated.",
+            ),
+          configured: zod
+            .boolean()
+            .describe(
+              "True when the connector's credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.",
+            ),
+          derivedCount: zod
+            .number()
+            .nullable()
+            .describe(
+              "Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.",
+            ),
+          lastSyncAt: zod.coerce
+            .date()
+            .nullable()
+            .describe("ISO timestamp of the last sync attempt."),
+          lastSuccessAt: zod.coerce
+            .date()
+            .nullable()
+            .describe("ISO timestamp of the last successful sync."),
+          lastErrorCode: zod
+            .string()
+            .nullable()
+            .describe(
+              "Machine-readable code for the last error, null when healthy.",
+            ),
+          description: zod
+            .string()
+            .describe("One-line summary of what this connector returns."),
+        })
+        .describe(
+          "One data connector's product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.",
+        ),
+    ),
+  })
+  .describe(
+    "The signed-in user's data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.",
+  );
 
 /**
  * Refreshes the access token if needed, reads the provider API read-only,
@@ -815,32 +1462,102 @@ stored, never raw third-party content.
  * @summary Sync a per-user OAuth connector for the signed-in user
  */
 export const SyncConnectorParams = zod.object({
-  "provider": zod.coerce.string().describe('The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).')
-})
+  provider: zod.coerce
+    .string()
+    .describe(
+      "The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).",
+    ),
+});
 
 export const SyncConnectorHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
-export const SyncConnectorResponse = zod.object({
-  "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
-  "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
-  "connectors": zod.array(zod.object({
-  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist', 'oura', 'trakt', 'github', 'reddit', 'discord']).describe('Stable provider key.'),
-  "laneId": zod.string().describe('The readiness lane this connector feeds.'),
-  "label": zod.string().describe('Human label for the connector.'),
-  "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
-  "live": zod.boolean().describe('True when a live connection currently holds derived signal.'),
-  "founderOnly": zod.boolean().describe('True when the live connect\/sync\/disconnect controls are founder-gated.'),
-  "configured": zod.boolean().describe('True when the connector\'s credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.'),
-  "derivedCount": zod.number().nullable().describe('Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.'),
-  "lastSyncAt": zod.coerce.date().nullable().describe('ISO timestamp of the last sync attempt.'),
-  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO timestamp of the last successful sync.'),
-  "lastErrorCode": zod.string().nullable().describe('Machine-readable code for the last error, null when healthy.'),
-  "description": zod.string().describe('One-line summary of what this connector returns.')
-}).describe('One data connector\'s product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.'))
-}).describe('The signed-in user\'s data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.')
-
+export const SyncConnectorResponse = zod
+  .object({
+    generatedAt: zod.coerce
+      .date()
+      .describe("ISO timestamp the status was generated."),
+    isDemo: zod
+      .boolean()
+      .describe(
+        "True when this is the anon demo, not a real account's connectors.",
+      ),
+    connectors: zod.array(
+      zod
+        .object({
+          provider: zod
+            .enum([
+              "google-calendar",
+              "spotify",
+              "instagram-oauth",
+              "strava",
+              "fitbit",
+              "exist",
+              "oura",
+              "trakt",
+              "github",
+              "reddit",
+              "discord",
+            ])
+            .describe("Stable provider key."),
+          laneId: zod
+            .string()
+            .describe("The readiness lane this connector feeds."),
+          label: zod.string().describe("Human label for the connector."),
+          status: zod
+            .enum(["available", "connected", "error", "disconnected"])
+            .describe("Lifecycle of the live connection."),
+          live: zod
+            .boolean()
+            .describe(
+              "True when a live connection currently holds derived signal.",
+            ),
+          founderOnly: zod
+            .boolean()
+            .describe(
+              "True when the live connect\/sync\/disconnect controls are founder-gated.",
+            ),
+          configured: zod
+            .boolean()
+            .describe(
+              "True when the connector's credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.",
+            ),
+          derivedCount: zod
+            .number()
+            .nullable()
+            .describe(
+              "Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.",
+            ),
+          lastSyncAt: zod.coerce
+            .date()
+            .nullable()
+            .describe("ISO timestamp of the last sync attempt."),
+          lastSuccessAt: zod.coerce
+            .date()
+            .nullable()
+            .describe("ISO timestamp of the last successful sync."),
+          lastErrorCode: zod
+            .string()
+            .nullable()
+            .describe(
+              "Machine-readable code for the last error, null when healthy.",
+            ),
+          description: zod
+            .string()
+            .describe("One-line summary of what this connector returns."),
+        })
+        .describe(
+          "One data connector's product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.",
+        ),
+    ),
+  })
+  .describe(
+    "The signed-in user's data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.",
+  );
 
 /**
  * Purges the user's derived import rows for this provider, deletes the
@@ -851,32 +1568,102 @@ source and its data.
  * @summary Disconnect a per-user OAuth connector for the signed-in user
  */
 export const DisconnectConnectorParams = zod.object({
-  "provider": zod.coerce.string().describe('The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).')
-})
+  provider: zod.coerce
+    .string()
+    .describe(
+      "The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).",
+    ),
+});
 
 export const DisconnectConnectorHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
-export const DisconnectConnectorResponse = zod.object({
-  "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
-  "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
-  "connectors": zod.array(zod.object({
-  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist', 'oura', 'trakt', 'github', 'reddit', 'discord']).describe('Stable provider key.'),
-  "laneId": zod.string().describe('The readiness lane this connector feeds.'),
-  "label": zod.string().describe('Human label for the connector.'),
-  "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
-  "live": zod.boolean().describe('True when a live connection currently holds derived signal.'),
-  "founderOnly": zod.boolean().describe('True when the live connect\/sync\/disconnect controls are founder-gated.'),
-  "configured": zod.boolean().describe('True when the connector\'s credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.'),
-  "derivedCount": zod.number().nullable().describe('Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.'),
-  "lastSyncAt": zod.coerce.date().nullable().describe('ISO timestamp of the last sync attempt.'),
-  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO timestamp of the last successful sync.'),
-  "lastErrorCode": zod.string().nullable().describe('Machine-readable code for the last error, null when healthy.'),
-  "description": zod.string().describe('One-line summary of what this connector returns.')
-}).describe('One data connector\'s product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.'))
-}).describe('The signed-in user\'s data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.')
-
+export const DisconnectConnectorResponse = zod
+  .object({
+    generatedAt: zod.coerce
+      .date()
+      .describe("ISO timestamp the status was generated."),
+    isDemo: zod
+      .boolean()
+      .describe(
+        "True when this is the anon demo, not a real account's connectors.",
+      ),
+    connectors: zod.array(
+      zod
+        .object({
+          provider: zod
+            .enum([
+              "google-calendar",
+              "spotify",
+              "instagram-oauth",
+              "strava",
+              "fitbit",
+              "exist",
+              "oura",
+              "trakt",
+              "github",
+              "reddit",
+              "discord",
+            ])
+            .describe("Stable provider key."),
+          laneId: zod
+            .string()
+            .describe("The readiness lane this connector feeds."),
+          label: zod.string().describe("Human label for the connector."),
+          status: zod
+            .enum(["available", "connected", "error", "disconnected"])
+            .describe("Lifecycle of the live connection."),
+          live: zod
+            .boolean()
+            .describe(
+              "True when a live connection currently holds derived signal.",
+            ),
+          founderOnly: zod
+            .boolean()
+            .describe(
+              "True when the live connect\/sync\/disconnect controls are founder-gated.",
+            ),
+          configured: zod
+            .boolean()
+            .describe(
+              "True when the connector's credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.",
+            ),
+          derivedCount: zod
+            .number()
+            .nullable()
+            .describe(
+              "Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.",
+            ),
+          lastSyncAt: zod.coerce
+            .date()
+            .nullable()
+            .describe("ISO timestamp of the last sync attempt."),
+          lastSuccessAt: zod.coerce
+            .date()
+            .nullable()
+            .describe("ISO timestamp of the last successful sync."),
+          lastErrorCode: zod
+            .string()
+            .nullable()
+            .describe(
+              "Machine-readable code for the last error, null when healthy.",
+            ),
+          description: zod
+            .string()
+            .describe("One-line summary of what this connector returns."),
+        })
+        .describe(
+          "One data connector's product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.",
+        ),
+    ),
+  })
+  .describe(
+    "The signed-in user's data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.",
+  );
 
 /**
  * Returns the authenticated user's personal invite code plus a
@@ -892,24 +1679,66 @@ near you raises everyone's match odds.
  * @summary Get the signed-in user's invite link and an honest reflection of who joined
  */
 export const GetMyReferralsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetMyReferralsResponse = zod.object({
-  "refCode": zod.string().describe('The user\'s personal invite code (shape \"user-<id>\") to append as the ?ref param on a shared link.'),
-  "sharePath": zod.string().describe('The suggested in-app destination to invite people to (for example \"\/quizzes\").'),
-  "summary": zod.object({
-  "joined": zod.number().describe('Total people who joined from this user\'s invites.'),
-  "inPool": zod.number().describe('How many of those invitees are active in the matching pool (building, ready, or concierge).'),
-  "ready": zod.number().describe('How many invitees are fully ready to match.')
-}),
-  "invitees": zod.array(zod.object({
-  "displayName": zod.string().describe('The invitee\'s first name, or \"A new member\" when no name is on file. Never an email or any other private field.'),
-  "joinedAt": zod.coerce.date().nullable().describe('When the invitee was attributed to this inviter, or null if unknown.'),
-  "status": zod.enum(['joined', 'building', 'ready', 'paused', 'concierge_only', 'off']).describe('Where the invitee sits in the matching pool. \"joined\" means signed up but no pool membership row yet.')
-})).describe('Privacy-safe list of people who joined from this user\'s invites, newest first.')
-})
-
+  refCode: zod
+    .string()
+    .describe(
+      'The user\'s personal invite code (shape \"user-<id>\") to append as the ?ref param on a shared link.',
+    ),
+  sharePath: zod
+    .string()
+    .describe(
+      'The suggested in-app destination to invite people to (for example \"\/quizzes\").',
+    ),
+  summary: zod.object({
+    joined: zod
+      .number()
+      .describe("Total people who joined from this user's invites."),
+    inPool: zod
+      .number()
+      .describe(
+        "How many of those invitees are active in the matching pool (building, ready, or concierge).",
+      ),
+    ready: zod.number().describe("How many invitees are fully ready to match."),
+  }),
+  invitees: zod
+    .array(
+      zod.object({
+        displayName: zod
+          .string()
+          .describe(
+            'The invitee\'s first name, or \"A new member\" when no name is on file. Never an email or any other private field.',
+          ),
+        joinedAt: zod.coerce
+          .date()
+          .nullable()
+          .describe(
+            "When the invitee was attributed to this inviter, or null if unknown.",
+          ),
+        status: zod
+          .enum([
+            "joined",
+            "building",
+            "ready",
+            "paused",
+            "concierge_only",
+            "off",
+          ])
+          .describe(
+            'Where the invitee sits in the matching pool. \"joined\" means signed up but no pool membership row yet.',
+          ),
+      }),
+    )
+    .describe(
+      "Privacy-safe list of people who joined from this user's invites, newest first.",
+    ),
+});
 
 /**
  * Returns whether the authenticated user has granted consent to send
@@ -922,15 +1751,17 @@ output and never transmit user content to the model.
  * @summary Get the signed-in user's AI content consent state
  */
 export const GetAiContentConsentHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetAiContentConsentResponse = zod.object({
-  "granted": zod.boolean(),
-  "grantedAt": zod.coerce.date().nullable(),
-  "revokedAt": zod.coerce.date().nullable()
-})
-
+  granted: zod.boolean(),
+  grantedAt: zod.coerce.date().nullable(),
+  revokedAt: zod.coerce.date().nullable(),
+});
 
 /**
  * Sets the authenticated user's account-level AI content consent.
@@ -942,19 +1773,21 @@ next request.
  * @summary Grant or revoke the signed-in user's AI content consent
  */
 export const SetAiContentConsentHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const SetAiContentConsentBody = zod.object({
-  "granted": zod.boolean()
-})
+  granted: zod.boolean(),
+});
 
 export const SetAiContentConsentResponse = zod.object({
-  "granted": zod.boolean(),
-  "grantedAt": zod.coerce.date().nullable(),
-  "revokedAt": zod.coerce.date().nullable()
-})
-
+  granted: zod.boolean(),
+  grantedAt: zod.coerce.date().nullable(),
+  revokedAt: zod.coerce.date().nullable(),
+});
 
 /**
  * Returns the cadence the user has chosen for the proactive Mirror digest
@@ -964,14 +1797,21 @@ digest send. New users default to "weekly" until they change it.
  * @summary Get the signed-in user's Mirror digest preferences
  */
 export const GetDigestPreferencesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetDigestPreferencesResponse = zod.object({
-  "frequency": zod.enum(['weekly', 'biweekly', 'off']).describe('How often the proactive Mirror digest is sent.'),
-  "lastSentAt": zod.coerce.date().nullable().describe('When the most recent digest was sent, or null if never.')
-})
-
+  frequency: zod
+    .enum(["weekly", "biweekly", "off"])
+    .describe("How often the proactive Mirror digest is sent."),
+  lastSentAt: zod.coerce
+    .date()
+    .nullable()
+    .describe("When the most recent digest was sent, or null if never."),
+});
 
 /**
  * Sets how often the user receives the proactive Mirror digest. Choosing
@@ -981,18 +1821,27 @@ takes effect on the next scheduled run.
  * @summary Set the signed-in user's Mirror digest cadence
  */
 export const SetDigestPreferencesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const SetDigestPreferencesBody = zod.object({
-  "frequency": zod.enum(['weekly', 'biweekly', 'off']).describe('The cadence to set for the Mirror digest.')
-})
+  frequency: zod
+    .enum(["weekly", "biweekly", "off"])
+    .describe("The cadence to set for the Mirror digest."),
+});
 
 export const SetDigestPreferencesResponse = zod.object({
-  "frequency": zod.enum(['weekly', 'biweekly', 'off']).describe('How often the proactive Mirror digest is sent.'),
-  "lastSentAt": zod.coerce.date().nullable().describe('When the most recent digest was sent, or null if never.')
-})
-
+  frequency: zod
+    .enum(["weekly", "biweekly", "off"])
+    .describe("How often the proactive Mirror digest is sent."),
+  lastSentAt: zod.coerce
+    .date()
+    .nullable()
+    .describe("When the most recent digest was sent, or null if never."),
+});
 
 /**
  * Creates a short-lived, single-use token that the user can use to
@@ -1003,15 +1852,22 @@ link expires after a short window and can only be used once.
  * @summary Email the signed-in user a single-use link to download their data
  */
 export const EmailMyDataExportHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const EmailMyDataExportResponse = zod.object({
-  "success": zod.boolean(),
-  "expiresAt": zod.string().describe('ISO timestamp after which the emailed link is no longer valid.'),
-  "sentTo": zod.string().email().describe('Email address the export link was sent to.')
-})
-
+  success: zod.boolean(),
+  expiresAt: zod
+    .string()
+    .describe("ISO timestamp after which the emailed link is no longer valid."),
+  sentTo: zod
+    .string()
+    .email()
+    .describe("Email address the export link was sent to."),
+});
 
 /**
  * Validates the token created by `/account/export/email`, marks it as
@@ -1022,199 +1878,405 @@ after being created.
  * @summary Download an emailed data export using a single-use token
  */
 export const DownloadEmailedExportParams = zod.object({
-  "token": zod.coerce.string()
-})
+  token: zod.coerce.string(),
+});
 
 export const downloadEmailedExportResponseJournalEntriesItemMoodMax = 5;
 
-
-
 export const DownloadEmailedExportResponse = zod.object({
-  "exportedAt": zod.string().describe('ISO timestamp of when the export was generated.'),
-  "user": zod.object({
-  "id": zod.string(),
-  "email": zod.string().email().nullable(),
-  "firstName": zod.string().nullable(),
-  "lastName": zod.string().nullable(),
-  "profileImageUrl": zod.string().nullable(),
-  "createdAt": zod.string()
-}),
-  "audits": zod.array(zod.object({
-  "id": zod.number(),
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string().optional(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
-  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
-  "source": zod.enum(['manual', 'screenshot']),
-  "readinessScore": zod.number().nullish(),
-  "report": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
-  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "previousReport": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
-  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
-  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
-  "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
-  "matchContext": zod.union([zod.object({
-  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
-  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
-}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
-})),
-  "profiles": zod.array(zod.object({
-  "id": zod.number(),
-  "platform": zod.string(),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})),
-  "messages": zod.array(zod.object({
-  "id": zod.number(),
-  "matchName": zod.string(),
-  "conversationContext": zod.string(),
-  "yourLastMessage": zod.string(),
-  "goal": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").'),
-  "status": zod.enum(['pending', 'complete']),
-  "createdAt": zod.string()
-})),
-  "insights": zod.array(zod.object({
-  "id": zod.number(),
-  "sourceLabel": zod.string(),
-  "sourceApp": zod.string().nullish().describe('Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").'),
-  "pastedContent": zod.string(),
-  "consentGiven": zod.boolean().optional(),
-  "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
-  "createdAt": zod.string()
-})),
-  "journalEntries": zod.array(zod.object({
-  "id": zod.number(),
-  "prompt": zod.string().nullish(),
-  "body": zod.string(),
-  "tags": zod.array(zod.string()),
-  "mood": zod.number().min(1).max(downloadEmailedExportResponseJournalEntriesItemMoodMax).nullish(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})),
-  "postDateNotes": zod.array(zod.object({
-  "id": zod.number(),
-  "dateAt": zod.coerce.date().nullish(),
-  "personLabel": zod.string().nullish(),
-  "platform": zod.string().nullish(),
-  "summary": zod.string(),
-  "whatWentWell": zod.string(),
-  "whatDidnt": zod.string(),
-  "followUpPlanned": zod.boolean(),
-  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-}))
-})
-
+  exportedAt: zod
+    .string()
+    .describe("ISO timestamp of when the export was generated."),
+  user: zod.object({
+    id: zod.string(),
+    email: zod.string().email().nullable(),
+    firstName: zod.string().nullable(),
+    lastName: zod.string().nullable(),
+    profileImageUrl: zod.string().nullable(),
+    createdAt: zod.string(),
+  }),
+  audits: zod.array(
+    zod.object({
+      id: zod.number(),
+      firstName: zod.string(),
+      age: zod.number(),
+      gender: zod.string(),
+      orientation: zod.string().optional(),
+      datingGoal: zod.string(),
+      currentApps: zod.array(zod.string()),
+      bio: zod.string(),
+      prompts: zod.string().nullish(),
+      recentMessageSample: zod.string().nullish(),
+      photoCount: zod.number().nullish(),
+      relationshipHistory: zod.string().nullish(),
+      biggestChallenge: zod.string().nullish(),
+      sourceApp: zod
+        .string()
+        .nullish()
+        .describe(
+          'Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.',
+        ),
+      status: zod.enum(["pending", "generating", "complete", "error"]),
+      source: zod.enum(["manual", "screenshot"]),
+      readinessScore: zod.number().nullish(),
+      report: zod
+        .union([
+          zod.object({
+            auditId: zod.number(),
+            readinessScore: zod.number(),
+            overallGrade: zod.string(),
+            strengths: zod.array(zod.string()),
+            risks: zod.array(zod.string()),
+            bioAudit: zod.string(),
+            rewrittenBio: zod.string(),
+            rewrittenPrompts: zod.array(
+              zod.object({
+                original: zod.string(),
+                rewritten: zod.string(),
+                tip: zod.string(),
+              }),
+            ),
+            photoGuidance: zod.array(
+              zod.object({
+                category: zod.string(),
+                status: zod.enum(["good", "needs_work", "missing"]),
+                advice: zod.string(),
+              }),
+            ),
+            actionPlan: zod.array(
+              zod.object({
+                priority: zod.number(),
+                title: zod.string(),
+                description: zod.string(),
+                timeframe: zod.string(),
+              }),
+            ),
+            messagingStyle: zod.string(),
+            coachingCta: zod.string(),
+            engineVersion: zod
+              .string()
+              .nullish()
+              .describe(
+                "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+              ),
+            changeSummary: zod
+              .union([
+                zod.object({
+                  scoreDelta: zod
+                    .number()
+                    .describe(
+                      "newScore minus previousScore (negative when the score dropped).",
+                    ),
+                  previousScore: zod.number(),
+                  newScore: zod.number(),
+                  addedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths present in the new report but not in the prior one.",
+                    ),
+                  removedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths from the prior report that no longer appear.",
+                    ),
+                  addedRisks: zod.array(zod.string()),
+                  removedRisks: zod.array(zod.string()),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+              ),
+            photoAnalysis: zod
+              .union([
+                zod.object({
+                  summary: zod
+                    .string()
+                    .describe(
+                      "One or two sentence overall read of the photos actually seen.",
+                    ),
+                  observations: zod.array(
+                    zod.object({
+                      aspect: zod
+                        .string()
+                        .describe(
+                          "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                        ),
+                      assessment: zod.enum(["strong", "okay", "needs_work"]),
+                      detail: zod
+                        .string()
+                        .describe(
+                          "Specific, grounded note referencing what is visible in the photo.",
+                        ),
+                    }),
+                  ),
+                  topFix: zod
+                    .string()
+                    .describe(
+                      "The single highest-impact change to make to the photos.",
+                    ),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+              ),
+          }),
+          zod.null(),
+        ])
+        .optional()
+        .describe(
+          "The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n",
+        ),
+      reportGeneratedAt: zod
+        .string()
+        .nullish()
+        .describe(
+          "ISO timestamp the stored report was generated. Null if no report has been generated yet.",
+        ),
+      previousReport: zod
+        .union([
+          zod.object({
+            auditId: zod.number(),
+            readinessScore: zod.number(),
+            overallGrade: zod.string(),
+            strengths: zod.array(zod.string()),
+            risks: zod.array(zod.string()),
+            bioAudit: zod.string(),
+            rewrittenBio: zod.string(),
+            rewrittenPrompts: zod.array(
+              zod.object({
+                original: zod.string(),
+                rewritten: zod.string(),
+                tip: zod.string(),
+              }),
+            ),
+            photoGuidance: zod.array(
+              zod.object({
+                category: zod.string(),
+                status: zod.enum(["good", "needs_work", "missing"]),
+                advice: zod.string(),
+              }),
+            ),
+            actionPlan: zod.array(
+              zod.object({
+                priority: zod.number(),
+                title: zod.string(),
+                description: zod.string(),
+                timeframe: zod.string(),
+              }),
+            ),
+            messagingStyle: zod.string(),
+            coachingCta: zod.string(),
+            engineVersion: zod
+              .string()
+              .nullish()
+              .describe(
+                "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+              ),
+            changeSummary: zod
+              .union([
+                zod.object({
+                  scoreDelta: zod
+                    .number()
+                    .describe(
+                      "newScore minus previousScore (negative when the score dropped).",
+                    ),
+                  previousScore: zod.number(),
+                  newScore: zod.number(),
+                  addedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths present in the new report but not in the prior one.",
+                    ),
+                  removedStrengths: zod
+                    .array(zod.string())
+                    .describe(
+                      "Strengths from the prior report that no longer appear.",
+                    ),
+                  addedRisks: zod.array(zod.string()),
+                  removedRisks: zod.array(zod.string()),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+              ),
+            photoAnalysis: zod
+              .union([
+                zod.object({
+                  summary: zod
+                    .string()
+                    .describe(
+                      "One or two sentence overall read of the photos actually seen.",
+                    ),
+                  observations: zod.array(
+                    zod.object({
+                      aspect: zod
+                        .string()
+                        .describe(
+                          "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                        ),
+                      assessment: zod.enum(["strong", "okay", "needs_work"]),
+                      detail: zod
+                        .string()
+                        .describe(
+                          "Specific, grounded note referencing what is visible in the photo.",
+                        ),
+                    }),
+                  ),
+                  topFix: zod
+                    .string()
+                    .describe(
+                      "The single highest-impact change to make to the photos.",
+                    ),
+                }),
+                zod.null(),
+              ])
+              .optional()
+              .describe(
+                "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+              ),
+          }),
+          zod.null(),
+        ])
+        .optional()
+        .describe(
+          "The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n",
+        ),
+      previousReadinessScore: zod
+        .number()
+        .nullish()
+        .describe(
+          "Readiness score from the prior regeneration (null if never regenerated).",
+        ),
+      previousReportGeneratedAt: zod
+        .string()
+        .nullish()
+        .describe(
+          "ISO timestamp of the prior regeneration's report (null if never regenerated).",
+        ),
+      createdAt: zod.string(),
+      deletedAt: zod
+        .string()
+        .nullish()
+        .describe(
+          "ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n",
+        ),
+      matchContext: zod
+        .union([
+          zod.object({
+            matchedField: zod
+              .enum(["name", "bio"])
+              .describe("The field that best matched the search query."),
+            snippet: zod
+              .string()
+              .nullish()
+              .describe(
+                "A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n",
+              ),
+          }),
+          zod.null(),
+        ])
+        .optional()
+        .describe(
+          "Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n",
+        ),
+    }),
+  ),
+  profiles: zod.array(
+    zod.object({
+      id: zod.number(),
+      platform: zod.string(),
+      bio: zod.string(),
+      prompts: zod.string().nullish(),
+      photoCount: zod.number().nullish(),
+      notes: zod.string().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+  messages: zod.array(
+    zod.object({
+      id: zod.number(),
+      matchName: zod.string(),
+      conversationContext: zod.string(),
+      yourLastMessage: zod.string(),
+      goal: zod.string().nullish(),
+      sourceApp: zod
+        .string()
+        .nullish()
+        .describe(
+          'Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").',
+        ),
+      status: zod.enum(["pending", "complete"]),
+      createdAt: zod.string(),
+    }),
+  ),
+  insights: zod.array(
+    zod.object({
+      id: zod.number(),
+      sourceLabel: zod.string(),
+      sourceApp: zod
+        .string()
+        .nullish()
+        .describe(
+          'Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").',
+        ),
+      pastedContent: zod.string(),
+      consentGiven: zod.boolean().optional(),
+      status: zod.enum(["pending", "analyzing", "complete", "error"]),
+      createdAt: zod.string(),
+    }),
+  ),
+  journalEntries: zod.array(
+    zod.object({
+      id: zod.number(),
+      prompt: zod.string().nullish(),
+      body: zod.string(),
+      tags: zod.array(zod.string()),
+      mood: zod
+        .number()
+        .min(1)
+        .max(downloadEmailedExportResponseJournalEntriesItemMoodMax)
+        .nullish(),
+      linkedAuditId: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+      deletedAt: zod.coerce.date().nullish(),
+    }),
+  ),
+  postDateNotes: zod.array(
+    zod.object({
+      id: zod.number(),
+      connectionId: zod.string().uuid().nullable(),
+      dateAt: zod.coerce.date().nullish(),
+      personLabel: zod.string().nullish(),
+      platform: zod.string().nullish(),
+      summary: zod.string(),
+      whatWentWell: zod.string(),
+      whatDidnt: zod.string(),
+      followUpPlanned: zod.boolean(),
+      outcome: zod
+        .union([
+          zod.enum(["another_date", "no_more", "unsure", "ghosted"]),
+          zod.null(),
+        ])
+        .optional(),
+      linkedAuditId: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+      deletedAt: zod.coerce.date().nullish(),
+    }),
+  ),
+  datasets: zod
+    .record(zod.string(), zod.array(zod.record(zod.string(), zod.unknown())))
+    .describe(
+      "Registry-backed first-party datasets keyed by database table. Security secrets and ephemeral credentials are omitted or sanitized.",
+    ),
+});
 
 /**
  * Returns every non-expired session belonging to the authenticated user,
@@ -1225,24 +2287,68 @@ can recognize each one. The caller's current session is flagged with
  * @summary List all active sign-ins for the current user
  */
 export const ListMySessionsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListMySessionsResponse = zod.object({
-  "sessions": zod.array(zod.object({
-  "sid": zod.string().describe('Opaque session id. Use it as the path parameter to revoke this session.'),
-  "createdAt": zod.string().describe('ISO timestamp of when the session was created.'),
-  "lastSeenAt": zod.string().describe('ISO timestamp of the most recent request seen on this session.'),
-  "expiresAt": zod.string().optional().describe('ISO timestamp after which this session is automatically invalid.'),
-  "userAgent": zod.string().nullish().describe('Raw user-agent string captured at sign-in. May be null for older sessions.'),
-  "deviceLabel": zod.string().nullish().describe('A friendly summary of the browser and OS, e.g. \"Chrome on macOS\".'),
-  "ip": zod.string().nullish().describe('IP address captured at sign-in. May be null for older sessions.'),
-  "ipLocation": zod.string().nullish().describe('Coarse geolocation derived from the sign-in IP, e.g. \"Berlin, DE\" or \"Brooklyn, NY, US\". Null when the IP is private, missing, or cannot be resolved. Computed at query time — no third-party calls are made.\n'),
-  "channel": zod.union([zod.literal('web'),zod.literal('mobile'),zod.literal(null)]).nullish().describe('Which app the user signed in from.'),
-  "current": zod.boolean().describe('True if this is the session making the request.')
-}))
-})
-
+  sessions: zod.array(
+    zod.object({
+      sid: zod
+        .string()
+        .describe(
+          "Opaque session id. Use it as the path parameter to revoke this session.",
+        ),
+      createdAt: zod
+        .string()
+        .describe("ISO timestamp of when the session was created."),
+      lastSeenAt: zod
+        .string()
+        .describe(
+          "ISO timestamp of the most recent request seen on this session.",
+        ),
+      expiresAt: zod
+        .string()
+        .optional()
+        .describe(
+          "ISO timestamp after which this session is automatically invalid.",
+        ),
+      userAgent: zod
+        .string()
+        .nullish()
+        .describe(
+          "Raw user-agent string captured at sign-in. May be null for older sessions.",
+        ),
+      deviceLabel: zod
+        .string()
+        .nullish()
+        .describe(
+          'A friendly summary of the browser and OS, e.g. \"Chrome on macOS\".',
+        ),
+      ip: zod
+        .string()
+        .nullish()
+        .describe(
+          "IP address captured at sign-in. May be null for older sessions.",
+        ),
+      ipLocation: zod
+        .string()
+        .nullish()
+        .describe(
+          'Coarse geolocation derived from the sign-in IP, e.g. \"Berlin, DE\" or \"Brooklyn, NY, US\". Null when the IP is private, missing, or cannot be resolved. Computed at query time — no third-party calls are made.\n',
+        ),
+      channel: zod
+        .union([zod.literal("web"), zod.literal("mobile"), zod.literal(null)])
+        .nullish()
+        .describe("Which app the user signed in from."),
+      current: zod
+        .boolean()
+        .describe("True if this is the session making the request."),
+    }),
+  ),
+});
 
 /**
  * Deletes every active session for the authenticated user other than
@@ -1252,14 +2358,16 @@ to sign out every other device after a suspicious sign-in.
  * @summary Revoke every session for the current user EXCEPT the caller's own
  */
 export const RevokeOtherSessionsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const RevokeOtherSessionsResponse = zod.object({
-  "success": zod.boolean(),
-  "revoked": zod.number().describe('Number of sessions actually deleted.')
-})
-
+  success: zod.boolean(),
+  revoked: zod.number().describe("Number of sessions actually deleted."),
+});
 
 /**
  * Deletes one specific session, identified by its session id, as long
@@ -1270,18 +2378,20 @@ allowed and effectively signs them out.
  * @summary Revoke a single session owned by the current user
  */
 export const RevokeOneSessionParams = zod.object({
-  "sid": zod.coerce.string()
-})
+  sid: zod.coerce.string(),
+});
 
 export const RevokeOneSessionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const RevokeOneSessionResponse = zod.object({
-  "success": zod.boolean(),
-  "revoked": zod.number().describe('Number of sessions actually deleted.')
-})
-
+  success: zod.boolean(),
+  revoked: zod.number().describe("Number of sessions actually deleted."),
+});
 
 /**
  * Permanently removes the authenticated user along with every audit,
@@ -1292,19 +2402,21 @@ browser session cookie, effectively signing them out.
  * @summary Permanently delete the signed-in user's account and all data
  */
 export const DeleteMyAccountHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DeleteMyAccountResponse = zod.object({
-  "success": zod.boolean(),
-  "deleted": zod.object({
-  "audits": zod.number(),
-  "profiles": zod.number(),
-  "messages": zod.number(),
-  "insights": zod.number()
-})
-})
-
+  success: zod.boolean(),
+  deleted: zod.object({
+    audits: zod.number(),
+    profiles: zod.number(),
+    messages: zod.number(),
+    insights: zod.number(),
+  }),
+});
 
 /**
  * Permanently removes the authenticated user and cascades the delete
@@ -1319,22 +2431,32 @@ cookie is cleared. Anonymous callers are rejected with 401.
  * @summary GDPR delete the signed-in user's account and every row tied to it
  */
 export const DeleteMyAccountConfirmedHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const deleteMyAccountConfirmedBodyConfirmationMax = 320;
 
-
-
 export const DeleteMyAccountConfirmedBody = zod.object({
-  "confirmation": zod.string().min(1).max(deleteMyAccountConfirmedBodyConfirmationMax).describe('Must equal the signed-in user\'s email address (case-insensitive). The endpoint compares lowercased values, so any-case input is accepted as long as the trimmed text matches the account email.')
-})
+  confirmation: zod
+    .string()
+    .min(1)
+    .max(deleteMyAccountConfirmedBodyConfirmationMax)
+    .describe(
+      "Must equal the signed-in user's email address (case-insensitive). The endpoint compares lowercased values, so any-case input is accepted as long as the trimmed text matches the account email.",
+    ),
+});
 
 export const DeleteMyAccountConfirmedResponse = zod.object({
-  "deleted": zod.boolean(),
-  "tables": zod.record(zod.string(), zod.number()).describe('Row counts deleted per table, keyed by database table name. Always includes every user-scoped table considered, even when the count is zero, so the client can show a faithful summary.')
-})
-
+  deleted: zod.boolean(),
+  tables: zod
+    .record(zod.string(), zod.number())
+    .describe(
+      "Row counts deleted per table, keyed by database table name. Always includes every user-scoped table considered, even when the count is zero, so the client can show a faithful summary.",
+    ),
+});
 
 /**
  * Returns one entry per signal source the product can hold about the
@@ -1351,37 +2473,82 @@ with 401; the frontend shows a sample view instead.
  * @summary Get the visible trust ledger of every signal the machine holds
  */
 export const GetTrustLedgerHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getTrustLedgerResponseEntriesItemStoredCountMin = 0;
 
 export const getTrustLedgerResponseEntriesItemCoverageMin = 0;
 export const getTrustLedgerResponseEntriesItemCoverageMax = 100;
 
-
-
 export const GetTrustLedgerResponse = zod.object({
-  "generatedAt": zod.string().describe('ISO timestamp of when this ledger was generated.'),
-  "entries": zod.array(zod.object({
-  "id": zod.string().describe('The signal registry id of this source.'),
-  "label": zod.string().describe('Human-readable name of the source.'),
-  "origin": zod.string().describe('Where this source\'s data comes from, in plain language.'),
-  "noun": zod.string().describe('Singular noun for one stored unit, e.g. \"read\", \"note\", \"import\".'),
-  "held": zod.boolean().describe('Whether the machine still holds any stored data from this source, i.e. whether a purge would remove anything. Derived from storedCount, not from the readiness signal count.'),
-  "count": zod.number().describe('How many units of this source count toward Match Readiness. This can be narrower than storedCount, since some stored rows (a one-line journal note, an unreflected post-date stub) are held but do not move readiness.'),
-  "storedCount": zod.number().min(getTrustLedgerResponseEntriesItemStoredCountMin).describe('How many raw units of this source the machine actually holds, i.e. exactly how many rows a purge would remove. Drives held and purgeable.'),
-  "coverage": zod.number().min(getTrustLedgerResponseEntriesItemCoverageMin).max(getTrustLedgerResponseEntriesItemCoverageMax).describe('Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.'),
-  "summary": zod.string().describe('Plain-English line describing what this source tells the machine at its current coverage, derived from the registry.'),
-  "dimensions": zod.array(zod.string()).describe('Wellness dimensions this source contributes to.'),
-  "seen": zod.array(zod.string()).describe('What the machine sees from this source.'),
-  "neverTouched": zod.array(zod.string()).describe('What the machine never touches from this source.'),
-  "actionLabel": zod.string().describe('CTA copy for feeding this source.'),
-  "actionHref": zod.string().describe('Where the CTA points to feed this source.'),
-  "purgeable": zod.boolean().describe('Whether this source can be purged on its own. Sources with nothing stored are not purgeable.')
-}))
-})
-
+  generatedAt: zod
+    .string()
+    .describe("ISO timestamp of when this ledger was generated."),
+  entries: zod.array(
+    zod.object({
+      id: zod.string().describe("The signal registry id of this source."),
+      label: zod.string().describe("Human-readable name of the source."),
+      origin: zod
+        .string()
+        .describe("Where this source's data comes from, in plain language."),
+      noun: zod
+        .string()
+        .describe(
+          'Singular noun for one stored unit, e.g. \"read\", \"note\", \"import\".',
+        ),
+      held: zod
+        .boolean()
+        .describe(
+          "Whether the machine still holds any stored data from this source, i.e. whether a purge would remove anything. Derived from storedCount, not from the readiness signal count.",
+        ),
+      count: zod
+        .number()
+        .describe(
+          "How many units of this source count toward Match Readiness. This can be narrower than storedCount, since some stored rows (a one-line journal note, an unreflected post-date stub) are held but do not move readiness.",
+        ),
+      storedCount: zod
+        .number()
+        .min(getTrustLedgerResponseEntriesItemStoredCountMin)
+        .describe(
+          "How many raw units of this source the machine actually holds, i.e. exactly how many rows a purge would remove. Drives held and purgeable.",
+        ),
+      coverage: zod
+        .number()
+        .min(getTrustLedgerResponseEntriesItemCoverageMin)
+        .max(getTrustLedgerResponseEntriesItemCoverageMax)
+        .describe(
+          "Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.",
+        ),
+      summary: zod
+        .string()
+        .describe(
+          "Plain-English line describing what this source tells the machine at its current coverage, derived from the registry.",
+        ),
+      dimensions: zod
+        .array(zod.string())
+        .describe("Wellness dimensions this source contributes to."),
+      seen: zod
+        .array(zod.string())
+        .describe("What the machine sees from this source."),
+      neverTouched: zod
+        .array(zod.string())
+        .describe("What the machine never touches from this source."),
+      actionLabel: zod.string().describe("CTA copy for feeding this source."),
+      actionHref: zod
+        .string()
+        .describe("Where the CTA points to feed this source."),
+      purgeable: zod
+        .boolean()
+        .describe(
+          "Whether this source can be purged on its own. Sources with nothing stored are not purgeable.",
+        ),
+    }),
+  ),
+});
 
 /**
  * Permanently removes everything the machine holds for a single signal
@@ -1396,19 +2563,25 @@ are rejected with 404; anonymous callers with 401.
  * @summary Purge every row behind one signal source
  */
 export const PurgeTrustSourceParams = zod.object({
-  "id": zod.coerce.string().describe('The signal registry id of the source to purge.')
-})
+  id: zod.coerce
+    .string()
+    .describe("The signal registry id of the source to purge."),
+});
 
 export const PurgeTrustSourceHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const PurgeTrustSourceResponse = zod.object({
-  "success": zod.boolean(),
-  "id": zod.string().describe('The signal registry id that was purged.'),
-  "removed": zod.number().describe('Total number of rows removed across the source\'s tables.')
-})
-
+  success: zod.boolean(),
+  id: zod.string().describe("The signal registry id that was purged."),
+  removed: zod
+    .number()
+    .describe("Total number of rows removed across the source's tables."),
+});
 
 /**
  * Stores an Expo push token server-side so the server can send
@@ -1419,21 +2592,25 @@ is a no-op.
  * @summary Register an Expo push token for the signed-in user
  */
 export const RegisterPushTokenHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const registerPushTokenBodyTokenMax = 512;
 
-
-
 export const RegisterPushTokenBody = zod.object({
-  "token": zod.string().min(1).max(registerPushTokenBodyTokenMax).describe('Expo push token obtained via expo-notifications on the device.')
-})
+  token: zod
+    .string()
+    .min(1)
+    .max(registerPushTokenBodyTokenMax)
+    .describe("Expo push token obtained via expo-notifications on the device."),
+});
 
 export const RegisterPushTokenResponse = zod.object({
-  "success": zod.boolean()
-})
-
+  success: zod.boolean(),
+});
 
 /**
  * Deletes the given push token from the server so no further
@@ -1443,17 +2620,19 @@ disables "Recently deleted reminders" or signs out.
  * @summary Remove an Expo push token for the signed-in user
  */
 export const UnregisterPushTokenQueryParams = zod.object({
-  "token": zod.coerce.string()
-})
+  token: zod.coerce.string(),
+});
 
 export const UnregisterPushTokenHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const UnregisterPushTokenResponse = zod.object({
-  "success": zod.boolean()
-})
-
+  success: zod.boolean(),
+});
 
 /**
  * Persists a single daily life pulse for the current user (or anonymous
@@ -1463,8 +2642,11 @@ users may pulse multiple times a day if they want to.
  * @summary Record a daily life pulse (5 quick self-ratings)
  */
 export const RecordLifePulseHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const recordLifePulseBodySleepMax = 5;
 
@@ -1478,17 +2660,40 @@ export const recordLifePulseBodyHeadspaceMax = 5;
 
 export const recordLifePulseBodyNoteMax = 500;
 
-
-
 export const RecordLifePulseBody = zod.object({
-  "sleep": zod.number().min(1).max(recordLifePulseBodySleepMax).describe('Subjective sleep quality last night (1 worst, 5 best).'),
-  "energy": zod.number().min(1).max(recordLifePulseBodyEnergyMax).describe('Subjective energy right now (1 depleted, 5 charged).'),
-  "social": zod.number().min(1).max(recordLifePulseBodySocialMax).describe('Social fuel — how much capacity for connection (1 drained, 5 lit up).'),
-  "money": zod.number().min(1).max(recordLifePulseBodyMoneyMax).describe('Money headspace (1 stressed, 5 unbothered).'),
-  "headspace": zod.number().min(1).max(recordLifePulseBodyHeadspaceMax).describe('General mental clarity (1 foggy, 5 sharp).'),
-  "note": zod.string().max(recordLifePulseBodyNoteMax).nullish().describe('Optional short note about today.')
-})
-
+  sleep: zod
+    .number()
+    .min(1)
+    .max(recordLifePulseBodySleepMax)
+    .describe("Subjective sleep quality last night (1 worst, 5 best)."),
+  energy: zod
+    .number()
+    .min(1)
+    .max(recordLifePulseBodyEnergyMax)
+    .describe("Subjective energy right now (1 depleted, 5 charged)."),
+  social: zod
+    .number()
+    .min(1)
+    .max(recordLifePulseBodySocialMax)
+    .describe(
+      "Social fuel — how much capacity for connection (1 drained, 5 lit up).",
+    ),
+  money: zod
+    .number()
+    .min(1)
+    .max(recordLifePulseBodyMoneyMax)
+    .describe("Money headspace (1 stressed, 5 unbothered)."),
+  headspace: zod
+    .number()
+    .min(1)
+    .max(recordLifePulseBodyHeadspaceMax)
+    .describe("General mental clarity (1 foggy, 5 sharp)."),
+  note: zod
+    .string()
+    .max(recordLifePulseBodyNoteMax)
+    .nullish()
+    .describe("Optional short note about today."),
+});
 
 /**
  * Returns the most recent life pulses (up to 30, newest first) along
@@ -1498,32 +2703,47 @@ claim scope. Returns an empty array + null `latest` when none exist.
  * @summary Recent life pulses for the current scope
  */
 export const GetRecentLifePulsesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetRecentLifePulsesResponse = zod.object({
-  "pulses": zod.array(zod.object({
-  "id": zod.number(),
-  "sleep": zod.number(),
-  "energy": zod.number(),
-  "social": zod.number(),
-  "money": zod.number(),
-  "headspace": zod.number(),
-  "note": zod.string().nullish(),
-  "createdAt": zod.coerce.date()
-})).describe('Most recent pulses for the current user\/anon scope, newest first, capped at 30.'),
-  "latest": zod.union([zod.object({
-  "id": zod.number(),
-  "sleep": zod.number(),
-  "energy": zod.number(),
-  "social": zod.number(),
-  "money": zod.number(),
-  "headspace": zod.number(),
-  "note": zod.string().nullish(),
-  "createdAt": zod.coerce.date()
-}),zod.null()]).describe('The single most recent pulse, or null when the user has never logged one.')
-})
-
+  pulses: zod
+    .array(
+      zod.object({
+        id: zod.number(),
+        sleep: zod.number(),
+        energy: zod.number(),
+        social: zod.number(),
+        money: zod.number(),
+        headspace: zod.number(),
+        note: zod.string().nullish(),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .describe(
+      "Most recent pulses for the current user\/anon scope, newest first, capped at 30.",
+    ),
+  latest: zod
+    .union([
+      zod.object({
+        id: zod.number(),
+        sleep: zod.number(),
+        energy: zod.number(),
+        social: zod.number(),
+        money: zod.number(),
+        headspace: zod.number(),
+        note: zod.string().nullish(),
+        createdAt: zod.coerce.date(),
+      }),
+      zod.null(),
+    ])
+    .describe(
+      "The single most recent pulse, or null when the user has never logged one.",
+    ),
+});
 
 /**
  * Returns the current user's (or anonymous-claim-scoped) journal entries.
@@ -1544,48 +2764,81 @@ export const listJournalEntriesQueryLimitMax = 200;
 export const listJournalEntriesQueryOffsetDefault = 0;
 export const listJournalEntriesQueryOffsetMin = 0;
 
-
-
 export const ListJournalEntriesQueryParams = zod.object({
-  "view": zod.enum(['active', 'trash', 'all']).default(listJournalEntriesQueryViewDefault),
-  "q": zod.coerce.string().optional().describe('Optional case-insensitive substring filter on prompt + body.'),
-  "tag": zod.coerce.string().max(listJournalEntriesQueryTagMax).optional().describe('Filter to entries that carry this tag.'),
-  "dateFrom": zod.coerce.string().optional().describe('ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.'),
-  "dateTo": zod.coerce.string().optional().describe('ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.'),
-  "limit": zod.coerce.number().min(1).max(listJournalEntriesQueryLimitMax).default(listJournalEntriesQueryLimitDefault),
-  "offset": zod.coerce.number().min(listJournalEntriesQueryOffsetMin).default(listJournalEntriesQueryOffsetDefault)
-})
+  view: zod
+    .enum(["active", "trash", "all"])
+    .default(listJournalEntriesQueryViewDefault),
+  q: zod.coerce
+    .string()
+    .optional()
+    .describe("Optional case-insensitive substring filter on prompt + body."),
+  tag: zod.coerce
+    .string()
+    .max(listJournalEntriesQueryTagMax)
+    .optional()
+    .describe("Filter to entries that carry this tag."),
+  dateFrom: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.",
+    ),
+  dateTo: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.",
+    ),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listJournalEntriesQueryLimitMax)
+    .default(listJournalEntriesQueryLimitDefault),
+  offset: zod.coerce
+    .number()
+    .min(listJournalEntriesQueryOffsetMin)
+    .default(listJournalEntriesQueryOffsetDefault),
+});
 
 export const ListJournalEntriesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const listJournalEntriesResponseEntriesItemMoodMax = 5;
 
-
-
 export const ListJournalEntriesResponse = zod.object({
-  "entries": zod.array(zod.object({
-  "id": zod.number(),
-  "prompt": zod.string().nullish(),
-  "body": zod.string(),
-  "tags": zod.array(zod.string()),
-  "mood": zod.number().min(1).max(listJournalEntriesResponseEntriesItemMoodMax).nullish(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})),
-  "total": zod.number().describe('Total matching rows across all pages.')
-})
-
+  entries: zod.array(
+    zod.object({
+      id: zod.number(),
+      prompt: zod.string().nullish(),
+      body: zod.string(),
+      tags: zod.array(zod.string()),
+      mood: zod
+        .number()
+        .min(1)
+        .max(listJournalEntriesResponseEntriesItemMoodMax)
+        .nullish(),
+      linkedAuditId: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+      deletedAt: zod.coerce.date().nullish(),
+    }),
+  ),
+  total: zod.number().describe("Total matching rows across all pages."),
+});
 
 /**
  * @summary Create a journal entry
  */
 export const CreateJournalEntryHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createJournalEntryBodyPromptMax = 500;
 
@@ -1598,17 +2851,32 @@ export const createJournalEntryBodyTagsMax = 20;
 
 export const createJournalEntryBodyMoodMax = 5;
 
-
-
-
 export const CreateJournalEntryBody = zod.object({
-  "prompt": zod.string().max(createJournalEntryBodyPromptMax).nullish().describe('Optional curated prompt the entry answers. Null = freeform.'),
-  "body": zod.string().min(1).max(createJournalEntryBodyBodyMax),
-  "tags": zod.array(zod.string().min(1).max(createJournalEntryBodyTagsItemMax)).max(createJournalEntryBodyTagsMax).default(createJournalEntryBodyTagsDefault).describe('Free-form tags (e.g. \"weekly\", \"intention\", \"reflection\").'),
-  "mood": zod.number().min(1).max(createJournalEntryBodyMoodMax).nullish().describe('Self-reported mood, 1 (low) to 5 (high). Null = not provided.'),
-  "linkedAuditId": zod.number().min(1).nullish().describe('Optional cross-reference to an audit this entry reflects on.')
-})
-
+  prompt: zod
+    .string()
+    .max(createJournalEntryBodyPromptMax)
+    .nullish()
+    .describe("Optional curated prompt the entry answers. Null = freeform."),
+  body: zod.string().min(1).max(createJournalEntryBodyBodyMax),
+  tags: zod
+    .array(zod.string().min(1).max(createJournalEntryBodyTagsItemMax))
+    .max(createJournalEntryBodyTagsMax)
+    .default(createJournalEntryBodyTagsDefault)
+    .describe(
+      'Free-form tags (e.g. \"weekly\", \"intention\", \"reflection\").',
+    ),
+  mood: zod
+    .number()
+    .min(1)
+    .max(createJournalEntryBodyMoodMax)
+    .nullish()
+    .describe("Self-reported mood, 1 (low) to 5 (high). Null = not provided."),
+  linkedAuditId: zod
+    .number()
+    .min(1)
+    .nullish()
+    .describe("Optional cross-reference to an audit this entry reflects on."),
+});
 
 /**
  * Partial-update of a journal entry. Pass `restore: true` to clear
@@ -1617,12 +2885,15 @@ export const CreateJournalEntryBody = zod.object({
  * @summary Edit a journal entry (or restore from trash)
  */
 export const UpdateJournalEntryParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateJournalEntryHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const updateJournalEntryBodyPromptMax = 500;
 
@@ -1634,51 +2905,53 @@ export const updateJournalEntryBodyTagsMax = 20;
 
 export const updateJournalEntryBodyMoodMax = 5;
 
-
-
-
 export const UpdateJournalEntryBody = zod.object({
-  "prompt": zod.string().max(updateJournalEntryBodyPromptMax).nullish(),
-  "body": zod.string().min(1).max(updateJournalEntryBodyBodyMax).optional(),
-  "tags": zod.array(zod.string().min(1).max(updateJournalEntryBodyTagsItemMax)).max(updateJournalEntryBodyTagsMax).optional(),
-  "mood": zod.number().min(1).max(updateJournalEntryBodyMoodMax).nullish(),
-  "linkedAuditId": zod.number().min(1).nullish(),
-  "restore": zod.boolean().optional().describe('If true, clears `deletedAt` so the entry leaves the trash.')
-})
+  prompt: zod.string().max(updateJournalEntryBodyPromptMax).nullish(),
+  body: zod.string().min(1).max(updateJournalEntryBodyBodyMax).optional(),
+  tags: zod
+    .array(zod.string().min(1).max(updateJournalEntryBodyTagsItemMax))
+    .max(updateJournalEntryBodyTagsMax)
+    .optional(),
+  mood: zod.number().min(1).max(updateJournalEntryBodyMoodMax).nullish(),
+  linkedAuditId: zod.number().min(1).nullish(),
+  restore: zod
+    .boolean()
+    .optional()
+    .describe("If true, clears `deletedAt` so the entry leaves the trash."),
+});
 
 export const updateJournalEntryResponseMoodMax = 5;
 
-
-
 export const UpdateJournalEntryResponse = zod.object({
-  "id": zod.number(),
-  "prompt": zod.string().nullish(),
-  "body": zod.string(),
-  "tags": zod.array(zod.string()),
-  "mood": zod.number().min(1).max(updateJournalEntryResponseMoodMax).nullish(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})
-
+  id: zod.number(),
+  prompt: zod.string().nullish(),
+  body: zod.string(),
+  tags: zod.array(zod.string()),
+  mood: zod.number().min(1).max(updateJournalEntryResponseMoodMax).nullish(),
+  linkedAuditId: zod.number().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+  deletedAt: zod.coerce.date().nullish(),
+});
 
 /**
  * @summary Soft-delete a journal entry
  */
 export const DeleteJournalEntryParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteJournalEntryHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DeleteJournalEntryResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * Clears `deletedAt` on the entry so it returns to the active list.
@@ -1688,29 +2961,29 @@ already-active entry succeeds and returns the entry unchanged.
  * @summary Restore a soft-deleted journal entry
  */
 export const RestoreJournalEntryParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const RestoreJournalEntryHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const restoreJournalEntryResponseMoodMax = 5;
 
-
-
 export const RestoreJournalEntryResponse = zod.object({
-  "id": zod.number(),
-  "prompt": zod.string().nullish(),
-  "body": zod.string(),
-  "tags": zod.array(zod.string()),
-  "mood": zod.number().min(1).max(restoreJournalEntryResponseMoodMax).nullish(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})
-
+  id: zod.number(),
+  prompt: zod.string().nullish(),
+  body: zod.string(),
+  tags: zod.array(zod.string()),
+  mood: zod.number().min(1).max(restoreJournalEntryResponseMoodMax).nullish(),
+  linkedAuditId: zod.number().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+  deletedAt: zod.coerce.date().nullish(),
+});
 
 /**
  * Returns the current user's (or anonymous-claim-scoped) post-date
@@ -1731,49 +3004,84 @@ export const listPostDateNotesQueryLimitMax = 200;
 export const listPostDateNotesQueryOffsetDefault = 0;
 export const listPostDateNotesQueryOffsetMin = 0;
 
-
-
 export const ListPostDateNotesQueryParams = zod.object({
-  "view": zod.enum(['active', 'trash', 'all']).default(listPostDateNotesQueryViewDefault),
-  "q": zod.coerce.string().optional(),
-  "outcome": zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']).optional(),
-  "platform": zod.coerce.string().max(listPostDateNotesQueryPlatformMax).optional(),
-  "dateFrom": zod.coerce.string().optional().describe('ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.'),
-  "dateTo": zod.coerce.string().optional().describe('ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.'),
-  "limit": zod.coerce.number().min(1).max(listPostDateNotesQueryLimitMax).default(listPostDateNotesQueryLimitDefault),
-  "offset": zod.coerce.number().min(listPostDateNotesQueryOffsetMin).default(listPostDateNotesQueryOffsetDefault)
-})
+  view: zod
+    .enum(["active", "trash", "all"])
+    .default(listPostDateNotesQueryViewDefault),
+  q: zod.coerce.string().optional(),
+  outcome: zod
+    .enum(["another_date", "no_more", "unsure", "ghosted"])
+    .optional(),
+  platform: zod.coerce
+    .string()
+    .max(listPostDateNotesQueryPlatformMax)
+    .optional(),
+  dateFrom: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.",
+    ),
+  dateTo: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.",
+    ),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listPostDateNotesQueryLimitMax)
+    .default(listPostDateNotesQueryLimitDefault),
+  offset: zod.coerce
+    .number()
+    .min(listPostDateNotesQueryOffsetMin)
+    .default(listPostDateNotesQueryOffsetDefault),
+});
 
 export const ListPostDateNotesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListPostDateNotesResponse = zod.object({
-  "notes": zod.array(zod.object({
-  "id": zod.number(),
-  "dateAt": zod.coerce.date().nullish(),
-  "personLabel": zod.string().nullish(),
-  "platform": zod.string().nullish(),
-  "summary": zod.string(),
-  "whatWentWell": zod.string(),
-  "whatDidnt": zod.string(),
-  "followUpPlanned": zod.boolean(),
-  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})),
-  "total": zod.number()
-})
-
+  notes: zod.array(
+    zod.object({
+      id: zod.number(),
+      connectionId: zod.string().uuid().nullable(),
+      dateAt: zod.coerce.date().nullish(),
+      personLabel: zod.string().nullish(),
+      platform: zod.string().nullish(),
+      summary: zod.string(),
+      whatWentWell: zod.string(),
+      whatDidnt: zod.string(),
+      followUpPlanned: zod.boolean(),
+      outcome: zod
+        .union([
+          zod.enum(["another_date", "no_more", "unsure", "ghosted"]),
+          zod.null(),
+        ])
+        .optional(),
+      linkedAuditId: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+      deletedAt: zod.coerce.date().nullish(),
+    }),
+  ),
+  total: zod.number(),
+});
 
 /**
  * @summary Create (persist) a post-date debrief
  */
 export const CreatePostDateNoteHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createPostDateNoteBodyPersonLabelMax = 120;
 
@@ -1789,19 +3097,48 @@ export const createPostDateNoteBodyWhatDidntMax = 20000;
 
 export const createPostDateNoteBodyFollowUpPlannedDefault = false;
 
-
 export const CreatePostDateNoteBody = zod.object({
-  "dateAt": zod.coerce.date().nullish().describe('When the date itself happened. Null = unspecified.'),
-  "personLabel": zod.string().max(createPostDateNoteBodyPersonLabelMax).nullish().describe('Free-form label for the person. Copy encourages first-name-only.'),
-  "platform": zod.string().max(createPostDateNoteBodyPlatformMax).nullish().describe('Origin platform (e.g. \"hinge\", \"bumble\", \"tinder\").'),
-  "summary": zod.string().min(1).max(createPostDateNoteBodySummaryMax),
-  "whatWentWell": zod.string().max(createPostDateNoteBodyWhatWentWellMax).default(createPostDateNoteBodyWhatWentWellDefault),
-  "whatDidnt": zod.string().max(createPostDateNoteBodyWhatDidntMax).default(createPostDateNoteBodyWhatDidntDefault),
-  "followUpPlanned": zod.boolean().default(createPostDateNoteBodyFollowUpPlannedDefault),
-  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
-  "linkedAuditId": zod.number().min(1).nullish()
-})
-
+  connectionId: zod
+    .string()
+    .uuid()
+    .nullish()
+    .describe("Optional mutual connection this private debrief belongs to."),
+  dateAt: zod.coerce
+    .date()
+    .nullish()
+    .describe("When the date itself happened. Null = unspecified."),
+  personLabel: zod
+    .string()
+    .max(createPostDateNoteBodyPersonLabelMax)
+    .nullish()
+    .describe(
+      "Free-form label for the person. Copy encourages first-name-only.",
+    ),
+  platform: zod
+    .string()
+    .max(createPostDateNoteBodyPlatformMax)
+    .nullish()
+    .describe('Origin platform (e.g. \"hinge\", \"bumble\", \"tinder\").'),
+  summary: zod.string().min(1).max(createPostDateNoteBodySummaryMax),
+  whatWentWell: zod
+    .string()
+    .max(createPostDateNoteBodyWhatWentWellMax)
+    .default(createPostDateNoteBodyWhatWentWellDefault),
+  whatDidnt: zod
+    .string()
+    .max(createPostDateNoteBodyWhatDidntMax)
+    .default(createPostDateNoteBodyWhatDidntDefault),
+  followUpPlanned: zod
+    .boolean()
+    .default(createPostDateNoteBodyFollowUpPlannedDefault),
+  outcome: zod
+    .union([
+      zod.enum(["another_date", "no_more", "unsure", "ghosted"]),
+      zod.null(),
+    ])
+    .optional(),
+  linkedAuditId: zod.number().min(1).nullish(),
+});
 
 /**
  * Partial-update of a post-date note. Pass `restore: true` to clear
@@ -1810,12 +3147,15 @@ export const CreatePostDateNoteBody = zod.object({
  * @summary Edit a post-date note (or restore from trash)
  */
 export const UpdatePostDateNoteParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdatePostDateNoteHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const updatePostDateNoteBodyPersonLabelMax = 120;
 
@@ -1827,118 +3167,145 @@ export const updatePostDateNoteBodyWhatWentWellMax = 20000;
 
 export const updatePostDateNoteBodyWhatDidntMax = 20000;
 
-
-
-
 export const UpdatePostDateNoteBody = zod.object({
-  "dateAt": zod.coerce.date().nullish(),
-  "personLabel": zod.string().max(updatePostDateNoteBodyPersonLabelMax).nullish(),
-  "platform": zod.string().max(updatePostDateNoteBodyPlatformMax).nullish(),
-  "summary": zod.string().min(1).max(updatePostDateNoteBodySummaryMax).optional(),
-  "whatWentWell": zod.string().max(updatePostDateNoteBodyWhatWentWellMax).optional(),
-  "whatDidnt": zod.string().max(updatePostDateNoteBodyWhatDidntMax).optional(),
-  "followUpPlanned": zod.boolean().optional(),
-  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
-  "linkedAuditId": zod.number().min(1).nullish(),
-  "restore": zod.boolean().optional()
-})
+  dateAt: zod.coerce.date().nullish(),
+  personLabel: zod.string().max(updatePostDateNoteBodyPersonLabelMax).nullish(),
+  platform: zod.string().max(updatePostDateNoteBodyPlatformMax).nullish(),
+  summary: zod.string().min(1).max(updatePostDateNoteBodySummaryMax).optional(),
+  whatWentWell: zod
+    .string()
+    .max(updatePostDateNoteBodyWhatWentWellMax)
+    .optional(),
+  whatDidnt: zod.string().max(updatePostDateNoteBodyWhatDidntMax).optional(),
+  followUpPlanned: zod.boolean().optional(),
+  outcome: zod
+    .union([
+      zod.enum(["another_date", "no_more", "unsure", "ghosted"]),
+      zod.null(),
+    ])
+    .optional(),
+  linkedAuditId: zod.number().min(1).nullish(),
+  restore: zod.boolean().optional(),
+});
 
 export const UpdatePostDateNoteResponse = zod.object({
-  "id": zod.number(),
-  "dateAt": zod.coerce.date().nullish(),
-  "personLabel": zod.string().nullish(),
-  "platform": zod.string().nullish(),
-  "summary": zod.string(),
-  "whatWentWell": zod.string(),
-  "whatDidnt": zod.string(),
-  "followUpPlanned": zod.boolean(),
-  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})
-
+  id: zod.number(),
+  connectionId: zod.string().uuid().nullable(),
+  dateAt: zod.coerce.date().nullish(),
+  personLabel: zod.string().nullish(),
+  platform: zod.string().nullish(),
+  summary: zod.string(),
+  whatWentWell: zod.string(),
+  whatDidnt: zod.string(),
+  followUpPlanned: zod.boolean(),
+  outcome: zod
+    .union([
+      zod.enum(["another_date", "no_more", "unsure", "ghosted"]),
+      zod.null(),
+    ])
+    .optional(),
+  linkedAuditId: zod.number().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+  deletedAt: zod.coerce.date().nullish(),
+});
 
 /**
  * @summary Soft-delete a post-date note
  */
 export const DeletePostDateNoteParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeletePostDateNoteHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DeletePostDateNoteResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * @summary Restore a soft-deleted post-date note
  */
 export const RestorePostDateNoteParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const RestorePostDateNoteHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const RestorePostDateNoteResponse = zod.object({
-  "id": zod.number(),
-  "dateAt": zod.coerce.date().nullish(),
-  "personLabel": zod.string().nullish(),
-  "platform": zod.string().nullish(),
-  "summary": zod.string(),
-  "whatWentWell": zod.string(),
-  "whatDidnt": zod.string(),
-  "followUpPlanned": zod.boolean(),
-  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
-  "linkedAuditId": zod.number().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date(),
-  "deletedAt": zod.coerce.date().nullish()
-})
-
+  id: zod.number(),
+  connectionId: zod.string().uuid().nullable(),
+  dateAt: zod.coerce.date().nullish(),
+  personLabel: zod.string().nullish(),
+  platform: zod.string().nullish(),
+  summary: zod.string(),
+  whatWentWell: zod.string(),
+  whatDidnt: zod.string(),
+  followUpPlanned: zod.boolean(),
+  outcome: zod
+    .union([
+      zod.enum(["another_date", "no_more", "unsure", "ghosted"]),
+      zod.null(),
+    ])
+    .optional(),
+  linkedAuditId: zod.number().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+  deletedAt: zod.coerce.date().nullish(),
+});
 
 /**
  * @summary List all wellness answers for current user
  */
 export const ListWellnessAnswersQueryParams = zod.object({
-  "dimension": zod.coerce.string().optional()
-})
+  dimension: zod.coerce.string().optional(),
+});
 
 export const ListWellnessAnswersHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListWellnessAnswersResponse = zod.object({
-  "answers": zod.array(zod.object({
-  "id": zod.number(),
-  "questionId": zod.string(),
-  "dimension": zod.string(),
-  "category": zod.string().nullish(),
-  "questionText": zod.string(),
-  "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
-  "deletedAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})),
-  "total": zod.number()
-})
-
+  answers: zod.array(
+    zod.object({
+      id: zod.number(),
+      questionId: zod.string(),
+      dimension: zod.string(),
+      category: zod.string().nullish(),
+      questionText: zod.string(),
+      answer: zod.string(),
+      consentLevel: zod.enum(["coaching", "matching", "research", "all"]),
+      deletedAt: zod.coerce.date().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+  total: zod.number(),
+});
 
 /**
  * @summary Save a wellness answer
  */
 export const CreateWellnessAnswerHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createWellnessAnswerBodyQuestionIdMax = 120;
 
@@ -1950,252 +3317,307 @@ export const createWellnessAnswerBodyQuestionTextMax = 1000;
 
 export const createWellnessAnswerBodyAnswerMax = 5000;
 
-
-
 export const CreateWellnessAnswerBody = zod.object({
-  "questionId": zod.string().min(1).max(createWellnessAnswerBodyQuestionIdMax),
-  "dimension": zod.string().min(1).max(createWellnessAnswerBodyDimensionMax),
-  "category": zod.string().max(createWellnessAnswerBodyCategoryMax).nullish(),
-  "questionText": zod.string().min(1).max(createWellnessAnswerBodyQuestionTextMax),
-  "answer": zod.string().min(1).max(createWellnessAnswerBodyAnswerMax),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
-})
-
+  questionId: zod.string().min(1).max(createWellnessAnswerBodyQuestionIdMax),
+  dimension: zod.string().min(1).max(createWellnessAnswerBodyDimensionMax),
+  category: zod.string().max(createWellnessAnswerBodyCategoryMax).nullish(),
+  questionText: zod
+    .string()
+    .min(1)
+    .max(createWellnessAnswerBodyQuestionTextMax),
+  answer: zod.string().min(1).max(createWellnessAnswerBodyAnswerMax),
+  consentLevel: zod
+    .enum(["coaching", "matching", "research", "all"])
+    .optional(),
+});
 
 /**
  * @summary Update a wellness answer or consent level
  */
 export const UpdateWellnessAnswerParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateWellnessAnswerHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const updateWellnessAnswerBodyAnswerMax = 5000;
 
-
-
 export const UpdateWellnessAnswerBody = zod.object({
-  "answer": zod.string().min(1).max(updateWellnessAnswerBodyAnswerMax).optional(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
-})
+  answer: zod.string().min(1).max(updateWellnessAnswerBodyAnswerMax).optional(),
+  consentLevel: zod
+    .enum(["coaching", "matching", "research", "all"])
+    .optional(),
+});
 
 export const UpdateWellnessAnswerResponse = zod.object({
-  "id": zod.number(),
-  "questionId": zod.string(),
-  "dimension": zod.string(),
-  "category": zod.string().nullish(),
-  "questionText": zod.string(),
-  "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
-  "deletedAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
+  id: zod.number(),
+  questionId: zod.string(),
+  dimension: zod.string(),
+  category: zod.string().nullish(),
+  questionText: zod.string(),
+  answer: zod.string(),
+  consentLevel: zod.enum(["coaching", "matching", "research", "all"]),
+  deletedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * @summary Soft-delete a wellness answer
  */
 export const DeleteWellnessAnswerParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteWellnessAnswerHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DeleteWellnessAnswerResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * @summary Today's single wellness question plus the user's answer streak
  */
 export const GetWellnessDailyHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetWellnessDailyResponse = zod.object({
-  "question": zod.union([zod.object({
-  "questionId": zod.string(),
-  "dimension": zod.string(),
-  "dimensionLabel": zod.string(),
-  "questionText": zod.string()
-}),zod.null()]).describe('Today\'s question, picked deterministically (least-covered dimension\nfirst). Null only when every bank question has been answered.\n'),
-  "answeredToday": zod.boolean(),
-  "streak": zod.object({
-  "current": zod.number(),
-  "longest": zod.number(),
-  "activeToday": zod.boolean(),
-  "daysActiveLast14": zod.number()
-}),
-  "dimensionsCovered": zod.number(),
-  "dimensionsTotal": zod.number(),
-  "bankAnswered": zod.number(),
-  "bankTotal": zod.number()
-})
-
+  question: zod
+    .union([
+      zod.object({
+        questionId: zod.string(),
+        dimension: zod.string(),
+        dimensionLabel: zod.string(),
+        questionText: zod.string(),
+      }),
+      zod.null(),
+    ])
+    .describe(
+      "Today's question, picked deterministically (least-covered dimension\nfirst). Null only when every bank question has been answered.\n",
+    ),
+  answeredToday: zod.boolean(),
+  streak: zod.object({
+    current: zod.number(),
+    longest: zod.number(),
+    activeToday: zod.boolean(),
+    daysActiveLast14: zod.number(),
+  }),
+  dimensionsCovered: zod.number(),
+  dimensionsTotal: zod.number(),
+  bankAnswered: zod.number(),
+  bankTotal: zod.number(),
+});
 
 /**
  * @summary Pending passive wellness inferences awaiting confirm or dismiss
  */
 export const ListWellnessInferencesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListWellnessInferencesResponse = zod.object({
-  "inferences": zod.array(zod.object({
-  "id": zod.number(),
-  "dimension": zod.string(),
-  "inferredQuestionId": zod.string(),
-  "questionText": zod.string(),
-  "suggestedAnswer": zod.string(),
-  "sourceKind": zod.string(),
-  "rationale": zod.string().nullish(),
-  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
-  "status": zod.string().describe('pending | confirmed | dismissed'),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
-
+  inferences: zod.array(
+    zod.object({
+      id: zod.number(),
+      dimension: zod.string(),
+      inferredQuestionId: zod.string(),
+      questionText: zod.string(),
+      suggestedAnswer: zod.string(),
+      sourceKind: zod.string(),
+      rationale: zod.string().nullish(),
+      mode: zod
+        .string()
+        .describe(
+          'Which engine produced it, \"deterministic\" or \"anthropic\".',
+        ),
+      status: zod.string().describe("pending | confirmed | dismissed"),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Scan the user's own writing for confirm-before-write wellness inferences
  */
 export const GenerateWellnessInferencesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GenerateWellnessInferencesResponse = zod.object({
-  "created": zod.number().describe('How many new pending inferences were written this run.'),
-  "mode": zod.string(),
-  "inferences": zod.array(zod.object({
-  "id": zod.number(),
-  "dimension": zod.string(),
-  "inferredQuestionId": zod.string(),
-  "questionText": zod.string(),
-  "suggestedAnswer": zod.string(),
-  "sourceKind": zod.string(),
-  "rationale": zod.string().nullish(),
-  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
-  "status": zod.string().describe('pending | confirmed | dismissed'),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
-
+  created: zod
+    .number()
+    .describe("How many new pending inferences were written this run."),
+  mode: zod.string(),
+  inferences: zod.array(
+    zod.object({
+      id: zod.number(),
+      dimension: zod.string(),
+      inferredQuestionId: zod.string(),
+      questionText: zod.string(),
+      suggestedAnswer: zod.string(),
+      sourceKind: zod.string(),
+      rationale: zod.string().nullish(),
+      mode: zod
+        .string()
+        .describe(
+          'Which engine produced it, \"deterministic\" or \"anthropic\".',
+        ),
+      status: zod.string().describe("pending | confirmed | dismissed"),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Confirm an inference, writing it through as a normal wellness answer
  */
 export const ConfirmWellnessInferenceParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const ConfirmWellnessInferenceHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const confirmWellnessInferenceBodyAnswerMax = 5000;
 
-
-
 export const ConfirmWellnessInferenceBody = zod.object({
-  "answer": zod.string().min(1).max(confirmWellnessInferenceBodyAnswerMax).optional().describe('Optional edited answer; defaults to the suggested answer.')
-})
+  answer: zod
+    .string()
+    .min(1)
+    .max(confirmWellnessInferenceBodyAnswerMax)
+    .optional()
+    .describe("Optional edited answer; defaults to the suggested answer."),
+});
 
 export const ConfirmWellnessInferenceResponse = zod.object({
-  "confirmed": zod.boolean(),
-  "answer": zod.object({
-  "id": zod.number(),
-  "questionId": zod.string(),
-  "dimension": zod.string(),
-  "category": zod.string().nullish(),
-  "questionText": zod.string(),
-  "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
-  "deletedAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}),
-  "inference": zod.object({
-  "id": zod.number(),
-  "dimension": zod.string(),
-  "inferredQuestionId": zod.string(),
-  "questionText": zod.string(),
-  "suggestedAnswer": zod.string(),
-  "sourceKind": zod.string(),
-  "rationale": zod.string().nullish(),
-  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
-  "status": zod.string().describe('pending | confirmed | dismissed'),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
-
+  confirmed: zod.boolean(),
+  answer: zod.object({
+    id: zod.number(),
+    questionId: zod.string(),
+    dimension: zod.string(),
+    category: zod.string().nullish(),
+    questionText: zod.string(),
+    answer: zod.string(),
+    consentLevel: zod.enum(["coaching", "matching", "research", "all"]),
+    deletedAt: zod.coerce.date().nullish(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+  inference: zod.object({
+    id: zod.number(),
+    dimension: zod.string(),
+    inferredQuestionId: zod.string(),
+    questionText: zod.string(),
+    suggestedAnswer: zod.string(),
+    sourceKind: zod.string(),
+    rationale: zod.string().nullish(),
+    mode: zod
+      .string()
+      .describe(
+        'Which engine produced it, \"deterministic\" or \"anthropic\".',
+      ),
+    status: zod.string().describe("pending | confirmed | dismissed"),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary Dismiss an inference so it is never re-surfaced
  */
 export const DismissWellnessInferenceParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DismissWellnessInferenceHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DismissWellnessInferenceResponse = zod.object({
-  "dismissed": zod.boolean(),
-  "inference": zod.object({
-  "id": zod.number(),
-  "dimension": zod.string(),
-  "inferredQuestionId": zod.string(),
-  "questionText": zod.string(),
-  "suggestedAnswer": zod.string(),
-  "sourceKind": zod.string(),
-  "rationale": zod.string().nullish(),
-  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
-  "status": zod.string().describe('pending | confirmed | dismissed'),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-})
-
+  dismissed: zod.boolean(),
+  inference: zod.object({
+    id: zod.number(),
+    dimension: zod.string(),
+    inferredQuestionId: zod.string(),
+    questionText: zod.string(),
+    suggestedAnswer: zod.string(),
+    sourceKind: zod.string(),
+    rationale: zod.string().nullish(),
+    mode: zod
+      .string()
+      .describe(
+        'Which engine produced it, \"deterministic\" or \"anthropic\".',
+      ),
+    status: zod.string().describe("pending | confirmed | dismissed"),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary List compatibility insight tags for current user
  */
 export const ListWellnessTagsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListWellnessTagsResponse = zod.object({
-  "tags": zod.array(zod.object({
-  "id": zod.number(),
-  "tag": zod.string(),
-  "label": zod.string(),
-  "category": zod.string(),
-  "approvedForMatching": zod.boolean(),
-  "hidden": zod.boolean(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}))
-})
-
+  tags: zod.array(
+    zod.object({
+      id: zod.number(),
+      tag: zod.string(),
+      label: zod.string(),
+      category: zod.string(),
+      approvedForMatching: zod.boolean(),
+      hidden: zod.boolean(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * @summary Create a compatibility insight tag
  */
 export const CreateWellnessTagHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createWellnessTagBodyTagMax = 80;
 
@@ -2203,112 +3625,116 @@ export const createWellnessTagBodyLabelMax = 120;
 
 export const createWellnessTagBodyCategoryMax = 40;
 
-
-
 export const CreateWellnessTagBody = zod.object({
-  "tag": zod.string().min(1).max(createWellnessTagBodyTagMax),
-  "label": zod.string().min(1).max(createWellnessTagBodyLabelMax),
-  "category": zod.string().min(1).max(createWellnessTagBodyCategoryMax),
-  "approvedForMatching": zod.boolean().optional(),
-  "hidden": zod.boolean().optional()
-})
-
+  tag: zod.string().min(1).max(createWellnessTagBodyTagMax),
+  label: zod.string().min(1).max(createWellnessTagBodyLabelMax),
+  category: zod.string().min(1).max(createWellnessTagBodyCategoryMax),
+  approvedForMatching: zod.boolean().optional(),
+  hidden: zod.boolean().optional(),
+});
 
 /**
  * @summary Update a compatibility tag
  */
 export const UpdateWellnessTagParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateWellnessTagHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const updateWellnessTagBodyLabelMax = 120;
 
-
-
 export const UpdateWellnessTagBody = zod.object({
-  "label": zod.string().min(1).max(updateWellnessTagBodyLabelMax).optional(),
-  "approvedForMatching": zod.boolean().optional(),
-  "hidden": zod.boolean().optional()
-})
+  label: zod.string().min(1).max(updateWellnessTagBodyLabelMax).optional(),
+  approvedForMatching: zod.boolean().optional(),
+  hidden: zod.boolean().optional(),
+});
 
 export const UpdateWellnessTagResponse = zod.object({
-  "id": zod.number(),
-  "tag": zod.string(),
-  "label": zod.string(),
-  "category": zod.string(),
-  "approvedForMatching": zod.boolean(),
-  "hidden": zod.boolean(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
+  id: zod.number(),
+  tag: zod.string(),
+  label: zod.string(),
+  category: zod.string(),
+  approvedForMatching: zod.boolean(),
+  hidden: zod.boolean(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * @summary Delete a compatibility tag
  */
 export const DeleteWellnessTagParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteWellnessTagHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DeleteWellnessTagResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * @summary Get summarised wellness dimensions profile + matching readiness
  */
 export const GetWellnessProfileHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetWellnessProfileResponse = zod.object({
-  "dimensions": zod.array(zod.object({
-  "dimension": zod.string(),
-  "label": zod.string(),
-  "answeredCount": zod.number(),
-  "totalQuestions": zod.number(),
-  "completionPct": zod.number(),
-  "strengths": zod.array(zod.string()),
-  "frictionPoints": zod.array(zod.string()),
-  "nextQuestion": zod.string().nullable()
-})),
-  "tags": zod.array(zod.object({
-  "id": zod.number(),
-  "tag": zod.string(),
-  "label": zod.string(),
-  "category": zod.string(),
-  "approvedForMatching": zod.boolean(),
-  "hidden": zod.boolean(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})),
-  "matchingReadiness": zod.object({
-  "overallPct": zod.number(),
-  "strongDimensions": zod.array(zod.string()),
-  "weakDimensions": zod.array(zod.string()),
-  "readyForMatching": zod.boolean()
-})
-})
-
+  dimensions: zod.array(
+    zod.object({
+      dimension: zod.string(),
+      label: zod.string(),
+      answeredCount: zod.number(),
+      totalQuestions: zod.number(),
+      completionPct: zod.number(),
+      strengths: zod.array(zod.string()),
+      frictionPoints: zod.array(zod.string()),
+      nextQuestion: zod.string().nullable(),
+    }),
+  ),
+  tags: zod.array(
+    zod.object({
+      id: zod.number(),
+      tag: zod.string(),
+      label: zod.string(),
+      category: zod.string(),
+      approvedForMatching: zod.boolean(),
+      hidden: zod.boolean(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+  matchingReadiness: zod.object({
+    overallPct: zod.number(),
+    strongDimensions: zod.array(zod.string()),
+    weakDimensions: zod.array(zod.string()),
+    readyForMatching: zod.boolean(),
+  }),
+});
 
 /**
  * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  "status": zod.string()
-})
-
+  status: zod.string(),
+});
 
 /**
  * @summary List all profile audits for current session
@@ -2320,287 +3746,642 @@ export const listAuditsQueryLimitMax = 100;
 export const listAuditsQueryOffsetDefault = 0;
 export const listAuditsQueryOffsetMin = 0;
 
-
-
 export const ListAuditsQueryParams = zod.object({
-  "source": zod.enum(['manual', 'screenshot']).optional(),
-  "q": zod.coerce.string().optional().describe('Case-insensitive substring search across firstName and bio.'),
-  "sort": zod.enum(['newest', 'topScore']).default(listAuditsQuerySortDefault).describe('Sort order for results.'),
-  "scoreRange": zod.enum(['low', 'medium', 'high']).optional().describe('Filter by readiness score band. `low` = <55, `medium` = 55-74,\n`high` = >=75. Audits without a score are excluded when set.\n'),
-  "limit": zod.coerce.number().min(1).max(listAuditsQueryLimitMax).default(listAuditsQueryLimitDefault).describe('Maximum number of audits to return (1-100). Defaults to 50.'),
-  "offset": zod.coerce.number().min(listAuditsQueryOffsetMin).default(listAuditsQueryOffsetDefault).describe('Number of audits to skip for pagination.')
-})
+  source: zod.enum(["manual", "screenshot"]).optional(),
+  q: zod.coerce
+    .string()
+    .optional()
+    .describe("Case-insensitive substring search across firstName and bio."),
+  sort: zod
+    .enum(["newest", "topScore"])
+    .default(listAuditsQuerySortDefault)
+    .describe("Sort order for results."),
+  scoreRange: zod
+    .enum(["low", "medium", "high"])
+    .optional()
+    .describe(
+      "Filter by readiness score band. `low` = <55, `medium` = 55-74,\n`high` = >=75. Audits without a score are excluded when set.\n",
+    ),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listAuditsQueryLimitMax)
+    .default(listAuditsQueryLimitDefault)
+    .describe("Maximum number of audits to return (1-100). Defaults to 50."),
+  offset: zod.coerce
+    .number()
+    .min(listAuditsQueryOffsetMin)
+    .default(listAuditsQueryOffsetDefault)
+    .describe("Number of audits to skip for pagination."),
+});
 
 export const ListAuditsResponseItem = zod.object({
-  "id": zod.number(),
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string().optional(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
-  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
-  "source": zod.enum(['manual', 'screenshot']),
-  "readinessScore": zod.number().nullish(),
-  "report": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
-  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "previousReport": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
-  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
-  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
-  "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
-  "matchContext": zod.union([zod.object({
-  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
-  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
-}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
-})
-export const ListAuditsResponse = zod.array(ListAuditsResponseItem)
-
+  id: zod.number(),
+  firstName: zod.string(),
+  age: zod.number(),
+  gender: zod.string(),
+  orientation: zod.string().optional(),
+  datingGoal: zod.string(),
+  currentApps: zod.array(zod.string()),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  recentMessageSample: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  relationshipHistory: zod.string().nullish(),
+  biggestChallenge: zod.string().nullish(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.',
+    ),
+  status: zod.enum(["pending", "generating", "complete", "error"]),
+  source: zod.enum(["manual", "screenshot"]),
+  readinessScore: zod.number().nullish(),
+  report: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n",
+    ),
+  reportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp the stored report was generated. Null if no report has been generated yet.",
+    ),
+  previousReport: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n",
+    ),
+  previousReadinessScore: zod
+    .number()
+    .nullish()
+    .describe(
+      "Readiness score from the prior regeneration (null if never regenerated).",
+    ),
+  previousReportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp of the prior regeneration's report (null if never regenerated).",
+    ),
+  createdAt: zod.string(),
+  deletedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n",
+    ),
+  matchContext: zod
+    .union([
+      zod.object({
+        matchedField: zod
+          .enum(["name", "bio"])
+          .describe("The field that best matched the search query."),
+        snippet: zod
+          .string()
+          .nullish()
+          .describe(
+            "A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n",
+    ),
+});
+export const ListAuditsResponse = zod.array(ListAuditsResponseItem);
 
 /**
  * @summary Create a new profile audit
  */
 export const CreateAuditBody = zod.object({
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish()
-})
-
+  firstName: zod.string(),
+  age: zod.number(),
+  gender: zod.string(),
+  orientation: zod.string(),
+  datingGoal: zod.string(),
+  currentApps: zod.array(zod.string()),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  recentMessageSample: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  relationshipHistory: zod.string().nullish(),
+  biggestChallenge: zod.string().nullish(),
+});
 
 /**
  * @summary Get a single audit by ID
  */
 export const GetAuditParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const GetAuditResponse = zod.object({
-  "id": zod.number(),
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string().optional(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
-  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
-  "source": zod.enum(['manual', 'screenshot']),
-  "readinessScore": zod.number().nullish(),
-  "report": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
-  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "previousReport": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
-  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
-  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
-  "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
-  "matchContext": zod.union([zod.object({
-  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
-  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
-}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
-})
-
+  id: zod.number(),
+  firstName: zod.string(),
+  age: zod.number(),
+  gender: zod.string(),
+  orientation: zod.string().optional(),
+  datingGoal: zod.string(),
+  currentApps: zod.array(zod.string()),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  recentMessageSample: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  relationshipHistory: zod.string().nullish(),
+  biggestChallenge: zod.string().nullish(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.',
+    ),
+  status: zod.enum(["pending", "generating", "complete", "error"]),
+  source: zod.enum(["manual", "screenshot"]),
+  readinessScore: zod.number().nullish(),
+  report: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n",
+    ),
+  reportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp the stored report was generated. Null if no report has been generated yet.",
+    ),
+  previousReport: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n",
+    ),
+  previousReadinessScore: zod
+    .number()
+    .nullish()
+    .describe(
+      "Readiness score from the prior regeneration (null if never regenerated).",
+    ),
+  previousReportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp of the prior regeneration's report (null if never regenerated).",
+    ),
+  createdAt: zod.string(),
+  deletedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n",
+    ),
+  matchContext: zod
+    .union([
+      zod.object({
+        matchedField: zod
+          .enum(["name", "bio"])
+          .describe("The field that best matched the search query."),
+        snippet: zod
+          .string()
+          .nullish()
+          .describe(
+            "A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n",
+    ),
+});
 
 /**
  * Moves a single audit to the trash by setting its `deletedAt` timestamp.
@@ -2614,14 +4395,13 @@ if the audit does not exist or is not owned by the caller.
  * @summary Soft-delete an audit owned by the current session
  */
 export const DeleteAuditParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteAuditResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * Returns audits the caller has soft-deleted (set `deletedAt`) but which
@@ -2632,127 +4412,298 @@ lets users restore or permanently remove individual audits.
  * @summary List soft-deleted audits owned by the current session
  */
 export const ListTrashedAuditsResponseItem = zod.object({
-  "id": zod.number(),
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string().optional(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
-  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
-  "source": zod.enum(['manual', 'screenshot']),
-  "readinessScore": zod.number().nullish(),
-  "report": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
-  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "previousReport": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
-  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
-  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
-  "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
-  "matchContext": zod.union([zod.object({
-  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
-  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
-}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
-})
-export const ListTrashedAuditsResponse = zod.array(ListTrashedAuditsResponseItem)
-
+  id: zod.number(),
+  firstName: zod.string(),
+  age: zod.number(),
+  gender: zod.string(),
+  orientation: zod.string().optional(),
+  datingGoal: zod.string(),
+  currentApps: zod.array(zod.string()),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  recentMessageSample: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  relationshipHistory: zod.string().nullish(),
+  biggestChallenge: zod.string().nullish(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.',
+    ),
+  status: zod.enum(["pending", "generating", "complete", "error"]),
+  source: zod.enum(["manual", "screenshot"]),
+  readinessScore: zod.number().nullish(),
+  report: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n",
+    ),
+  reportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp the stored report was generated. Null if no report has been generated yet.",
+    ),
+  previousReport: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n",
+    ),
+  previousReadinessScore: zod
+    .number()
+    .nullish()
+    .describe(
+      "Readiness score from the prior regeneration (null if never regenerated).",
+    ),
+  previousReportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp of the prior regeneration's report (null if never regenerated).",
+    ),
+  createdAt: zod.string(),
+  deletedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n",
+    ),
+  matchContext: zod
+    .union([
+      zod.object({
+        matchedField: zod
+          .enum(["name", "bio"])
+          .describe("The field that best matched the search query."),
+        snippet: zod
+          .string()
+          .nullish()
+          .describe(
+            "A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n",
+    ),
+});
+export const ListTrashedAuditsResponse = zod.array(
+  ListTrashedAuditsResponseItem,
+);
 
 /**
  * Returns soft-deleted audits owned by the caller that will be
@@ -2768,137 +4719,323 @@ can compute exact purge timestamps without hard-coding it.
 export const listExpiringTrashedAuditsQueryWithinDaysDefault = 3;
 export const listExpiringTrashedAuditsQueryWithinDaysMax = 30;
 
-
-
 export const ListExpiringTrashedAuditsQueryParams = zod.object({
-  "withinDays": zod.coerce.number().min(1).max(listExpiringTrashedAuditsQueryWithinDaysMax).default(listExpiringTrashedAuditsQueryWithinDaysDefault).describe('Number of days of headroom to look ahead. Defaults to 3.')
-})
+  withinDays: zod.coerce
+    .number()
+    .min(1)
+    .max(listExpiringTrashedAuditsQueryWithinDaysMax)
+    .default(listExpiringTrashedAuditsQueryWithinDaysDefault)
+    .describe("Number of days of headroom to look ahead. Defaults to 3."),
+});
 
 export const ListExpiringTrashedAuditsResponse = zod.object({
-  "audits": zod.array(zod.object({
-  "id": zod.number(),
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string().optional(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
-  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
-  "source": zod.enum(['manual', 'screenshot']),
-  "readinessScore": zod.number().nullish(),
-  "report": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
-  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "previousReport": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
-  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
-  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
-  "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
-  "matchContext": zod.union([zod.object({
-  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
-  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
-}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
-})).describe('Trashed audits within `withinDays` of permanent purge, earliest first.'),
-  "retentionDays": zod.number().describe('Number of days an audit can stay in the trash before being permanently purged.'),
-  "withinDays": zod.number().describe('The lookahead window (in days) that was used to compute this list.')
-})
-
+  audits: zod
+    .array(
+      zod.object({
+        id: zod.number(),
+        firstName: zod.string(),
+        age: zod.number(),
+        gender: zod.string(),
+        orientation: zod.string().optional(),
+        datingGoal: zod.string(),
+        currentApps: zod.array(zod.string()),
+        bio: zod.string(),
+        prompts: zod.string().nullish(),
+        recentMessageSample: zod.string().nullish(),
+        photoCount: zod.number().nullish(),
+        relationshipHistory: zod.string().nullish(),
+        biggestChallenge: zod.string().nullish(),
+        sourceApp: zod
+          .string()
+          .nullish()
+          .describe(
+            'Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.',
+          ),
+        status: zod.enum(["pending", "generating", "complete", "error"]),
+        source: zod.enum(["manual", "screenshot"]),
+        readinessScore: zod.number().nullish(),
+        report: zod
+          .union([
+            zod.object({
+              auditId: zod.number(),
+              readinessScore: zod.number(),
+              overallGrade: zod.string(),
+              strengths: zod.array(zod.string()),
+              risks: zod.array(zod.string()),
+              bioAudit: zod.string(),
+              rewrittenBio: zod.string(),
+              rewrittenPrompts: zod.array(
+                zod.object({
+                  original: zod.string(),
+                  rewritten: zod.string(),
+                  tip: zod.string(),
+                }),
+              ),
+              photoGuidance: zod.array(
+                zod.object({
+                  category: zod.string(),
+                  status: zod.enum(["good", "needs_work", "missing"]),
+                  advice: zod.string(),
+                }),
+              ),
+              actionPlan: zod.array(
+                zod.object({
+                  priority: zod.number(),
+                  title: zod.string(),
+                  description: zod.string(),
+                  timeframe: zod.string(),
+                }),
+              ),
+              messagingStyle: zod.string(),
+              coachingCta: zod.string(),
+              engineVersion: zod
+                .string()
+                .nullish()
+                .describe(
+                  "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+                ),
+              changeSummary: zod
+                .union([
+                  zod.object({
+                    scoreDelta: zod
+                      .number()
+                      .describe(
+                        "newScore minus previousScore (negative when the score dropped).",
+                      ),
+                    previousScore: zod.number(),
+                    newScore: zod.number(),
+                    addedStrengths: zod
+                      .array(zod.string())
+                      .describe(
+                        "Strengths present in the new report but not in the prior one.",
+                      ),
+                    removedStrengths: zod
+                      .array(zod.string())
+                      .describe(
+                        "Strengths from the prior report that no longer appear.",
+                      ),
+                    addedRisks: zod.array(zod.string()),
+                    removedRisks: zod.array(zod.string()),
+                  }),
+                  zod.null(),
+                ])
+                .optional()
+                .describe(
+                  'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+                ),
+              photoAnalysis: zod
+                .union([
+                  zod.object({
+                    summary: zod
+                      .string()
+                      .describe(
+                        "One or two sentence overall read of the photos actually seen.",
+                      ),
+                    observations: zod.array(
+                      zod.object({
+                        aspect: zod
+                          .string()
+                          .describe(
+                            "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                          ),
+                        assessment: zod.enum(["strong", "okay", "needs_work"]),
+                        detail: zod
+                          .string()
+                          .describe(
+                            "Specific, grounded note referencing what is visible in the photo.",
+                          ),
+                      }),
+                    ),
+                    topFix: zod
+                      .string()
+                      .describe(
+                        "The single highest-impact change to make to the photos.",
+                      ),
+                  }),
+                  zod.null(),
+                ])
+                .optional()
+                .describe(
+                  "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n",
+          ),
+        reportGeneratedAt: zod
+          .string()
+          .nullish()
+          .describe(
+            "ISO timestamp the stored report was generated. Null if no report has been generated yet.",
+          ),
+        previousReport: zod
+          .union([
+            zod.object({
+              auditId: zod.number(),
+              readinessScore: zod.number(),
+              overallGrade: zod.string(),
+              strengths: zod.array(zod.string()),
+              risks: zod.array(zod.string()),
+              bioAudit: zod.string(),
+              rewrittenBio: zod.string(),
+              rewrittenPrompts: zod.array(
+                zod.object({
+                  original: zod.string(),
+                  rewritten: zod.string(),
+                  tip: zod.string(),
+                }),
+              ),
+              photoGuidance: zod.array(
+                zod.object({
+                  category: zod.string(),
+                  status: zod.enum(["good", "needs_work", "missing"]),
+                  advice: zod.string(),
+                }),
+              ),
+              actionPlan: zod.array(
+                zod.object({
+                  priority: zod.number(),
+                  title: zod.string(),
+                  description: zod.string(),
+                  timeframe: zod.string(),
+                }),
+              ),
+              messagingStyle: zod.string(),
+              coachingCta: zod.string(),
+              engineVersion: zod
+                .string()
+                .nullish()
+                .describe(
+                  "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+                ),
+              changeSummary: zod
+                .union([
+                  zod.object({
+                    scoreDelta: zod
+                      .number()
+                      .describe(
+                        "newScore minus previousScore (negative when the score dropped).",
+                      ),
+                    previousScore: zod.number(),
+                    newScore: zod.number(),
+                    addedStrengths: zod
+                      .array(zod.string())
+                      .describe(
+                        "Strengths present in the new report but not in the prior one.",
+                      ),
+                    removedStrengths: zod
+                      .array(zod.string())
+                      .describe(
+                        "Strengths from the prior report that no longer appear.",
+                      ),
+                    addedRisks: zod.array(zod.string()),
+                    removedRisks: zod.array(zod.string()),
+                  }),
+                  zod.null(),
+                ])
+                .optional()
+                .describe(
+                  'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+                ),
+              photoAnalysis: zod
+                .union([
+                  zod.object({
+                    summary: zod
+                      .string()
+                      .describe(
+                        "One or two sentence overall read of the photos actually seen.",
+                      ),
+                    observations: zod.array(
+                      zod.object({
+                        aspect: zod
+                          .string()
+                          .describe(
+                            "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                          ),
+                        assessment: zod.enum(["strong", "okay", "needs_work"]),
+                        detail: zod
+                          .string()
+                          .describe(
+                            "Specific, grounded note referencing what is visible in the photo.",
+                          ),
+                      }),
+                    ),
+                    topFix: zod
+                      .string()
+                      .describe(
+                        "The single highest-impact change to make to the photos.",
+                      ),
+                  }),
+                  zod.null(),
+                ])
+                .optional()
+                .describe(
+                  "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n",
+          ),
+        previousReadinessScore: zod
+          .number()
+          .nullish()
+          .describe(
+            "Readiness score from the prior regeneration (null if never regenerated).",
+          ),
+        previousReportGeneratedAt: zod
+          .string()
+          .nullish()
+          .describe(
+            "ISO timestamp of the prior regeneration's report (null if never regenerated).",
+          ),
+        createdAt: zod.string(),
+        deletedAt: zod
+          .string()
+          .nullish()
+          .describe(
+            "ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n",
+          ),
+        matchContext: zod
+          .union([
+            zod.object({
+              matchedField: zod
+                .enum(["name", "bio"])
+                .describe("The field that best matched the search query."),
+              snippet: zod
+                .string()
+                .nullish()
+                .describe(
+                  "A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n",
+          ),
+      }),
+    )
+    .describe(
+      "Trashed audits within `withinDays` of permanent purge, earliest first.",
+    ),
+  retentionDays: zod
+    .number()
+    .describe(
+      "Number of days an audit can stay in the trash before being permanently purged.",
+    ),
+  withinDays: zod
+    .number()
+    .describe(
+      "The lookahead window (in days) that was used to compute this list.",
+    ),
+});
 
 /**
  * Clears the audit's `deletedAt` timestamp so it reappears in the
@@ -2909,130 +5046,299 @@ been hard-purged.
  * @summary Restore a previously soft-deleted audit
  */
 export const RestoreAuditParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const RestoreAuditResponse = zod.object({
-  "id": zod.number(),
-  "firstName": zod.string(),
-  "age": zod.number(),
-  "gender": zod.string(),
-  "orientation": zod.string().optional(),
-  "datingGoal": zod.string(),
-  "currentApps": zod.array(zod.string()),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "recentMessageSample": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "relationshipHistory": zod.string().nullish(),
-  "biggestChallenge": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
-  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
-  "source": zod.enum(['manual', 'screenshot']),
-  "readinessScore": zod.number().nullish(),
-  "report": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
-  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "previousReport": zod.union([zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
-  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
-  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
-  "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
-  "matchContext": zod.union([zod.object({
-  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
-  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
-}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
-})
-
+  id: zod.number(),
+  firstName: zod.string(),
+  age: zod.number(),
+  gender: zod.string(),
+  orientation: zod.string().optional(),
+  datingGoal: zod.string(),
+  currentApps: zod.array(zod.string()),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  recentMessageSample: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  relationshipHistory: zod.string().nullish(),
+  biggestChallenge: zod.string().nullish(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.',
+    ),
+  status: zod.enum(["pending", "generating", "complete", "error"]),
+  source: zod.enum(["manual", "screenshot"]),
+  readinessScore: zod.number().nullish(),
+  report: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n",
+    ),
+  reportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp the stored report was generated. Null if no report has been generated yet.",
+    ),
+  previousReport: zod
+    .union([
+      zod.object({
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        overallGrade: zod.string(),
+        strengths: zod.array(zod.string()),
+        risks: zod.array(zod.string()),
+        bioAudit: zod.string(),
+        rewrittenBio: zod.string(),
+        rewrittenPrompts: zod.array(
+          zod.object({
+            original: zod.string(),
+            rewritten: zod.string(),
+            tip: zod.string(),
+          }),
+        ),
+        photoGuidance: zod.array(
+          zod.object({
+            category: zod.string(),
+            status: zod.enum(["good", "needs_work", "missing"]),
+            advice: zod.string(),
+          }),
+        ),
+        actionPlan: zod.array(
+          zod.object({
+            priority: zod.number(),
+            title: zod.string(),
+            description: zod.string(),
+            timeframe: zod.string(),
+          }),
+        ),
+        messagingStyle: zod.string(),
+        coachingCta: zod.string(),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+          ),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+          ),
+        photoAnalysis: zod
+          .union([
+            zod.object({
+              summary: zod
+                .string()
+                .describe(
+                  "One or two sentence overall read of the photos actually seen.",
+                ),
+              observations: zod.array(
+                zod.object({
+                  aspect: zod
+                    .string()
+                    .describe(
+                      "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                    ),
+                  assessment: zod.enum(["strong", "okay", "needs_work"]),
+                  detail: zod
+                    .string()
+                    .describe(
+                      "Specific, grounded note referencing what is visible in the photo.",
+                    ),
+                }),
+              ),
+              topFix: zod
+                .string()
+                .describe(
+                  "The single highest-impact change to make to the photos.",
+                ),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n",
+    ),
+  previousReadinessScore: zod
+    .number()
+    .nullish()
+    .describe(
+      "Readiness score from the prior regeneration (null if never regenerated).",
+    ),
+  previousReportGeneratedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp of the prior regeneration's report (null if never regenerated).",
+    ),
+  createdAt: zod.string(),
+  deletedAt: zod
+    .string()
+    .nullish()
+    .describe(
+      "ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n",
+    ),
+  matchContext: zod
+    .union([
+      zod.object({
+        matchedField: zod
+          .enum(["name", "bio"])
+          .describe("The field that best matched the search query."),
+        snippet: zod
+          .string()
+          .nullish()
+          .describe(
+            "A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n",
+          ),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n",
+    ),
+});
 
 /**
  * Hard-deletes a single audit from the trash. Only audits whose
@@ -3044,14 +5350,13 @@ caller, or has not been soft-deleted.
  * @summary Permanently delete a soft-deleted audit
  */
 export const PurgeAuditParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const PurgeAuditResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * Hard-deletes every audit in the caller's trash (i.e. every audit
@@ -3064,10 +5369,9 @@ that were actually purged.
  * @summary Permanently delete every soft-deleted audit owned by the caller
  */
 export const EmptyTrashResponse = zod.object({
-  "success": zod.boolean(),
-  "purgedIds": zod.array(zod.number())
-})
-
+  success: zod.boolean(),
+  purgedIds: zod.array(zod.number()),
+});
 
 /**
  * Clears `deletedAt` on every audit in the caller's trash so they
@@ -3077,10 +5381,9 @@ affected. The response lists the ids that were actually restored.
  * @summary Restore every soft-deleted audit owned by the caller
  */
 export const RestoreAllTrashResponse = zod.object({
-  "success": zod.boolean(),
-  "restoredIds": zod.array(zod.number())
-})
-
+  success: zod.boolean(),
+  restoredIds: zod.array(zod.number()),
+});
 
 /**
  * Moves a list of audits to the trash in a single round-trip by setting
@@ -3094,17 +5397,20 @@ were actually soft-deleted.
  */
 export const bulkDeleteAuditsBodyIdsMax = 200;
 
-
-
 export const BulkDeleteAuditsBody = zod.object({
-  "ids": zod.array(zod.number()).min(1).max(bulkDeleteAuditsBodyIdsMax).describe('List of audit ids to delete. Ids the caller does not own are silently skipped.')
-})
+  ids: zod
+    .array(zod.number())
+    .min(1)
+    .max(bulkDeleteAuditsBodyIdsMax)
+    .describe(
+      "List of audit ids to delete. Ids the caller does not own are silently skipped.",
+    ),
+});
 
 export const BulkDeleteAuditsResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedIds": zod.array(zod.number())
-})
-
+  success: zod.boolean(),
+  deletedIds: zod.array(zod.number()),
+});
 
 /**
  * Called when the user indicates the source app shown on their report is
@@ -3116,73 +5422,132 @@ the user chose. Pass `null` for `correctedApp` to mark the app as unknown.
  * @summary Record a user correction for a mis-detected source app
  */
 export const CorrectAuditSourceAppParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const CorrectAuditSourceAppBody = zod.object({
-  "correctedApp": zod.string().nullable().describe('The app the user says the audit actually came from. One of \"Hinge\",\n\"Bumble\", \"Tinder\", \"Grindr\", \"Feeld\", \"HER\", \"OkCupid\",\n\"CoffeeMeetsBagel\". Pass null to mark the app as\nunknown\/unrecognised.\n')
-})
+  correctedApp: zod
+    .string()
+    .nullable()
+    .describe(
+      'The app the user says the audit actually came from. One of \"Hinge\",\n\"Bumble\", \"Tinder\", \"Grindr\", \"Feeld\", \"HER\", \"OkCupid\",\n\"CoffeeMeetsBagel\". Pass null to mark the app as\nunknown\/unrecognised.\n',
+    ),
+});
 
 export const CorrectAuditSourceAppResponse = zod.object({
-  "success": zod.boolean(),
-  "sourceApp": zod.string().nullable().describe('The updated sourceApp value now stored on the audit.')
-})
-
+  success: zod.boolean(),
+  sourceApp: zod
+    .string()
+    .nullable()
+    .describe("The updated sourceApp value now stored on the audit."),
+});
 
 /**
  * @summary Generate AI profile audit report for an audit
  */
 export const GenerateAuditReportParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const GenerateAuditReportResponse = zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-})
-
+  auditId: zod.number(),
+  readinessScore: zod.number(),
+  overallGrade: zod.string(),
+  strengths: zod.array(zod.string()),
+  risks: zod.array(zod.string()),
+  bioAudit: zod.string(),
+  rewrittenBio: zod.string(),
+  rewrittenPrompts: zod.array(
+    zod.object({
+      original: zod.string(),
+      rewritten: zod.string(),
+      tip: zod.string(),
+    }),
+  ),
+  photoGuidance: zod.array(
+    zod.object({
+      category: zod.string(),
+      status: zod.enum(["good", "needs_work", "missing"]),
+      advice: zod.string(),
+    }),
+  ),
+  actionPlan: zod.array(
+    zod.object({
+      priority: zod.number(),
+      title: zod.string(),
+      description: zod.string(),
+      timeframe: zod.string(),
+    }),
+  ),
+  messagingStyle: zod.string(),
+  coachingCta: zod.string(),
+  engineVersion: zod
+    .string()
+    .nullish()
+    .describe(
+      "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+    ),
+  changeSummary: zod
+    .union([
+      zod.object({
+        scoreDelta: zod
+          .number()
+          .describe(
+            "newScore minus previousScore (negative when the score dropped).",
+          ),
+        previousScore: zod.number(),
+        newScore: zod.number(),
+        addedStrengths: zod
+          .array(zod.string())
+          .describe(
+            "Strengths present in the new report but not in the prior one.",
+          ),
+        removedStrengths: zod
+          .array(zod.string())
+          .describe("Strengths from the prior report that no longer appear."),
+        addedRisks: zod.array(zod.string()),
+        removedRisks: zod.array(zod.string()),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+    ),
+  photoAnalysis: zod
+    .union([
+      zod.object({
+        summary: zod
+          .string()
+          .describe(
+            "One or two sentence overall read of the photos actually seen.",
+          ),
+        observations: zod.array(
+          zod.object({
+            aspect: zod
+              .string()
+              .describe(
+                "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+              ),
+            assessment: zod.enum(["strong", "okay", "needs_work"]),
+            detail: zod
+              .string()
+              .describe(
+                "Specific, grounded note referencing what is visible in the photo.",
+              ),
+          }),
+        ),
+        topFix: zod
+          .string()
+          .describe("The single highest-impact change to make to the photos."),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+    ),
+});
 
 /**
  * Returns the chronological log of report versions for an audit — one
@@ -3194,147 +5559,311 @@ regeneration timeline on the audit detail page.
  * @summary List every regeneration of a single audit's report
  */
 export const ListAuditReportVersionsParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const ListAuditReportVersionsResponse = zod.object({
-  "auditId": zod.number(),
-  "versions": zod.array(zod.object({
-  "id": zod.number(),
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "report": zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('\"What changed since last time\" diff at the moment this version was\ngenerated. Null for the first generation of an audit.\n'),
-  "engineVersion": zod.string().nullish().describe('Engine version tag at the time this version was produced.'),
-  "generatedAt": zod.string().describe('ISO timestamp this version was generated.')
-})).describe('Report versions for this audit, newest first.')
-})
-
+  auditId: zod.number(),
+  versions: zod
+    .array(
+      zod.object({
+        id: zod.number(),
+        auditId: zod.number(),
+        readinessScore: zod.number(),
+        report: zod.object({
+          auditId: zod.number(),
+          readinessScore: zod.number(),
+          overallGrade: zod.string(),
+          strengths: zod.array(zod.string()),
+          risks: zod.array(zod.string()),
+          bioAudit: zod.string(),
+          rewrittenBio: zod.string(),
+          rewrittenPrompts: zod.array(
+            zod.object({
+              original: zod.string(),
+              rewritten: zod.string(),
+              tip: zod.string(),
+            }),
+          ),
+          photoGuidance: zod.array(
+            zod.object({
+              category: zod.string(),
+              status: zod.enum(["good", "needs_work", "missing"]),
+              advice: zod.string(),
+            }),
+          ),
+          actionPlan: zod.array(
+            zod.object({
+              priority: zod.number(),
+              title: zod.string(),
+              description: zod.string(),
+              timeframe: zod.string(),
+            }),
+          ),
+          messagingStyle: zod.string(),
+          coachingCta: zod.string(),
+          engineVersion: zod
+            .string()
+            .nullish()
+            .describe(
+              "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+            ),
+          changeSummary: zod
+            .union([
+              zod.object({
+                scoreDelta: zod
+                  .number()
+                  .describe(
+                    "newScore minus previousScore (negative when the score dropped).",
+                  ),
+                previousScore: zod.number(),
+                newScore: zod.number(),
+                addedStrengths: zod
+                  .array(zod.string())
+                  .describe(
+                    "Strengths present in the new report but not in the prior one.",
+                  ),
+                removedStrengths: zod
+                  .array(zod.string())
+                  .describe(
+                    "Strengths from the prior report that no longer appear.",
+                  ),
+                addedRisks: zod.array(zod.string()),
+                removedRisks: zod.array(zod.string()),
+              }),
+              zod.null(),
+            ])
+            .optional()
+            .describe(
+              'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+            ),
+          photoAnalysis: zod
+            .union([
+              zod.object({
+                summary: zod
+                  .string()
+                  .describe(
+                    "One or two sentence overall read of the photos actually seen.",
+                  ),
+                observations: zod.array(
+                  zod.object({
+                    aspect: zod
+                      .string()
+                      .describe(
+                        "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                      ),
+                    assessment: zod.enum(["strong", "okay", "needs_work"]),
+                    detail: zod
+                      .string()
+                      .describe(
+                        "Specific, grounded note referencing what is visible in the photo.",
+                      ),
+                  }),
+                ),
+                topFix: zod
+                  .string()
+                  .describe(
+                    "The single highest-impact change to make to the photos.",
+                  ),
+              }),
+              zod.null(),
+            ])
+            .optional()
+            .describe(
+              "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+            ),
+        }),
+        changeSummary: zod
+          .union([
+            zod.object({
+              scoreDelta: zod
+                .number()
+                .describe(
+                  "newScore minus previousScore (negative when the score dropped).",
+                ),
+              previousScore: zod.number(),
+              newScore: zod.number(),
+              addedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths present in the new report but not in the prior one.",
+                ),
+              removedStrengths: zod
+                .array(zod.string())
+                .describe(
+                  "Strengths from the prior report that no longer appear.",
+                ),
+              addedRisks: zod.array(zod.string()),
+              removedRisks: zod.array(zod.string()),
+            }),
+            zod.null(),
+          ])
+          .optional()
+          .describe(
+            '\"What changed since last time\" diff at the moment this version was\ngenerated. Null for the first generation of an audit.\n',
+          ),
+        engineVersion: zod
+          .string()
+          .nullish()
+          .describe(
+            "Engine version tag at the time this version was produced.",
+          ),
+        generatedAt: zod
+          .string()
+          .describe("ISO timestamp this version was generated."),
+      }),
+    )
+    .describe("Report versions for this audit, newest first."),
+});
 
 /**
  * @summary Fetch a single historical report version for an audit
  */
 export const GetAuditReportVersionParams = zod.object({
-  "id": zod.coerce.number(),
-  "versionId": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+  versionId: zod.coerce.number(),
+});
 
 export const GetAuditReportVersionResponse = zod.object({
-  "id": zod.number(),
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "report": zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-}),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('\"What changed since last time\" diff at the moment this version was\ngenerated. Null for the first generation of an audit.\n'),
-  "engineVersion": zod.string().nullish().describe('Engine version tag at the time this version was produced.'),
-  "generatedAt": zod.string().describe('ISO timestamp this version was generated.')
-})
-
+  id: zod.number(),
+  auditId: zod.number(),
+  readinessScore: zod.number(),
+  report: zod.object({
+    auditId: zod.number(),
+    readinessScore: zod.number(),
+    overallGrade: zod.string(),
+    strengths: zod.array(zod.string()),
+    risks: zod.array(zod.string()),
+    bioAudit: zod.string(),
+    rewrittenBio: zod.string(),
+    rewrittenPrompts: zod.array(
+      zod.object({
+        original: zod.string(),
+        rewritten: zod.string(),
+        tip: zod.string(),
+      }),
+    ),
+    photoGuidance: zod.array(
+      zod.object({
+        category: zod.string(),
+        status: zod.enum(["good", "needs_work", "missing"]),
+        advice: zod.string(),
+      }),
+    ),
+    actionPlan: zod.array(
+      zod.object({
+        priority: zod.number(),
+        title: zod.string(),
+        description: zod.string(),
+        timeframe: zod.string(),
+      }),
+    ),
+    messagingStyle: zod.string(),
+    coachingCta: zod.string(),
+    engineVersion: zod
+      .string()
+      .nullish()
+      .describe(
+        "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+      ),
+    changeSummary: zod
+      .union([
+        zod.object({
+          scoreDelta: zod
+            .number()
+            .describe(
+              "newScore minus previousScore (negative when the score dropped).",
+            ),
+          previousScore: zod.number(),
+          newScore: zod.number(),
+          addedStrengths: zod
+            .array(zod.string())
+            .describe(
+              "Strengths present in the new report but not in the prior one.",
+            ),
+          removedStrengths: zod
+            .array(zod.string())
+            .describe("Strengths from the prior report that no longer appear."),
+          addedRisks: zod.array(zod.string()),
+          removedRisks: zod.array(zod.string()),
+        }),
+        zod.null(),
+      ])
+      .optional()
+      .describe(
+        'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+      ),
+    photoAnalysis: zod
+      .union([
+        zod.object({
+          summary: zod
+            .string()
+            .describe(
+              "One or two sentence overall read of the photos actually seen.",
+            ),
+          observations: zod.array(
+            zod.object({
+              aspect: zod
+                .string()
+                .describe(
+                  "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                ),
+              assessment: zod.enum(["strong", "okay", "needs_work"]),
+              detail: zod
+                .string()
+                .describe(
+                  "Specific, grounded note referencing what is visible in the photo.",
+                ),
+            }),
+          ),
+          topFix: zod
+            .string()
+            .describe(
+              "The single highest-impact change to make to the photos.",
+            ),
+        }),
+        zod.null(),
+      ])
+      .optional()
+      .describe(
+        "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+      ),
+  }),
+  changeSummary: zod
+    .union([
+      zod.object({
+        scoreDelta: zod
+          .number()
+          .describe(
+            "newScore minus previousScore (negative when the score dropped).",
+          ),
+        previousScore: zod.number(),
+        newScore: zod.number(),
+        addedStrengths: zod
+          .array(zod.string())
+          .describe(
+            "Strengths present in the new report but not in the prior one.",
+          ),
+        removedStrengths: zod
+          .array(zod.string())
+          .describe("Strengths from the prior report that no longer appear."),
+        addedRisks: zod.array(zod.string()),
+        removedRisks: zod.array(zod.string()),
+      }),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      '\"What changed since last time\" diff at the moment this version was\ngenerated. Null for the first generation of an audit.\n',
+    ),
+  engineVersion: zod
+    .string()
+    .nullish()
+    .describe("Engine version tag at the time this version was produced."),
+  generatedAt: zod
+    .string()
+    .describe("ISO timestamp this version was generated."),
+});
 
 /**
  * Accepts a base64-encoded screenshot of a dating profile and returns the
@@ -3345,19 +5874,26 @@ call /audits/from-screenshot with the corrected values.
  * @summary OCR a profile screenshot and return extracted fields for review
  */
 export const ExtractScreenshotBody = zod.object({
-  "imageBase64": zod.string().describe('Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n')
-})
+  imageBase64: zod
+    .string()
+    .describe(
+      'Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n',
+    ),
+});
 
 export const ExtractScreenshotResponse = zod.object({
-  "firstName": zod.string().nullish(),
-  "age": zod.number().nullish(),
-  "sourceApp": zod.string().nullish(),
-  "bio": zod.string(),
-  "prompts": zod.array(zod.string()),
-  "rawOcrText": zod.string(),
-  "lowConfidenceFields": zod.array(zod.enum(['firstName', 'age', 'sourceApp', 'bio', 'prompts'])).describe('Fields the parser is least sure about. The review UI should highlight\nthese so the user double-checks them before submitting.\n')
-})
-
+  firstName: zod.string().nullish(),
+  age: zod.number().nullish(),
+  sourceApp: zod.string().nullish(),
+  bio: zod.string(),
+  prompts: zod.array(zod.string()),
+  rawOcrText: zod.string(),
+  lowConfidenceFields: zod
+    .array(zod.enum(["firstName", "age", "sourceApp", "bio", "prompts"]))
+    .describe(
+      "Fields the parser is least sure about. The review UI should highlight\nthese so the user double-checks them before submitting.\n",
+    ),
+});
 
 /**
  * Accepts either a base64-encoded screenshot or the corrected fields the user
@@ -3368,78 +5904,175 @@ to the audit record.
 
  * @summary Run an audit on profile text from a screenshot (optionally corrected)
  */
-export const AuditFromScreenshotBody = zod.object({
-  "imageBase64": zod.string().nullish().describe('Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\nOmit when supplying corrected text directly.\n'),
-  "imageMediaType": zod.string().nullish().describe('MIME type of the uploaded image (e.g. \"image\/png\"). Sent so the opt-in\nphoto vision call labels the image correctly even when imageBase64 has\nno data URL prefix. Falls back to prefix sniffing then JPEG.\n'),
-  "firstName": zod.string().nullish().describe('Optional name (e.g. the match\'s first name pulled from the profile).'),
-  "age": zod.number().nullish().describe('Optional age, used when supplying corrected fields.'),
-  "datingGoal": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Which dating app the screenshot was taken from (e.g. \"Hinge\").'),
-  "bio": zod.string().nullish().describe('Corrected bio text. When present, OCR is skipped.'),
-  "prompts": zod.array(zod.string()).optional().describe('Corrected prompts. Only used when `bio` is provided.'),
-  "rawOcrText": zod.string().nullish().describe('Raw OCR text from the prior \/audits\/extract-screenshot call. When\npresent alongside corrected fields, the server stores it next to the\naudit so the OCR-vs-correction diff can be inspected later.\n'),
-  "rawExtracted": zod.object({
-  "firstName": zod.string().nullish(),
-  "age": zod.number().nullish(),
-  "sourceApp": zod.string().nullish(),
-  "bio": zod.string().nullish(),
-  "prompts": zod.array(zod.string()).optional()
-}).nullish().describe('The parser\'s original guesses from the prior extract-screenshot call.\nWhen the corrected values differ, the diff is recorded against the\naudit for parser-improvement analysis.\n')
-}).describe('Either provide `imageBase64` (server will OCR) or provide `bio` (and\noptionally `prompts`) from a prior \/audits\/extract-screenshot call so the\nuser could correct OCR mistakes. When `bio` is provided, OCR is skipped.\n')
+export const AuditFromScreenshotBody = zod
+  .object({
+    imageBase64: zod
+      .string()
+      .nullish()
+      .describe(
+        'Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\nOmit when supplying corrected text directly.\n',
+      ),
+    imageMediaType: zod
+      .string()
+      .nullish()
+      .describe(
+        'MIME type of the uploaded image (e.g. \"image\/png\"). Sent so the opt-in\nphoto vision call labels the image correctly even when imageBase64 has\nno data URL prefix. Falls back to prefix sniffing then JPEG.\n',
+      ),
+    firstName: zod
+      .string()
+      .nullish()
+      .describe(
+        "Optional name (e.g. the match's first name pulled from the profile).",
+      ),
+    age: zod
+      .number()
+      .nullish()
+      .describe("Optional age, used when supplying corrected fields."),
+    datingGoal: zod.string().nullish(),
+    sourceApp: zod
+      .string()
+      .nullish()
+      .describe(
+        'Which dating app the screenshot was taken from (e.g. \"Hinge\").',
+      ),
+    bio: zod
+      .string()
+      .nullish()
+      .describe("Corrected bio text. When present, OCR is skipped."),
+    prompts: zod
+      .array(zod.string())
+      .optional()
+      .describe("Corrected prompts. Only used when `bio` is provided."),
+    rawOcrText: zod
+      .string()
+      .nullish()
+      .describe(
+        "Raw OCR text from the prior \/audits\/extract-screenshot call. When\npresent alongside corrected fields, the server stores it next to the\naudit so the OCR-vs-correction diff can be inspected later.\n",
+      ),
+    rawExtracted: zod
+      .object({
+        firstName: zod.string().nullish(),
+        age: zod.number().nullish(),
+        sourceApp: zod.string().nullish(),
+        bio: zod.string().nullish(),
+        prompts: zod.array(zod.string()).optional(),
+      })
+      .nullish()
+      .describe(
+        "The parser's original guesses from the prior extract-screenshot call.\nWhen the corrected values differ, the diff is recorded against the\naudit for parser-improvement analysis.\n",
+      ),
+  })
+  .describe(
+    "Either provide `imageBase64` (server will OCR) or provide `bio` (and\noptionally `prompts`) from a prior \/audits\/extract-screenshot call so the\nuser could correct OCR mistakes. When `bio` is provided, OCR is skipped.\n",
+  );
 
 export const AuditFromScreenshotResponse = zod.object({
-  "auditId": zod.number(),
-  "extractedBio": zod.string(),
-  "extractedPrompts": zod.array(zod.string()),
-  "rawOcrText": zod.string().optional(),
-  "report": zod.object({
-  "auditId": zod.number(),
-  "readinessScore": zod.number(),
-  "overallGrade": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "bioAudit": zod.string(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "photoGuidance": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "actionPlan": zod.array(zod.object({
-  "priority": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "timeframe": zod.string()
-})),
-  "messagingStyle": zod.string(),
-  "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
-  "changeSummary": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
-  "previousScore": zod.number(),
-  "newScore": zod.number(),
-  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
-  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
-  "addedRisks": zod.array(zod.string()),
-  "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
-  "photoAnalysis": zod.union([zod.object({
-  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
-  "observations": zod.array(zod.object({
-  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
-})),
-  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
-}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
-})
-})
-
+  auditId: zod.number(),
+  extractedBio: zod.string(),
+  extractedPrompts: zod.array(zod.string()),
+  rawOcrText: zod.string().optional(),
+  report: zod.object({
+    auditId: zod.number(),
+    readinessScore: zod.number(),
+    overallGrade: zod.string(),
+    strengths: zod.array(zod.string()),
+    risks: zod.array(zod.string()),
+    bioAudit: zod.string(),
+    rewrittenBio: zod.string(),
+    rewrittenPrompts: zod.array(
+      zod.object({
+        original: zod.string(),
+        rewritten: zod.string(),
+        tip: zod.string(),
+      }),
+    ),
+    photoGuidance: zod.array(
+      zod.object({
+        category: zod.string(),
+        status: zod.enum(["good", "needs_work", "missing"]),
+        advice: zod.string(),
+      }),
+    ),
+    actionPlan: zod.array(
+      zod.object({
+        priority: zod.number(),
+        title: zod.string(),
+        description: zod.string(),
+        timeframe: zod.string(),
+      }),
+    ),
+    messagingStyle: zod.string(),
+    coachingCta: zod.string(),
+    engineVersion: zod
+      .string()
+      .nullish()
+      .describe(
+        "Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n",
+      ),
+    changeSummary: zod
+      .union([
+        zod.object({
+          scoreDelta: zod
+            .number()
+            .describe(
+              "newScore minus previousScore (negative when the score dropped).",
+            ),
+          previousScore: zod.number(),
+          newScore: zod.number(),
+          addedStrengths: zod
+            .array(zod.string())
+            .describe(
+              "Strengths present in the new report but not in the prior one.",
+            ),
+          removedStrengths: zod
+            .array(zod.string())
+            .describe("Strengths from the prior report that no longer appear."),
+          addedRisks: zod.array(zod.string()),
+          removedRisks: zod.array(zod.string()),
+        }),
+        zod.null(),
+      ])
+      .optional()
+      .describe(
+        'A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n',
+      ),
+    photoAnalysis: zod
+      .union([
+        zod.object({
+          summary: zod
+            .string()
+            .describe(
+              "One or two sentence overall read of the photos actually seen.",
+            ),
+          observations: zod.array(
+            zod.object({
+              aspect: zod
+                .string()
+                .describe(
+                  "What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n",
+                ),
+              assessment: zod.enum(["strong", "okay", "needs_work"]),
+              detail: zod
+                .string()
+                .describe(
+                  "Specific, grounded note referencing what is visible in the photo.",
+                ),
+            }),
+          ),
+          topFix: zod
+            .string()
+            .describe(
+              "The single highest-impact change to make to the photos.",
+            ),
+        }),
+        zod.null(),
+      ])
+      .optional()
+      .describe(
+        "Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n",
+      ),
+  }),
+});
 
 /**
  * Returns the version tag of the deterministic audit engine currently
@@ -3449,182 +6082,197 @@ stored on a saved report to decide whether the report is stale.
  * @summary Get the current deterministic engine version
  */
 export const GetEngineMetaResponse = zod.object({
-  "engineVersion": zod.string().describe('Version tag of the deterministic audit engine currently running on\nthe server. Clients should treat saved reports tagged with a\ndifferent (or missing) version as stale.\n')
-})
-
+  engineVersion: zod
+    .string()
+    .describe(
+      "Version tag of the deterministic audit engine currently running on\nthe server. Clients should treat saved reports tagged with a\ndifferent (or missing) version as stale.\n",
+    ),
+});
 
 /**
  * @summary Get aggregate summary of user audits (scores, trends)
  */
 export const GetAuditSummaryResponse = zod.object({
-  "totalAudits": zod.number(),
-  "averageScore": zod.number(),
-  "latestScore": zod.number().nullable(),
-  "scoreHistory": zod.array(zod.object({
-  "date": zod.string(),
-  "score": zod.number()
-})),
-  "topStrengths": zod.array(zod.string()),
-  "topRisks": zod.array(zod.string())
-})
-
+  totalAudits: zod.number(),
+  averageScore: zod.number(),
+  latestScore: zod.number().nullable(),
+  scoreHistory: zod.array(
+    zod.object({
+      date: zod.string(),
+      score: zod.number(),
+    }),
+  ),
+  topStrengths: zod.array(zod.string()),
+  topRisks: zod.array(zod.string()),
+});
 
 /**
  * @summary List saved dating profiles
  */
 export const ListProfilesResponseItem = zod.object({
-  "id": zod.number(),
-  "platform": zod.string(),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-export const ListProfilesResponse = zod.array(ListProfilesResponseItem)
-
+  id: zod.number(),
+  platform: zod.string(),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListProfilesResponse = zod.array(ListProfilesResponseItem);
 
 /**
  * @summary Save a dating profile
  */
 export const CreateProfileBody = zod.object({
-  "platform": zod.string(),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "notes": zod.string().nullish()
-})
-
+  platform: zod.string(),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  notes: zod.string().nullish(),
+});
 
 /**
  * @summary Get a dating profile
  */
 export const GetProfileParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const GetProfileResponse = zod.object({
-  "id": zod.number(),
-  "platform": zod.string(),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
+  id: zod.number(),
+  platform: zod.string(),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+});
 
 /**
  * @summary Update a dating profile
  */
 export const UpdateProfileParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateProfileBody = zod.object({
-  "platform": zod.string().optional(),
-  "bio": zod.string().optional(),
-  "prompts": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "notes": zod.string().nullish()
-})
+  platform: zod.string().optional(),
+  bio: zod.string().optional(),
+  prompts: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  notes: zod.string().nullish(),
+});
 
 export const UpdateProfileResponse = zod.object({
-  "id": zod.number(),
-  "platform": zod.string(),
-  "bio": zod.string(),
-  "prompts": zod.string().nullish(),
-  "photoCount": zod.number().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
+  id: zod.number(),
+  platform: zod.string(),
+  bio: zod.string(),
+  prompts: zod.string().nullish(),
+  photoCount: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+});
 
 /**
  * @summary Delete a saved dating profile
  */
 export const DeleteProfileParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteProfileResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * @summary Generate AI-rewritten bio and prompts for a profile
  */
 export const RewriteProfileBioParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const RewriteProfileBioResponse = zod.object({
-  "profileId": zod.number(),
-  "rewrittenBio": zod.string(),
-  "rewrittenPrompts": zod.array(zod.object({
-  "original": zod.string(),
-  "rewritten": zod.string(),
-  "tip": zod.string()
-})),
-  "tips": zod.array(zod.string())
-})
-
+  profileId: zod.number(),
+  rewrittenBio: zod.string(),
+  rewrittenPrompts: zod.array(
+    zod.object({
+      original: zod.string(),
+      rewritten: zod.string(),
+      tip: zod.string(),
+    }),
+  ),
+  tips: zod.array(zod.string()),
+});
 
 /**
  * @summary List message coaching sessions
  */
 export const ListMessageCoachingSessionsResponseItem = zod.object({
-  "id": zod.number(),
-  "matchName": zod.string(),
-  "conversationContext": zod.string(),
-  "yourLastMessage": zod.string(),
-  "goal": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").'),
-  "status": zod.enum(['pending', 'complete']),
-  "createdAt": zod.string()
-})
-export const ListMessageCoachingSessionsResponse = zod.array(ListMessageCoachingSessionsResponseItem)
-
+  id: zod.number(),
+  matchName: zod.string(),
+  conversationContext: zod.string(),
+  yourLastMessage: zod.string(),
+  goal: zod.string().nullish(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").',
+    ),
+  status: zod.enum(["pending", "complete"]),
+  createdAt: zod.string(),
+});
+export const ListMessageCoachingSessionsResponse = zod.array(
+  ListMessageCoachingSessionsResponseItem,
+);
 
 /**
  * @summary Create a message coaching session
  */
 export const CreateMessageCoachingSessionBody = zod.object({
-  "matchName": zod.string(),
-  "conversationContext": zod.string(),
-  "yourLastMessage": zod.string(),
-  "goal": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\"). Used to tune coach output.')
-})
-
+  matchName: zod.string(),
+  conversationContext: zod.string(),
+  yourLastMessage: zod.string(),
+  goal: zod.string().nullish(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\"). Used to tune coach output.',
+    ),
+});
 
 /**
  * @summary Get AI coaching advice for a specific message session
  */
 export const CoachMessageParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const CoachMessageResponse = zod.object({
-  "sessionId": zod.number(),
-  "analysis": zod.string(),
-  "suggestedReplies": zod.array(zod.object({
-  "style": zod.string(),
-  "text": zod.string(),
-  "rationale": zod.string()
-})),
-  "tone": zod.string(),
-  "redFlags": zod.array(zod.string()),
-  "coachTip": zod.string(),
-  "safety": zod.object({
-  "risk": zod.enum(['none', 'low', 'elevated']),
-  "signals": zod.array(zod.string()),
-  "advice": zod.string()
-}).describe('Romance-scam screen for the coached conversation. The deterministic\nengine produces this on every coach request; the deep AI lane refines it\nwhen consent is on. risk is none, low, or elevated.\n')
-})
-
+  sessionId: zod.number(),
+  analysis: zod.string(),
+  suggestedReplies: zod.array(
+    zod.object({
+      style: zod.string(),
+      text: zod.string(),
+      rationale: zod.string(),
+    }),
+  ),
+  tone: zod.string(),
+  redFlags: zod.array(zod.string()),
+  coachTip: zod.string(),
+  safety: zod
+    .object({
+      risk: zod.enum(["none", "low", "elevated"]),
+      signals: zod.array(zod.string()),
+      advice: zod.string(),
+    })
+    .describe(
+      "Romance-scam screen for the coached conversation. The deterministic\nengine produces this on every coach request; the deep AI lane refines it\nwhen consent is on. risk is none, low, or elevated.\n",
+    ),
+});
 
 /**
  * Accepts a base64-encoded screenshot of a dating-app chat and returns the
@@ -3636,19 +6284,41 @@ anything before submitting.
  * @summary OCR a chat screenshot and return conversation text + detected source app
  */
 export const ExtractMessageScreenshotBody = zod.object({
-  "imageBase64": zod.string().describe('Base64-encoded screenshot of a dating-app chat. May include a data\nURL prefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n')
-})
+  imageBase64: zod
+    .string()
+    .describe(
+      'Base64-encoded screenshot of a dating-app chat. May include a data\nURL prefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n',
+    ),
+});
 
 export const ExtractMessageScreenshotResponse = zod.object({
-  "conversationText": zod.string().describe('OCR-extracted conversation text, with obvious UI chrome (timestamps,\n\"Delivered\", \"Send\", etc.) filtered out. The user is expected to\ntidy it up in the Coach textarea before submitting.\n'),
-  "sourceApp": zod.string().nullish().describe('Detected source app — \"Hinge\", \"Bumble\", \"Tinder\", or null when undetectable.'),
-  "rawOcrText": zod.string(),
-  "speakerTurns": zod.array(zod.object({
-  "speaker": zod.enum(['them', 'you']).describe('Who sent this message — \"them\" for the match, \"you\" for the user.'),
-  "text": zod.string().describe('The message text for this turn.')
-})).describe('Ordered list of inferred speaker turns extracted from the screenshot.\nSpeaker attribution is a heuristic (noise-boundary alternation) and may\nneed user correction — the client should offer a way to flip misattributed turns.\n')
-})
-
+  conversationText: zod
+    .string()
+    .describe(
+      'OCR-extracted conversation text, with obvious UI chrome (timestamps,\n\"Delivered\", \"Send\", etc.) filtered out. The user is expected to\ntidy it up in the Coach textarea before submitting.\n',
+    ),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Detected source app — \"Hinge\", \"Bumble\", \"Tinder\", or null when undetectable.',
+    ),
+  rawOcrText: zod.string(),
+  speakerTurns: zod
+    .array(
+      zod.object({
+        speaker: zod
+          .enum(["them", "you"])
+          .describe(
+            'Who sent this message — \"them\" for the match, \"you\" for the user.',
+          ),
+        text: zod.string().describe("The message text for this turn."),
+      }),
+    )
+    .describe(
+      "Ordered list of inferred speaker turns extracted from the screenshot.\nSpeaker attribution is a heuristic (noise-boundary alternation) and may\nneed user correction — the client should offer a way to flip misattributed turns.\n",
+    ),
+});
 
 /**
  * Files a report against another member. The report is queued for founder
@@ -3658,8 +6328,11 @@ client should offer block as a separate step.
  * @summary Report another member for a Trust & Safety concern
  */
 export const ReportUserHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const reportUserBodyExternalAppMax = 120;
 
@@ -3667,18 +6340,40 @@ export const reportUserBodyExternalLabelMax = 120;
 
 export const reportUserBodyNoteMax = 1000;
 
-
-
-export const ReportUserBody = zod.object({
-  "reportedUserId": zod.string().nullish(),
-  "subjectType": zod.union([zod.literal('member'),zod.literal('off_platform'),zod.literal(null)]).nullish(),
-  "externalApp": zod.string().max(reportUserBodyExternalAppMax).nullish(),
-  "externalLabel": zod.string().max(reportUserBodyExternalLabelMax).nullish(),
-  "reason": zod.enum(['fake_profile', 'harassment', 'inappropriate', 'scam', 'underage', 'safety', 'other']),
-  "context": zod.union([zod.literal('match'),zod.literal('conversation'),zod.literal('profile'),zod.literal(null)]).nullish(),
-  "note": zod.string().max(reportUserBodyNoteMax).nullish()
-}).describe('A safety report. For a report about another platform member, set\nreportedUserId and leave subjectType as \"member\". For an off-platform\nreport filed from the message coach (the person lives on Hinge\/Tinder\/\nBumble and has no account here), set subjectType to \"off_platform\",\nomit reportedUserId, and use externalApp\/externalLabel for context.\n')
-
+export const ReportUserBody = zod
+  .object({
+    reportedUserId: zod.string().nullish(),
+    subjectType: zod
+      .union([
+        zod.literal("member"),
+        zod.literal("off_platform"),
+        zod.literal(null),
+      ])
+      .nullish(),
+    externalApp: zod.string().max(reportUserBodyExternalAppMax).nullish(),
+    externalLabel: zod.string().max(reportUserBodyExternalLabelMax).nullish(),
+    reason: zod.enum([
+      "fake_profile",
+      "harassment",
+      "inappropriate",
+      "scam",
+      "underage",
+      "safety",
+      "other",
+    ]),
+    context: zod
+      .union([
+        zod.literal("match"),
+        zod.literal("conversation"),
+        zod.literal("profile"),
+        zod.literal(null),
+      ])
+      .nullish(),
+    note: zod.string().max(reportUserBodyNoteMax).nullish(),
+  })
+  .describe(
+    'A safety report. For a report about another platform member, set\nreportedUserId and leave subjectType as \"member\". For an off-platform\nreport filed from the message coach (the person lives on Hinge\/Tinder\/\nBumble and has no account here), set subjectType to \"off_platform\",\nomit reportedUserId, and use externalApp\/externalLabel for context.\n',
+  );
 
 /**
  * Blocks another member. Blocking is a hard, symmetric gate in the matching
@@ -3689,46 +6384,65 @@ are removed. Blocking is idempotent.
  * @summary Block another member
  */
 export const BlockUserHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const BlockUserBody = zod.object({
-  "blockedUserId": zod.string(),
-  "reason": zod.union([zod.literal('fake_profile'),zod.literal('harassment'),zod.literal('inappropriate'),zod.literal('scam'),zod.literal('underage'),zod.literal('safety'),zod.literal('other'),zod.literal(null)]).nullish()
-})
-
+  blockedUserId: zod.string(),
+  reason: zod
+    .union([
+      zod.literal("fake_profile"),
+      zod.literal("harassment"),
+      zod.literal("inappropriate"),
+      zod.literal("scam"),
+      zod.literal("underage"),
+      zod.literal("safety"),
+      zod.literal("other"),
+      zod.literal(null),
+    ])
+    .nullish(),
+});
 
 /**
  * @summary List the members the caller has blocked
  */
 export const ListSafetyBlocksHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListSafetyBlocksResponse = zod.object({
-  "blocks": zod.array(zod.object({
-  "blockedUserId": zod.string(),
-  "reason": zod.string().nullable(),
-  "createdAt": zod.string()
-}))
-})
-
+  blocks: zod.array(
+    zod.object({
+      blockedUserId: zod.string(),
+      reason: zod.string().nullable(),
+      createdAt: zod.string(),
+    }),
+  ),
+});
 
 /**
  * @summary Remove a block (undo)
  */
 export const UnblockUserParams = zod.object({
-  "blockedUserId": zod.coerce.string()
-})
+  blockedUserId: zod.coerce.string(),
+});
 
 export const UnblockUserHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const UnblockUserResponse = zod.object({
-  "ok": zod.boolean()
-})
-
+  ok: zod.boolean(),
+});
 
 /**
  * Runs a pre-send safety check on a message the caller is about to send.
@@ -3742,26 +6456,37 @@ stored. risk is none, low, or elevated.
  * @summary Screen an outgoing message for romance-scam red flags before sending
  */
 export const CheckOutgoingMessageHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const checkOutgoingMessageBodyDraftMax = 4000;
 
 export const checkOutgoingMessageBodyConversationContextMax = 8000;
 
+export const CheckOutgoingMessageBody = zod
+  .object({
+    draft: zod.string().min(1).max(checkOutgoingMessageBodyDraftMax),
+    conversationContext: zod
+      .string()
+      .max(checkOutgoingMessageBodyConversationContextMax)
+      .nullish(),
+  })
+  .describe(
+    "A message the caller is about to send, plus optional conversation\ncontext the client already shows the user. Used only to screen the\ndraft for romance-scam patterns before it goes out. Nothing here is\nstored.\n",
+  );
 
-
-export const CheckOutgoingMessageBody = zod.object({
-  "draft": zod.string().min(1).max(checkOutgoingMessageBodyDraftMax),
-  "conversationContext": zod.string().max(checkOutgoingMessageBodyConversationContextMax).nullish()
-}).describe('A message the caller is about to send, plus optional conversation\ncontext the client already shows the user. Used only to screen the\ndraft for romance-scam patterns before it goes out. Nothing here is\nstored.\n')
-
-export const CheckOutgoingMessageResponse = zod.object({
-  "risk": zod.enum(['none', 'low', 'elevated']),
-  "signals": zod.array(zod.string()),
-  "advice": zod.string()
-}).describe('Romance-scam screen for the coached conversation. The deterministic\nengine produces this on every coach request; the deep AI lane refines it\nwhen consent is on. risk is none, low, or elevated.\n')
-
+export const CheckOutgoingMessageResponse = zod
+  .object({
+    risk: zod.enum(["none", "low", "elevated"]),
+    signals: zod.array(zod.string()),
+    advice: zod.string(),
+  })
+  .describe(
+    "Romance-scam screen for the coached conversation. The deterministic\nengine produces this on every coach request; the deep AI lane refines it\nwhen consent is on. risk is none, low, or elevated.\n",
+  );
 
 /**
  * Returns Trust & Safety reports for the founder review queue, newest
@@ -3770,112 +6495,126 @@ first. Requires founder key.
  * @summary List member reports for founder review
  */
 export const GetFounderReportsQueryParams = zod.object({
-  "status": zod.enum(['open', 'reviewed', 'dismissed']).optional()
-})
+  status: zod.enum(["open", "reviewed", "dismissed"]).optional(),
+});
 
 export const GetFounderReportsHeader = zod.object({
-  "x-founder-key": zod.string()
-})
+  "x-founder-key": zod.string(),
+});
 
 export const GetFounderReportsResponse = zod.object({
-  "reports": zod.array(zod.object({
-  "id": zod.number(),
-  "reporterUserId": zod.string(),
-  "reportedUserId": zod.string().nullable(),
-  "subjectType": zod.enum(['member', 'off_platform']),
-  "externalApp": zod.string().nullable(),
-  "externalLabel": zod.string().nullable(),
-  "reason": zod.string(),
-  "context": zod.string().nullable(),
-  "note": zod.string().nullable(),
-  "status": zod.enum(['open', 'reviewed', 'dismissed']),
-  "createdAt": zod.string(),
-  "reviewedAt": zod.string().nullable()
-}))
-})
-
+  reports: zod.array(
+    zod.object({
+      id: zod.number(),
+      reporterUserId: zod.string(),
+      reportedUserId: zod.string().nullable(),
+      subjectType: zod.enum(["member", "off_platform"]),
+      externalApp: zod.string().nullable(),
+      externalLabel: zod.string().nullable(),
+      reason: zod.string(),
+      context: zod.string().nullable(),
+      note: zod.string().nullable(),
+      status: zod.enum(["open", "reviewed", "dismissed"]),
+      createdAt: zod.string(),
+      reviewedAt: zod.string().nullable(),
+    }),
+  ),
+});
 
 /**
  * Requires founder key.
  * @summary Update the review status of a member report
  */
 export const UpdateFounderReportStatusParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateFounderReportStatusHeader = zod.object({
-  "x-founder-key": zod.string()
-})
+  "x-founder-key": zod.string(),
+});
 
 export const UpdateFounderReportStatusBody = zod.object({
-  "status": zod.enum(['open', 'reviewed', 'dismissed'])
-})
+  status: zod.enum(["open", "reviewed", "dismissed"]),
+});
 
 export const UpdateFounderReportStatusResponse = zod.object({
-  "id": zod.number(),
-  "reporterUserId": zod.string(),
-  "reportedUserId": zod.string().nullable(),
-  "subjectType": zod.enum(['member', 'off_platform']),
-  "externalApp": zod.string().nullable(),
-  "externalLabel": zod.string().nullable(),
-  "reason": zod.string(),
-  "context": zod.string().nullable(),
-  "note": zod.string().nullable(),
-  "status": zod.enum(['open', 'reviewed', 'dismissed']),
-  "createdAt": zod.string(),
-  "reviewedAt": zod.string().nullable()
-})
-
+  id: zod.number(),
+  reporterUserId: zod.string(),
+  reportedUserId: zod.string().nullable(),
+  subjectType: zod.enum(["member", "off_platform"]),
+  externalApp: zod.string().nullable(),
+  externalLabel: zod.string().nullable(),
+  reason: zod.string(),
+  context: zod.string().nullable(),
+  note: zod.string().nullable(),
+  status: zod.enum(["open", "reviewed", "dismissed"]),
+  createdAt: zod.string(),
+  reviewedAt: zod.string().nullable(),
+});
 
 /**
  * @summary Record whether the user sent a coached reply
  */
 export const RecordCoachFollowUpBody = zod.object({
-  "answer": zod.enum(['sent', 'not_sent', 'snoozed', 'dismissed']),
-  "sessionId": zod.number().nullish()
-})
+  answer: zod.enum(["sent", "not_sent", "snoozed", "dismissed"]),
+  sessionId: zod.number().nullish(),
+});
 
-export const RecordCoachFollowUpResponse = zod.object({
-  "followUpId": zod.number().describe('ID of the just-inserted coach_follow_ups row.'),
-  "totalPrompts": zod.number(),
-  "sentCount": zod.number(),
-  "notSentCount": zod.number(),
-  "snoozeCount": zod.number(),
-  "dismissCount": zod.number(),
-  "lastAnsweredAt": zod.string().nullable(),
-  "lastAnswer": zod.union([zod.literal('sent'),zod.literal('not_sent'),zod.literal(null)]).nullable()
-}).describe('Result of recording a new follow-up answer. Includes the new row\'s id\nso anonymous callers can persist it locally and pass it to the claim\nendpoint after login.\n')
-
+export const RecordCoachFollowUpResponse = zod
+  .object({
+    followUpId: zod
+      .number()
+      .describe("ID of the just-inserted coach_follow_ups row."),
+    totalPrompts: zod.number(),
+    sentCount: zod.number(),
+    notSentCount: zod.number(),
+    snoozeCount: zod.number(),
+    dismissCount: zod.number(),
+    lastAnsweredAt: zod.string().nullable(),
+    lastAnswer: zod
+      .union([zod.literal("sent"), zod.literal("not_sent"), zod.literal(null)])
+      .nullable(),
+  })
+  .describe(
+    "Result of recording a new follow-up answer. Includes the new row's id\nso anonymous callers can persist it locally and pass it to the claim\nendpoint after login.\n",
+  );
 
 /**
  * @summary Get aggregate send-through stats for the current account
  */
 export const GetCoachFollowUpStatsResponse = zod.object({
-  "totalPrompts": zod.number(),
-  "sentCount": zod.number(),
-  "notSentCount": zod.number(),
-  "snoozeCount": zod.number(),
-  "dismissCount": zod.number(),
-  "lastAnsweredAt": zod.string().nullable(),
-  "lastAnswer": zod.union([zod.literal('sent'),zod.literal('not_sent'),zod.literal(null)]).nullable()
-})
-
+  totalPrompts: zod.number(),
+  sentCount: zod.number(),
+  notSentCount: zod.number(),
+  snoozeCount: zod.number(),
+  dismissCount: zod.number(),
+  lastAnsweredAt: zod.string().nullable(),
+  lastAnswer: zod
+    .union([zod.literal("sent"), zod.literal("not_sent"), zod.literal(null)])
+    .nullable(),
+});
 
 /**
  * @summary Get weekly send-through buckets for the current account
  */
 export const GetCoachFollowUpTimelineResponse = zod.object({
-  "buckets": zod.array(zod.object({
-  "weekStart": zod.string().describe('ISO date for the start of the week (UTC, Monday)'),
-  "sentCount": zod.number(),
-  "notSentCount": zod.number(),
-  "snoozeCount": zod.number(),
-  "dismissCount": zod.number(),
-  "total": zod.number().describe('sentCount + notSentCount for this week'),
-  "sendThroughRate": zod.number().nullable().describe('sentCount \/ total, or null when total is 0')
-}))
-})
-
+  buckets: zod.array(
+    zod.object({
+      weekStart: zod
+        .string()
+        .describe("ISO date for the start of the week (UTC, Monday)"),
+      sentCount: zod.number(),
+      notSentCount: zod.number(),
+      snoozeCount: zod.number(),
+      dismissCount: zod.number(),
+      total: zod.number().describe("sentCount + notSentCount for this week"),
+      sendThroughRate: zod
+        .number()
+        .nullable()
+        .describe("sentCount \/ total, or null when total is 0"),
+    }),
+  ),
+});
 
 /**
  * Stateless. The client sends the chosen scenario, an optional description
@@ -3889,21 +6628,22 @@ persisted.
  * @summary Run one turn of a relationship-conversation rehearsal
  */
 export const RehearsalTurnBody = zod.object({
-  "scenario": zod.string(),
-  "theirStyle": zod.string().nullish(),
-  "transcript": zod.array(zod.object({
-  "role": zod.enum(['you', 'them']),
-  "text": zod.string()
-}))
-})
+  scenario: zod.string(),
+  theirStyle: zod.string().nullish(),
+  transcript: zod.array(
+    zod.object({
+      role: zod.enum(["you", "them"]),
+      text: zod.string(),
+    }),
+  ),
+});
 
 export const RehearsalTurnResponse = zod.object({
-  "reply": zod.string(),
-  "note": zod.string(),
-  "tone": zod.string(),
-  "isFallback": zod.boolean()
-})
-
+  reply: zod.string(),
+  note: zod.string(),
+  tone: zod.string(),
+  isFallback: zod.boolean(),
+});
 
 /**
  * Aggregates the current user's (or anonymous-claim-scoped) audits, coach
@@ -3930,80 +6670,109 @@ export const getMirrorTrendsResponseJournalingStreakTotalEntriesMin = 0;
 
 export const getMirrorTrendsResponseMoodTrendRecentCountMin = 0;
 
-
-
 export const GetMirrorTrendsResponse = zod.object({
-  "hasEnoughData": zod.boolean(),
-  "totalAudits": zod.number(),
-  "spanDays": zod.number(),
-  "repeatedStrengths": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "count": zod.number(),
-  "firstSeenAuditId": zod.number().nullable(),
-  "lastSeenAuditId": zod.number().nullable()
-})),
-  "recurringRisks": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "count": zod.number(),
-  "firstSeenAuditId": zod.number().nullable(),
-  "lastSeenAuditId": zod.number().nullable()
-})),
-  "scoreDelta": zod.object({
-  "first": zod.number().nullable(),
-  "latest": zod.number().nullable(),
-  "previous": zod.number().nullable(),
-  "delta": zod.number(),
-  "currentVsPrevious": zod.number(),
-  "rolling30Delta": zod.number(),
-  "direction": zod.enum(['up', 'down', 'flat'])
-}),
-  "themeShifts": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "from": zod.number(),
-  "to": zod.number(),
-  "direction": zod.enum(['emerged', 'faded', 'steady'])
-})),
-  "engagementWindow": zod.object({
-  "firstAuditAt": zod.coerce.date().nullable(),
-  "latestAuditAt": zod.coerce.date().nullable(),
-  "avgGapDays": zod.number().nullable(),
-  "mostActiveDay": zod.string().nullable(),
-  "daysSinceLatest": zod.number().nullable(),
-  "auditsPerMonth": zod.number(),
-  "dormancyGapCount": zod.number()
-}),
-  "readinessSignals": zod.array(zod.object({
-  "label": zod.string(),
-  "tone": zod.enum(['positive', 'watch', 'neutral'])
-})),
-  "readinessScore": zod.number().min(getMirrorTrendsResponseReadinessScoreMin).max(getMirrorTrendsResponseReadinessScoreMax),
-  "scoreHistory": zod.array(zod.object({
-  "auditId": zod.number().nullable(),
-  "score": zod.number(),
-  "createdAt": zod.coerce.date()
-})),
-  "headlineInsight": zod.string(),
-  "outcomeStreak": zod.object({
-  "positiveStreak": zod.number().min(getMirrorTrendsResponseOutcomeStreakPositiveStreakMin).describe('Consecutive most-recent post-date notes whose outcome is \"another_date\".'),
-  "latestOutcome": zod.string().nullable().describe('Most recent recorded outcome, or null if no notes have one.'),
-  "totalWithOutcome": zod.number().min(getMirrorTrendsResponseOutcomeStreakTotalWithOutcomeMin)
-}),
-  "journalingStreak": zod.object({
-  "currentStreakDays": zod.number().min(getMirrorTrendsResponseJournalingStreakCurrentStreakDaysMin),
-  "daysInLast14": zod.number().min(getMirrorTrendsResponseJournalingStreakDaysInLast14Min).max(getMirrorTrendsResponseJournalingStreakDaysInLast14Max),
-  "totalEntries": zod.number().min(getMirrorTrendsResponseJournalingStreakTotalEntriesMin)
-}),
-  "moodTrend": zod.object({
-  "recentCount": zod.number().min(getMirrorTrendsResponseMoodTrendRecentCountMin),
-  "averageMood": zod.number().nullable(),
-  "direction": zod.enum(['rising', 'falling', 'steady', 'unknown'])
-}),
-  "engineVersion": zod.string()
-})
-
+  hasEnoughData: zod.boolean(),
+  totalAudits: zod.number(),
+  spanDays: zod.number(),
+  repeatedStrengths: zod.array(
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      count: zod.number(),
+      firstSeenAuditId: zod.number().nullable(),
+      lastSeenAuditId: zod.number().nullable(),
+    }),
+  ),
+  recurringRisks: zod.array(
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      count: zod.number(),
+      firstSeenAuditId: zod.number().nullable(),
+      lastSeenAuditId: zod.number().nullable(),
+    }),
+  ),
+  scoreDelta: zod.object({
+    first: zod.number().nullable(),
+    latest: zod.number().nullable(),
+    previous: zod.number().nullable(),
+    delta: zod.number(),
+    currentVsPrevious: zod.number(),
+    rolling30Delta: zod.number(),
+    direction: zod.enum(["up", "down", "flat"]),
+  }),
+  themeShifts: zod.array(
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      from: zod.number(),
+      to: zod.number(),
+      direction: zod.enum(["emerged", "faded", "steady"]),
+    }),
+  ),
+  engagementWindow: zod.object({
+    firstAuditAt: zod.coerce.date().nullable(),
+    latestAuditAt: zod.coerce.date().nullable(),
+    avgGapDays: zod.number().nullable(),
+    mostActiveDay: zod.string().nullable(),
+    daysSinceLatest: zod.number().nullable(),
+    auditsPerMonth: zod.number(),
+    dormancyGapCount: zod.number(),
+  }),
+  readinessSignals: zod.array(
+    zod.object({
+      label: zod.string(),
+      tone: zod.enum(["positive", "watch", "neutral"]),
+    }),
+  ),
+  readinessScore: zod
+    .number()
+    .min(getMirrorTrendsResponseReadinessScoreMin)
+    .max(getMirrorTrendsResponseReadinessScoreMax),
+  scoreHistory: zod.array(
+    zod.object({
+      auditId: zod.number().nullable(),
+      score: zod.number(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  headlineInsight: zod.string(),
+  outcomeStreak: zod.object({
+    positiveStreak: zod
+      .number()
+      .min(getMirrorTrendsResponseOutcomeStreakPositiveStreakMin)
+      .describe(
+        'Consecutive most-recent post-date notes whose outcome is \"another_date\".',
+      ),
+    latestOutcome: zod
+      .string()
+      .nullable()
+      .describe("Most recent recorded outcome, or null if no notes have one."),
+    totalWithOutcome: zod
+      .number()
+      .min(getMirrorTrendsResponseOutcomeStreakTotalWithOutcomeMin),
+  }),
+  journalingStreak: zod.object({
+    currentStreakDays: zod
+      .number()
+      .min(getMirrorTrendsResponseJournalingStreakCurrentStreakDaysMin),
+    daysInLast14: zod
+      .number()
+      .min(getMirrorTrendsResponseJournalingStreakDaysInLast14Min)
+      .max(getMirrorTrendsResponseJournalingStreakDaysInLast14Max),
+    totalEntries: zod
+      .number()
+      .min(getMirrorTrendsResponseJournalingStreakTotalEntriesMin),
+  }),
+  moodTrend: zod.object({
+    recentCount: zod
+      .number()
+      .min(getMirrorTrendsResponseMoodTrendRecentCountMin),
+    averageMood: zod.number().nullable(),
+    direction: zod.enum(["rising", "falling", "steady", "unknown"]),
+  }),
+  engineVersion: zod.string(),
+});
 
 /**
  * Synthesizes the signed-in user's real signal coverage (per readiness
@@ -4032,44 +6801,63 @@ export const getMirrorPortraitResponseTotalDatesMin = 0;
 export const getMirrorPortraitResponseThresholdMin = 0;
 export const getMirrorPortraitResponseThresholdMax = 100;
 
-
-
 export const GetMirrorPortraitResponse = zod.object({
-  "readinessScore": zod.number().min(getMirrorPortraitResponseReadinessScoreMin).max(getMirrorPortraitResponseReadinessScoreMax),
-  "stage": zod.enum(['outline', 'forming', 'sharp', 'vivid']),
-  "stageLabel": zod.string(),
-  "stageBlurb": zod.string(),
-  "coveragePercent": zod.number().min(getMirrorPortraitResponseCoveragePercentMin).max(getMirrorPortraitResponseCoveragePercentMax),
-  "headline": zod.string(),
-  "known": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "coverage": zod.number().min(getMirrorPortraitResponseKnownItemCoverageMin).max(getMirrorPortraitResponseKnownItemCoverageMax),
-  "confidence": zod.number().min(getMirrorPortraitResponseKnownItemConfidenceMin).max(getMirrorPortraitResponseKnownItemConfidenceMax),
-  "insight": zod.string(),
-  "dimensions": zod.array(zod.string())
-})),
-  "blindSpots": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "why": zod.string(),
-  "actionLabel": zod.string(),
-  "href": zod.string()
-})),
-  "nextSignal": zod.union([zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string(),
-  "points": zod.number()
-}),zod.null()]),
-  "outcomeHeadline": zod.string(),
-  "totalDates": zod.number().min(getMirrorPortraitResponseTotalDatesMin),
-  "eligible": zod.boolean(),
-  "threshold": zod.number().min(getMirrorPortraitResponseThresholdMin).max(getMirrorPortraitResponseThresholdMax),
-  "engineVersion": zod.string()
-})
-
+  readinessScore: zod
+    .number()
+    .min(getMirrorPortraitResponseReadinessScoreMin)
+    .max(getMirrorPortraitResponseReadinessScoreMax),
+  stage: zod.enum(["outline", "forming", "sharp", "vivid"]),
+  stageLabel: zod.string(),
+  stageBlurb: zod.string(),
+  coveragePercent: zod
+    .number()
+    .min(getMirrorPortraitResponseCoveragePercentMin)
+    .max(getMirrorPortraitResponseCoveragePercentMax),
+  headline: zod.string(),
+  known: zod.array(
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      coverage: zod
+        .number()
+        .min(getMirrorPortraitResponseKnownItemCoverageMin)
+        .max(getMirrorPortraitResponseKnownItemCoverageMax),
+      confidence: zod
+        .number()
+        .min(getMirrorPortraitResponseKnownItemConfidenceMin)
+        .max(getMirrorPortraitResponseKnownItemConfidenceMax),
+      insight: zod.string(),
+      dimensions: zod.array(zod.string()),
+    }),
+  ),
+  blindSpots: zod.array(
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      why: zod.string(),
+      actionLabel: zod.string(),
+      href: zod.string(),
+    }),
+  ),
+  nextSignal: zod.union([
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      detail: zod.string(),
+      href: zod.string(),
+      points: zod.number(),
+    }),
+    zod.null(),
+  ]),
+  outcomeHeadline: zod.string(),
+  totalDates: zod.number().min(getMirrorPortraitResponseTotalDatesMin),
+  eligible: zod.boolean(),
+  threshold: zod
+    .number()
+    .min(getMirrorPortraitResponseThresholdMin)
+    .max(getMirrorPortraitResponseThresholdMax),
+  engineVersion: zod.string(),
+});
 
 /**
  * Answers a free-text question about the user from their real signal
@@ -4082,19 +6870,16 @@ data, never invented by the model. Requires auth.
  */
 export const askMirrorBodyQuestionMax = 2000;
 
-
-
 export const AskMirrorBody = zod.object({
-  "question": zod.string().min(1).max(askMirrorBodyQuestionMax)
-})
+  question: zod.string().min(1).max(askMirrorBodyQuestionMax),
+});
 
 export const AskMirrorResponse = zod.object({
-  "answer": zod.string(),
-  "grounding": zod.array(zod.string()),
-  "followUp": zod.string(),
-  "isFallback": zod.boolean()
-})
-
+  answer: zod.string(),
+  grounding: zod.array(zod.string()),
+  followUp: zod.string(),
+  isFallback: zod.boolean(),
+});
 
 /**
  * Returns Echo's current read on the signed-in user: a persona-voiced
@@ -4115,49 +6900,64 @@ export const getCompanionResponseUnreadCountMin = 0;
 
 export const getCompanionResponseSettingsCandorMax = 3;
 
-
-
 export const GetCompanionResponse = zod.object({
-  "personaLabel": zod.string(),
-  "greeting": zod.string(),
-  "read": zod.string(),
-  "challenge": zod.union([zod.string(),zod.null()]),
-  "nextMove": zod.union([zod.object({
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string(),
-  "points": zod.number()
-}),zod.null()]),
-  "readinessScore": zod.number().min(getCompanionResponseReadinessScoreMin).max(getCompanionResponseReadinessScoreMax),
-  "threshold": zod.number().min(getCompanionResponseThresholdMin).max(getCompanionResponseThresholdMax),
-  "eligible": zod.boolean(),
-  "observations": zod.array(zod.object({
-  "id": zod.number(),
-  "kind": zod.string(),
-  "severity": zod.enum(['praise', 'note', 'challenge']),
-  "body": zod.string(),
-  "signalId": zod.union([zod.string(),zod.null()]).optional(),
-  "createdAt": zod.string()
-})),
-  "commitments": zod.array(zod.object({
-  "id": zod.number(),
-  "body": zod.string(),
-  "status": zod.enum(['open', 'done', 'missed']),
-  "dueAt": zod.union([zod.string(),zod.null()]).optional(),
-  "createdAt": zod.string(),
-  "completedAt": zod.union([zod.string(),zod.null()]).optional()
-})),
-  "unreadCount": zod.number().min(getCompanionResponseUnreadCountMin),
-  "settings": zod.object({
-  "persona": zod.enum(['best_friend', 'tough_coach', 'witty_sibling', 'calm_mentor']),
-  "candor": zod.number().min(1).max(getCompanionResponseSettingsCandorMax),
-  "inApp": zod.boolean(),
-  "email": zod.boolean(),
-  "sms": zod.boolean(),
-  "phone": zod.union([zod.string(),zod.null()]).optional()
-})
-})
-
+  personaLabel: zod.string(),
+  greeting: zod.string(),
+  read: zod.string(),
+  challenge: zod.union([zod.string(), zod.null()]),
+  nextMove: zod.union([
+    zod.object({
+      label: zod.string(),
+      detail: zod.string(),
+      href: zod.string(),
+      points: zod.number(),
+    }),
+    zod.null(),
+  ]),
+  readinessScore: zod
+    .number()
+    .min(getCompanionResponseReadinessScoreMin)
+    .max(getCompanionResponseReadinessScoreMax),
+  threshold: zod
+    .number()
+    .min(getCompanionResponseThresholdMin)
+    .max(getCompanionResponseThresholdMax),
+  eligible: zod.boolean(),
+  observations: zod.array(
+    zod.object({
+      id: zod.number(),
+      kind: zod.string(),
+      severity: zod.enum(["praise", "note", "challenge"]),
+      body: zod.string(),
+      signalId: zod.union([zod.string(), zod.null()]).optional(),
+      createdAt: zod.string(),
+    }),
+  ),
+  commitments: zod.array(
+    zod.object({
+      id: zod.number(),
+      body: zod.string(),
+      status: zod.enum(["open", "done", "missed"]),
+      dueAt: zod.union([zod.string(), zod.null()]).optional(),
+      createdAt: zod.string(),
+      completedAt: zod.union([zod.string(), zod.null()]).optional(),
+    }),
+  ),
+  unreadCount: zod.number().min(getCompanionResponseUnreadCountMin),
+  settings: zod.object({
+    persona: zod.enum([
+      "best_friend",
+      "tough_coach",
+      "witty_sibling",
+      "calm_mentor",
+    ]),
+    candor: zod.number().min(1).max(getCompanionResponseSettingsCandorMax),
+    inApp: zod.boolean(),
+    email: zod.boolean(),
+    sms: zod.boolean(),
+    phone: zod.union([zod.string(), zod.null()]).optional(),
+  }),
+});
 
 /**
  * Persists the user's message and Echo's reply to the durable thread. The
@@ -4171,27 +6971,29 @@ Requires auth.
  */
 export const sayToCompanionBodyMessageMax = 2000;
 
-
-
 export const SayToCompanionBody = zod.object({
-  "message": zod.string().min(1).max(sayToCompanionBodyMessageMax)
-})
+  message: zod.string().min(1).max(sayToCompanionBodyMessageMax),
+});
 
 export const SayToCompanionResponse = zod.object({
-  "answer": zod.string(),
-  "followUp": zod.string(),
-  "grounding": zod.array(zod.string()),
-  "isFallback": zod.boolean(),
-  "commitment": zod.union([zod.object({
-  "id": zod.number(),
-  "body": zod.string(),
-  "status": zod.enum(['open', 'done', 'missed']),
-  "dueAt": zod.union([zod.string(),zod.null()]).optional(),
-  "createdAt": zod.string(),
-  "completedAt": zod.union([zod.string(),zod.null()]).optional()
-}),zod.null()]).optional()
-})
-
+  answer: zod.string(),
+  followUp: zod.string(),
+  grounding: zod.array(zod.string()),
+  isFallback: zod.boolean(),
+  commitment: zod
+    .union([
+      zod.object({
+        id: zod.number(),
+        body: zod.string(),
+        status: zod.enum(["open", "done", "missed"]),
+        dueAt: zod.union([zod.string(), zod.null()]).optional(),
+        createdAt: zod.string(),
+        completedAt: zod.union([zod.string(), zod.null()]).optional(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+});
 
 /**
  * The user shares one message they are about to send or just received and
@@ -4203,21 +7005,18 @@ consent-gated before any model sees it and is never stored. Requires auth.
  */
 export const reviewMessageWithCompanionBodyTextMax = 4000;
 
-
-
 export const ReviewMessageWithCompanionBody = zod.object({
-  "text": zod.string().min(1).max(reviewMessageWithCompanionBodyTextMax),
-  "direction": zod.enum(['sending', 'received'])
-})
+  text: zod.string().min(1).max(reviewMessageWithCompanionBodyTextMax),
+  direction: zod.enum(["sending", "received"]),
+});
 
 export const ReviewMessageWithCompanionResponse = zod.object({
-  "verdict": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "suggestion": zod.string(),
-  "isFallback": zod.boolean()
-})
-
+  verdict: zod.string(),
+  strengths: zod.array(zod.string()),
+  risks: zod.array(zod.string()),
+  suggestion: zod.string(),
+  isFallback: zod.boolean(),
+});
 
 /**
  * Called the instant the Match Readiness meter moves. Echo compares the
@@ -4232,33 +7031,39 @@ climb is never reacted to twice. Requires auth.
  * @summary Get Echo's in-the-moment reaction to a readiness change
  */
 export const PulseCompanionResponse = zod.object({
-  "reaction": zod.object({
-  "moved": zod.boolean().describe('True only when there is a real movement worth surfacing.'),
-  "tone": zod.enum(['rise', 'crossing', 'dip', 'steady']),
-  "delta": zod.number(),
-  "fromScore": zod.number(),
-  "toScore": zod.number(),
-  "threshold": zod.number(),
-  "eligible": zod.boolean(),
-  "crossedThreshold": zod.boolean(),
-  "headline": zod.string(),
-  "nowSee": zod.union([zod.string(),zod.null()]),
-  "lanesMoved": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "from": zod.number(),
-  "to": zod.number()
-})),
-  "nextMove": zod.union([zod.null(),zod.object({
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string(),
-  "points": zod.number()
-})])
-}),
-  "isFallback": zod.boolean()
-})
-
+  reaction: zod.object({
+    moved: zod
+      .boolean()
+      .describe("True only when there is a real movement worth surfacing."),
+    tone: zod.enum(["rise", "crossing", "dip", "steady"]),
+    delta: zod.number(),
+    fromScore: zod.number(),
+    toScore: zod.number(),
+    threshold: zod.number(),
+    eligible: zod.boolean(),
+    crossedThreshold: zod.boolean(),
+    headline: zod.string(),
+    nowSee: zod.union([zod.string(), zod.null()]),
+    lanesMoved: zod.array(
+      zod.object({
+        key: zod.string(),
+        label: zod.string(),
+        from: zod.number(),
+        to: zod.number(),
+      }),
+    ),
+    nextMove: zod.union([
+      zod.null(),
+      zod.object({
+        label: zod.string(),
+        detail: zod.string(),
+        href: zod.string(),
+        points: zod.number(),
+      }),
+    ]),
+  }),
+  isFallback: zod.boolean(),
+});
 
 /**
  * Returns the most recent notifications Echo has surfaced for the user
@@ -4269,23 +7074,24 @@ Requires auth.
  */
 export const listCompanionNotificationsResponseUnreadCountMin = 0;
 
-
-
 export const ListCompanionNotificationsResponse = zod.object({
-  "notifications": zod.array(zod.object({
-  "id": zod.number(),
-  "source": zod.string(),
-  "kind": zod.string(),
-  "title": zod.string(),
-  "body": zod.string(),
-  "ctaHref": zod.union([zod.string(),zod.null()]).optional(),
-  "ctaLabel": zod.union([zod.string(),zod.null()]).optional(),
-  "read": zod.boolean(),
-  "createdAt": zod.string()
-})),
-  "unreadCount": zod.number().min(listCompanionNotificationsResponseUnreadCountMin)
-})
-
+  notifications: zod.array(
+    zod.object({
+      id: zod.number(),
+      source: zod.string(),
+      kind: zod.string(),
+      title: zod.string(),
+      body: zod.string(),
+      ctaHref: zod.union([zod.string(), zod.null()]).optional(),
+      ctaLabel: zod.union([zod.string(), zod.null()]).optional(),
+      read: zod.boolean(),
+      createdAt: zod.string(),
+    }),
+  ),
+  unreadCount: zod
+    .number()
+    .min(listCompanionNotificationsResponseUnreadCountMin),
+});
 
 /**
  * Marks the given notification ids as read, or all of them when no ids are
@@ -4294,17 +7100,16 @@ supplied. Returns the new unread count. Requires auth.
  * @summary Mark Echo notifications as read
  */
 export const MarkCompanionNotificationsReadBody = zod.object({
-  "ids": zod.array(zod.number()).optional()
-})
+  ids: zod.array(zod.number()).optional(),
+});
 
 export const markCompanionNotificationsReadResponseUnreadCountMin = 0;
 
-
-
 export const MarkCompanionNotificationsReadResponse = zod.object({
-  "unreadCount": zod.number().min(markCompanionNotificationsReadResponseUnreadCountMin)
-})
-
+  unreadCount: zod
+    .number()
+    .min(markCompanionNotificationsReadResponseUnreadCountMin),
+});
 
 /**
  * Sets how Echo sounds (persona), how blunt it is (candor 1 to 3), and how
@@ -4315,184 +7120,213 @@ explicit phone number and opt-in). Requires auth.
  */
 export const updateCompanionSettingsBodyCandorMax = 3;
 
-
-
 export const UpdateCompanionSettingsBody = zod.object({
-  "persona": zod.enum(['best_friend', 'tough_coach', 'witty_sibling', 'calm_mentor']).optional(),
-  "candor": zod.number().min(1).max(updateCompanionSettingsBodyCandorMax).optional(),
-  "inApp": zod.boolean().optional(),
-  "email": zod.boolean().optional(),
-  "sms": zod.boolean().optional(),
-  "phone": zod.union([zod.string(),zod.null()]).optional()
-})
+  persona: zod
+    .enum(["best_friend", "tough_coach", "witty_sibling", "calm_mentor"])
+    .optional(),
+  candor: zod
+    .number()
+    .min(1)
+    .max(updateCompanionSettingsBodyCandorMax)
+    .optional(),
+  inApp: zod.boolean().optional(),
+  email: zod.boolean().optional(),
+  sms: zod.boolean().optional(),
+  phone: zod.union([zod.string(), zod.null()]).optional(),
+});
 
 export const updateCompanionSettingsResponseCandorMax = 3;
 
-
-
 export const UpdateCompanionSettingsResponse = zod.object({
-  "persona": zod.enum(['best_friend', 'tough_coach', 'witty_sibling', 'calm_mentor']),
-  "candor": zod.number().min(1).max(updateCompanionSettingsResponseCandorMax),
-  "inApp": zod.boolean(),
-  "email": zod.boolean(),
-  "sms": zod.boolean(),
-  "phone": zod.union([zod.string(),zod.null()]).optional()
-})
-
+  persona: zod.enum([
+    "best_friend",
+    "tough_coach",
+    "witty_sibling",
+    "calm_mentor",
+  ]),
+  candor: zod.number().min(1).max(updateCompanionSettingsResponseCandorMax),
+  inApp: zod.boolean(),
+  email: zod.boolean(),
+  sms: zod.boolean(),
+  phone: zod.union([zod.string(), zod.null()]).optional(),
+});
 
 /**
  * @summary Mark a commitment Echo is tracking as done
  */
 export const CompleteCompanionCommitmentParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const CompleteCompanionCommitmentResponse = zod.object({
-  "id": zod.number(),
-  "body": zod.string(),
-  "status": zod.enum(['open', 'done', 'missed']),
-  "dueAt": zod.union([zod.string(),zod.null()]).optional(),
-  "createdAt": zod.string(),
-  "completedAt": zod.union([zod.string(),zod.null()]).optional()
-})
-
+  id: zod.number(),
+  body: zod.string(),
+  status: zod.enum(["open", "done", "missed"]),
+  dueAt: zod.union([zod.string(), zod.null()]).optional(),
+  createdAt: zod.string(),
+  completedAt: zod.union([zod.string(), zod.null()]).optional(),
+});
 
 /**
  * @summary Dismiss one of Echo's observations
  */
 export const DismissCompanionObservationParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DismissCompanionObservationResponse = zod.object({
-  "ok": zod.boolean()
-})
-
+  ok: zod.boolean(),
+});
 
 /**
  * @summary List email insight imports
  */
 export const ListInsightsResponseItem = zod.object({
-  "id": zod.number(),
-  "sourceLabel": zod.string(),
-  "sourceApp": zod.string().nullish().describe('Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").'),
-  "pastedContent": zod.string(),
-  "consentGiven": zod.boolean().optional(),
-  "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
-  "createdAt": zod.string()
-})
-export const ListInsightsResponse = zod.array(ListInsightsResponseItem)
-
+  id: zod.number(),
+  sourceLabel: zod.string(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").',
+    ),
+  pastedContent: zod.string(),
+  consentGiven: zod.boolean().optional(),
+  status: zod.enum(["pending", "analyzing", "complete", "error"]),
+  createdAt: zod.string(),
+});
+export const ListInsightsResponse = zod.array(ListInsightsResponseItem);
 
 /**
  * @summary Submit email/message history for communication pattern analysis
  */
 export const CreateInsightBody = zod.object({
-  "pastedContent": zod.string(),
-  "sourceLabel": zod.string(),
-  "sourceApp": zod.string().nullish().describe('Where the messages came from. Used to tune communication patterns,\ngrowth areas, and profile tips. Recognized values include \"Hinge\",\n\"Bumble\", \"Tinder\", \"iMessage\", and \"Email\"; anything else is\ntreated as unknown.\n'),
-  "consentGiven": zod.boolean().optional()
-})
-
+  pastedContent: zod.string(),
+  sourceLabel: zod.string(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe(
+      'Where the messages came from. Used to tune communication patterns,\ngrowth areas, and profile tips. Recognized values include \"Hinge\",\n\"Bumble\", \"Tinder\", \"iMessage\", and \"Email\"; anything else is\ntreated as unknown.\n',
+    ),
+  consentGiven: zod.boolean().optional(),
+});
 
 /**
  * @summary Cross-import communication pattern rollup grouped by source app
  */
 export const GetInsightsRollupResponse = zod.object({
-  "totalAnalyzed": zod.number(),
-  "sources": zod.array(zod.object({
-  "sourceApp": zod.string().describe('Source platform label. \"Other\" is used for imports without a recognized source.'),
-  "count": zod.number(),
-  "attachmentStyle": zod.string().describe('Most common attachment style across imports from this source.'),
-  "traits": zod.object({
-  "warmth": zod.number(),
-  "curiosity": zod.number(),
-  "verbosity": zod.number(),
-  "humor": zod.number()
-}).describe('Average 0-100 scores across this source\'s imports.'),
-  "signaturePattern": zod.string().describe('The communication pattern that shows up most across imports from this source.'),
-  "summary": zod.string()
-})),
-  "comparisons": zod.array(zod.object({
-  "trait": zod.enum(['warmth', 'curiosity', 'verbosity', 'humor']),
-  "leader": zod.string(),
-  "laggard": zod.string(),
-  "delta": zod.number(),
-  "sentence": zod.string()
-}))
-})
-
+  totalAnalyzed: zod.number(),
+  sources: zod.array(
+    zod.object({
+      sourceApp: zod
+        .string()
+        .describe(
+          'Source platform label. \"Other\" is used for imports without a recognized source.',
+        ),
+      count: zod.number(),
+      attachmentStyle: zod
+        .string()
+        .describe(
+          "Most common attachment style across imports from this source.",
+        ),
+      traits: zod
+        .object({
+          warmth: zod.number(),
+          curiosity: zod.number(),
+          verbosity: zod.number(),
+          humor: zod.number(),
+        })
+        .describe("Average 0-100 scores across this source's imports."),
+      signaturePattern: zod
+        .string()
+        .describe(
+          "The communication pattern that shows up most across imports from this source.",
+        ),
+      summary: zod.string(),
+    }),
+  ),
+  comparisons: zod.array(
+    zod.object({
+      trait: zod.enum(["warmth", "curiosity", "verbosity", "humor"]),
+      leader: zod.string(),
+      laggard: zod.string(),
+      delta: zod.number(),
+      sentence: zod.string(),
+    }),
+  ),
+});
 
 /**
  * @summary Delete an insight import owned by the current session
  */
 export const DeleteInsightParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteInsightResponse = zod.object({
-  "success": zod.boolean(),
-  "deletedId": zod.number()
-})
-
+  success: zod.boolean(),
+  deletedId: zod.number(),
+});
 
 /**
  * @summary Run AI analysis on pasted email/message history
  */
 export const AnalyzeInsightParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const AnalyzeInsightResponse = zod.object({
-  "insightId": zod.number(),
-  "sourceApp": zod.string().nullish().describe('Source platform the engine tuned its analysis for, if any.'),
-  "communicationPatterns": zod.array(zod.object({
-  "pattern": zod.string(),
-  "frequency": zod.string(),
-  "impact": zod.string()
-})),
-  "attachmentStyle": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "growthAreas": zod.array(zod.string()),
-  "datingProfileTips": zod.array(zod.string()),
-  "summary": zod.string()
-})
-
+  insightId: zod.number(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe("Source platform the engine tuned its analysis for, if any."),
+  communicationPatterns: zod.array(
+    zod.object({
+      pattern: zod.string(),
+      frequency: zod.string(),
+      impact: zod.string(),
+    }),
+  ),
+  attachmentStyle: zod.string(),
+  strengths: zod.array(zod.string()),
+  growthAreas: zod.array(zod.string()),
+  datingProfileTips: zod.array(zod.string()),
+  summary: zod.string(),
+});
 
 /**
  * @summary Join the podcast launch waitlist
  */
 export const JoinWaitlistBody = zod.object({
-  "email": zod.string(),
-  "firstName": zod.string(),
-  "podcastSource": zod.string().nullish(),
-  "interestedIn": zod.string().nullish()
-})
-
+  email: zod.string(),
+  firstName: zod.string(),
+  podcastSource: zod.string().nullish(),
+  interestedIn: zod.string().nullish(),
+});
 
 /**
  * @summary Get waitlist stats (count, spots remaining)
  */
 export const GetWaitlistStatsResponse = zod.object({
-  "totalCount": zod.number(),
-  "spotsRemaining": zod.number(),
-  "nextMilestone": zod.number()
-})
-
+  totalCount: zod.number(),
+  spotsRemaining: zod.number(),
+  nextMilestone: zod.number(),
+});
 
 /**
  * Returns whether OpenAI is connected, in fallback mode, or needs setup.
  * @summary Get current AI integration status
  */
 export const GetAiStatusResponse = zod.object({
-  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
-  "keyDetected": zod.boolean(),
-  "provider": zod.string().nullish(),
-  "source": zod.enum(['direct', 'replit-proxy', 'none']),
-  "model": zod.string(),
-  "message": zod.string()
-})
-
+  mode: zod.enum(["live", "fallback", "setup-needed"]),
+  keyDetected: zod.boolean(),
+  provider: zod.string().nullish(),
+  source: zod.enum(["direct", "replit-proxy", "none"]),
+  model: zod.string(),
+  message: zod.string(),
+});
 
 /**
  * Public endpoint used by client tools (Blueprint, NextMessage, etc.) to enhance deterministic output with live AI when an API key is configured. Falls back silently to an empty output if AI is unavailable.
@@ -4502,37 +7336,53 @@ export const enhanceAiBodyToolNameMax = 80;
 
 export const enhanceAiBodyPromptMax = 4000;
 
-
-
 export const EnhanceAiBody = zod.object({
-  "toolName": zod.string().min(1).max(enhanceAiBodyToolNameMax),
-  "prompt": zod.string().min(1).max(enhanceAiBodyPromptMax),
-  "context": zod.object({
-  "toolName": zod.string().optional(),
-  "formValues": zod.record(zod.string(), zod.unknown()).optional(),
-  "savedResults": zod.record(zod.string(), zod.unknown()).optional(),
-  "goals": zod.array(zod.string()).optional(),
-  "progressEntries": zod.array(zod.object({
-  "date": zod.string().optional(),
-  "tag": zod.string().optional(),
-  "note": zod.string().optional()
-})).optional(),
-  "extras": zod.record(zod.string(), zod.unknown()).optional()
-}).optional(),
-  "expectJson": zod.boolean().optional().describe('When true, asks the model to return a valid JSON object (response_format json_object). Use for structured tool outputs.')
-})
+  toolName: zod.string().min(1).max(enhanceAiBodyToolNameMax),
+  prompt: zod.string().min(1).max(enhanceAiBodyPromptMax),
+  context: zod
+    .object({
+      toolName: zod.string().optional(),
+      formValues: zod.record(zod.string(), zod.unknown()).optional(),
+      savedResults: zod.record(zod.string(), zod.unknown()).optional(),
+      goals: zod.array(zod.string()).optional(),
+      progressEntries: zod
+        .array(
+          zod.object({
+            date: zod.string().optional(),
+            tag: zod.string().optional(),
+            note: zod.string().optional(),
+          }),
+        )
+        .optional(),
+      extras: zod.record(zod.string(), zod.unknown()).optional(),
+    })
+    .optional(),
+  expectJson: zod
+    .boolean()
+    .optional()
+    .describe(
+      "When true, asks the model to return a valid JSON object (response_format json_object). Use for structured tool outputs.",
+    ),
+});
 
 export const EnhanceAiResponse = zod.object({
-  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
-  "isFallback": zod.boolean(),
-  "output": zod.string(),
-  "durationMs": zod.number(),
-  "error": zod.string().optional(),
-  "model": zod.string().optional(),
-  "validated": zod.boolean().optional().describe('Set when a schema validation was attempted. True if the model output passed validation.'),
-  "attempts": zod.number().optional().describe('Number of model attempts made (1 = no retry, 2 = one retry).')
-})
-
+  mode: zod.enum(["live", "fallback", "setup-needed"]),
+  isFallback: zod.boolean(),
+  output: zod.string(),
+  durationMs: zod.number(),
+  error: zod.string().optional(),
+  model: zod.string().optional(),
+  validated: zod
+    .boolean()
+    .optional()
+    .describe(
+      "Set when a schema validation was attempted. True if the model output passed validation.",
+    ),
+  attempts: zod
+    .number()
+    .optional()
+    .describe("Number of model attempts made (1 = no retry, 2 = one retry)."),
+});
 
 /**
  * Returns the number of fallback (coach-written) answers out of the most
@@ -4548,64 +7398,83 @@ export const getAiFallbackRateQueryToolNameMax = 80;
 export const getAiFallbackRateQueryWindowSizeDefault = 20;
 export const getAiFallbackRateQueryWindowSizeMax = 200;
 
-
-
 export const GetAiFallbackRateQueryParams = zod.object({
-  "toolName": zod.coerce.string().min(1).max(getAiFallbackRateQueryToolNameMax),
-  "windowSize": zod.coerce.number().min(1).max(getAiFallbackRateQueryWindowSizeMax).default(getAiFallbackRateQueryWindowSizeDefault).describe('How many recent requests to consider (1-200, defaults to 20).')
-})
+  toolName: zod.coerce.string().min(1).max(getAiFallbackRateQueryToolNameMax),
+  windowSize: zod.coerce
+    .number()
+    .min(1)
+    .max(getAiFallbackRateQueryWindowSizeMax)
+    .default(getAiFallbackRateQueryWindowSizeDefault)
+    .describe("How many recent requests to consider (1-200, defaults to 20)."),
+});
 
 export const GetAiFallbackRateResponse = zod.object({
-  "toolName": zod.string(),
-  "windowSize": zod.number().describe('The cap on how many recent requests were considered.'),
-  "total": zod.number().describe('Number of recent requests actually counted (<= windowSize).'),
-  "fallbacks": zod.number().describe('Number of those requests that used the deterministic backup.')
-})
-
+  toolName: zod.string(),
+  windowSize: zod
+    .number()
+    .describe("The cap on how many recent requests were considered."),
+  total: zod
+    .number()
+    .describe("Number of recent requests actually counted (<= windowSize)."),
+  fallbacks: zod
+    .number()
+    .describe("Number of those requests that used the deterministic backup."),
+});
 
 /**
  * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */
 export const TestAiQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
+  key: zod.coerce.string().optional(),
+});
 
 export const TestAiHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
+  "x-founder-key": zod.string().optional(),
+});
 
 export const testAiBodySampleMax = 2000;
 
-
-
 export const TestAiBody = zod.object({
-  "sample": zod.string().min(1).max(testAiBodySampleMax),
-  "context": zod.object({
-  "toolName": zod.string().optional(),
-  "formValues": zod.record(zod.string(), zod.unknown()).optional(),
-  "savedResults": zod.record(zod.string(), zod.unknown()).optional(),
-  "goals": zod.array(zod.string()).optional(),
-  "progressEntries": zod.array(zod.object({
-  "date": zod.string().optional(),
-  "tag": zod.string().optional(),
-  "note": zod.string().optional()
-})).optional(),
-  "extras": zod.record(zod.string(), zod.unknown()).optional()
-}).optional()
-})
+  sample: zod.string().min(1).max(testAiBodySampleMax),
+  context: zod
+    .object({
+      toolName: zod.string().optional(),
+      formValues: zod.record(zod.string(), zod.unknown()).optional(),
+      savedResults: zod.record(zod.string(), zod.unknown()).optional(),
+      goals: zod.array(zod.string()).optional(),
+      progressEntries: zod
+        .array(
+          zod.object({
+            date: zod.string().optional(),
+            tag: zod.string().optional(),
+            note: zod.string().optional(),
+          }),
+        )
+        .optional(),
+      extras: zod.record(zod.string(), zod.unknown()).optional(),
+    })
+    .optional(),
+});
 
 export const TestAiResponse = zod.object({
-  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
-  "isFallback": zod.boolean(),
-  "output": zod.string(),
-  "durationMs": zod.number(),
-  "error": zod.string().optional(),
-  "model": zod.string().optional(),
-  "validated": zod.boolean().optional().describe('Set when a schema validation was attempted. True if the model output passed validation.'),
-  "attempts": zod.number().optional().describe('Number of model attempts made (1 = no retry, 2 = one retry).')
-})
-
+  mode: zod.enum(["live", "fallback", "setup-needed"]),
+  isFallback: zod.boolean(),
+  output: zod.string(),
+  durationMs: zod.number(),
+  error: zod.string().optional(),
+  model: zod.string().optional(),
+  validated: zod
+    .boolean()
+    .optional()
+    .describe(
+      "Set when a schema validation was attempted. True if the model output passed validation.",
+    ),
+  attempts: zod
+    .number()
+    .optional()
+    .describe("Number of model attempts made (1 = no retry, 2 = one retry)."),
+});
 
 /**
  * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
@@ -4616,13 +7485,16 @@ Requires founder key.
  * @summary Manually trigger an immediate audit trash purge
  */
 export const PurgeTrashNowHeader = zod.object({
-  "x-founder-key": zod.string()
-})
+  "x-founder-key": zod.string(),
+});
 
 export const PurgeTrashNowResponse = zod.object({
-  "deleted": zod.number().describe('Number of soft-deleted audit rows permanently removed by this purge run.')
-})
-
+  deleted: zod
+    .number()
+    .describe(
+      "Number of soft-deleted audit rows permanently removed by this purge run.",
+    ),
+});
 
 /**
  * Runs the GeoIP updater immediately (the same routine the monthly job calls).
@@ -4632,18 +7504,23 @@ to be stale. Requires founder key.
  * @summary Trigger a manual GeoIP database refresh
  */
 export const RefreshGeoipQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
+  key: zod.coerce.string().optional(),
+});
 
 export const RefreshGeoipHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
+  "x-founder-key": zod.string().optional(),
+});
 
 export const RefreshGeoipResponse = zod.object({
-  "success": zod.boolean().describe('True when the GeoIP database was refreshed; false when the updater could not run (e.g. MAXMIND_LICENSE_KEY missing or download failed).'),
-  "message": zod.string().describe('Human-readable summary of the refresh result.')
-})
-
+  success: zod
+    .boolean()
+    .describe(
+      "True when the GeoIP database was refreshed; false when the updater could not run (e.g. MAXMIND_LICENSE_KEY missing or download failed).",
+    ),
+  message: zod
+    .string()
+    .describe("Human-readable summary of the refresh result."),
+});
 
 /**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
@@ -4652,16 +7529,33 @@ together with the elapsed time and a staleness flag. Requires founder key.
  * @summary When did the audit trash purge job last succeed?
  */
 export const GetTrashPurgeHeartbeatHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
+  "x-founder-key": zod.string().optional(),
+});
 
 export const GetTrashPurgeHeartbeatResponse = zod.object({
-  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.'),
-  "ageMs": zod.number().nullable().describe('Milliseconds since the last successful run, or null if it has never run.'),
-  "staleThresholdMs": zod.number().describe('The staleness threshold in milliseconds. If ageMs exceeds this, stale is true.'),
-  "stale": zod.boolean().describe('True when the job has never run or last ran longer ago than staleThresholdMs.')
-})
-
+  lastSuccessAt: zod.coerce
+    .date()
+    .nullable()
+    .describe(
+      "ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.",
+    ),
+  ageMs: zod
+    .number()
+    .nullable()
+    .describe(
+      "Milliseconds since the last successful run, or null if it has never run.",
+    ),
+  staleThresholdMs: zod
+    .number()
+    .describe(
+      "The staleness threshold in milliseconds. If ageMs exceeds this, stale is true.",
+    ),
+  stale: zod
+    .boolean()
+    .describe(
+      "True when the job has never run or last ran longer ago than staleThresholdMs.",
+    ),
+});
 
 /**
  * Aggregates the `referrals` table joined to `users` and `purchase_interest`
@@ -4677,41 +7571,70 @@ Requires founder key.
  * @summary Referral attribution summary for the founder dashboard
  */
 export const GetFounderReferralsQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
+  key: zod.coerce.string().optional(),
+});
 
 export const GetFounderReferralsHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
+  "x-founder-key": zod.string().optional(),
+});
 
 export const GetFounderReferralsResponse = zod.object({
-  "totalReferrals": zod.number().describe('Total number of rows in the referrals table.'),
-  "uniqueInviters": zod.number().describe('Count of distinct inviter user ids across all referrals.'),
-  "overallConversionRate": zod.number().describe('Fraction of invited users with at least one paid purchase_interest row. Zero when there are no invitees.'),
-  "topInviters": zod.array(zod.object({
-  "inviterUserId": zod.string(),
-  "inviterEmail": zod.string(),
-  "inviterDisplayName": zod.string().nullable(),
-  "invitedCount": zod.number(),
-  "paidCount": zod.number(),
-  "conversionRate": zod.number().describe('paidCount divided by invitedCount. Zero when invitedCount is zero.')
-})).describe('Top 20 inviters by invited count, sorted descending.'),
-  "surfaceBreakdown": zod.array(zod.object({
-  "surface": zod.string(),
-  "count": zod.number(),
-  "paidCount": zod.number(),
-  "conversionRate": zod.number()
-})).describe('All referral surfaces ordered by count desc. Rows with no surface tag are bucketed under \"(unknown)\".'),
-  "recentReferrals": zod.array(zod.object({
-  "createdAt": zod.coerce.date(),
-  "inviterEmail": zod.string(),
-  "inviteeEmail": zod.string(),
-  "surface": zod.string().nullable(),
-  "invitedAt": zod.coerce.date().nullable(),
-  "invitedConverted": zod.boolean().describe('True when the invitee user has at least one paid purchase_interest row.')
-})).describe('Last 50 referrals, newest first.')
-})
-
+  totalReferrals: zod
+    .number()
+    .describe("Total number of rows in the referrals table."),
+  uniqueInviters: zod
+    .number()
+    .describe("Count of distinct inviter user ids across all referrals."),
+  overallConversionRate: zod
+    .number()
+    .describe(
+      "Fraction of invited users with at least one paid purchase_interest row. Zero when there are no invitees.",
+    ),
+  topInviters: zod
+    .array(
+      zod.object({
+        inviterUserId: zod.string(),
+        inviterEmail: zod.string(),
+        inviterDisplayName: zod.string().nullable(),
+        invitedCount: zod.number(),
+        paidCount: zod.number(),
+        conversionRate: zod
+          .number()
+          .describe(
+            "paidCount divided by invitedCount. Zero when invitedCount is zero.",
+          ),
+      }),
+    )
+    .describe("Top 20 inviters by invited count, sorted descending."),
+  surfaceBreakdown: zod
+    .array(
+      zod.object({
+        surface: zod.string(),
+        count: zod.number(),
+        paidCount: zod.number(),
+        conversionRate: zod.number(),
+      }),
+    )
+    .describe(
+      'All referral surfaces ordered by count desc. Rows with no surface tag are bucketed under \"(unknown)\".',
+    ),
+  recentReferrals: zod
+    .array(
+      zod.object({
+        createdAt: zod.coerce.date(),
+        inviterEmail: zod.string(),
+        inviteeEmail: zod.string(),
+        surface: zod.string().nullable(),
+        invitedAt: zod.coerce.date().nullable(),
+        invitedConverted: zod
+          .boolean()
+          .describe(
+            "True when the invitee user has at least one paid purchase_interest row.",
+          ),
+      }),
+    )
+    .describe("Last 50 referrals, newest first."),
+});
 
 /**
  * Counts distinct users at each stage of the readiness-to-matching-to-revenue
@@ -4732,25 +7655,47 @@ Requires founder key.
  * @summary Readiness-to-revenue funnel for the founder dashboard
  */
 export const GetFounderFunnelQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
+  key: zod.coerce.string().optional(),
+});
 
 export const GetFounderFunnelHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
+  "x-founder-key": zod.string().optional(),
+});
 
 export const GetFounderFunnelResponse = zod.object({
-  "readinessThreshold": zod.number().describe('Effective matching pool readiness threshold at request time.'),
-  "paidViaPurchaseInterest": zod.number().describe('Distinct paid purchase_interest emails. Supplemental to the tier-based purchased stage, since it also captures anonymous one-off buys.'),
-  "overallConversionRate": zod.number().describe('Purchased distinct users divided by accounts. Zero when there are no accounts.'),
-  "stages": zod.array(zod.object({
-  "key": zod.string().describe('Stable stage identifier (accounts, signal_fed, readiness_gained, entered_matching, matched, purchased).'),
-  "label": zod.string(),
-  "count": zod.number().describe('Distinct users who reached this stage.'),
-  "conversionFromPrev": zod.number().nullable().describe('count divided by the previous stage count. Null for the first stage. Zero when the previous stage is zero.')
-})).describe('Ordered funnel stages from accounts to purchased.')
-})
-
+  readinessThreshold: zod
+    .number()
+    .describe("Effective matching pool readiness threshold at request time."),
+  paidViaPurchaseInterest: zod
+    .number()
+    .describe(
+      "Distinct paid purchase_interest emails. Supplemental to the tier-based purchased stage, since it also captures anonymous one-off buys.",
+    ),
+  overallConversionRate: zod
+    .number()
+    .describe(
+      "Purchased distinct users divided by accounts. Zero when there are no accounts.",
+    ),
+  stages: zod
+    .array(
+      zod.object({
+        key: zod
+          .string()
+          .describe(
+            "Stable stage identifier (accounts, signal_fed, readiness_gained, entered_matching, matched, purchased).",
+          ),
+        label: zod.string(),
+        count: zod.number().describe("Distinct users who reached this stage."),
+        conversionFromPrev: zod
+          .number()
+          .nullable()
+          .describe(
+            "count divided by the previous stage count. Null for the first stage. Zero when the previous stage is zero.",
+          ),
+      }),
+    )
+    .describe("Ordered funnel stages from accounts to purchased."),
+});
 
 /**
  * Routes a free-form founder question to the Echo persona via Anthropic.
@@ -4762,31 +7707,48 @@ entry. Requires founder key.
  * @summary Ask Echo a free-form strategic question
  */
 export const AskFounderCopilotQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
+  key: zod.coerce.string().optional(),
+});
 
 export const AskFounderCopilotHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
+  "x-founder-key": zod.string().optional(),
+});
 
 export const askFounderCopilotBodyQuestionMin = 4;
 export const askFounderCopilotBodyQuestionMax = 2000;
 
 export const askFounderCopilotBodyContextHintMax = 1000;
 
-
-
 export const AskFounderCopilotBody = zod.object({
-  "question": zod.string().min(askFounderCopilotBodyQuestionMin).max(askFounderCopilotBodyQuestionMax).describe('Free-form strategic question for Echo.'),
-  "contextHint": zod.string().max(askFounderCopilotBodyContextHintMax).optional().describe('Optional one-line context the founder wants Echo to consider (a metric, a moment, a specific signup).')
-})
+  question: zod
+    .string()
+    .min(askFounderCopilotBodyQuestionMin)
+    .max(askFounderCopilotBodyQuestionMax)
+    .describe("Free-form strategic question for Echo."),
+  contextHint: zod
+    .string()
+    .max(askFounderCopilotBodyContextHintMax)
+    .optional()
+    .describe(
+      "Optional one-line context the founder wants Echo to consider (a metric, a moment, a specific signup).",
+    ),
+});
 
 export const AskFounderCopilotResponse = zod.object({
-  "answer": zod.string().describe('Echo\'s reply, voiced per the persona rules.'),
-  "fallback": zod.boolean().optional().describe('True when the model was unavailable and the answer was assembled from the playbook deterministically.'),
-  "tokensUsed": zod.number().optional().describe('Approximate tokens consumed by the model call, when reported by the provider.')
-})
-
+  answer: zod.string().describe("Echo's reply, voiced per the persona rules."),
+  fallback: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the model was unavailable and the answer was assembled from the playbook deterministically.",
+    ),
+  tokensUsed: zod
+    .number()
+    .optional()
+    .describe(
+      "Approximate tokens consumed by the model call, when reported by the provider.",
+    ),
+});
 
 /**
  * Accepts an image upload (max 10MB) and returns the OCR-extracted text
@@ -4802,9 +7764,10 @@ directly.
  * @summary OCR a profile or chat screenshot and return its extracted text
  */
 export const ExtractCompassScreenshotResponse = zod.object({
-  "text": zod.string().describe('The raw OCR-extracted text from the uploaded screenshot.')
-})
-
+  text: zod
+    .string()
+    .describe("The raw OCR-extracted text from the uploaded screenshot."),
+});
 
 /**
  * Returns up to 50 compass reads for the signed-in user, or for the
@@ -4814,22 +7777,26 @@ first. Soft-deleted rows are excluded.
  * @summary List the current scope's compass reads
  */
 export const ListCompassReadsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListCompassReadsResponse = zod.object({
-  "reads": zod.array(zod.object({
-  "id": zod.number(),
-  "connectionStyle": zod.string(),
-  "patterns": zod.array(zod.string()),
-  "notes": zod.string().nullish(),
-  "deterministicResult": zod.record(zod.string(), zod.unknown()),
-  "aiResult": zod.record(zod.string(), zod.unknown()).nullish(),
-  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
-  "createdAt": zod.coerce.date()
-}))
-})
-
+  reads: zod.array(
+    zod.object({
+      id: zod.number(),
+      connectionStyle: zod.string(),
+      patterns: zod.array(zod.string()),
+      notes: zod.string().nullish(),
+      deterministicResult: zod.record(zod.string(), zod.unknown()),
+      aiResult: zod.record(zod.string(), zod.unknown()).nullish(),
+      mode: zod.enum(["live", "fallback", "setup-needed"]),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
 
 /**
  * Persists a single compass read. Anon-safe: when no user is signed
@@ -4839,8 +7806,11 @@ be merged into the account on signup.
  * @summary Save a Compatibility Compass read
  */
 export const SaveCompassReadHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const saveCompassReadBodyConnectionStyleMax = 200;
 
@@ -4851,39 +7821,50 @@ export const saveCompassReadBodyPatternsMax = 20;
 
 export const saveCompassReadBodyNotesMax = 2000;
 
-
-
 export const SaveCompassReadBody = zod.object({
-  "connectionStyle": zod.string().min(1).max(saveCompassReadBodyConnectionStyleMax).describe('The connection-style label the user picked.'),
-  "patterns": zod.array(zod.string().min(1).max(saveCompassReadBodyPatternsItemMax)).max(saveCompassReadBodyPatternsMax).default(saveCompassReadBodyPatternsDefault),
-  "notes": zod.string().max(saveCompassReadBodyNotesMax).nullish(),
-  "deterministicResult": zod.record(zod.string(), zod.unknown()).describe('The deterministic compass output shown to the user.'),
-  "aiResult": zod.record(zod.string(), zod.unknown()).nullish().describe('The AI-enhanced compass output when present, otherwise null.')
-})
-
+  connectionStyle: zod
+    .string()
+    .min(1)
+    .max(saveCompassReadBodyConnectionStyleMax)
+    .describe("The connection-style label the user picked."),
+  patterns: zod
+    .array(zod.string().min(1).max(saveCompassReadBodyPatternsItemMax))
+    .max(saveCompassReadBodyPatternsMax)
+    .default(saveCompassReadBodyPatternsDefault),
+  notes: zod.string().max(saveCompassReadBodyNotesMax).nullish(),
+  deterministicResult: zod
+    .record(zod.string(), zod.unknown())
+    .describe("The deterministic compass output shown to the user."),
+  aiResult: zod
+    .record(zod.string(), zod.unknown())
+    .nullish()
+    .describe("The AI-enhanced compass output when present, otherwise null."),
+});
 
 /**
  * @summary Fetch a single compass read by id
  */
 export const GetCompassReadParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const GetCompassReadHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetCompassReadResponse = zod.object({
-  "id": zod.number(),
-  "connectionStyle": zod.string(),
-  "patterns": zod.array(zod.string()),
-  "notes": zod.string().nullish(),
-  "deterministicResult": zod.record(zod.string(), zod.unknown()),
-  "aiResult": zod.record(zod.string(), zod.unknown()).nullish(),
-  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
-  "createdAt": zod.coerce.date()
-})
-
+  id: zod.number(),
+  connectionStyle: zod.string(),
+  patterns: zod.array(zod.string()),
+  notes: zod.string().nullish(),
+  deterministicResult: zod.record(zod.string(), zod.unknown()),
+  aiResult: zod.record(zod.string(), zod.unknown()).nullish(),
+  mode: zod.enum(["live", "fallback", "setup-needed"]),
+  createdAt: zod.coerce.date(),
+});
 
 /**
  * Returns the derived signal context that lets the Compass evolve with the
@@ -4896,41 +7877,61 @@ never raw content or PII.
  * @summary Aggregate signal context for a recurring compass read
  */
 export const GetCompassSignalContextHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
-export const GetCompassSignalContextResponse = zod.object({
-  "available": zod.boolean(),
-  "readinessScore": zod.number().optional(),
-  "stage": zod.string().optional(),
-  "stageLabel": zod.string().optional(),
-  "activeLaneCount": zod.number().optional(),
-  "totalLaneCount": zod.number().optional(),
-  "signalLayer": zod.object({
-  "headline": zod.string(),
-  "lines": zod.array(zod.string())
-}).optional(),
-  "activeSignals": zod.array(zod.string()).optional(),
-  "nextSignal": zod.union([zod.object({
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string(),
-  "points": zod.number()
-}),zod.null()]).optional(),
-  "mirror": zod.object({
-  "href": zod.string(),
-  "line": zod.string()
-}).optional(),
-  "movement": zod.union([zod.object({
-  "previousScore": zod.number(),
-  "currentScore": zod.number(),
-  "delta": zod.number(),
-  "lastReadAt": zod.coerce.date().nullish(),
-  "newSignals": zod.array(zod.string()),
-  "note": zod.string()
-}),zod.null()]).optional()
-}).describe('Aggregate, derived signal context for the Compass so each read can evolve\nwith the user\'s growing readiness and surface movement over time. Anonymous\ncallers receive `{ available: false }`. Only derived coverage is ever\nincluded, never raw content or PII.\n')
-
+export const GetCompassSignalContextResponse = zod
+  .object({
+    available: zod.boolean(),
+    readinessScore: zod.number().optional(),
+    stage: zod.string().optional(),
+    stageLabel: zod.string().optional(),
+    activeLaneCount: zod.number().optional(),
+    totalLaneCount: zod.number().optional(),
+    signalLayer: zod
+      .object({
+        headline: zod.string(),
+        lines: zod.array(zod.string()),
+      })
+      .optional(),
+    activeSignals: zod.array(zod.string()).optional(),
+    nextSignal: zod
+      .union([
+        zod.object({
+          label: zod.string(),
+          detail: zod.string(),
+          href: zod.string(),
+          points: zod.number(),
+        }),
+        zod.null(),
+      ])
+      .optional(),
+    mirror: zod
+      .object({
+        href: zod.string(),
+        line: zod.string(),
+      })
+      .optional(),
+    movement: zod
+      .union([
+        zod.object({
+          previousScore: zod.number(),
+          currentScore: zod.number(),
+          delta: zod.number(),
+          lastReadAt: zod.coerce.date().nullish(),
+          newSignals: zod.array(zod.string()),
+          note: zod.string(),
+        }),
+        zod.null(),
+      ])
+      .optional(),
+  })
+  .describe(
+    "Aggregate, derived signal context for the Compass so each read can evolve\nwith the user's growing readiness and surface movement over time. Anonymous\ncallers receive `{ available: false }`. Only derived coverage is ever\nincluded, never raw content or PII.\n",
+  );
 
 /**
  * Ranks several photos for use as a dating profile lineup and recommends a
@@ -4945,69 +7946,151 @@ Mirror tie-in and next best signal.
  * @summary Rank multiple photos and recommend a lead shot
  */
 export const RankPhotoLabHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const rankPhotoLabBodyPhotosItemIdMax = 120;
 
 export const rankPhotoLabBodyPhotosMax = 6;
 
-
-
 export const RankPhotoLabBody = zod.object({
-  "photos": zod.array(zod.object({
-  "id": zod.string().min(1).max(rankPhotoLabBodyPhotosItemIdMax).describe('Caller-assigned id so the ranking maps back to the photo.'),
-  "shotType": zod.enum(['solo_face', 'full_body', 'activity', 'group', 'candid', 'other']).describe('What kind of shot this is, declared by the member. Drives the\ndeterministic ranking. Composition only, never appearance.\n'),
-  "wellLit": zod.boolean().nullish(),
-  "genuineExpression": zod.boolean().nullish(),
-  "imageBase64": zod.string().nullish().describe('Optional base64 image, used only for the opt-in Claude vision pass.\nMay include a data URL prefix; the server strips it. Read in the\nmoment and never stored. Omit to keep the request deterministic-only.\n'),
-  "imageMediaType": zod.string().nullish().describe('MIME type of the image (e.g. \"image\/png\") for the vision call.')
-})).min(1).max(rankPhotoLabBodyPhotosMax),
-  "datingGoal": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Which dating app the photos are for (e.g. \"Hinge\").')
-})
+  photos: zod
+    .array(
+      zod.object({
+        id: zod
+          .string()
+          .min(1)
+          .max(rankPhotoLabBodyPhotosItemIdMax)
+          .describe(
+            "Caller-assigned id so the ranking maps back to the photo.",
+          ),
+        shotType: zod
+          .enum([
+            "solo_face",
+            "full_body",
+            "activity",
+            "group",
+            "candid",
+            "other",
+          ])
+          .describe(
+            "What kind of shot this is, declared by the member. Drives the\ndeterministic ranking. Composition only, never appearance.\n",
+          ),
+        wellLit: zod.boolean().nullish(),
+        genuineExpression: zod.boolean().nullish(),
+        imageBase64: zod
+          .string()
+          .nullish()
+          .describe(
+            "Optional base64 image, used only for the opt-in Claude vision pass.\nMay include a data URL prefix; the server strips it. Read in the\nmoment and never stored. Omit to keep the request deterministic-only.\n",
+          ),
+        imageMediaType: zod
+          .string()
+          .nullish()
+          .describe(
+            'MIME type of the image (e.g. \"image\/png\") for the vision call.',
+          ),
+      }),
+    )
+    .min(1)
+    .max(rankPhotoLabBodyPhotosMax),
+  datingGoal: zod.string().nullish(),
+  sourceApp: zod
+    .string()
+    .nullish()
+    .describe('Which dating app the photos are for (e.g. \"Hinge\").'),
+});
 
-export const RankPhotoLabResponse = zod.object({
-  "leadShotId": zod.string().describe('Id of the recommended lead shot. Empty only when no photos were sent.'),
-  "leadShotRationale": zod.string(),
-  "summary": zod.string(),
-  "ranked": zod.array(zod.object({
-  "id": zod.string(),
-  "rank": zod.number(),
-  "score": zod.number(),
-  "role": zod.string().describe('Recommended slot for this shot (e.g. \"Lead shot\").'),
-  "isLead": zod.boolean(),
-  "notes": zod.array(zod.string())
-})),
-  "checklist": zod.array(zod.object({
-  "category": zod.string(),
-  "status": zod.enum(['good', 'needs_work', 'missing']),
-  "advice": zod.string()
-})),
-  "visionMode": zod.enum(['live', 'fallback']).describe('Whether the opt-in Claude vision pass actually ran.'),
-  "visionFallbackReason": zod.string().nullish().describe('Why the vision pass did not run (e.g. consent_required,\ndaily_cap_exceeded, no_client). Null when it ran or was not requested.\n'),
-  "visionAnalysis": zod.union([zod.object({
-  "summary": zod.string(),
-  "leadShotId": zod.string().nullish().describe('The vision pass\'s lead-shot pick, mapped to an input id.'),
-  "leadShotReason": zod.string().nullish(),
-  "photos": zod.array(zod.object({
-  "id": zod.string(),
-  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
-  "reason": zod.string()
-}))
-}).describe('Opt-in Claude vision pass. Present only when the deep AI lane is on, the\ncap allows it, and the call succeeded. The images are read in the moment\nand never stored.\n'),zod.null()]).optional(),
-  "nextSignal": zod.union([zod.object({
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string(),
-  "points": zod.number().optional()
-}),zod.null()]).optional(),
-  "mirror": zod.union([zod.object({
-  "href": zod.string(),
-  "line": zod.string()
-}),zod.null()]).optional()
-}).describe('Deterministic ranking plus an optional opt-in vision layer and, for\nsigned-in members, a tie back to Your Mirror and the next best signal.\n')
-
+export const RankPhotoLabResponse = zod
+  .object({
+    leadShotId: zod
+      .string()
+      .describe(
+        "Id of the recommended lead shot. Empty only when no photos were sent.",
+      ),
+    leadShotRationale: zod.string(),
+    summary: zod.string(),
+    ranked: zod.array(
+      zod.object({
+        id: zod.string(),
+        rank: zod.number(),
+        score: zod.number(),
+        role: zod
+          .string()
+          .describe('Recommended slot for this shot (e.g. \"Lead shot\").'),
+        isLead: zod.boolean(),
+        notes: zod.array(zod.string()),
+      }),
+    ),
+    checklist: zod.array(
+      zod.object({
+        category: zod.string(),
+        status: zod.enum(["good", "needs_work", "missing"]),
+        advice: zod.string(),
+      }),
+    ),
+    visionMode: zod
+      .enum(["live", "fallback"])
+      .describe("Whether the opt-in Claude vision pass actually ran."),
+    visionFallbackReason: zod
+      .string()
+      .nullish()
+      .describe(
+        "Why the vision pass did not run (e.g. consent_required,\ndaily_cap_exceeded, no_client). Null when it ran or was not requested.\n",
+      ),
+    visionAnalysis: zod
+      .union([
+        zod
+          .object({
+            summary: zod.string(),
+            leadShotId: zod
+              .string()
+              .nullish()
+              .describe(
+                "The vision pass's lead-shot pick, mapped to an input id.",
+              ),
+            leadShotReason: zod.string().nullish(),
+            photos: zod.array(
+              zod.object({
+                id: zod.string(),
+                assessment: zod.enum(["strong", "okay", "needs_work"]),
+                reason: zod.string(),
+              }),
+            ),
+          })
+          .describe(
+            "Opt-in Claude vision pass. Present only when the deep AI lane is on, the\ncap allows it, and the call succeeded. The images are read in the moment\nand never stored.\n",
+          ),
+        zod.null(),
+      ])
+      .optional(),
+    nextSignal: zod
+      .union([
+        zod.object({
+          label: zod.string(),
+          detail: zod.string(),
+          href: zod.string(),
+          points: zod.number().optional(),
+        }),
+        zod.null(),
+      ])
+      .optional(),
+    mirror: zod
+      .union([
+        zod.object({
+          href: zod.string(),
+          line: zod.string(),
+        }),
+        zod.null(),
+      ])
+      .optional(),
+  })
+  .describe(
+    "Deterministic ranking plus an optional opt-in vision layer and, for\nsigned-in members, a tie back to Your Mirror and the next best signal.\n",
+  );
 
 /**
  * Accepts a Hinge GDPR data-export ZIP (max 50MB), parses it in
@@ -5020,9 +8103,11 @@ and sign in to receive the AI read.
  * @summary Upload a Hinge GDPR data export ZIP
  */
 export const UploadHingeImportHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 /**
  * Accepts pasted .ics calendar file contents, parses event rhythm
@@ -5035,76 +8120,106 @@ their account on signup.
  * @summary Import a calendar by pasting .ics contents
  */
 export const UploadCalendarImportHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const uploadCalendarImportBodyIcsContentMax = 2000000;
 
-
-
 export const UploadCalendarImportBody = zod.object({
-  "icsContent": zod.string().min(1).max(uploadCalendarImportBodyIcsContentMax).describe('The full text contents of a .ics calendar file.')
-})
-
+  icsContent: zod
+    .string()
+    .min(1)
+    .max(uploadCalendarImportBodyIcsContentMax)
+    .describe("The full text contents of a .ics calendar file."),
+});
 
 /**
  * @summary List the caller's data imports
  */
 export const ListImportsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ListImportsResponse = zod.object({
-  "imports": zod.array(zod.object({
-  "id": zod.number(),
-  "source": zod.string().describe('Which source app the export came from.'),
-  "status": zod.string().describe('Lifecycle state. One of pending, complete, fallback, parsing, failed.'),
-  "originalFilename": zod.string().nullish(),
-  "parsedSummary": zod.record(zod.string(), zod.unknown()).nullish().describe('Structured summary derived from the upload. Shape varies per\nsource. For Hinge imports it includes a `counts` object, a\n`derivedStats` object, and optionally an `aiRead` object when\nthe Anthropic enrichment succeeded, or `aiError` when it did\nnot.\n'),
-  "uploadedAt": zod.coerce.date(),
-  "processedAt": zod.coerce.date().nullish()
-}))
-})
-
+  imports: zod.array(
+    zod.object({
+      id: zod.number(),
+      source: zod.string().describe("Which source app the export came from."),
+      status: zod
+        .string()
+        .describe(
+          "Lifecycle state. One of pending, complete, fallback, parsing, failed.",
+        ),
+      originalFilename: zod.string().nullish(),
+      parsedSummary: zod
+        .record(zod.string(), zod.unknown())
+        .nullish()
+        .describe(
+          "Structured summary derived from the upload. Shape varies per\nsource. For Hinge imports it includes a `counts` object, a\n`derivedStats` object, and optionally an `aiRead` object when\nthe Anthropic enrichment succeeded, or `aiError` when it did\nnot.\n",
+        ),
+      uploadedAt: zod.coerce.date(),
+      processedAt: zod.coerce.date().nullish(),
+    }),
+  ),
+});
 
 /**
  * @summary Fetch a single import by id
  */
 export const GetImportParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const GetImportHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetImportResponse = zod.object({
-  "id": zod.number(),
-  "source": zod.string().describe('Which source app the export came from.'),
-  "status": zod.string().describe('Lifecycle state. One of pending, complete, fallback, parsing, failed.'),
-  "originalFilename": zod.string().nullish(),
-  "parsedSummary": zod.record(zod.string(), zod.unknown()).nullish().describe('Structured summary derived from the upload. Shape varies per\nsource. For Hinge imports it includes a `counts` object, a\n`derivedStats` object, and optionally an `aiRead` object when\nthe Anthropic enrichment succeeded, or `aiError` when it did\nnot.\n'),
-  "uploadedAt": zod.coerce.date(),
-  "processedAt": zod.coerce.date().nullish()
-})
-
+  id: zod.number(),
+  source: zod.string().describe("Which source app the export came from."),
+  status: zod
+    .string()
+    .describe(
+      "Lifecycle state. One of pending, complete, fallback, parsing, failed.",
+    ),
+  originalFilename: zod.string().nullish(),
+  parsedSummary: zod
+    .record(zod.string(), zod.unknown())
+    .nullish()
+    .describe(
+      "Structured summary derived from the upload. Shape varies per\nsource. For Hinge imports it includes a `counts` object, a\n`derivedStats` object, and optionally an `aiRead` object when\nthe Anthropic enrichment succeeded, or `aiError` when it did\nnot.\n",
+    ),
+  uploadedAt: zod.coerce.date(),
+  processedAt: zod.coerce.date().nullish(),
+});
 
 /**
  * @summary Hard-delete an import the caller owns
  */
 export const DeleteImportParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteImportHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DeleteImportResponse = zod.object({
-  "deleted": zod.boolean(),
-  "id": zod.number()
-})
-
+  deleted: zod.boolean(),
+  id: zod.number(),
+});
 
 /**
  * Returns the combined matching envelope used by the Matching page:
@@ -5117,8 +8232,11 @@ every page load.
  * @summary Get the signed-in user's matching readiness, preferences, and pool status
  */
 export const GetMatchingStateHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getMatchingStateResponseReadinessScoreMin = 0;
 export const getMatchingStateResponseReadinessScoreMax = 100;
@@ -5257,110 +8375,379 @@ export const getMatchingStateResponseReadinessLearningBaseScoreMax = 100;
 export const getMatchingStateResponseReadinessLearningObservedScoreMin = 0;
 export const getMatchingStateResponseReadinessLearningObservedScoreMax = 100;
 
-
-
 export const GetMatchingStateResponse = zod.object({
-  "preferences": zod.union([zod.object({
-  "userId": zod.string(),
-  "ageMin": zod.number().nullable(),
-  "ageMax": zod.number().nullable(),
-  "distanceKm": zod.number().nullable(),
-  "genderPreference": zod.string().nullable(),
-  "dealBreakers": zod.array(zod.string()).nullable(),
-  "mustHaves": zod.array(zod.string()).nullable(),
-  "cityHint": zod.string().nullable(),
-  "updatedAt": zod.coerce.date()
-}),zod.null()]),
-  "poolStatus": zod.enum(['off', 'building', 'ready', 'paused', 'concierge_only']),
-  "revealConsent": zod.boolean().optional().describe('Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched.'),
-  "tier": zod.union([zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
-  "readiness": zod.object({
-  "score": zod.number().min(getMatchingStateResponseReadinessScoreMin).max(getMatchingStateResponseReadinessScoreMax),
-  "breakdown": zod.object({
-  "compass": zod.number().min(getMatchingStateResponseReadinessBreakdownCompassMin).max(getMatchingStateResponseReadinessBreakdownCompassMax),
-  "journal": zod.number().min(getMatchingStateResponseReadinessBreakdownJournalMin).max(getMatchingStateResponseReadinessBreakdownJournalMax),
-  "wellness": zod.number().min(getMatchingStateResponseReadinessBreakdownWellnessMin).max(getMatchingStateResponseReadinessBreakdownWellnessMax),
-  "hingeImport": zod.number().min(getMatchingStateResponseReadinessBreakdownHingeImportMin).max(getMatchingStateResponseReadinessBreakdownHingeImportMax),
-  "postDate": zod.number().min(getMatchingStateResponseReadinessBreakdownPostDateMin).max(getMatchingStateResponseReadinessBreakdownPostDateMax),
-  "wins": zod.number().min(getMatchingStateResponseReadinessBreakdownWinsMin).max(getMatchingStateResponseReadinessBreakdownWinsMax),
-  "calendar": zod.number().min(getMatchingStateResponseReadinessBreakdownCalendarMin).max(getMatchingStateResponseReadinessBreakdownCalendarMax),
-  "audits": zod.number().min(getMatchingStateResponseReadinessBreakdownAuditsMin).max(getMatchingStateResponseReadinessBreakdownAuditsMax),
-  "coaching": zod.number().min(getMatchingStateResponseReadinessBreakdownCoachingMin).max(getMatchingStateResponseReadinessBreakdownCoachingMax),
-  "instagram": zod.number().min(getMatchingStateResponseReadinessBreakdownInstagramMin).max(getMatchingStateResponseReadinessBreakdownInstagramMax),
-  "lifePulse": zod.number().min(getMatchingStateResponseReadinessBreakdownLifePulseMin).max(getMatchingStateResponseReadinessBreakdownLifePulseMax),
-  "taste": zod.number().min(getMatchingStateResponseReadinessBreakdownTasteMin).max(getMatchingStateResponseReadinessBreakdownTasteMax),
-  "lifestyle": zod.number().min(getMatchingStateResponseReadinessBreakdownLifestyleMin).max(getMatchingStateResponseReadinessBreakdownLifestyleMax),
-  "quizzes": zod.number().min(getMatchingStateResponseReadinessBreakdownQuizzesMin).max(getMatchingStateResponseReadinessBreakdownQuizzesMax),
-  "receipts": zod.number().min(getMatchingStateResponseReadinessBreakdownReceiptsMin).max(getMatchingStateResponseReadinessBreakdownReceiptsMax),
-  "music": zod.number().min(getMatchingStateResponseReadinessBreakdownMusicMin).max(getMatchingStateResponseReadinessBreakdownMusicMax),
-  "vitality": zod.number().min(getMatchingStateResponseReadinessBreakdownVitalityMin).max(getMatchingStateResponseReadinessBreakdownVitalityMax),
-  "communities": zod.number().min(getMatchingStateResponseReadinessBreakdownCommunitiesMin).max(getMatchingStateResponseReadinessBreakdownCommunitiesMax),
-  "curiosity": zod.number().min(getMatchingStateResponseReadinessBreakdownCuriosityMin).max(getMatchingStateResponseReadinessBreakdownCuriosityMax),
-  "film": zod.number().min(getMatchingStateResponseReadinessBreakdownFilmMin).max(getMatchingStateResponseReadinessBreakdownFilmMax),
-  "reading": zod.number().min(getMatchingStateResponseReadinessBreakdownReadingMin).max(getMatchingStateResponseReadinessBreakdownReadingMax),
-  "wyr": zod.number().min(getMatchingStateResponseReadinessBreakdownWyrMin).max(getMatchingStateResponseReadinessBreakdownWyrMax),
-  "dailySpark": zod.number().min(getMatchingStateResponseReadinessBreakdownDailySparkMin).max(getMatchingStateResponseReadinessBreakdownDailySparkMax),
-  "flags": zod.number().min(getMatchingStateResponseReadinessBreakdownFlagsMin).max(getMatchingStateResponseReadinessBreakdownFlagsMax),
-  "consistency": zod.number().min(getMatchingStateResponseReadinessBreakdownConsistencyMin).max(getMatchingStateResponseReadinessBreakdownConsistencyMax),
-  "scenarioReels": zod.number().min(getMatchingStateResponseReadinessBreakdownScenarioReelsMin).max(getMatchingStateResponseReadinessBreakdownScenarioReelsMax),
-  "selfAwareness": zod.number().min(getMatchingStateResponseReadinessBreakdownSelfAwarenessMin).max(getMatchingStateResponseReadinessBreakdownSelfAwarenessMax),
-  "timeCapsule": zod.number().min(getMatchingStateResponseReadinessBreakdownTimeCapsuleMin).max(getMatchingStateResponseReadinessBreakdownTimeCapsuleMax),
-  "externalCalibration": zod.number().min(getMatchingStateResponseReadinessBreakdownExternalCalibrationMin).max(getMatchingStateResponseReadinessBreakdownExternalCalibrationMax),
-  "cosmicProfile": zod.number().min(getMatchingStateResponseReadinessBreakdownCosmicProfileMin).max(getMatchingStateResponseReadinessBreakdownCosmicProfileMax),
-  "relocationOpen": zod.number().min(getMatchingStateResponseReadinessBreakdownRelocationOpenMin).max(getMatchingStateResponseReadinessBreakdownRelocationOpenMax),
-  "verification": zod.number().min(getMatchingStateResponseReadinessBreakdownVerificationMin).max(getMatchingStateResponseReadinessBreakdownVerificationMax)
-})
-}),
-  "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
-  "readinessThreshold": zod.number().min(getMatchingStateResponseReadinessThresholdMin).max(getMatchingStateResponseReadinessThresholdMax).describe('Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).'),
-  "cityDensity": zod.number().min(getMatchingStateResponseCityDensityMin),
-  "totalPoolCount": zod.number().min(getMatchingStateResponseTotalPoolCountMin),
-  "nextActions": zod.array(zod.object({
-  "key": zod.string().describe('Stable identifier for the signal this action strengthens.'),
-  "label": zod.string().describe('Short imperative label, e.g. \"Run a compass read\".'),
-  "detail": zod.string().describe('One spoken-English line on why this moves the needle.'),
-  "points": zod.number().min(getMatchingStateResponseNextActionsItemPointsMin).max(getMatchingStateResponseNextActionsItemPointsMax).describe('Approximate readiness points this action would add.'),
-  "href": zod.string().describe('In-app route the user should go to.')
-})).describe('Ranked \"do this next\" steps that would move readiness toward the threshold most. Empty when the user is already eligible.'),
-  "history": zod.array(zod.object({
-  "day": zod.string().describe('Calendar day (YYYY-MM-DD, UTC) of the snapshot.'),
-  "score": zod.number().min(getMatchingStateResponseHistoryItemScoreMin).max(getMatchingStateResponseHistoryItemScoreMax)
-})).describe('Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points.'),
-  "readinessDelta": zod.union([zod.object({
-  "scoreDelta": zod.number().describe('Change in the overall readiness score since the prior snapshot.'),
-  "fromDay": zod.coerce.date().describe('Calendar day (UTC) of the prior snapshot being compared against.'),
-  "toDay": zod.coerce.date().describe('Calendar day (UTC) of the most recent snapshot.'),
-  "lanes": zod.array(zod.object({
-  "key": zod.string().describe('Signal lane id, matching a MatchReadinessBreakdown key.'),
-  "delta": zod.number().describe('Coverage change for this lane (0-100 scale), can be negative.')
-}))
-}).describe('The change in matching readiness between the two most recent daily snapshots. scoreDelta is the change in the overall readiness score (can be negative). lanes lists the signal lanes whose coverage changed, biggest absolute move first. Derived only, never includes raw content.'),zod.null()]).optional().describe('What moved between the two most recent daily readiness snapshots, or null until there are at least two snapshots to compare.'),
-  "outcomeInsight": zod.object({
-  "totalDates": zod.number().min(getMatchingStateResponseOutcomeInsightTotalDatesMin),
-  "anotherDate": zod.number().min(getMatchingStateResponseOutcomeInsightAnotherDateMin),
-  "noMore": zod.number().min(getMatchingStateResponseOutcomeInsightNoMoreMin),
-  "ghosted": zod.number().min(getMatchingStateResponseOutcomeInsightGhostedMin),
-  "unsure": zod.number().min(getMatchingStateResponseOutcomeInsightUnsureMin),
-  "headline": zod.string().describe('One spoken-English read of the user\'s recent date outcomes.')
-}),
-  "activityStreak": zod.object({
-  "current": zod.number().min(getMatchingStateResponseActivityStreakCurrentMin).describe('Consecutive active days ending today, or yesterday if today is not yet active. 0 once the run has lapsed.'),
-  "longest": zod.number().min(getMatchingStateResponseActivityStreakLongestMin).describe('Longest consecutive run of active days ever.'),
-  "activeToday": zod.boolean().describe('True when the user has already fed a signal today (UTC).'),
-  "daysActiveLast14": zod.number().min(getMatchingStateResponseActivityStreakDaysActiveLast14Min).max(getMatchingStateResponseActivityStreakDaysActiveLast14Max).describe('How many of the last 14 days (inclusive of today) had activity.')
-}).optional().describe('A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.'),
-  "readinessLearning": zod.object({
-  "observing": zod.boolean().describe('True when outcome-driven re-weighting is being computed (shadow or applied). False when held at day-one weights.'),
-  "applied": zod.boolean().describe('True only when the tilt is actually serving this user\'s score (applied mode and in the rollout cohort). False in shadow or hold, so the UI must not claim the matching gate moved unless this is true.'),
-  "headline": zod.string().describe('Spoken-English read of what the recent outcomes suggest.'),
-  "totalDates": zod.number().min(getMatchingStateResponseReadinessLearningTotalDatesMin).describe('How many date outcomes the user has logged.'),
-  "baseScore": zod.number().min(getMatchingStateResponseReadinessLearningBaseScoreMin).max(getMatchingStateResponseReadinessLearningBaseScoreMax).describe('The day-one readiness score, served to the user today.'),
-  "observedScore": zod.number().min(getMatchingStateResponseReadinessLearningObservedScoreMin).max(getMatchingStateResponseReadinessLearningObservedScoreMax).describe('The would-be readiness score if the outcome tilt were applied. Observational only in shadow mode.'),
-  "delta": zod.number().describe('observedScore minus baseScore. Can be negative.'),
-  "leaningInto": zod.array(zod.string()).describe('Plain-English labels of the signal lanes the tilt is leaning into, given the recent outcomes. Empty when nothing is being tilted yet.')
-}).optional().describe('A derived, user-facing read of how the engine is learning from the caller\'s own logged date outcomes. Carries only aggregate, derived numbers (scores and lane labels), never raw notes or any PII. When observing is true the engine is watching the would-be tilt without changing the score the user is served (shadow), so this is informational and does not claim the matching gate moved.')
-})
-
+  preferences: zod.union([
+    zod.object({
+      userId: zod.string(),
+      ageMin: zod.number().nullable(),
+      ageMax: zod.number().nullable(),
+      distanceKm: zod.number().nullable(),
+      genderPreference: zod.string().nullable(),
+      dealBreakers: zod.array(zod.string()).nullable(),
+      mustHaves: zod.array(zod.string()).nullable(),
+      cityHint: zod.string().nullable(),
+      updatedAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+  poolStatus: zod.enum([
+    "off",
+    "building",
+    "ready",
+    "paused",
+    "concierge_only",
+  ]),
+  revealConsent: zod
+    .boolean()
+    .optional()
+    .describe(
+      "Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched.",
+    ),
+  tier: zod
+    .enum(["member", "insight", "match", "guided"])
+    .describe(
+      "Canonical plan key retained for compatibility. Prefer plan.key.",
+    ),
+  plan: zod.object({
+    key: zod.enum(["member", "insight", "match", "guided"]),
+    label: zod.string(),
+    source: zod.enum(["default", "canonical", "legacy"]),
+    grantedAt: zod.coerce.date().nullable(),
+    canActivateSearch: zod.boolean(),
+    includesHumanGuidance: zod.boolean(),
+    nextPlanKey: zod
+      .union([
+        zod.literal("member"),
+        zod.literal("insight"),
+        zod.literal("match"),
+        zod.literal("guided"),
+        zod.literal(null),
+      ])
+      .nullable(),
+    upgradeCta: zod.string().nullable(),
+  }),
+  searchActive: zod
+    .boolean()
+    .describe(
+      "True only when the account has Match or Guided active-search access and its pool state is active. Candidate-pool opt-in alone does not make search active.",
+    ),
+  readiness: zod.object({
+    score: zod
+      .number()
+      .min(getMatchingStateResponseReadinessScoreMin)
+      .max(getMatchingStateResponseReadinessScoreMax),
+    breakdown: zod.object({
+      compass: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownCompassMin)
+        .max(getMatchingStateResponseReadinessBreakdownCompassMax),
+      journal: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownJournalMin)
+        .max(getMatchingStateResponseReadinessBreakdownJournalMax),
+      wellness: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownWellnessMin)
+        .max(getMatchingStateResponseReadinessBreakdownWellnessMax),
+      hingeImport: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownHingeImportMin)
+        .max(getMatchingStateResponseReadinessBreakdownHingeImportMax),
+      postDate: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownPostDateMin)
+        .max(getMatchingStateResponseReadinessBreakdownPostDateMax),
+      wins: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownWinsMin)
+        .max(getMatchingStateResponseReadinessBreakdownWinsMax),
+      calendar: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownCalendarMin)
+        .max(getMatchingStateResponseReadinessBreakdownCalendarMax),
+      audits: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownAuditsMin)
+        .max(getMatchingStateResponseReadinessBreakdownAuditsMax),
+      coaching: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownCoachingMin)
+        .max(getMatchingStateResponseReadinessBreakdownCoachingMax),
+      instagram: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownInstagramMin)
+        .max(getMatchingStateResponseReadinessBreakdownInstagramMax),
+      lifePulse: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownLifePulseMin)
+        .max(getMatchingStateResponseReadinessBreakdownLifePulseMax),
+      taste: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownTasteMin)
+        .max(getMatchingStateResponseReadinessBreakdownTasteMax),
+      lifestyle: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownLifestyleMin)
+        .max(getMatchingStateResponseReadinessBreakdownLifestyleMax),
+      quizzes: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownQuizzesMin)
+        .max(getMatchingStateResponseReadinessBreakdownQuizzesMax),
+      receipts: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownReceiptsMin)
+        .max(getMatchingStateResponseReadinessBreakdownReceiptsMax),
+      music: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownMusicMin)
+        .max(getMatchingStateResponseReadinessBreakdownMusicMax),
+      vitality: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownVitalityMin)
+        .max(getMatchingStateResponseReadinessBreakdownVitalityMax),
+      communities: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownCommunitiesMin)
+        .max(getMatchingStateResponseReadinessBreakdownCommunitiesMax),
+      curiosity: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownCuriosityMin)
+        .max(getMatchingStateResponseReadinessBreakdownCuriosityMax),
+      film: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownFilmMin)
+        .max(getMatchingStateResponseReadinessBreakdownFilmMax),
+      reading: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownReadingMin)
+        .max(getMatchingStateResponseReadinessBreakdownReadingMax),
+      wyr: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownWyrMin)
+        .max(getMatchingStateResponseReadinessBreakdownWyrMax),
+      dailySpark: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownDailySparkMin)
+        .max(getMatchingStateResponseReadinessBreakdownDailySparkMax),
+      flags: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownFlagsMin)
+        .max(getMatchingStateResponseReadinessBreakdownFlagsMax),
+      consistency: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownConsistencyMin)
+        .max(getMatchingStateResponseReadinessBreakdownConsistencyMax),
+      scenarioReels: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownScenarioReelsMin)
+        .max(getMatchingStateResponseReadinessBreakdownScenarioReelsMax),
+      selfAwareness: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownSelfAwarenessMin)
+        .max(getMatchingStateResponseReadinessBreakdownSelfAwarenessMax),
+      timeCapsule: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownTimeCapsuleMin)
+        .max(getMatchingStateResponseReadinessBreakdownTimeCapsuleMax),
+      externalCalibration: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownExternalCalibrationMin)
+        .max(getMatchingStateResponseReadinessBreakdownExternalCalibrationMax),
+      cosmicProfile: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownCosmicProfileMin)
+        .max(getMatchingStateResponseReadinessBreakdownCosmicProfileMax),
+      relocationOpen: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownRelocationOpenMin)
+        .max(getMatchingStateResponseReadinessBreakdownRelocationOpenMax),
+      verification: zod
+        .number()
+        .min(getMatchingStateResponseReadinessBreakdownVerificationMin)
+        .max(getMatchingStateResponseReadinessBreakdownVerificationMax),
+    }),
+  }),
+  eligible: zod
+    .boolean()
+    .describe(
+      "True when profile evidence is at or above readinessThreshold. This is distinct from plan access, active search, market availability, and whether an introduction exists.",
+    ),
+  readinessThreshold: zod
+    .number()
+    .min(getMatchingStateResponseReadinessThresholdMin)
+    .max(getMatchingStateResponseReadinessThresholdMax)
+    .describe(
+      "Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).",
+    ),
+  cityDensity: zod.number().min(getMatchingStateResponseCityDensityMin),
+  totalPoolCount: zod.number().min(getMatchingStateResponseTotalPoolCountMin),
+  nextActions: zod
+    .array(
+      zod.object({
+        key: zod
+          .string()
+          .describe(
+            "Stable identifier for the signal this action strengthens.",
+          ),
+        label: zod
+          .string()
+          .describe('Short imperative label, e.g. \"Run a compass read\".'),
+        detail: zod
+          .string()
+          .describe("One spoken-English line on why this moves the needle."),
+        points: zod
+          .number()
+          .min(getMatchingStateResponseNextActionsItemPointsMin)
+          .max(getMatchingStateResponseNextActionsItemPointsMax)
+          .describe("Approximate readiness points this action would add."),
+        href: zod.string().describe("In-app route the user should go to."),
+      }),
+    )
+    .describe(
+      'Ranked \"do this next\" steps that would move readiness toward the threshold most. Empty when the user is already eligible.',
+    ),
+  history: zod
+    .array(
+      zod.object({
+        day: zod
+          .string()
+          .describe("Calendar day (YYYY-MM-DD, UTC) of the snapshot."),
+        score: zod
+          .number()
+          .min(getMatchingStateResponseHistoryItemScoreMin)
+          .max(getMatchingStateResponseHistoryItemScoreMax),
+      }),
+    )
+    .describe(
+      "Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points.",
+    ),
+  readinessDelta: zod
+    .union([
+      zod
+        .object({
+          scoreDelta: zod
+            .number()
+            .describe(
+              "Change in the overall readiness score since the prior snapshot.",
+            ),
+          fromDay: zod.coerce
+            .date()
+            .describe(
+              "Calendar day (UTC) of the prior snapshot being compared against.",
+            ),
+          toDay: zod.coerce
+            .date()
+            .describe("Calendar day (UTC) of the most recent snapshot."),
+          lanes: zod.array(
+            zod.object({
+              key: zod
+                .string()
+                .describe(
+                  "Signal lane id, matching a MatchReadinessBreakdown key.",
+                ),
+              delta: zod
+                .number()
+                .describe(
+                  "Coverage change for this lane (0-100 scale), can be negative.",
+                ),
+            }),
+          ),
+        })
+        .describe(
+          "The change in matching readiness between the two most recent daily snapshots. scoreDelta is the change in the overall readiness score (can be negative). lanes lists the signal lanes whose coverage changed, biggest absolute move first. Derived only, never includes raw content.",
+        ),
+      zod.null(),
+    ])
+    .optional()
+    .describe(
+      "What moved between the two most recent daily readiness snapshots, or null until there are at least two snapshots to compare.",
+    ),
+  outcomeInsight: zod.object({
+    totalDates: zod
+      .number()
+      .min(getMatchingStateResponseOutcomeInsightTotalDatesMin),
+    anotherDate: zod
+      .number()
+      .min(getMatchingStateResponseOutcomeInsightAnotherDateMin),
+    noMore: zod.number().min(getMatchingStateResponseOutcomeInsightNoMoreMin),
+    ghosted: zod.number().min(getMatchingStateResponseOutcomeInsightGhostedMin),
+    unsure: zod.number().min(getMatchingStateResponseOutcomeInsightUnsureMin),
+    headline: zod
+      .string()
+      .describe("One spoken-English read of the user's recent date outcomes."),
+  }),
+  activityStreak: zod
+    .object({
+      current: zod
+        .number()
+        .min(getMatchingStateResponseActivityStreakCurrentMin)
+        .describe(
+          "Consecutive active days ending today, or yesterday if today is not yet active. 0 once the run has lapsed.",
+        ),
+      longest: zod
+        .number()
+        .min(getMatchingStateResponseActivityStreakLongestMin)
+        .describe("Longest consecutive run of active days ever."),
+      activeToday: zod
+        .boolean()
+        .describe("True when the user has already fed a signal today (UTC)."),
+      daysActiveLast14: zod
+        .number()
+        .min(getMatchingStateResponseActivityStreakDaysActiveLast14Min)
+        .max(getMatchingStateResponseActivityStreakDaysActiveLast14Max)
+        .describe(
+          "How many of the last 14 days (inclusive of today) had activity.",
+        ),
+    })
+    .optional()
+    .describe(
+      "A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.",
+    ),
+  readinessLearning: zod
+    .object({
+      observing: zod
+        .boolean()
+        .describe(
+          "True when outcome-driven re-weighting is being computed (shadow or applied). False when held at day-one weights.",
+        ),
+      applied: zod
+        .boolean()
+        .describe(
+          "True only when the tilt is actually serving this user's score (applied mode and in the rollout cohort). False in shadow or hold, so the UI must not claim the matching gate moved unless this is true.",
+        ),
+      headline: zod
+        .string()
+        .describe("Spoken-English read of what the recent outcomes suggest."),
+      totalDates: zod
+        .number()
+        .min(getMatchingStateResponseReadinessLearningTotalDatesMin)
+        .describe("How many date outcomes the user has logged."),
+      baseScore: zod
+        .number()
+        .min(getMatchingStateResponseReadinessLearningBaseScoreMin)
+        .max(getMatchingStateResponseReadinessLearningBaseScoreMax)
+        .describe("The day-one readiness score, served to the user today."),
+      observedScore: zod
+        .number()
+        .min(getMatchingStateResponseReadinessLearningObservedScoreMin)
+        .max(getMatchingStateResponseReadinessLearningObservedScoreMax)
+        .describe(
+          "The would-be readiness score if the outcome tilt were applied. Observational only in shadow mode.",
+        ),
+      delta: zod
+        .number()
+        .describe("observedScore minus baseScore. Can be negative."),
+      leaningInto: zod
+        .array(zod.string())
+        .describe(
+          "Plain-English labels of the signal lanes the tilt is leaning into, given the recent outcomes. Empty when nothing is being tilted yet.",
+        ),
+    })
+    .optional()
+    .describe(
+      "A derived, user-facing read of how the engine is learning from the caller's own logged date outcomes. Carries only aggregate, derived numbers (scores and lane labels), never raw notes or any PII. When observing is true the engine is watching the would-be tilt without changing the score the user is served (shadow), so this is informational and does not claim the matching gate moved.",
+    ),
+});
 
 /**
  * Returns the caller's per-lane readiness coverage compared against the
@@ -5375,8 +8762,11 @@ individual.
  * @summary Get the signed-in user's anonymized per-lane standing vs their goal cohort
  */
 export const GetMatchingBenchmarksHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getMatchingBenchmarksResponseCohortSizeMin = 0;
 
@@ -5391,21 +8781,58 @@ export const getMatchingBenchmarksResponseLanesItemCohortMedianMax = 100;
 export const getMatchingBenchmarksResponseLanesItemPercentileMin = 0;
 export const getMatchingBenchmarksResponseLanesItemPercentileMax = 100;
 
-
-
-export const GetMatchingBenchmarksResponse = zod.object({
-  "available": zod.boolean().describe('True only when the goal cohort meets the minimum size. When false, lanes is empty and no percentile is revealed.'),
-  "goal": zod.string().describe('The normalized goal bucket the cohort is built from (e.g. long-term, casual, friends-first, exploring).'),
-  "cohortSize": zod.number().min(getMatchingBenchmarksResponseCohortSizeMin).describe('Number of other users in the caller\'s goal cohort.'),
-  "minCohort": zod.number().min(getMatchingBenchmarksResponseMinCohortMin).describe('Minimum cohort size required before benchmarks are shown.'),
-  "lanes": zod.array(zod.object({
-  "key": zod.string().describe('Signal lane id, matching a MatchReadinessBreakdown key.'),
-  "coverage": zod.number().min(getMatchingBenchmarksResponseLanesItemCoverageMin).max(getMatchingBenchmarksResponseLanesItemCoverageMax).describe('The caller\'s own coverage for this lane.'),
-  "cohortMedian": zod.number().min(getMatchingBenchmarksResponseLanesItemCohortMedianMin).max(getMatchingBenchmarksResponseLanesItemCohortMedianMax).describe('The cohort\'s median coverage for this lane.'),
-  "percentile": zod.number().min(getMatchingBenchmarksResponseLanesItemPercentileMin).max(getMatchingBenchmarksResponseLanesItemPercentileMax).describe('Where the caller sits within the cohort for this lane, as a percentile (share of the cohort at or below the caller\'s coverage).')
-})).describe('Per-lane standing, one entry per readiness signal lane.')
-}).describe('The caller\'s anonymized per-lane standing against the cohort of users who share their normalized dating goal. Derived only (coverage maps + goal bucket, never identities or raw content). When available is false the cohort is below the minimum size and lanes is empty.')
-
+export const GetMatchingBenchmarksResponse = zod
+  .object({
+    available: zod
+      .boolean()
+      .describe(
+        "True only when the goal cohort meets the minimum size. When false, lanes is empty and no percentile is revealed.",
+      ),
+    goal: zod
+      .string()
+      .describe(
+        "The normalized goal bucket the cohort is built from (e.g. long-term, casual, friends-first, exploring).",
+      ),
+    cohortSize: zod
+      .number()
+      .min(getMatchingBenchmarksResponseCohortSizeMin)
+      .describe("Number of other users in the caller's goal cohort."),
+    minCohort: zod
+      .number()
+      .min(getMatchingBenchmarksResponseMinCohortMin)
+      .describe("Minimum cohort size required before benchmarks are shown."),
+    lanes: zod
+      .array(
+        zod.object({
+          key: zod
+            .string()
+            .describe(
+              "Signal lane id, matching a MatchReadinessBreakdown key.",
+            ),
+          coverage: zod
+            .number()
+            .min(getMatchingBenchmarksResponseLanesItemCoverageMin)
+            .max(getMatchingBenchmarksResponseLanesItemCoverageMax)
+            .describe("The caller's own coverage for this lane."),
+          cohortMedian: zod
+            .number()
+            .min(getMatchingBenchmarksResponseLanesItemCohortMedianMin)
+            .max(getMatchingBenchmarksResponseLanesItemCohortMedianMax)
+            .describe("The cohort's median coverage for this lane."),
+          percentile: zod
+            .number()
+            .min(getMatchingBenchmarksResponseLanesItemPercentileMin)
+            .max(getMatchingBenchmarksResponseLanesItemPercentileMax)
+            .describe(
+              "Where the caller sits within the cohort for this lane, as a percentile (share of the cohort at or below the caller's coverage).",
+            ),
+        }),
+      )
+      .describe("Per-lane standing, one entry per readiness signal lane."),
+  })
+  .describe(
+    "The caller's anonymized per-lane standing against the cohort of users who share their normalized dating goal. Derived only (coverage maps + goal bucket, never identities or raw content). When available is false the cohort is below the minimum size and lanes is empty.",
+  );
 
 /**
  * Returns a small, user-scoped summary of the caller's own journey
@@ -5418,8 +8845,11 @@ page load.
  * @summary Get the signed-in user's own weekly momentum recap
  */
 export const GetMyJourneySummaryHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getMyJourneySummaryResponseSignalsFedThisWeekMin = 0;
 
@@ -5427,15 +8857,31 @@ export const getMyJourneySummaryResponseReadinessGainedThisWeekMin = 0;
 
 export const getMyJourneySummaryResponseToolsCompletedThisWeekMin = 0;
 
-
-
-export const GetMyJourneySummaryResponse = zod.object({
-  "signalsFedThisWeek": zod.number().min(getMyJourneySummaryResponseSignalsFedThisWeekMin).describe('Count of signals the caller fed in the last 7 days.'),
-  "readinessGainedThisWeek": zod.number().min(getMyJourneySummaryResponseReadinessGainedThisWeekMin).describe('Total readiness points the caller gained in the last 7 days, summed from their readiness-gain events.'),
-  "toolsCompletedThisWeek": zod.number().min(getMyJourneySummaryResponseToolsCompletedThisWeekMin).describe('Count of tools the caller completed in the last 7 days.'),
-  "hasHistory": zod.boolean().describe('True when the caller has any journey event on record, so the client can show a first-week welcome state instead of zeros.')
-}).describe('A user-scoped weekly momentum recap derived from the caller\'s own journey events. Only derived counts are returned, never raw content, and it never includes any other user\'s activity.')
-
+export const GetMyJourneySummaryResponse = zod
+  .object({
+    signalsFedThisWeek: zod
+      .number()
+      .min(getMyJourneySummaryResponseSignalsFedThisWeekMin)
+      .describe("Count of signals the caller fed in the last 7 days."),
+    readinessGainedThisWeek: zod
+      .number()
+      .min(getMyJourneySummaryResponseReadinessGainedThisWeekMin)
+      .describe(
+        "Total readiness points the caller gained in the last 7 days, summed from their readiness-gain events.",
+      ),
+    toolsCompletedThisWeek: zod
+      .number()
+      .min(getMyJourneySummaryResponseToolsCompletedThisWeekMin)
+      .describe("Count of tools the caller completed in the last 7 days."),
+    hasHistory: zod
+      .boolean()
+      .describe(
+        "True when the caller has any journey event on record, so the client can show a first-week welcome state instead of zeros.",
+      ),
+  })
+  .describe(
+    "A user-scoped weekly momentum recap derived from the caller's own journey events. Only derived counts are returned, never raw content, and it never includes any other user's activity.",
+  );
 
 /**
  * Returns the caller's full achievements board: every unlock with its
@@ -5448,9 +8894,11 @@ raw content. Safe to hit on every page load.
  * @summary Get the signed-in user's unlock board
  */
 export const GetMyAchievementsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getMyAchievementsResponseAchievementsItemProgressMin = 0;
 
@@ -5458,24 +8906,61 @@ export const getMyAchievementsResponseUnlockedCountMin = 0;
 
 export const getMyAchievementsResponseTotalCountMin = 0;
 
-
-
-export const GetMyAchievementsResponse = zod.object({
-  "achievements": zod.array(zod.object({
-  "id": zod.string().describe('Stable unlock id.'),
-  "title": zod.string().describe('Short unlock name.'),
-  "description": zod.string().describe('One-line description of what earns the unlock.'),
-  "icon": zod.string().describe('lucide-react icon name, resolved on the client.'),
-  "tier": zod.enum(['bronze', 'silver', 'gold']).describe('Visual tier of the unlock.'),
-  "unit": zod.string().describe('Short noun for progress copy, e.g. \"signals\" or \"days\".'),
-  "target": zod.number().min(1).describe('Value the metric must reach to unlock. The \"match ready\" unlock uses the live readiness threshold.'),
-  "progress": zod.number().min(getMyAchievementsResponseAchievementsItemProgressMin).describe('Current progress toward the target, clamped to the target.'),
-  "unlocked": zod.boolean().describe('True when the unlock has been earned.')
-}).describe('A single unlock on the climb. Derived only from the caller\'s aggregate progress; it never affects the readiness score and never carries raw content.')).describe('Every unlock, locked and unlocked, in journey order.'),
-  "unlockedCount": zod.number().min(getMyAchievementsResponseUnlockedCountMin).describe('How many unlocks the caller has earned.'),
-  "totalCount": zod.number().min(getMyAchievementsResponseTotalCountMin).describe('Total number of unlocks on the board.')
-}).describe('The caller\'s full unlock board plus a simple unlocked\/total tally. Purely derived gamification; never feeds the readiness score.')
-
+export const GetMyAchievementsResponse = zod
+  .object({
+    achievements: zod
+      .array(
+        zod
+          .object({
+            id: zod.string().describe("Stable unlock id."),
+            title: zod.string().describe("Short unlock name."),
+            description: zod
+              .string()
+              .describe("One-line description of what earns the unlock."),
+            icon: zod
+              .string()
+              .describe("lucide-react icon name, resolved on the client."),
+            tier: zod
+              .enum(["bronze", "silver", "gold"])
+              .describe("Visual tier of the unlock."),
+            unit: zod
+              .string()
+              .describe(
+                'Short noun for progress copy, e.g. \"signals\" or \"days\".',
+              ),
+            target: zod
+              .number()
+              .min(1)
+              .describe(
+                'Value the metric must reach to unlock. The \"match ready\" unlock uses the live readiness threshold.',
+              ),
+            progress: zod
+              .number()
+              .min(getMyAchievementsResponseAchievementsItemProgressMin)
+              .describe(
+                "Current progress toward the target, clamped to the target.",
+              ),
+            unlocked: zod
+              .boolean()
+              .describe("True when the unlock has been earned."),
+          })
+          .describe(
+            "A single unlock on the climb. Derived only from the caller's aggregate progress; it never affects the readiness score and never carries raw content.",
+          ),
+      )
+      .describe("Every unlock, locked and unlocked, in journey order."),
+    unlockedCount: zod
+      .number()
+      .min(getMyAchievementsResponseUnlockedCountMin)
+      .describe("How many unlocks the caller has earned."),
+    totalCount: zod
+      .number()
+      .min(getMyAchievementsResponseTotalCountMin)
+      .describe("Total number of unlocks on the board."),
+  })
+  .describe(
+    "The caller's full unlock board plus a simple unlocked\/total tally. Purely derived gamification; never feeds the readiness score.",
+  );
 
 /**
  * Returns a lane-by-lane view of how full the picture the machine holds
@@ -5490,8 +8975,11 @@ hit on every page load.
  * @summary Get the signed-in user's signal-density map
  */
 export const GetMySignalMapHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getMySignalMapResponseDensityPercentMin = 0;
 export const getMySignalMapResponseDensityPercentMax = 100;
@@ -5518,42 +9006,124 @@ export const getMySignalMapResponseTopBlindSpotOneWeightPercentMax = 100;
 export const getMySignalMapResponseTopBlindSpotOneConfidenceMin = 0;
 export const getMySignalMapResponseTopBlindSpotOneConfidenceMax = 100;
 
-
-
-export const GetMySignalMapResponse = zod.object({
-  "densityPercent": zod.number().min(getMySignalMapResponseDensityPercentMin).max(getMySignalMapResponseDensityPercentMax).describe('Overall fullness of the picture, equal to the readiness score (the weighted coverage across every lane).'),
-  "lanesActive": zod.number().min(getMySignalMapResponseLanesActiveMin).describe('How many lanes have any signal.'),
-  "totalLanes": zod.number().min(getMySignalMapResponseTotalLanesMin).describe('Total number of lanes the machine reads.'),
-  "lanes": zod.array(zod.object({
-  "id": zod.string().describe('Stable lane id, matches the readiness breakdown key.'),
-  "label": zod.string().describe('Human label for the lane.'),
-  "coverage": zod.number().min(getMySignalMapResponseLanesItemCoverageMin).max(getMySignalMapResponseLanesItemCoverageMax).describe('How full this lane is, from the readiness breakdown.'),
-  "weightPercent": zod.number().min(getMySignalMapResponseLanesItemWeightPercentMin).max(getMySignalMapResponseLanesItemWeightPercentMax).describe('How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.'),
-  "confidence": zod.number().min(getMySignalMapResponseLanesItemConfidenceMin).max(getMySignalMapResponseLanesItemConfidenceMax).describe('Rough confidence in this lane\'s predictive value.'),
-  "dimensions": zod.array(zod.string()).describe('Wellness or personality dimensions this lane informs.'),
-  "hasSignal": zod.boolean().describe('True once the lane has any signal at all.'),
-  "action": zod.object({
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string()
-}).describe('The single do-this-next action that fills this lane.')
-}).describe('One lane of the signal-density map: a single signal source the machine reads, with how full it is, how much it counts, and the action that fills it. Derived from the signal registry plus the caller\'s own coverage; it carries no raw content.')).describe('Every lane, active ones first (fullest coverage first), then blind spots ordered by how much filling them would matter.'),
-  "topBlindSpot": zod.union([zod.object({
-  "id": zod.string().describe('Stable lane id, matches the readiness breakdown key.'),
-  "label": zod.string().describe('Human label for the lane.'),
-  "coverage": zod.number().min(getMySignalMapResponseTopBlindSpotOneCoverageMin).max(getMySignalMapResponseTopBlindSpotOneCoverageMax).describe('How full this lane is, from the readiness breakdown.'),
-  "weightPercent": zod.number().min(getMySignalMapResponseTopBlindSpotOneWeightPercentMin).max(getMySignalMapResponseTopBlindSpotOneWeightPercentMax).describe('How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.'),
-  "confidence": zod.number().min(getMySignalMapResponseTopBlindSpotOneConfidenceMin).max(getMySignalMapResponseTopBlindSpotOneConfidenceMax).describe('Rough confidence in this lane\'s predictive value.'),
-  "dimensions": zod.array(zod.string()).describe('Wellness or personality dimensions this lane informs.'),
-  "hasSignal": zod.boolean().describe('True once the lane has any signal at all.'),
-  "action": zod.object({
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string()
-}).describe('The single do-this-next action that fills this lane.')
-}).describe('One lane of the signal-density map: a single signal source the machine reads, with how full it is, how much it counts, and the action that fills it. Derived from the signal registry plus the caller\'s own coverage; it carries no raw content.'),zod.null()]).describe('The highest-leverage empty lane, or null when every lane already has signal.')
-}).describe('The caller\'s signal-density map: every lane the machine reads plus a simple aggregate. The overall density equals the readiness score, since the map is derived from the same breakdown and weights. Purely a presentation lens; never feeds the readiness score.')
-
+export const GetMySignalMapResponse = zod
+  .object({
+    densityPercent: zod
+      .number()
+      .min(getMySignalMapResponseDensityPercentMin)
+      .max(getMySignalMapResponseDensityPercentMax)
+      .describe(
+        "Overall fullness of the picture, equal to the readiness score (the weighted coverage across every lane).",
+      ),
+    lanesActive: zod
+      .number()
+      .min(getMySignalMapResponseLanesActiveMin)
+      .describe("How many lanes have any signal."),
+    totalLanes: zod
+      .number()
+      .min(getMySignalMapResponseTotalLanesMin)
+      .describe("Total number of lanes the machine reads."),
+    lanes: zod
+      .array(
+        zod
+          .object({
+            id: zod
+              .string()
+              .describe("Stable lane id, matches the readiness breakdown key."),
+            label: zod.string().describe("Human label for the lane."),
+            coverage: zod
+              .number()
+              .min(getMySignalMapResponseLanesItemCoverageMin)
+              .max(getMySignalMapResponseLanesItemCoverageMax)
+              .describe("How full this lane is, from the readiness breakdown."),
+            weightPercent: zod
+              .number()
+              .min(getMySignalMapResponseLanesItemWeightPercentMin)
+              .max(getMySignalMapResponseLanesItemWeightPercentMax)
+              .describe(
+                "How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.",
+              ),
+            confidence: zod
+              .number()
+              .min(getMySignalMapResponseLanesItemConfidenceMin)
+              .max(getMySignalMapResponseLanesItemConfidenceMax)
+              .describe("Rough confidence in this lane's predictive value."),
+            dimensions: zod
+              .array(zod.string())
+              .describe(
+                "Wellness or personality dimensions this lane informs.",
+              ),
+            hasSignal: zod
+              .boolean()
+              .describe("True once the lane has any signal at all."),
+            action: zod
+              .object({
+                label: zod.string(),
+                detail: zod.string(),
+                href: zod.string(),
+              })
+              .describe("The single do-this-next action that fills this lane."),
+          })
+          .describe(
+            "One lane of the signal-density map: a single signal source the machine reads, with how full it is, how much it counts, and the action that fills it. Derived from the signal registry plus the caller's own coverage; it carries no raw content.",
+          ),
+      )
+      .describe(
+        "Every lane, active ones first (fullest coverage first), then blind spots ordered by how much filling them would matter.",
+      ),
+    topBlindSpot: zod
+      .union([
+        zod
+          .object({
+            id: zod
+              .string()
+              .describe("Stable lane id, matches the readiness breakdown key."),
+            label: zod.string().describe("Human label for the lane."),
+            coverage: zod
+              .number()
+              .min(getMySignalMapResponseTopBlindSpotOneCoverageMin)
+              .max(getMySignalMapResponseTopBlindSpotOneCoverageMax)
+              .describe("How full this lane is, from the readiness breakdown."),
+            weightPercent: zod
+              .number()
+              .min(getMySignalMapResponseTopBlindSpotOneWeightPercentMin)
+              .max(getMySignalMapResponseTopBlindSpotOneWeightPercentMax)
+              .describe(
+                "How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.",
+              ),
+            confidence: zod
+              .number()
+              .min(getMySignalMapResponseTopBlindSpotOneConfidenceMin)
+              .max(getMySignalMapResponseTopBlindSpotOneConfidenceMax)
+              .describe("Rough confidence in this lane's predictive value."),
+            dimensions: zod
+              .array(zod.string())
+              .describe(
+                "Wellness or personality dimensions this lane informs.",
+              ),
+            hasSignal: zod
+              .boolean()
+              .describe("True once the lane has any signal at all."),
+            action: zod
+              .object({
+                label: zod.string(),
+                detail: zod.string(),
+                href: zod.string(),
+              })
+              .describe("The single do-this-next action that fills this lane."),
+          })
+          .describe(
+            "One lane of the signal-density map: a single signal source the machine reads, with how full it is, how much it counts, and the action that fills it. Derived from the signal registry plus the caller's own coverage; it carries no raw content.",
+          ),
+        zod.null(),
+      ])
+      .describe(
+        "The highest-leverage empty lane, or null when every lane already has signal.",
+      ),
+  })
+  .describe(
+    "The caller's signal-density map: every lane the machine reads plus a simple aggregate. The overall density equals the readiness score, since the map is derived from the same breakdown and weights. Purely a presentation lens; never feeds the readiness score.",
+  );
 
 /**
  * Inserts or updates the caller's row in `match_preferences`. Every
@@ -5563,8 +9133,11 @@ bounds are validated server-side.
  * @summary Upsert the signed-in user's match preferences
  */
 export const UpdateMatchingPreferencesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const updateMatchingPreferencesBodyAgeMinMin = 18;
 export const updateMatchingPreferencesBodyAgeMinMax = 120;
@@ -5587,62 +9160,103 @@ export const updateMatchingPreferencesBodyMustHavesMax = 50;
 
 export const updateMatchingPreferencesBodyCityHintMax = 120;
 
-
-
 export const UpdateMatchingPreferencesBody = zod.object({
-  "ageMin": zod.number().min(updateMatchingPreferencesBodyAgeMinMin).max(updateMatchingPreferencesBodyAgeMinMax).nullish(),
-  "ageMax": zod.number().min(updateMatchingPreferencesBodyAgeMaxMin).max(updateMatchingPreferencesBodyAgeMaxMax).nullish(),
-  "distanceKm": zod.number().min(updateMatchingPreferencesBodyDistanceKmMin).max(updateMatchingPreferencesBodyDistanceKmMax).nullish(),
-  "genderPreference": zod.string().max(updateMatchingPreferencesBodyGenderPreferenceMax).nullish(),
-  "dealBreakers": zod.array(zod.string().min(1).max(updateMatchingPreferencesBodyDealBreakersItemMax)).max(updateMatchingPreferencesBodyDealBreakersMax).nullish(),
-  "mustHaves": zod.array(zod.string().min(1).max(updateMatchingPreferencesBodyMustHavesItemMax)).max(updateMatchingPreferencesBodyMustHavesMax).nullish(),
-  "cityHint": zod.string().max(updateMatchingPreferencesBodyCityHintMax).nullish()
-})
+  ageMin: zod
+    .number()
+    .min(updateMatchingPreferencesBodyAgeMinMin)
+    .max(updateMatchingPreferencesBodyAgeMinMax)
+    .nullish(),
+  ageMax: zod
+    .number()
+    .min(updateMatchingPreferencesBodyAgeMaxMin)
+    .max(updateMatchingPreferencesBodyAgeMaxMax)
+    .nullish(),
+  distanceKm: zod
+    .number()
+    .min(updateMatchingPreferencesBodyDistanceKmMin)
+    .max(updateMatchingPreferencesBodyDistanceKmMax)
+    .nullish(),
+  genderPreference: zod
+    .string()
+    .max(updateMatchingPreferencesBodyGenderPreferenceMax)
+    .nullish(),
+  dealBreakers: zod
+    .array(
+      zod.string().min(1).max(updateMatchingPreferencesBodyDealBreakersItemMax),
+    )
+    .max(updateMatchingPreferencesBodyDealBreakersMax)
+    .nullish(),
+  mustHaves: zod
+    .array(
+      zod.string().min(1).max(updateMatchingPreferencesBodyMustHavesItemMax),
+    )
+    .max(updateMatchingPreferencesBodyMustHavesMax)
+    .nullish(),
+  cityHint: zod
+    .string()
+    .max(updateMatchingPreferencesBodyCityHintMax)
+    .nullish(),
+});
 
 export const UpdateMatchingPreferencesResponse = zod.object({
-  "userId": zod.string(),
-  "ageMin": zod.number().nullable(),
-  "ageMax": zod.number().nullable(),
-  "distanceKm": zod.number().nullable(),
-  "genderPreference": zod.string().nullable(),
-  "dealBreakers": zod.array(zod.string()).nullable(),
-  "mustHaves": zod.array(zod.string()).nullable(),
-  "cityHint": zod.string().nullable(),
-  "updatedAt": zod.coerce.date()
-})
-
+  userId: zod.string(),
+  ageMin: zod.number().nullable(),
+  ageMax: zod.number().nullable(),
+  distanceKm: zod.number().nullable(),
+  genderPreference: zod.string().nullable(),
+  dealBreakers: zod.array(zod.string()).nullable(),
+  mustHaves: zod.array(zod.string()).nullable(),
+  cityHint: zod.string().nullable(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * Inserts or updates the caller's row in `match_pool_membership`.
 Accepted client-facing statuses: `off`, `building`, `ready`,
-`paused`. When the caller's tier is `wingman` and the client
-sends `building`, the server may upgrade the stored status to
-`concierge_only` for founder-curated routing.
+`paused`. Member and Insight members may opt into the candidate pool;
+that does not activate a paid search. When the caller's canonical plan
+includes human guidance and the client sends `building`, the server may
+upgrade the stored status to `concierge_only` for founder-curated
+routing.
 
  * @summary Upsert the signed-in user's match pool membership status
  */
 export const UpdateMatchingPoolMembershipHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const updateMatchingPoolMembershipBodyPausedReasonMax = 280;
 
-
-
 export const UpdateMatchingPoolMembershipBody = zod.object({
-  "status": zod.enum(['off', 'building', 'ready', 'paused']),
-  "pausedReason": zod.string().max(updateMatchingPoolMembershipBodyPausedReasonMax).nullish()
-})
+  status: zod.enum(["off", "building", "ready", "paused"]),
+  pausedReason: zod
+    .string()
+    .max(updateMatchingPoolMembershipBodyPausedReasonMax)
+    .nullish(),
+});
 
 export const UpdateMatchingPoolMembershipResponse = zod.object({
-  "userId": zod.string(),
-  "status": zod.enum(['off', 'building', 'ready', 'paused', 'concierge_only']),
-  "readyAt": zod.coerce.date().nullable(),
-  "pausedReason": zod.string().nullable(),
-  "tier": zod.union([zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
-  "updatedAt": zod.coerce.date()
-})
-
+  userId: zod.string(),
+  status: zod.enum(["off", "building", "ready", "paused", "concierge_only"]),
+  readyAt: zod.coerce.date().nullable(),
+  pausedReason: zod.string().nullable(),
+  tier: zod
+    .union([
+      zod.literal("member"),
+      zod.literal("insight"),
+      zod.literal("match"),
+      zod.literal("guided"),
+      zod.literal("free"),
+      zod.literal("reset"),
+      zod.literal("wingman"),
+      zod.literal(null),
+    ])
+    .nullable(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * Persists a paste of a profile the caller is already talking to and
@@ -5654,30 +9268,43 @@ is also captured as a `match_proposals` row with
  * @summary Score a pasted external profile against the signed-in user
  */
 export const CreateMatchingExternalReadHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createMatchingExternalReadBodyProfileTextMax = 20000;
 
-
-
 export const CreateMatchingExternalReadBody = zod.object({
-  "profileText": zod.string().min(1).max(createMatchingExternalReadBodyProfileTextMax),
-  "source": zod.enum(['hinge', 'tinder', 'bumble', 'grindr', 'feeld', 'her', 'facebookDating', 'other'])
-})
+  profileText: zod
+    .string()
+    .min(1)
+    .max(createMatchingExternalReadBodyProfileTextMax),
+  source: zod.enum([
+    "hinge",
+    "tinder",
+    "bumble",
+    "grindr",
+    "feeld",
+    "her",
+    "facebookDating",
+    "other",
+  ]),
+});
 
 export const createMatchingExternalReadResponseScoreMin = 0;
 export const createMatchingExternalReadResponseScoreMax = 100;
 
-
-
 export const CreateMatchingExternalReadResponse = zod.object({
-  "score": zod.number().min(createMatchingExternalReadResponseScoreMin).max(createMatchingExternalReadResponseScoreMax),
-  "highlights": zod.array(zod.string()),
-  "frictions": zod.array(zod.string()),
-  "summary": zod.string().nullable()
-})
-
+  score: zod
+    .number()
+    .min(createMatchingExternalReadResponseScoreMin)
+    .max(createMatchingExternalReadResponseScoreMax),
+  highlights: zod.array(zod.string()),
+  frictions: zod.array(zod.string()),
+  summary: zod.string().nullable(),
+});
 
 /**
  * Returns the caller's non-deleted dating wins, newest first. Dating
@@ -5687,46 +9314,62 @@ matching readiness as a low-weight signal.
  * @summary List the signed-in user's logged dating wins
  */
 export const GetDatingWinsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetDatingWinsResponseItem = zod.object({
-  "id": zod.number(),
-  "category": zod.enum(['sent-it', 'great-convo', 'got-a-date', 'noticed-something', 'personal-win']),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})
-export const GetDatingWinsResponse = zod.array(GetDatingWinsResponseItem)
-
+  id: zod.number(),
+  category: zod.enum([
+    "sent-it",
+    "great-convo",
+    "got-a-date",
+    "noticed-something",
+    "personal-win",
+  ]),
+  body: zod.string(),
+  createdAt: zod.string(),
+});
+export const GetDatingWinsResponse = zod.array(GetDatingWinsResponseItem);
 
 /**
  * @summary Log a new dating win
  */
 export const CreateDatingWinHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createDatingWinBodyBodyMax = 2000;
 
-
-
 export const CreateDatingWinBody = zod.object({
-  "category": zod.enum(['sent-it', 'great-convo', 'got-a-date', 'noticed-something', 'personal-win']),
-  "body": zod.string().min(1).max(createDatingWinBodyBodyMax)
-})
-
+  category: zod.enum([
+    "sent-it",
+    "great-convo",
+    "got-a-date",
+    "noticed-something",
+    "personal-win",
+  ]),
+  body: zod.string().min(1).max(createDatingWinBodyBodyMax),
+});
 
 /**
  * @summary Delete one of the signed-in user's dating wins
  */
 export const DeleteDatingWinParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteDatingWinHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 /**
  * Returns the caller's non-deleted behavioral growth actions, newest
@@ -5737,16 +9380,24 @@ feeds matching readiness as a low-weight follow-through signal.
  * @summary List the signed-in user's logged growth actions
  */
 export const GetGrowthEventsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetGrowthEventsResponseItem = zod.object({
-  "id": zod.number(),
-  "type": zod.enum(['experiment_tried', 'what_changed', 'pattern_broken', 'follow_up_logged', 'commitment_kept']),
-  "createdAt": zod.string()
-})
-export const GetGrowthEventsResponse = zod.array(GetGrowthEventsResponseItem)
-
+  id: zod.number(),
+  type: zod.enum([
+    "experiment_tried",
+    "what_changed",
+    "pattern_broken",
+    "follow_up_logged",
+    "commitment_kept",
+  ]),
+  createdAt: zod.string(),
+});
+export const GetGrowthEventsResponse = zod.array(GetGrowthEventsResponseItem);
 
 /**
  * Records one behavioral growth action (an experiment tried, a pattern
@@ -5758,13 +9409,21 @@ follow-through signal.
  * @summary Record a behavioral growth action
  */
 export const RecordGrowthEventHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const RecordGrowthEventBody = zod.object({
-  "type": zod.enum(['experiment_tried', 'what_changed', 'pattern_broken', 'follow_up_logged', 'commitment_kept'])
-})
-
+  type: zod.enum([
+    "experiment_tried",
+    "what_changed",
+    "pattern_broken",
+    "follow_up_logged",
+    "commitment_kept",
+  ]),
+});
 
 /**
  * Returns the caller's saved birth chart with its deterministically
@@ -5775,67 +9434,85 @@ Raw birth details never leave the server beyond the local compute.
  * @summary Get the signed-in user's Cosmic Compass chart
  */
 export const GetCosmicChartHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetCosmicChartResponse = zod.object({
-  "birthDate": zod.string(),
-  "birthTime": zod.string().nullable(),
-  "birthPlace": zod.string(),
-  "birthLat": zod.number(),
-  "birthLng": zod.number(),
-  "placements": zod.object({
-  "mode": zod.enum(['full', 'sunOnly']),
-  "sun": zod.object({
-  "sign": zod.string(),
-  "degree": zod.number()
-}),
-  "moon": zod.union([zod.object({
-  "sign": zod.string(),
-  "degree": zod.number()
-}),zod.null()]),
-  "rising": zod.union([zod.object({
-  "sign": zod.string(),
-  "degree": zod.number()
-}),zod.null()]),
-  "midheaven": zod.union([zod.object({
-  "sign": zod.string()
-}),zod.null()]),
-  "bodies": zod.array(zod.object({
-  "body": zod.string(),
-  "sign": zod.string()
-})),
-  "traits": zod.object({
-  "novelty": zod.number(),
-  "stability": zod.number(),
-  "expression": zod.number(),
-  "depth": zod.number()
-}),
-  "elements": zod.object({
-  "fire": zod.number(),
-  "earth": zod.number(),
-  "air": zod.number(),
-  "water": zod.number()
-}),
-  "modalities": zod.object({
-  "cardinal": zod.number(),
-  "fixed": zod.number(),
-  "mutable": zod.number()
-})
-}),
-  "reaction": zod.string().nullable(),
-  "reading": zod.object({
-  "headline": zod.string(),
-  "lines": zod.array(zod.string()),
-  "topTrait": zod.string(),
-  "source": zod.enum(['deterministic', 'claude']),
-  "deep": zod.object({
-  "headline": zod.string(),
-  "lines": zod.array(zod.string())
-}).nullish().describe('Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.')
-})
-})
-
+  birthDate: zod.string(),
+  birthTime: zod.string().nullable(),
+  birthPlace: zod.string(),
+  birthLat: zod.number(),
+  birthLng: zod.number(),
+  placements: zod.object({
+    mode: zod.enum(["full", "sunOnly"]),
+    sun: zod.object({
+      sign: zod.string(),
+      degree: zod.number(),
+    }),
+    moon: zod.union([
+      zod.object({
+        sign: zod.string(),
+        degree: zod.number(),
+      }),
+      zod.null(),
+    ]),
+    rising: zod.union([
+      zod.object({
+        sign: zod.string(),
+        degree: zod.number(),
+      }),
+      zod.null(),
+    ]),
+    midheaven: zod.union([
+      zod.object({
+        sign: zod.string(),
+      }),
+      zod.null(),
+    ]),
+    bodies: zod.array(
+      zod.object({
+        body: zod.string(),
+        sign: zod.string(),
+      }),
+    ),
+    traits: zod.object({
+      novelty: zod.number(),
+      stability: zod.number(),
+      expression: zod.number(),
+      depth: zod.number(),
+    }),
+    elements: zod.object({
+      fire: zod.number(),
+      earth: zod.number(),
+      air: zod.number(),
+      water: zod.number(),
+    }),
+    modalities: zod.object({
+      cardinal: zod.number(),
+      fixed: zod.number(),
+      mutable: zod.number(),
+    }),
+  }),
+  reaction: zod.string().nullable(),
+  reading: zod.object({
+    headline: zod.string(),
+    lines: zod.array(zod.string()),
+    topTrait: zod.string(),
+    source: zod.enum(["deterministic", "claude"]),
+    deep: zod
+      .object({
+        headline: zod.string(),
+        lines: zod.array(zod.string()),
+      })
+      .nullish()
+      .describe(
+        "Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.",
+      ),
+  }),
+});
 
 /**
  * Computes a birth chart deterministically from birth date, time, and
@@ -5846,8 +9523,11 @@ we return a sun-only read rather than guess a rising sign.
  * @summary Build and save a Cosmic Compass chart
  */
 export const SaveCosmicChartHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const saveCosmicChartBodyBirthPlaceMax = 160;
 
@@ -5857,16 +9537,24 @@ export const saveCosmicChartBodyBirthLatMax = 90;
 export const saveCosmicChartBodyBirthLngMin = -180;
 export const saveCosmicChartBodyBirthLngMax = 180;
 
-
-
 export const SaveCosmicChartBody = zod.object({
-  "birthDate": zod.string().describe('ISO date, YYYY-MM-DD.'),
-  "birthTime": zod.string().nullish().describe('HH:MM 24h, or null when the user does not know their birth time.'),
-  "birthPlace": zod.string().max(saveCosmicChartBodyBirthPlaceMax),
-  "birthLat": zod.number().min(saveCosmicChartBodyBirthLatMin).max(saveCosmicChartBodyBirthLatMax),
-  "birthLng": zod.number().min(saveCosmicChartBodyBirthLngMin).max(saveCosmicChartBodyBirthLngMax)
-})
-
+  birthDate: zod.string().describe("ISO date, YYYY-MM-DD."),
+  birthTime: zod
+    .string()
+    .nullish()
+    .describe(
+      "HH:MM 24h, or null when the user does not know their birth time.",
+    ),
+  birthPlace: zod.string().max(saveCosmicChartBodyBirthPlaceMax),
+  birthLat: zod
+    .number()
+    .min(saveCosmicChartBodyBirthLatMin)
+    .max(saveCosmicChartBodyBirthLatMax),
+  birthLng: zod
+    .number()
+    .min(saveCosmicChartBodyBirthLngMin)
+    .max(saveCosmicChartBodyBirthLngMax),
+});
 
 /**
  * Records whether the read felt like the user, partly, or not at all. This
@@ -5877,71 +9565,89 @@ whether the stars mean anything. Requires an existing chart.
  * @summary Record how the chart read landed
  */
 export const SaveCosmicReactionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const SaveCosmicReactionBody = zod.object({
-  "reaction": zod.enum(['resonant', 'mixed', 'off'])
-})
+  reaction: zod.enum(["resonant", "mixed", "off"]),
+});
 
 export const SaveCosmicReactionResponse = zod.object({
-  "birthDate": zod.string(),
-  "birthTime": zod.string().nullable(),
-  "birthPlace": zod.string(),
-  "birthLat": zod.number(),
-  "birthLng": zod.number(),
-  "placements": zod.object({
-  "mode": zod.enum(['full', 'sunOnly']),
-  "sun": zod.object({
-  "sign": zod.string(),
-  "degree": zod.number()
-}),
-  "moon": zod.union([zod.object({
-  "sign": zod.string(),
-  "degree": zod.number()
-}),zod.null()]),
-  "rising": zod.union([zod.object({
-  "sign": zod.string(),
-  "degree": zod.number()
-}),zod.null()]),
-  "midheaven": zod.union([zod.object({
-  "sign": zod.string()
-}),zod.null()]),
-  "bodies": zod.array(zod.object({
-  "body": zod.string(),
-  "sign": zod.string()
-})),
-  "traits": zod.object({
-  "novelty": zod.number(),
-  "stability": zod.number(),
-  "expression": zod.number(),
-  "depth": zod.number()
-}),
-  "elements": zod.object({
-  "fire": zod.number(),
-  "earth": zod.number(),
-  "air": zod.number(),
-  "water": zod.number()
-}),
-  "modalities": zod.object({
-  "cardinal": zod.number(),
-  "fixed": zod.number(),
-  "mutable": zod.number()
-})
-}),
-  "reaction": zod.string().nullable(),
-  "reading": zod.object({
-  "headline": zod.string(),
-  "lines": zod.array(zod.string()),
-  "topTrait": zod.string(),
-  "source": zod.enum(['deterministic', 'claude']),
-  "deep": zod.object({
-  "headline": zod.string(),
-  "lines": zod.array(zod.string())
-}).nullish().describe('Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.')
-})
-})
-
+  birthDate: zod.string(),
+  birthTime: zod.string().nullable(),
+  birthPlace: zod.string(),
+  birthLat: zod.number(),
+  birthLng: zod.number(),
+  placements: zod.object({
+    mode: zod.enum(["full", "sunOnly"]),
+    sun: zod.object({
+      sign: zod.string(),
+      degree: zod.number(),
+    }),
+    moon: zod.union([
+      zod.object({
+        sign: zod.string(),
+        degree: zod.number(),
+      }),
+      zod.null(),
+    ]),
+    rising: zod.union([
+      zod.object({
+        sign: zod.string(),
+        degree: zod.number(),
+      }),
+      zod.null(),
+    ]),
+    midheaven: zod.union([
+      zod.object({
+        sign: zod.string(),
+      }),
+      zod.null(),
+    ]),
+    bodies: zod.array(
+      zod.object({
+        body: zod.string(),
+        sign: zod.string(),
+      }),
+    ),
+    traits: zod.object({
+      novelty: zod.number(),
+      stability: zod.number(),
+      expression: zod.number(),
+      depth: zod.number(),
+    }),
+    elements: zod.object({
+      fire: zod.number(),
+      earth: zod.number(),
+      air: zod.number(),
+      water: zod.number(),
+    }),
+    modalities: zod.object({
+      cardinal: zod.number(),
+      fixed: zod.number(),
+      mutable: zod.number(),
+    }),
+  }),
+  reaction: zod.string().nullable(),
+  reading: zod.object({
+    headline: zod.string(),
+    lines: zod.array(zod.string()),
+    topTrait: zod.string(),
+    source: zod.enum(["deterministic", "claude"]),
+    deep: zod
+      .object({
+        headline: zod.string(),
+        lines: zod.array(zod.string()),
+      })
+      .nullish()
+      .describe(
+        "Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.",
+      ),
+  }),
+});
 
 /**
  * Returns the deterministic reading always, and layers an optional Claude
@@ -5952,20 +9658,27 @@ Falls back to the deterministic reading on consent-off, cap, or failure.
  * @summary Get a deeper Cosmic Compass reading
  */
 export const GetCosmicReadingHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetCosmicReadingResponse = zod.object({
-  "headline": zod.string(),
-  "lines": zod.array(zod.string()),
-  "topTrait": zod.string(),
-  "source": zod.enum(['deterministic', 'claude']),
-  "deep": zod.object({
-  "headline": zod.string(),
-  "lines": zod.array(zod.string())
-}).nullish().describe('Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.')
-})
-
+  headline: zod.string(),
+  lines: zod.array(zod.string()),
+  topTrait: zod.string(),
+  source: zod.enum(["deterministic", "claude"]),
+  deep: zod
+    .object({
+      headline: zod.string(),
+      lines: zod.array(zod.string()),
+    })
+    .nullish()
+    .describe(
+      "Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.",
+    ),
+});
 
 /**
  * Returns the planetary meridian lines (MC and IC) derived from the saved
@@ -5978,31 +9691,41 @@ chart has been built yet. Raw birth details never leave the server.
  * @summary Get the user's astrocartography lines and love-line cities
  */
 export const GetCosmicLinesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetCosmicLinesResponse = zod.object({
-  "mode": zod.enum(['full', 'sunOnly']).describe('Lines are only computed in full mode (a birth time was given).'),
-  "lines": zod.array(zod.object({
-  "body": zod.string().describe('Lowercase body key, e.g. venus.'),
-  "bodyLabel": zod.string(),
-  "angle": zod.enum(['MC', 'IC']),
-  "lng": zod.number().describe('Longitude where this meridian line falls, in [-180, 180).'),
-  "meaning": zod.string()
-})),
-  "loveLineCities": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "lat": zod.number(),
-  "lng": zod.number(),
-  "body": zod.string(),
-  "bodyLabel": zod.string(),
-  "angle": zod.enum(['MC', 'IC']),
-  "distanceMiles": zod.number()
-})),
-  "relocationOpen": zod.boolean()
-})
-
+  mode: zod
+    .enum(["full", "sunOnly"])
+    .describe("Lines are only computed in full mode (a birth time was given)."),
+  lines: zod.array(
+    zod.object({
+      body: zod.string().describe("Lowercase body key, e.g. venus."),
+      bodyLabel: zod.string(),
+      angle: zod.enum(["MC", "IC"]),
+      lng: zod
+        .number()
+        .describe("Longitude where this meridian line falls, in [-180, 180)."),
+      meaning: zod.string(),
+    }),
+  ),
+  loveLineCities: zod.array(
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      lat: zod.number(),
+      lng: zod.number(),
+      body: zod.string(),
+      bodyLabel: zod.string(),
+      angle: zod.enum(["MC", "IC"]),
+      distanceMiles: zod.number(),
+    }),
+  ),
+  relocationOpen: zod.boolean(),
+});
 
 /**
  * Turns the relocation-openness flag on or off. When on, the user's
@@ -6013,17 +9736,19 @@ preference, not content, and a trust-ledger purge flips it back off.
  * @summary Set whether the user is open to relocation-based matching
  */
 export const SetCosmicRelocationHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const SetCosmicRelocationBody = zod.object({
-  "open": zod.boolean()
-})
+  open: zod.boolean(),
+});
 
 export const SetCosmicRelocationResponse = zod.object({
-  "relocationOpen": zod.boolean()
-})
-
+  relocationOpen: zod.boolean(),
+});
 
 /**
  * Returns a playful, star-flavoured wrapper around the user's single most
@@ -6035,19 +9760,24 @@ been built yet. Only derived placements and the real action are used.
  * @summary Get the user's daily cosmic weather card
  */
 export const GetCosmicWeatherHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetCosmicWeatherResponse = zod.object({
-  "headline": zod.string(),
-  "reframe": zod.string(),
-  "action": zod.union([zod.object({
-  "label": zod.string(),
-  "detail": zod.string(),
-  "href": zod.string()
-}),zod.null()])
-})
-
+  headline: zod.string(),
+  reframe: zod.string(),
+  action: zod.union([
+    zod.object({
+      label: zod.string(),
+      detail: zod.string(),
+      href: zod.string(),
+    }),
+    zod.null(),
+  ]),
+});
 
 /**
  * Returns which verification tiers the caller has cleared. Verification is
@@ -6060,27 +9790,50 @@ sample view instead.
  * @summary Get the signed-in user's Trust & Safety verification state
  */
 export const GetVerificationHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getVerificationResponseVerifiedTiersMin = 0;
 
-
-
-
 export const GetVerificationResponse = zod.object({
-  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
-  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
-  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
-  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
-  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
-  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
-  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
-  "verifiedTiers": zod.number().min(getVerificationResponseVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
-  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
-  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
-})
-
+  phoneVerified: zod
+    .boolean()
+    .describe("Whether a phone number has cleared a verification check."),
+  phoneVerifiedAt: zod
+    .union([zod.string(), zod.null()])
+    .describe("ISO timestamp the phone check cleared, or null."),
+  selfieVerified: zod
+    .boolean()
+    .describe(
+      "Whether a selfie looked consistent with the member's profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.",
+    ),
+  selfieVerifiedAt: zod
+    .union([zod.string(), zod.null()])
+    .describe("ISO timestamp the selfie consistency check cleared, or null."),
+  idVerified: zod
+    .boolean()
+    .describe("Whether a government ID has cleared a Stripe Identity check."),
+  idVerifiedAt: zod
+    .union([zod.string(), zod.null()])
+    .describe("ISO timestamp the government ID check cleared, or null."),
+  ageOver18: zod
+    .boolean()
+    .describe("True when the ID check confirmed the holder is 18 or older."),
+  verifiedTiers: zod
+    .number()
+    .min(getVerificationResponseVerifiedTiersMin)
+    .describe("How many verification tiers the user has cleared."),
+  tierTotal: zod
+    .number()
+    .min(1)
+    .describe("Total tiers the climb can reach (phone, selfie, ID)."),
+  isVerified: zod
+    .boolean()
+    .describe("True when at least one tier has cleared; drives the badge."),
+});
 
 /**
  * Dispatches a one-time code to the supplied phone number through Twilio
@@ -6092,23 +9845,27 @@ identically in development.
  * @summary Send a one-time code to verify a phone number
  */
 export const StartPhoneVerificationHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const startPhoneVerificationBodyPhoneMin = 5;
 export const startPhoneVerificationBodyPhoneMax = 32;
 
-
-
 export const StartPhoneVerificationBody = zod.object({
-  "phone": zod.string().min(startPhoneVerificationBodyPhoneMin).max(startPhoneVerificationBodyPhoneMax).describe('Phone number in E.164 form, e.g. \"+14155550123\".')
-})
+  phone: zod
+    .string()
+    .min(startPhoneVerificationBodyPhoneMin)
+    .max(startPhoneVerificationBodyPhoneMax)
+    .describe('Phone number in E.164 form, e.g. \"+14155550123\".'),
+});
 
 export const StartPhoneVerificationResponse = zod.object({
-  "sent": zod.boolean(),
-  "transport": zod.enum(['twilio', 'log'])
-})
-
+  sent: zod.boolean(),
+  transport: zod.enum(["twilio", "log"]),
+});
 
 /**
  * Checks the one-time code against the live challenge. On success we record
@@ -6119,8 +9876,11 @@ state so the caller can reflect the badge immediately.
  * @summary Confirm a phone verification code
  */
 export const CheckPhoneVerificationHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const checkPhoneVerificationBodyPhoneMin = 5;
 export const checkPhoneVerificationBodyPhoneMax = 32;
@@ -6128,35 +9888,59 @@ export const checkPhoneVerificationBodyPhoneMax = 32;
 export const checkPhoneVerificationBodyCodeMin = 4;
 export const checkPhoneVerificationBodyCodeMax = 10;
 
-
-
 export const CheckPhoneVerificationBody = zod.object({
-  "phone": zod.string().min(checkPhoneVerificationBodyPhoneMin).max(checkPhoneVerificationBodyPhoneMax),
-  "code": zod.string().min(checkPhoneVerificationBodyCodeMin).max(checkPhoneVerificationBodyCodeMax)
-})
+  phone: zod
+    .string()
+    .min(checkPhoneVerificationBodyPhoneMin)
+    .max(checkPhoneVerificationBodyPhoneMax),
+  code: zod
+    .string()
+    .min(checkPhoneVerificationBodyCodeMin)
+    .max(checkPhoneVerificationBodyCodeMax),
+});
 
 export const checkPhoneVerificationResponseVerificationVerifiedTiersMin = 0;
 
-
-
-
 export const CheckPhoneVerificationResponse = zod.object({
-  "verified": zod.boolean(),
-  "transport": zod.enum(['twilio', 'log']),
-  "verification": zod.object({
-  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
-  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
-  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
-  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
-  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
-  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
-  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
-  "verifiedTiers": zod.number().min(checkPhoneVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
-  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
-  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
-})
-})
-
+  verified: zod.boolean(),
+  transport: zod.enum(["twilio", "log"]),
+  verification: zod.object({
+    phoneVerified: zod
+      .boolean()
+      .describe("Whether a phone number has cleared a verification check."),
+    phoneVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the phone check cleared, or null."),
+    selfieVerified: zod
+      .boolean()
+      .describe(
+        "Whether a selfie looked consistent with the member's profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.",
+      ),
+    selfieVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the selfie consistency check cleared, or null."),
+    idVerified: zod
+      .boolean()
+      .describe("Whether a government ID has cleared a Stripe Identity check."),
+    idVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the government ID check cleared, or null."),
+    ageOver18: zod
+      .boolean()
+      .describe("True when the ID check confirmed the holder is 18 or older."),
+    verifiedTiers: zod
+      .number()
+      .min(checkPhoneVerificationResponseVerificationVerifiedTiersMin)
+      .describe("How many verification tiers the user has cleared."),
+    tierTotal: zod
+      .number()
+      .min(1)
+      .describe("Total tiers the climb can reach (phone, selfie, ID)."),
+    isVerified: zod
+      .boolean()
+      .describe("True when at least one tier has cleared; drives the badge."),
+  }),
+});
 
 /**
  * Creates a Stripe Identity verification session for the highest-trust,
@@ -6169,15 +9953,25 @@ explain the tier is coming, rather than erroring.
  * @summary Start a government ID and age check via Stripe Identity
  */
 export const StartIdVerificationHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const StartIdVerificationResponse = zod.object({
-  "configured": zod.boolean().describe('False when Stripe is not connected; the tier is then coming soon.'),
-  "clientSecret": zod.union([zod.string(),zod.null()]).describe('Client secret for Stripe\'s embedded modal flow, or null.'),
-  "url": zod.union([zod.string(),zod.null()]).describe('Hosted URL for the redirect flow, or null.')
-})
-
+  configured: zod
+    .boolean()
+    .describe(
+      "False when Stripe is not connected; the tier is then coming soon.",
+    ),
+  clientSecret: zod
+    .union([zod.string(), zod.null()])
+    .describe("Client secret for Stripe's embedded modal flow, or null."),
+  url: zod
+    .union([zod.string(), zod.null()])
+    .describe("Hosted URL for the redirect flow, or null."),
+});
 
 /**
  * Polls Stripe for the outcome of the user's outstanding Identity session
@@ -6188,30 +9982,55 @@ flow returns. Returns the updated verification state.
  * @summary Poll Stripe for the latest ID verification status
  */
 export const RefreshIdVerificationHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const refreshIdVerificationResponseVerificationVerifiedTiersMin = 0;
 
-
-
-
 export const RefreshIdVerificationResponse = zod.object({
-  "configured": zod.boolean().describe('False when Stripe is not connected; verification is unchanged.'),
-  "verification": zod.object({
-  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
-  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
-  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
-  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
-  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
-  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
-  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
-  "verifiedTiers": zod.number().min(refreshIdVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
-  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
-  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
-})
-})
-
+  configured: zod
+    .boolean()
+    .describe("False when Stripe is not connected; verification is unchanged."),
+  verification: zod.object({
+    phoneVerified: zod
+      .boolean()
+      .describe("Whether a phone number has cleared a verification check."),
+    phoneVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the phone check cleared, or null."),
+    selfieVerified: zod
+      .boolean()
+      .describe(
+        "Whether a selfie looked consistent with the member's profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.",
+      ),
+    selfieVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the selfie consistency check cleared, or null."),
+    idVerified: zod
+      .boolean()
+      .describe("Whether a government ID has cleared a Stripe Identity check."),
+    idVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the government ID check cleared, or null."),
+    ageOver18: zod
+      .boolean()
+      .describe("True when the ID check confirmed the holder is 18 or older."),
+    verifiedTiers: zod
+      .number()
+      .min(refreshIdVerificationResponseVerificationVerifiedTiersMin)
+      .describe("How many verification tiers the user has cleared."),
+    tierTotal: zod
+      .number()
+      .min(1)
+      .describe("Total tiers the climb can reach (phone, selfie, ID)."),
+    isVerified: zod
+      .boolean()
+      .describe("True when at least one tier has cleared; drives the badge."),
+  }),
+});
 
 /**
  * Compares a just-taken selfie against the member's profile photos using
@@ -6227,50 +10046,105 @@ that never awards the tier. A "consistent" verdict awards the selfie tier.
  * @summary Run a soft selfie photo-match consistency check
  */
 export const CheckSelfieVerificationHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
-
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const checkSelfieVerificationBodyProfilePhotosMax = 5;
 
-
-
 export const CheckSelfieVerificationBody = zod.object({
-  "selfie": zod.object({
-  "imageBase64": zod.string().min(1).describe('Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.'),
-  "imageMediaType": zod.union([zod.string(),zod.null()]).optional().describe('Optional MIME type hint, e.g. \"image\/jpeg\".')
-}),
-  "profilePhotos": zod.array(zod.object({
-  "imageBase64": zod.string().min(1).describe('Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.'),
-  "imageMediaType": zod.union([zod.string(),zod.null()]).optional().describe('Optional MIME type hint, e.g. \"image\/jpeg\".')
-})).min(1).max(checkSelfieVerificationBodyProfilePhotosMax).describe('The profile photos to compare the selfie against, read in the moment.')
-})
+  selfie: zod.object({
+    imageBase64: zod
+      .string()
+      .min(1)
+      .describe(
+        "Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.",
+      ),
+    imageMediaType: zod
+      .union([zod.string(), zod.null()])
+      .optional()
+      .describe('Optional MIME type hint, e.g. \"image\/jpeg\".'),
+  }),
+  profilePhotos: zod
+    .array(
+      zod.object({
+        imageBase64: zod
+          .string()
+          .min(1)
+          .describe(
+            "Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.",
+          ),
+        imageMediaType: zod
+          .union([zod.string(), zod.null()])
+          .optional()
+          .describe('Optional MIME type hint, e.g. \"image\/jpeg\".'),
+      }),
+    )
+    .min(1)
+    .max(checkSelfieVerificationBodyProfilePhotosMax)
+    .describe(
+      "The profile photos to compare the selfie against, read in the moment.",
+    ),
+});
 
 export const checkSelfieVerificationResponseVerificationVerifiedTiersMin = 0;
 
-
-
-
 export const CheckSelfieVerificationResponse = zod.object({
-  "verdict": zod.enum(['consistent', 'inconsistent', 'unclear']).describe('Soft consistency outcome. \"consistent\" looks like the same person and awards the tier; \"inconsistent\" looks like a different person; \"unclear\" could not tell. Never a liveness or identity proof.'),
-  "reason": zod.string().describe('A short, plain-language explanation of the verdict.'),
-  "mode": zod.enum(['live', 'fallback']).describe('\"live\" when the Claude vision check ran; \"fallback\" when consent was off, the daily cap was hit, or the call could not run. Fallback never awards the tier.'),
-  "fallbackReason": zod.union([zod.string(),zod.null()]).describe('Why the check fell back, or null when it ran live.'),
-  "verification": zod.object({
-  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
-  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
-  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
-  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
-  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
-  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
-  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
-  "verifiedTiers": zod.number().min(checkSelfieVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
-  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
-  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
-})
-})
-
+  verdict: zod
+    .enum(["consistent", "inconsistent", "unclear"])
+    .describe(
+      'Soft consistency outcome. \"consistent\" looks like the same person and awards the tier; \"inconsistent\" looks like a different person; \"unclear\" could not tell. Never a liveness or identity proof.',
+    ),
+  reason: zod
+    .string()
+    .describe("A short, plain-language explanation of the verdict."),
+  mode: zod
+    .enum(["live", "fallback"])
+    .describe(
+      '\"live\" when the Claude vision check ran; \"fallback\" when consent was off, the daily cap was hit, or the call could not run. Fallback never awards the tier.',
+    ),
+  fallbackReason: zod
+    .union([zod.string(), zod.null()])
+    .describe("Why the check fell back, or null when it ran live."),
+  verification: zod.object({
+    phoneVerified: zod
+      .boolean()
+      .describe("Whether a phone number has cleared a verification check."),
+    phoneVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the phone check cleared, or null."),
+    selfieVerified: zod
+      .boolean()
+      .describe(
+        "Whether a selfie looked consistent with the member's profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.",
+      ),
+    selfieVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the selfie consistency check cleared, or null."),
+    idVerified: zod
+      .boolean()
+      .describe("Whether a government ID has cleared a Stripe Identity check."),
+    idVerifiedAt: zod
+      .union([zod.string(), zod.null()])
+      .describe("ISO timestamp the government ID check cleared, or null."),
+    ageOver18: zod
+      .boolean()
+      .describe("True when the ID check confirmed the holder is 18 or older."),
+    verifiedTiers: zod
+      .number()
+      .min(checkSelfieVerificationResponseVerificationVerifiedTiersMin)
+      .describe("How many verification tiers the user has cleared."),
+    tierTotal: zod
+      .number()
+      .min(1)
+      .describe("Total tiers the climb can reach (phone, selfie, ID)."),
+    isVerified: zod
+      .boolean()
+      .describe("True when at least one tier has cleared; drives the badge."),
+  }),
+});
 
 /**
  * Returns the caller's answers to the Would You Rather deck, newest first.
@@ -6280,16 +10154,20 @@ Distinct prompts answered feed matching readiness as a low-weight signal.
  * @summary List the signed-in user's Would You Rather answers
  */
 export const GetWouldYouRatherAnswersHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetWouldYouRatherAnswersResponseItem = zod.object({
-  "promptId": zod.string(),
-  "choice": zod.enum(['a', 'b']),
-  "createdAt": zod.string()
-})
-export const GetWouldYouRatherAnswersResponse = zod.array(GetWouldYouRatherAnswersResponseItem)
-
+  promptId: zod.string(),
+  choice: zod.enum(["a", "b"]),
+  createdAt: zod.string(),
+});
+export const GetWouldYouRatherAnswersResponse = zod.array(
+  GetWouldYouRatherAnswersResponseItem,
+);
 
 /**
  * Records the side chosen for one prompt. Answering the same prompt again
@@ -6298,18 +10176,18 @@ updates the choice in place, so the distinct-prompt count stays honest.
  * @summary Record a Would You Rather answer
  */
 export const CreateWouldYouRatherAnswerHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createWouldYouRatherAnswerBodyPromptIdMax = 64;
 
-
-
 export const CreateWouldYouRatherAnswerBody = zod.object({
-  "promptId": zod.string().min(1).max(createWouldYouRatherAnswerBodyPromptIdMax),
-  "choice": zod.enum(['a', 'b'])
-})
-
+  promptId: zod.string().min(1).max(createWouldYouRatherAnswerBodyPromptIdMax),
+  choice: zod.enum(["a", "b"]),
+});
 
 /**
  * Returns the caller's answers to the Daily Spark deck, newest first. Each
@@ -6320,16 +10198,20 @@ questions answered feed matching readiness as a low-weight signal.
  * @summary List the signed-in user's Daily Spark answers
  */
 export const GetDailySparkAnswersHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetDailySparkAnswersResponseItem = zod.object({
-  "questionId": zod.string(),
-  "choice": zod.string(),
-  "createdAt": zod.string()
-})
-export const GetDailySparkAnswersResponse = zod.array(GetDailySparkAnswersResponseItem)
-
+  questionId: zod.string(),
+  choice: zod.string(),
+  createdAt: zod.string(),
+});
+export const GetDailySparkAnswersResponse = zod.array(
+  GetDailySparkAnswersResponseItem,
+);
 
 /**
  * Records the option chosen for one question. Answering the same question
@@ -6339,20 +10221,20 @@ honest.
  * @summary Record a Daily Spark answer
  */
 export const CreateDailySparkAnswerHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createDailySparkAnswerBodyQuestionIdMax = 64;
 
 export const createDailySparkAnswerBodyChoiceMax = 64;
 
-
-
 export const CreateDailySparkAnswerBody = zod.object({
-  "questionId": zod.string().min(1).max(createDailySparkAnswerBodyQuestionIdMax),
-  "choice": zod.string().min(1).max(createDailySparkAnswerBodyChoiceMax)
-})
-
+  questionId: zod.string().min(1).max(createDailySparkAnswerBodyQuestionIdMax),
+  choice: zod.string().min(1).max(createDailySparkAnswerBodyChoiceMax),
+});
 
 /**
  * Returns the caller's flag selection: the green flags they bring and the
@@ -6363,15 +10245,17 @@ matching readiness as a low-weight standards signal.
  * @summary Get the signed-in user's green and red flag selection
  */
 export const GetFlagSelectionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetFlagSelectionResponse = zod.object({
-  "bringFlags": zod.array(zod.string()),
-  "seekFlags": zod.array(zod.string()),
-  "updatedAt": zod.string().nullish()
-})
-
+  bringFlags: zod.array(zod.string()),
+  seekFlags: zod.array(zod.string()),
+  updatedAt: zod.string().nullish(),
+});
 
 /**
  * Replaces the caller's flag selection in place with the two lists provided.
@@ -6380,8 +10264,11 @@ Stores only the stable flag ids chosen, never any free text.
  * @summary Replace the signed-in user's flag selection
  */
 export const PutFlagSelectionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const putFlagSelectionBodyBringFlagsItemMax = 64;
 
@@ -6391,19 +10278,20 @@ export const putFlagSelectionBodySeekFlagsItemMax = 64;
 
 export const putFlagSelectionBodySeekFlagsMax = 50;
 
-
-
 export const PutFlagSelectionBody = zod.object({
-  "bringFlags": zod.array(zod.string().min(1).max(putFlagSelectionBodyBringFlagsItemMax)).max(putFlagSelectionBodyBringFlagsMax),
-  "seekFlags": zod.array(zod.string().min(1).max(putFlagSelectionBodySeekFlagsItemMax)).max(putFlagSelectionBodySeekFlagsMax)
-})
+  bringFlags: zod
+    .array(zod.string().min(1).max(putFlagSelectionBodyBringFlagsItemMax))
+    .max(putFlagSelectionBodyBringFlagsMax),
+  seekFlags: zod
+    .array(zod.string().min(1).max(putFlagSelectionBodySeekFlagsItemMax))
+    .max(putFlagSelectionBodySeekFlagsMax),
+});
 
 export const PutFlagSelectionResponse = zod.object({
-  "bringFlags": zod.array(zod.string()),
-  "seekFlags": zod.array(zod.string()),
-  "updatedAt": zod.string().nullish()
-})
-
+  bringFlags: zod.array(zod.string()),
+  seekFlags: zod.array(zod.string()),
+  updatedAt: zod.string().nullish(),
+});
 
 /**
  * Returns the caller's responses to the scenario reels, newest first. Each
@@ -6414,16 +10302,20 @@ communication and conflict-style signal.
  * @summary List the signed-in user's scenario reel responses
  */
 export const GetScenarioResponsesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetScenarioResponsesResponseItem = zod.object({
-  "scenarioId": zod.string(),
-  "optionId": zod.string(),
-  "createdAt": zod.string()
-})
-export const GetScenarioResponsesResponse = zod.array(GetScenarioResponsesResponseItem)
-
+  scenarioId: zod.string(),
+  optionId: zod.string(),
+  createdAt: zod.string(),
+});
+export const GetScenarioResponsesResponse = zod.array(
+  GetScenarioResponsesResponseItem,
+);
 
 /**
  * Records the option chosen for one scenario. Answering the same scenario
@@ -6433,20 +10325,20 @@ honest.
  * @summary Record a scenario reel response
  */
 export const CreateScenarioResponseHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createScenarioResponseBodyScenarioIdMax = 64;
 
 export const createScenarioResponseBodyOptionIdMax = 16;
 
-
-
 export const CreateScenarioResponseBody = zod.object({
-  "scenarioId": zod.string().min(1).max(createScenarioResponseBodyScenarioIdMax),
-  "optionId": zod.string().min(1).max(createScenarioResponseBodyOptionIdMax)
-})
-
+  scenarioId: zod.string().min(1).max(createScenarioResponseBodyScenarioIdMax),
+  optionId: zod.string().min(1).max(createScenarioResponseBodyOptionIdMax),
+});
 
 /**
  * Returns the caller's completed predict-yourself rounds, newest first.
@@ -6457,8 +10349,11 @@ feed matching readiness as a low-weight self-awareness signal.
  * @summary List the signed-in user's predict-yourself rounds
  */
 export const GetPredictionResponsesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getPredictionResponsesResponsePredictedMin = 0;
 export const getPredictionResponsesResponsePredictedMax = 100;
@@ -6466,16 +10361,21 @@ export const getPredictionResponsesResponsePredictedMax = 100;
 export const getPredictionResponsesResponseActualMin = 0;
 export const getPredictionResponsesResponseActualMax = 100;
 
-
-
 export const GetPredictionResponsesResponseItem = zod.object({
-  "itemId": zod.string(),
-  "predicted": zod.number().min(getPredictionResponsesResponsePredictedMin).max(getPredictionResponsesResponsePredictedMax),
-  "actual": zod.number().min(getPredictionResponsesResponseActualMin).max(getPredictionResponsesResponseActualMax),
-  "createdAt": zod.string()
-})
-export const GetPredictionResponsesResponse = zod.array(GetPredictionResponsesResponseItem)
-
+  itemId: zod.string(),
+  predicted: zod
+    .number()
+    .min(getPredictionResponsesResponsePredictedMin)
+    .max(getPredictionResponsesResponsePredictedMax),
+  actual: zod
+    .number()
+    .min(getPredictionResponsesResponseActualMin)
+    .max(getPredictionResponsesResponseActualMax),
+  createdAt: zod.string(),
+});
+export const GetPredictionResponsesResponse = zod.array(
+  GetPredictionResponsesResponseItem,
+);
 
 /**
  * Records the predicted and actual counts for one round. Completing the
@@ -6485,8 +10385,11 @@ honest.
  * @summary Record a completed predict-yourself round
  */
 export const CreatePredictionResponseHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createPredictionResponseBodyItemIdMax = 64;
 
@@ -6496,14 +10399,17 @@ export const createPredictionResponseBodyPredictedMax = 100;
 export const createPredictionResponseBodyActualMin = 0;
 export const createPredictionResponseBodyActualMax = 100;
 
-
-
 export const CreatePredictionResponseBody = zod.object({
-  "itemId": zod.string().min(1).max(createPredictionResponseBodyItemIdMax),
-  "predicted": zod.number().min(createPredictionResponseBodyPredictedMin).max(createPredictionResponseBodyPredictedMax),
-  "actual": zod.number().min(createPredictionResponseBodyActualMin).max(createPredictionResponseBodyActualMax)
-})
-
+  itemId: zod.string().min(1).max(createPredictionResponseBodyItemIdMax),
+  predicted: zod
+    .number()
+    .min(createPredictionResponseBodyPredictedMin)
+    .max(createPredictionResponseBodyPredictedMax),
+  actual: zod
+    .number()
+    .min(createPredictionResponseBodyActualMin)
+    .max(createPredictionResponseBodyActualMax),
+});
 
 /**
  * Returns the caller's time-capsule notes, newest first, so they can replay
@@ -6514,16 +10420,18 @@ low-weight intent and values signal.
  * @summary List the signed-in user's notes to a future partner
  */
 export const GetTimeCapsulesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetTimeCapsulesResponseItem = zod.object({
-  "id": zod.number(),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})
-export const GetTimeCapsulesResponse = zod.array(GetTimeCapsulesResponseItem)
-
+  id: zod.number(),
+  body: zod.string(),
+  createdAt: zod.string(),
+});
+export const GetTimeCapsulesResponse = zod.array(GetTimeCapsulesResponseItem);
 
 /**
  * Stores one short note. Notes accumulate over time so the user can return
@@ -6532,17 +10440,17 @@ and replay them; each distinct note nudges readiness.
  * @summary Write a note to a future partner
  */
 export const CreateTimeCapsuleHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createTimeCapsuleBodyBodyMax = 280;
 
-
-
 export const CreateTimeCapsuleBody = zod.object({
-  "body": zod.string().min(1).max(createTimeCapsuleBodyBodyMax)
-})
-
+  body: zod.string().min(1).max(createTimeCapsuleBodyBodyMax),
+});
 
 /**
  * Returns how many outside perspectives the user has gathered, their own
@@ -6554,51 +10462,65 @@ feed matching readiness as the externalCalibration lane.
  * @summary The signed-in user's Wingman loop state
  */
 export const GetWingmanStateHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getWingmanStateResponsePerspectivesMin = 0;
 
-
-
 export const GetWingmanStateResponse = zod.object({
-  "perspectives": zod.number().min(getWingmanStateResponsePerspectivesMin),
-  "selfRatings": zod.union([zod.object({
-  "warmth": zod.number(),
-  "humor": zod.number(),
-  "drive": zod.number(),
-  "openness": zod.number(),
-  "steadiness": zod.number()
-}),zod.null()]),
-  "friendAverages": zod.union([zod.object({
-  "warmth": zod.number(),
-  "humor": zod.number(),
-  "drive": zod.number(),
-  "openness": zod.number(),
-  "steadiness": zod.number()
-}),zod.null()]),
-  "gap": zod.union([zod.object({
-  "warmth": zod.number(),
-  "humor": zod.number(),
-  "drive": zod.number(),
-  "openness": zod.number(),
-  "steadiness": zod.number(),
-  "largest": zod.object({
-  "trait": zod.string(),
-  "selfRating": zod.number(),
-  "friendRating": zod.number(),
-  "delta": zod.number()
-})
-}),zod.null()]),
-  "invites": zod.array(zod.object({
-  "id": zod.number(),
-  "friendLabel": zod.string().nullable(),
-  "status": zod.enum(['pending', 'answered']),
-  "createdAt": zod.string(),
-  "path": zod.string().nullish().describe('Fresh signed share path, present only for pending invites.')
-}))
-})
-
+  perspectives: zod.number().min(getWingmanStateResponsePerspectivesMin),
+  selfRatings: zod.union([
+    zod.object({
+      warmth: zod.number(),
+      humor: zod.number(),
+      drive: zod.number(),
+      openness: zod.number(),
+      steadiness: zod.number(),
+    }),
+    zod.null(),
+  ]),
+  friendAverages: zod.union([
+    zod.object({
+      warmth: zod.number(),
+      humor: zod.number(),
+      drive: zod.number(),
+      openness: zod.number(),
+      steadiness: zod.number(),
+    }),
+    zod.null(),
+  ]),
+  gap: zod.union([
+    zod.object({
+      warmth: zod.number(),
+      humor: zod.number(),
+      drive: zod.number(),
+      openness: zod.number(),
+      steadiness: zod.number(),
+      largest: zod.object({
+        trait: zod.string(),
+        selfRating: zod.number(),
+        friendRating: zod.number(),
+        delta: zod.number(),
+      }),
+    }),
+    zod.null(),
+  ]),
+  invites: zod.array(
+    zod.object({
+      id: zod.number(),
+      friendLabel: zod.string().nullable(),
+      status: zod.enum(["pending", "answered"]),
+      createdAt: zod.string(),
+      path: zod
+        .string()
+        .nullish()
+        .describe("Fresh signed share path, present only for pending invites."),
+    }),
+  ),
+});
 
 /**
  * Stores the user's self-rating on the five traits (1-5 each). Re-rating
@@ -6608,8 +10530,11 @@ averages are compared against to surface the calibration gap.
  * @summary Set the signed-in user's own trait self-rating
  */
 export const SetWingmanSelfRatingHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const setWingmanSelfRatingBodyWarmthMax = 5;
 
@@ -6621,58 +10546,67 @@ export const setWingmanSelfRatingBodyOpennessMax = 5;
 
 export const setWingmanSelfRatingBodySteadinessMax = 5;
 
-
-
 export const SetWingmanSelfRatingBody = zod.object({
-  "warmth": zod.number().min(1).max(setWingmanSelfRatingBodyWarmthMax),
-  "humor": zod.number().min(1).max(setWingmanSelfRatingBodyHumorMax),
-  "drive": zod.number().min(1).max(setWingmanSelfRatingBodyDriveMax),
-  "openness": zod.number().min(1).max(setWingmanSelfRatingBodyOpennessMax),
-  "steadiness": zod.number().min(1).max(setWingmanSelfRatingBodySteadinessMax)
-})
+  warmth: zod.number().min(1).max(setWingmanSelfRatingBodyWarmthMax),
+  humor: zod.number().min(1).max(setWingmanSelfRatingBodyHumorMax),
+  drive: zod.number().min(1).max(setWingmanSelfRatingBodyDriveMax),
+  openness: zod.number().min(1).max(setWingmanSelfRatingBodyOpennessMax),
+  steadiness: zod.number().min(1).max(setWingmanSelfRatingBodySteadinessMax),
+});
 
 export const setWingmanSelfRatingResponsePerspectivesMin = 0;
 
-
-
 export const SetWingmanSelfRatingResponse = zod.object({
-  "perspectives": zod.number().min(setWingmanSelfRatingResponsePerspectivesMin),
-  "selfRatings": zod.union([zod.object({
-  "warmth": zod.number(),
-  "humor": zod.number(),
-  "drive": zod.number(),
-  "openness": zod.number(),
-  "steadiness": zod.number()
-}),zod.null()]),
-  "friendAverages": zod.union([zod.object({
-  "warmth": zod.number(),
-  "humor": zod.number(),
-  "drive": zod.number(),
-  "openness": zod.number(),
-  "steadiness": zod.number()
-}),zod.null()]),
-  "gap": zod.union([zod.object({
-  "warmth": zod.number(),
-  "humor": zod.number(),
-  "drive": zod.number(),
-  "openness": zod.number(),
-  "steadiness": zod.number(),
-  "largest": zod.object({
-  "trait": zod.string(),
-  "selfRating": zod.number(),
-  "friendRating": zod.number(),
-  "delta": zod.number()
-})
-}),zod.null()]),
-  "invites": zod.array(zod.object({
-  "id": zod.number(),
-  "friendLabel": zod.string().nullable(),
-  "status": zod.enum(['pending', 'answered']),
-  "createdAt": zod.string(),
-  "path": zod.string().nullish().describe('Fresh signed share path, present only for pending invites.')
-}))
-})
-
+  perspectives: zod.number().min(setWingmanSelfRatingResponsePerspectivesMin),
+  selfRatings: zod.union([
+    zod.object({
+      warmth: zod.number(),
+      humor: zod.number(),
+      drive: zod.number(),
+      openness: zod.number(),
+      steadiness: zod.number(),
+    }),
+    zod.null(),
+  ]),
+  friendAverages: zod.union([
+    zod.object({
+      warmth: zod.number(),
+      humor: zod.number(),
+      drive: zod.number(),
+      openness: zod.number(),
+      steadiness: zod.number(),
+    }),
+    zod.null(),
+  ]),
+  gap: zod.union([
+    zod.object({
+      warmth: zod.number(),
+      humor: zod.number(),
+      drive: zod.number(),
+      openness: zod.number(),
+      steadiness: zod.number(),
+      largest: zod.object({
+        trait: zod.string(),
+        selfRating: zod.number(),
+        friendRating: zod.number(),
+        delta: zod.number(),
+      }),
+    }),
+    zod.null(),
+  ]),
+  invites: zod.array(
+    zod.object({
+      id: zod.number(),
+      friendLabel: zod.string().nullable(),
+      status: zod.enum(["pending", "answered"]),
+      createdAt: zod.string(),
+      path: zod
+        .string()
+        .nullish()
+        .describe("Fresh signed share path, present only for pending invites."),
+    }),
+  ),
+});
 
 /**
  * Creates an invite and returns a signed, time-limited share path the user
@@ -6683,17 +10617,20 @@ owner's own reference and is never shown to the friend.
  * @summary Mint a signed invite link for a friend
  */
 export const CreateWingmanInviteHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createWingmanInviteBodyFriendLabelMax = 60;
 
-
-
 export const CreateWingmanInviteBody = zod.object({
-  "friendLabel": zod.string().max(createWingmanInviteBodyFriendLabelMax).nullish()
-})
-
+  friendLabel: zod
+    .string()
+    .max(createWingmanInviteBodyFriendLabelMax)
+    .nullish(),
+});
 
 /**
  * Resolves a signed invite token so a friend can see who invited them and
@@ -6703,14 +10640,13 @@ whether the invite has already been answered. Requires no account. Returns
  * @summary Public view of an invite (no auth)
  */
 export const GetWingmanInvitePublicParams = zod.object({
-  "token": zod.coerce.string()
-})
+  token: zod.coerce.string(),
+});
 
 export const GetWingmanInvitePublicResponse = zod.object({
-  "inviterName": zod.string(),
-  "answered": zod.boolean()
-})
-
+  inviterName: zod.string(),
+  answered: zod.boolean(),
+});
 
 /**
  * Records a friend's five 1-5 trait scores for the invite. Requires no
@@ -6721,8 +10657,8 @@ owner aggregated.
  * @summary Submit a friend's trait ratings (no auth)
  */
 export const AnswerWingmanInviteParams = zod.object({
-  "token": zod.coerce.string()
-})
+  token: zod.coerce.string(),
+});
 
 export const answerWingmanInviteBodyWarmthMax = 5;
 
@@ -6734,20 +10670,17 @@ export const answerWingmanInviteBodyOpennessMax = 5;
 
 export const answerWingmanInviteBodySteadinessMax = 5;
 
-
-
 export const AnswerWingmanInviteBody = zod.object({
-  "warmth": zod.number().min(1).max(answerWingmanInviteBodyWarmthMax),
-  "humor": zod.number().min(1).max(answerWingmanInviteBodyHumorMax),
-  "drive": zod.number().min(1).max(answerWingmanInviteBodyDriveMax),
-  "openness": zod.number().min(1).max(answerWingmanInviteBodyOpennessMax),
-  "steadiness": zod.number().min(1).max(answerWingmanInviteBodySteadinessMax)
-})
+  warmth: zod.number().min(1).max(answerWingmanInviteBodyWarmthMax),
+  humor: zod.number().min(1).max(answerWingmanInviteBodyHumorMax),
+  drive: zod.number().min(1).max(answerWingmanInviteBodyDriveMax),
+  openness: zod.number().min(1).max(answerWingmanInviteBodyOpennessMax),
+  steadiness: zod.number().min(1).max(answerWingmanInviteBodySteadinessMax),
+});
 
 export const AnswerWingmanInviteResponse = zod.object({
-  "ok": zod.boolean()
-})
-
+  ok: zod.boolean(),
+});
 
 /**
  * Returns the caller's proposals ordered by createdAt desc. Empty for
@@ -6756,8 +10689,11 @@ most users today; founder seeds rows as the internal pool grows.
  * @summary List the signed-in user's current match proposals
  */
 export const GetMatchingProposalsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getMatchingProposalsResponseCompatibilityScoreMin = 0;
 export const getMatchingProposalsResponseCompatibilityScoreMax = 100;
@@ -6765,23 +10701,44 @@ export const getMatchingProposalsResponseCompatibilityScoreMax = 100;
 export const getMatchingProposalsResponseCosmicResonanceMin = 0;
 export const getMatchingProposalsResponseCosmicResonanceMax = 100;
 
-
-
 export const GetMatchingProposalsResponseItem = zod.object({
-  "id": zod.string().uuid(),
-  "userId": zod.string(),
-  "proposedToUserId": zod.string().nullable(),
-  "source": zod.enum(['internal', 'external_paste', 'concierge']),
-  "compatibilityScore": zod.number().min(getMatchingProposalsResponseCompatibilityScoreMin).max(getMatchingProposalsResponseCompatibilityScoreMax),
-  "summary": zod.string().nullable(),
-  "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
-  "cosmicResonance": zod.number().min(getMatchingProposalsResponseCosmicResonanceMin).max(getMatchingProposalsResponseCosmicResonanceMax).nullable().describe('A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.'),
-  "cosmicResonanceNote": zod.string().nullable().describe('A short, light note for the resonance garnish. Null when either person has no chart.'),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-export const GetMatchingProposalsResponse = zod.array(GetMatchingProposalsResponseItem)
-
+  id: zod.string().uuid(),
+  userId: zod.string(),
+  proposedToUserId: zod.string().nullable(),
+  source: zod.enum(["internal", "external_paste", "concierge"]),
+  compatibilityScore: zod
+    .number()
+    .min(getMatchingProposalsResponseCompatibilityScoreMin)
+    .max(getMatchingProposalsResponseCompatibilityScoreMax),
+  summary: zod.string().nullable(),
+  status: zod.enum([
+    "proposed",
+    "user_yes",
+    "user_no",
+    "mutual_yes",
+    "expired",
+    "completed",
+  ]),
+  cosmicResonance: zod
+    .number()
+    .min(getMatchingProposalsResponseCosmicResonanceMin)
+    .max(getMatchingProposalsResponseCosmicResonanceMax)
+    .nullable()
+    .describe(
+      "A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.",
+    ),
+  cosmicResonanceNote: zod
+    .string()
+    .nullable()
+    .describe(
+      "A short, light note for the resonance garnish. Null when either person has no chart.",
+    ),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const GetMatchingProposalsResponse = zod.array(
+  GetMatchingProposalsResponseItem,
+);
 
 /**
  * Runs the deterministic internal matching engine for the caller. Pairs
@@ -6790,13 +10747,18 @@ aggregate signals and stated preferences (no raw content, no PII), and
 creates mutual internal proposals for the top candidates, skipping any
 pair that already has an internal proposal in either direction. Returns
 the caller's full proposal list (newest first), so the surface can
-refresh in one round-trip. Requires the caller to be in the pool.
+refresh in one round-trip. Requires the caller to be in the pool and to
+have active-search access through Match or Guided. Member and Insight
+may still opt into the candidate pool without initiating a search.
 
  * @summary Find and create internal matches for the signed-in user
  */
 export const DiscoverMatchesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const discoverMatchesResponseCompatibilityScoreMin = 0;
 export const discoverMatchesResponseCompatibilityScoreMax = 100;
@@ -6804,23 +10766,42 @@ export const discoverMatchesResponseCompatibilityScoreMax = 100;
 export const discoverMatchesResponseCosmicResonanceMin = 0;
 export const discoverMatchesResponseCosmicResonanceMax = 100;
 
-
-
 export const DiscoverMatchesResponseItem = zod.object({
-  "id": zod.string().uuid(),
-  "userId": zod.string(),
-  "proposedToUserId": zod.string().nullable(),
-  "source": zod.enum(['internal', 'external_paste', 'concierge']),
-  "compatibilityScore": zod.number().min(discoverMatchesResponseCompatibilityScoreMin).max(discoverMatchesResponseCompatibilityScoreMax),
-  "summary": zod.string().nullable(),
-  "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
-  "cosmicResonance": zod.number().min(discoverMatchesResponseCosmicResonanceMin).max(discoverMatchesResponseCosmicResonanceMax).nullable().describe('A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.'),
-  "cosmicResonanceNote": zod.string().nullable().describe('A short, light note for the resonance garnish. Null when either person has no chart.'),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-export const DiscoverMatchesResponse = zod.array(DiscoverMatchesResponseItem)
-
+  id: zod.string().uuid(),
+  userId: zod.string(),
+  proposedToUserId: zod.string().nullable(),
+  source: zod.enum(["internal", "external_paste", "concierge"]),
+  compatibilityScore: zod
+    .number()
+    .min(discoverMatchesResponseCompatibilityScoreMin)
+    .max(discoverMatchesResponseCompatibilityScoreMax),
+  summary: zod.string().nullable(),
+  status: zod.enum([
+    "proposed",
+    "user_yes",
+    "user_no",
+    "mutual_yes",
+    "expired",
+    "completed",
+  ]),
+  cosmicResonance: zod
+    .number()
+    .min(discoverMatchesResponseCosmicResonanceMin)
+    .max(discoverMatchesResponseCosmicResonanceMax)
+    .nullable()
+    .describe(
+      "A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.",
+    ),
+  cosmicResonanceNote: zod
+    .string()
+    .nullable()
+    .describe(
+      "A short, light note for the resonance garnish. Null when either person has no chart.",
+    ),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const DiscoverMatchesResponse = zod.array(DiscoverMatchesResponseItem);
 
 /**
  * Returns Echo's read of the user grounded in their own aggregate signal
@@ -6833,8 +10814,11 @@ derived signal coverage is ever sent to Claude, never raw content.
  * @summary Echo's read on the signed-in user for matching
  */
 export const CreateMatchingEchoReadHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const createMatchingEchoReadResponseConfidenceMin = 0;
 export const createMatchingEchoReadResponseConfidenceMax = 100;
@@ -6842,22 +10826,48 @@ export const createMatchingEchoReadResponseConfidenceMax = 100;
 export const createMatchingEchoReadResponseGapToPoolMin = 0;
 export const createMatchingEchoReadResponseGapToPoolMax = 100;
 
-
-
 export const CreateMatchingEchoReadResponse = zod.object({
-  "headline": zod.string(),
-  "confidence": zod.number().min(createMatchingEchoReadResponseConfidenceMin).max(createMatchingEchoReadResponseConfidenceMax).describe('How confident Echo\'s read is, derived from signal coverage and readiness.'),
-  "reading": zod.array(zod.string()).describe('What Echo can see in the user\'s accumulated signals (aggregate only).'),
-  "idealMatch": zod.array(zod.string()).describe('The kind of person Echo would put in front of them.'),
-  "radiusLabel": zod.string().describe('Human label for the search radius, e.g. \"inside your 35-mile radius\".'),
-  "gapToPool": zod.number().min(createMatchingEchoReadResponseGapToPoolMin).max(createMatchingEchoReadResponseGapToPoolMax).describe('Readiness points still needed to join the pool, 0 when eligible.'),
-  "nextStep": zod.union([zod.object({
-  "label": zod.string(),
-  "href": zod.string()
-}),zod.null()]),
-  "usedAi": zod.boolean().describe('True when the Claude layer produced this read, false on the deterministic baseline.')
-})
-
+  headline: zod.string(),
+  confidence: zod
+    .number()
+    .min(createMatchingEchoReadResponseConfidenceMin)
+    .max(createMatchingEchoReadResponseConfidenceMax)
+    .describe(
+      "How confident Echo's read is, derived from signal coverage and readiness.",
+    ),
+  reading: zod
+    .array(zod.string())
+    .describe(
+      "What Echo can see in the user's accumulated signals (aggregate only).",
+    ),
+  idealMatch: zod
+    .array(zod.string())
+    .describe("The kind of person Echo would put in front of them."),
+  radiusLabel: zod
+    .string()
+    .describe(
+      'Human label for the search radius, e.g. \"inside your 35-mile radius\".',
+    ),
+  gapToPool: zod
+    .number()
+    .min(createMatchingEchoReadResponseGapToPoolMin)
+    .max(createMatchingEchoReadResponseGapToPoolMax)
+    .describe(
+      "Readiness points still needed to join the pool, 0 when eligible.",
+    ),
+  nextStep: zod.union([
+    zod.object({
+      label: zod.string(),
+      href: zod.string(),
+    }),
+    zod.null(),
+  ]),
+  usedAi: zod
+    .boolean()
+    .describe(
+      "True when the Claude layer produced this read, false on the deterministic baseline.",
+    ),
+});
 
 /**
  * Lets the user act on a proposal instead of hitting a dead-end preview.
@@ -6868,16 +10878,23 @@ respond, and only while it is still in the proposed state.
  * @summary Record the user's interest in a match proposal
  */
 export const RespondToMatchProposalParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const RespondToMatchProposalHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const RespondToMatchProposalBody = zod.object({
-  "interested": zod.boolean().describe('True records the user\'s interest (user_yes), false passes (user_no).')
-})
+  interested: zod
+    .boolean()
+    .describe(
+      "True records the user's interest (user_yes), false passes (user_no).",
+    ),
+});
 
 export const respondToMatchProposalResponseCompatibilityScoreMin = 0;
 export const respondToMatchProposalResponseCompatibilityScoreMax = 100;
@@ -6885,22 +10902,41 @@ export const respondToMatchProposalResponseCompatibilityScoreMax = 100;
 export const respondToMatchProposalResponseCosmicResonanceMin = 0;
 export const respondToMatchProposalResponseCosmicResonanceMax = 100;
 
-
-
 export const RespondToMatchProposalResponse = zod.object({
-  "id": zod.string().uuid(),
-  "userId": zod.string(),
-  "proposedToUserId": zod.string().nullable(),
-  "source": zod.enum(['internal', 'external_paste', 'concierge']),
-  "compatibilityScore": zod.number().min(respondToMatchProposalResponseCompatibilityScoreMin).max(respondToMatchProposalResponseCompatibilityScoreMax),
-  "summary": zod.string().nullable(),
-  "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
-  "cosmicResonance": zod.number().min(respondToMatchProposalResponseCosmicResonanceMin).max(respondToMatchProposalResponseCosmicResonanceMax).nullable().describe('A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.'),
-  "cosmicResonanceNote": zod.string().nullable().describe('A short, light note for the resonance garnish. Null when either person has no chart.'),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
+  id: zod.string().uuid(),
+  userId: zod.string(),
+  proposedToUserId: zod.string().nullable(),
+  source: zod.enum(["internal", "external_paste", "concierge"]),
+  compatibilityScore: zod
+    .number()
+    .min(respondToMatchProposalResponseCompatibilityScoreMin)
+    .max(respondToMatchProposalResponseCompatibilityScoreMax),
+  summary: zod.string().nullable(),
+  status: zod.enum([
+    "proposed",
+    "user_yes",
+    "user_no",
+    "mutual_yes",
+    "expired",
+    "completed",
+  ]),
+  cosmicResonance: zod
+    .number()
+    .min(respondToMatchProposalResponseCosmicResonanceMin)
+    .max(respondToMatchProposalResponseCosmicResonanceMax)
+    .nullable()
+    .describe(
+      "A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.",
+    ),
+  cosmicResonanceNote: zod
+    .string()
+    .nullable()
+    .describe(
+      "A short, light note for the resonance garnish. Null when either person has no chart.",
+    ),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * Returns a presigned GCS URL for direct upload. The client sends JSON
@@ -6909,31 +10945,33 @@ metadata here, then uploads the file directly to the returned URL.
  * @summary Request a presigned URL for file upload
  */
 
-
-
-
-
 export const RequestUploadUrlBody = zod.object({
-  "name": zod.string().min(1).describe('Original file name.'),
-  "size": zod.number().min(1).describe('File size in bytes.'),
-  "contentType": zod.string().min(1).describe('MIME type of the file (e.g. `image\/jpeg`).')
-})
-
-
-
-
-
+  name: zod.string().min(1).describe("Original file name."),
+  size: zod.number().min(1).describe("File size in bytes."),
+  contentType: zod
+    .string()
+    .min(1)
+    .describe("MIME type of the file (e.g. `image\/jpeg`)."),
+});
 
 export const RequestUploadUrlResponse = zod.object({
-  "uploadURL": zod.string().url().describe('Presigned GCS URL for PUT upload.'),
-  "objectPath": zod.string().describe('Normalized object path (e.g. `\/objects\/uploads\/uuid`). Store this in your database.'),
-  "metadata": zod.object({
-  "name": zod.string().min(1).describe('Original file name.'),
-  "size": zod.number().min(1).describe('File size in bytes.'),
-  "contentType": zod.string().min(1).describe('MIME type of the file (e.g. `image\/jpeg`).')
-}).optional()
-})
-
+  uploadURL: zod.string().url().describe("Presigned GCS URL for PUT upload."),
+  objectPath: zod
+    .string()
+    .describe(
+      "Normalized object path (e.g. `\/objects\/uploads\/uuid`). Store this in your database.",
+    ),
+  metadata: zod
+    .object({
+      name: zod.string().min(1).describe("Original file name."),
+      size: zod.number().min(1).describe("File size in bytes."),
+      contentType: zod
+        .string()
+        .min(1)
+        .describe("MIME type of the file (e.g. `image\/jpeg`)."),
+    })
+    .optional(),
+});
 
 /**
  * Unconditionally public. Searches PUBLIC_OBJECT_SEARCH_PATHS for the
@@ -6942,9 +10980,10 @@ given file path.
  * @summary Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
  */
 export const GetPublicObjectParams = zod.object({
-  "filePath": zod.coerce.string().describe('Relative file path within the public search paths.')
-})
-
+  filePath: zod.coerce
+    .string()
+    .describe("Relative file path within the public search paths."),
+});
 
 /**
  * Serves private object entities uploaded via presigned URLs. The caller
@@ -6956,13 +10995,17 @@ path knowledge.
  * @summary Serve an object entity from PRIVATE_OBJECT_DIR
  */
 export const GetStorageObjectParams = zod.object({
-  "objectPath": zod.coerce.string().describe('Object path within the private object dir.')
-})
+  objectPath: zod.coerce
+    .string()
+    .describe("Object path within the private object dir."),
+});
 
 export const GetStorageObjectHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 /**
  * Returns the caller's photos ordered by ordinal, each with a relative
@@ -6971,17 +11014,19 @@ serving URL. Anonymous callers get a 401.
  * @summary List the signed-in user's profile photos
  */
 export const GetMyPhotosHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetMyPhotosResponseItem = zod.object({
-  "id": zod.number(),
-  "url": zod.string().describe('Relative serving URL for the photo.'),
-  "ordinal": zod.number(),
-  "createdAt": zod.coerce.date()
-})
-export const GetMyPhotosResponse = zod.array(GetMyPhotosResponseItem)
-
+  id: zod.number(),
+  url: zod.string().describe("Relative serving URL for the photo."),
+  ordinal: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+export const GetMyPhotosResponse = zod.array(GetMyPhotosResponseItem);
 
 /**
  * Persists the normalized object path returned by the storage upload flow
@@ -6990,33 +11035,41 @@ as a profile photo for the caller. Appends to the end of the order.
  * @summary Record a profile photo after uploading it to storage
  */
 export const AddMyPhotoHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const AddMyPhotoBody = zod.object({
-  "uploadURL": zod.string().describe('The presigned upload URL the photo was PUT to, or its object path.')
-})
-
+  uploadURL: zod
+    .string()
+    .describe(
+      "The presigned upload URL the photo was PUT to, or its object path.",
+    ),
+});
 
 /**
  * @summary Delete one of the signed-in user's profile photos
  */
 export const DeleteMyPhotoParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteMyPhotoHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const DeleteMyPhotoResponseItem = zod.object({
-  "id": zod.number(),
-  "url": zod.string().describe('Relative serving URL for the photo.'),
-  "ordinal": zod.number(),
-  "createdAt": zod.coerce.date()
-})
-export const DeleteMyPhotoResponse = zod.array(DeleteMyPhotoResponseItem)
-
+  id: zod.number(),
+  url: zod.string().describe("Relative serving URL for the photo."),
+  ordinal: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+export const DeleteMyPhotoResponse = zod.array(DeleteMyPhotoResponseItem);
 
 /**
  * Accepts the full list of photo ids in the desired order. Photos not
@@ -7025,21 +11078,23 @@ listed keep their relative order after the listed ones.
  * @summary Reorder the signed-in user's profile photos
  */
 export const ReorderMyPhotosHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const ReorderMyPhotosBody = zod.object({
-  "orderedIds": zod.array(zod.number())
-})
+  orderedIds: zod.array(zod.number()),
+});
 
 export const ReorderMyPhotosResponseItem = zod.object({
-  "id": zod.number(),
-  "url": zod.string().describe('Relative serving URL for the photo.'),
-  "ordinal": zod.number(),
-  "createdAt": zod.coerce.date()
-})
-export const ReorderMyPhotosResponse = zod.array(ReorderMyPhotosResponseItem)
-
+  id: zod.number(),
+  url: zod.string().describe("Relative serving URL for the photo."),
+  ordinal: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+export const ReorderMyPhotosResponse = zod.array(ReorderMyPhotosResponseItem);
 
 /**
  * Off by default. When on, a mutual match can see the caller's curated
@@ -7048,17 +11103,19 @@ reveal card (name, photos, a few prompts). Never gates being matched.
  * @summary Toggle whether the user shares their reveal card with matches
  */
 export const SetRevealConsentHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const SetRevealConsentBody = zod.object({
-  "revealConsent": zod.boolean()
-})
+  revealConsent: zod.boolean(),
+});
 
 export const SetRevealConsentResponse = zod.object({
-  "revealConsent": zod.boolean()
-})
-
+  revealConsent: zod.boolean(),
+});
 
 /**
  * Returns the caller's connections, most recently active first, each with
@@ -7068,46 +11125,92 @@ message.
  * @summary List the signed-in user's match conversations
  */
 export const GetConnectionsHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetConnectionsResponseItem = zod.object({
-  "id": zod.string().uuid(),
-  "counterpartUserId": zod.string(),
-  "status": zod.enum(['active', 'closed']),
-  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
-  "closedByYou": zod.boolean(),
-  "unreadCount": zod.number(),
-  "createdAt": zod.coerce.date(),
-  "lastMessageAt": zod.coerce.date().nullable(),
-  "lastMessagePreview": zod.string().nullable()
-})
-export const GetConnectionsResponse = zod.array(GetConnectionsResponseItem)
-
+  id: zod.string().uuid(),
+  counterpartUserId: zod.string(),
+  status: zod.enum(["active", "closed"]),
+  closedReason: zod
+    .union([
+      zod.literal("unmatch"),
+      zod.literal("block"),
+      zod.literal("report"),
+      zod.literal(null),
+    ])
+    .nullish(),
+  closedByYou: zod.boolean(),
+  dateStage: zod.enum([
+    "connected",
+    "date_planned",
+    "date_completed",
+    "debrief_saved",
+  ]),
+  datePlannedAt: zod.coerce.date().nullable(),
+  dateCompletedAt: zod.coerce.date().nullable(),
+  debriefNoteId: zod
+    .number()
+    .nullable()
+    .describe(
+      "The signed-in member's active private debrief, never the counterpart's.",
+    ),
+  unreadCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  lastMessageAt: zod.coerce.date().nullable(),
+  lastMessagePreview: zod.string().nullable(),
+});
+export const GetConnectionsResponse = zod.array(GetConnectionsResponseItem);
 
 /**
  * @summary Get one of the signed-in user's conversations
  */
 export const GetConnectionParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const GetConnectionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetConnectionResponse = zod.object({
-  "id": zod.string().uuid(),
-  "counterpartUserId": zod.string(),
-  "status": zod.enum(['active', 'closed']),
-  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
-  "closedByYou": zod.boolean(),
-  "unreadCount": zod.number(),
-  "createdAt": zod.coerce.date(),
-  "lastMessageAt": zod.coerce.date().nullable(),
-  "lastMessagePreview": zod.string().nullable()
-})
-
+  id: zod.string().uuid(),
+  counterpartUserId: zod.string(),
+  status: zod.enum(["active", "closed"]),
+  closedReason: zod
+    .union([
+      zod.literal("unmatch"),
+      zod.literal("block"),
+      zod.literal("report"),
+      zod.literal(null),
+    ])
+    .nullish(),
+  closedByYou: zod.boolean(),
+  dateStage: zod.enum([
+    "connected",
+    "date_planned",
+    "date_completed",
+    "debrief_saved",
+  ]),
+  datePlannedAt: zod.coerce.date().nullable(),
+  dateCompletedAt: zod.coerce.date().nullable(),
+  debriefNoteId: zod
+    .number()
+    .nullable()
+    .describe(
+      "The signed-in member's active private debrief, never the counterpart's.",
+    ),
+  unreadCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  lastMessageAt: zod.coerce.date().nullable(),
+  lastMessagePreview: zod.string().nullable(),
+});
 
 /**
  * Returns the consented view of the other member: name and photos only if
@@ -7117,33 +11220,119 @@ summary. Never raw signals or PII.
  * @summary The counterpart's curated reveal card for a conversation
  */
 export const GetConnectionProfileParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const GetConnectionProfileHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const getConnectionProfileResponseCompatibilityScoreMin = 0;
 export const getConnectionProfileResponseCompatibilityScoreMax = 100;
 
-
-
 export const GetConnectionProfileResponse = zod.object({
-  "counterpartUserId": zod.string(),
-  "revealed": zod.boolean().describe('True when the counterpart turned reveal consent on. When false, name and photos are withheld.'),
-  "displayName": zod.string().nullable(),
-  "photos": zod.array(zod.string()).describe('Relative serving URLs, empty when not revealed.'),
-  "prompts": zod.array(zod.object({
-  "prompt": zod.string(),
-  "answer": zod.string()
-})),
-  "readinessSummary": zod.string().describe('Aggregate readiness phrasing, never raw signals.'),
-  "valuesSummary": zod.string().describe('Aggregate values phrasing, never raw signals.'),
-  "compatibilityScore": zod.number().min(getConnectionProfileResponseCompatibilityScoreMin).max(getConnectionProfileResponseCompatibilityScoreMax).nullable().describe('Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.'),
-  "matchSummary": zod.string().nullable().describe('Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.')
-})
+  counterpartUserId: zod.string(),
+  revealed: zod
+    .boolean()
+    .describe(
+      "True when the counterpart turned reveal consent on. When false, name and photos are withheld.",
+    ),
+  displayName: zod.string().nullable(),
+  photos: zod
+    .array(zod.string())
+    .describe("Relative serving URLs, empty when not revealed."),
+  prompts: zod.array(
+    zod.object({
+      prompt: zod.string(),
+      answer: zod.string(),
+    }),
+  ),
+  readinessSummary: zod
+    .string()
+    .describe("Aggregate readiness phrasing, never raw signals."),
+  valuesSummary: zod
+    .string()
+    .describe("Aggregate values phrasing, never raw signals."),
+  compatibilityScore: zod
+    .number()
+    .min(getConnectionProfileResponseCompatibilityScoreMin)
+    .max(getConnectionProfileResponseCompatibilityScoreMax)
+    .nullable()
+    .describe(
+      "Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.",
+    ),
+  matchSummary: zod
+    .string()
+    .nullable()
+    .describe(
+      "Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.",
+    ),
+});
 
+/**
+ * Persists the shared date stage for both members. Debriefs remain private
+and are linked through PostDateNote; saving one creates a tentative Echo
+learning that must be confirmed before it becomes profile truth.
+
+ * @summary Plan or complete a date for a mutual connection
+ */
+export const UpdateConnectionDateStateParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const UpdateConnectionDateStateHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const UpdateConnectionDateStateBody = zod.union([
+  zod.object({
+    action: zod.literal("plan"),
+    occurredAt: zod.coerce.date(),
+  }),
+  zod.object({
+    action: zod.literal("complete"),
+    occurredAt: zod.coerce.date().optional(),
+  }),
+]);
+
+export const UpdateConnectionDateStateResponse = zod.object({
+  id: zod.string().uuid(),
+  counterpartUserId: zod.string(),
+  status: zod.enum(["active", "closed"]),
+  closedReason: zod
+    .union([
+      zod.literal("unmatch"),
+      zod.literal("block"),
+      zod.literal("report"),
+      zod.literal(null),
+    ])
+    .nullish(),
+  closedByYou: zod.boolean(),
+  dateStage: zod.enum([
+    "connected",
+    "date_planned",
+    "date_completed",
+    "debrief_saved",
+  ]),
+  datePlannedAt: zod.coerce.date().nullable(),
+  dateCompletedAt: zod.coerce.date().nullable(),
+  debriefNoteId: zod
+    .number()
+    .nullable()
+    .describe(
+      "The signed-in member's active private debrief, never the counterpart's.",
+    ),
+  unreadCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  lastMessageAt: zod.coerce.date().nullable(),
+  lastMessagePreview: zod.string().nullable(),
+});
 
 /**
  * Three opener suggestions for the signed-in user to send. Generated only
@@ -7156,21 +11345,35 @@ on when the account opted in.
  * @summary Conversation openers for a connection
  */
 export const GetConnectionStartersParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const GetConnectionStartersHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetConnectionStartersResponse = zod.object({
-  "starters": zod.array(zod.object({
-  "text": zod.string().describe('An opener the signed-in user could send, in a real human voice.'),
-  "rationale": zod.string().describe('One line on why this opener fits this match.')
-})),
-  "mode": zod.enum(['deterministic', 'ai']).describe('Which lane produced these openers. \"ai\" only when the deep AI lane was used.')
-})
-
+  starters: zod.array(
+    zod.object({
+      text: zod
+        .string()
+        .describe(
+          "An opener the signed-in user could send, in a real human voice.",
+        ),
+      rationale: zod
+        .string()
+        .describe("One line on why this opener fits this match."),
+    }),
+  ),
+  mode: zod
+    .enum(["deterministic", "ai"])
+    .describe(
+      'Which lane produced these openers. \"ai\" only when the deep AI lane was used.',
+    ),
+});
 
 /**
  * A short set of date ideas for the signed-in user and this match, sized to
@@ -7186,46 +11389,72 @@ this contract; until then ideas are template-based, never invented venues.
  * @summary Date ideas for a connected pair
  */
 export const SuggestConnectionDateIdeasParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const SuggestConnectionDateIdeasHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const SuggestConnectionDateIdeasResponse = zod.object({
-  "ideas": zod.array(zod.object({
-  "title": zod.string().describe('A short name for the date idea.'),
-  "description": zod.string().describe('One or two lines on what the date is and why it suits this pair, in a real human voice.'),
-  "category": zod.string().describe('A coarse bucket for the idea, e.g. coffee, food, outdoors, culture, active, low-key.')
-})),
-  "mode": zod.enum(['deterministic', 'ai']).describe('Which lane produced these ideas. \"ai\" only when the deep AI lane was used.'),
-  "locationLabel": zod.string().describe('Reveal-safe phrasing for where the ideas are pitched. Names the counterpart\'s city only when they revealed it or both gave the same city, otherwise stays on the signed-in user\'s own area or \"near both of you\".')
-})
-
+  ideas: zod.array(
+    zod.object({
+      title: zod.string().describe("A short name for the date idea."),
+      description: zod
+        .string()
+        .describe(
+          "One or two lines on what the date is and why it suits this pair, in a real human voice.",
+        ),
+      category: zod
+        .string()
+        .describe(
+          "A coarse bucket for the idea, e.g. coffee, food, outdoors, culture, active, low-key.",
+        ),
+    }),
+  ),
+  mode: zod
+    .enum(["deterministic", "ai"])
+    .describe(
+      'Which lane produced these ideas. \"ai\" only when the deep AI lane was used.',
+    ),
+  locationLabel: zod
+    .string()
+    .describe(
+      "Reveal-safe phrasing for where the ideas are pitched. Names the counterpart's city only when they revealed it or both gave the same city, otherwise stays on the signed-in user's own area or \"near both of you\".",
+    ),
+});
 
 /**
  * @summary List the messages in a conversation
  */
 export const GetConnectionMessagesParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const GetConnectionMessagesHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const GetConnectionMessagesResponseItem = zod.object({
-  "id": zod.string().uuid(),
-  "connectionId": zod.string().uuid(),
-  "senderUserId": zod.string(),
-  "body": zod.string(),
-  "mine": zod.boolean().describe('True when the signed-in user sent this message.'),
-  "createdAt": zod.coerce.date(),
-  "readAt": zod.coerce.date().nullable()
-})
-export const GetConnectionMessagesResponse = zod.array(GetConnectionMessagesResponseItem)
-
+  id: zod.string().uuid(),
+  connectionId: zod.string().uuid(),
+  senderUserId: zod.string(),
+  body: zod.string(),
+  mine: zod
+    .boolean()
+    .describe("True when the signed-in user sent this message."),
+  createdAt: zod.coerce.date(),
+  readAt: zod.coerce.date().nullable(),
+});
+export const GetConnectionMessagesResponse = zod.array(
+  GetConnectionMessagesResponseItem,
+);
 
 /**
  * Sends a message. The conversation must be active and the pair must not
@@ -7234,37 +11463,39 @@ be blocked. Rate-limited per sender.
  * @summary Send a message in a conversation
  */
 export const SendConnectionMessageParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const SendConnectionMessageHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const sendConnectionMessageBodyBodyMax = 4000;
 
-
-
 export const SendConnectionMessageBody = zod.object({
-  "body": zod.string().min(1).max(sendConnectionMessageBodyBodyMax)
-})
-
+  body: zod.string().min(1).max(sendConnectionMessageBodyBodyMax),
+});
 
 /**
  * @summary Mark the counterpart's messages as read
  */
 export const MarkConnectionReadParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const MarkConnectionReadHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const MarkConnectionReadResponse = zod.object({
-  "ok": zod.boolean()
-})
-
+  ok: zod.boolean(),
+});
 
 /**
  * Closes the conversation symmetrically. Once closed neither side can
@@ -7273,25 +11504,48 @@ send. A later mutual match reopens it.
  * @summary End a conversation
  */
 export const UnmatchConnectionParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const UnmatchConnectionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const UnmatchConnectionResponse = zod.object({
-  "id": zod.string().uuid(),
-  "counterpartUserId": zod.string(),
-  "status": zod.enum(['active', 'closed']),
-  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
-  "closedByYou": zod.boolean(),
-  "unreadCount": zod.number(),
-  "createdAt": zod.coerce.date(),
-  "lastMessageAt": zod.coerce.date().nullable(),
-  "lastMessagePreview": zod.string().nullable()
-})
-
+  id: zod.string().uuid(),
+  counterpartUserId: zod.string(),
+  status: zod.enum(["active", "closed"]),
+  closedReason: zod
+    .union([
+      zod.literal("unmatch"),
+      zod.literal("block"),
+      zod.literal("report"),
+      zod.literal(null),
+    ])
+    .nullish(),
+  closedByYou: zod.boolean(),
+  dateStage: zod.enum([
+    "connected",
+    "date_planned",
+    "date_completed",
+    "debrief_saved",
+  ]),
+  datePlannedAt: zod.coerce.date().nullable(),
+  dateCompletedAt: zod.coerce.date().nullable(),
+  debriefNoteId: zod
+    .number()
+    .nullable()
+    .describe(
+      "The signed-in member's active private debrief, never the counterpart's.",
+    ),
+  unreadCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  lastMessageAt: zod.coerce.date().nullable(),
+  lastMessagePreview: zod.string().nullable(),
+});
 
 /**
  * Files a member report about the other person and closes the thread.
@@ -7300,32 +11554,196 @@ Reporting never moves Match Readiness.
  * @summary Report the counterpart and close the conversation
  */
 export const ReportConnectionParams = zod.object({
-  "id": zod.coerce.string().uuid()
-})
+  id: zod.coerce.string().uuid(),
+});
 
 export const ReportConnectionHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
 export const reportConnectionBodyNoteMax = 4000;
 
-
-
 export const ReportConnectionBody = zod.object({
-  "reason": zod.enum(['fake_profile', 'harassment', 'inappropriate', 'scam', 'underage', 'safety', 'other']),
-  "note": zod.string().max(reportConnectionBodyNoteMax).optional()
-})
+  reason: zod.enum([
+    "fake_profile",
+    "harassment",
+    "inappropriate",
+    "scam",
+    "underage",
+    "safety",
+    "other",
+  ]),
+  note: zod.string().max(reportConnectionBodyNoteMax).optional(),
+});
 
 export const ReportConnectionResponse = zod.object({
-  "id": zod.string().uuid(),
-  "counterpartUserId": zod.string(),
-  "status": zod.enum(['active', 'closed']),
-  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
-  "closedByYou": zod.boolean(),
-  "unreadCount": zod.number(),
-  "createdAt": zod.coerce.date(),
-  "lastMessageAt": zod.coerce.date().nullable(),
-  "lastMessagePreview": zod.string().nullable()
-})
+  id: zod.string().uuid(),
+  counterpartUserId: zod.string(),
+  status: zod.enum(["active", "closed"]),
+  closedReason: zod
+    .union([
+      zod.literal("unmatch"),
+      zod.literal("block"),
+      zod.literal("report"),
+      zod.literal(null),
+    ])
+    .nullish(),
+  closedByYou: zod.boolean(),
+  dateStage: zod.enum([
+    "connected",
+    "date_planned",
+    "date_completed",
+    "debrief_saved",
+  ]),
+  datePlannedAt: zod.coerce.date().nullable(),
+  dateCompletedAt: zod.coerce.date().nullable(),
+  debriefNoteId: zod
+    .number()
+    .nullable()
+    .describe(
+      "The signed-in member's active private debrief, never the counterpart's.",
+    ),
+  unreadCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  lastMessageAt: zod.coerce.date().nullable(),
+  lastMessagePreview: zod.string().nullable(),
+});
 
+/**
+ * @summary Get the signed-in member's package and billing state
+ */
+export const GetBillingStatusHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
 
+export const GetBillingStatusResponse = zod.object({
+  configured: zod.boolean(),
+  assignment: zod.object({
+    key: zod.enum(["member", "insight", "match", "guided"]),
+    label: zod.string(),
+    source: zod.enum(["default", "canonical", "legacy"]),
+    grantedAt: zod.coerce.date().nullable(),
+    canActivateSearch: zod.boolean(),
+    includesHumanGuidance: zod.boolean(),
+    nextPlanKey: zod
+      .union([
+        zod.literal("member"),
+        zod.literal("insight"),
+        zod.literal("match"),
+        zod.literal("guided"),
+        zod.literal(null),
+      ])
+      .nullable(),
+    upgradeCta: zod.string().nullable(),
+  }),
+  billingState: zod.enum([
+    "beta_grant",
+    "active",
+    "trialing",
+    "past_due",
+    "incomplete",
+    "inactive",
+    "unavailable",
+  ]),
+  stripePlanKey: zod
+    .union([
+      zod.literal("insight"),
+      zod.literal("match"),
+      zod.literal("guided"),
+      zod.literal(null),
+    ])
+    .nullable(),
+  portalAvailable: zod.boolean(),
+});
+
+/**
+ * @summary Create an authenticated Insight or Match Checkout Session
+ */
+export const CreateBillingCheckoutHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const CreateBillingCheckoutBody = zod.object({
+  planKey: zod.enum(["insight", "match"]),
+  cadence: zod.enum(["monthly", "annual", "quarterly"]),
+});
+
+/**
+ * @summary Create a Stripe Billing Portal Session
+ */
+export const CreateBillingPortalHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+/**
+ * Returns the approved Member, Insight, Match, and Guided outcome ladder,
+including prices, progression prompts, included services, and bounded
+entitlements. These are commercial packages, not numbered product
+progress levels. No authentication is required.
+
+ * @summary Get the canonical MatchLab commercial plans
+ */
+export const getCommercialPlansResponsePlansItemPricesItemAmountCentsMin = 0;
+
+export const getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMinMin = 0;
+
+export const getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMaxMin = 0;
+
+export const GetCommercialPlansResponse = zod.object({
+  plans: zod.array(
+    zod.object({
+      key: zod.enum(["member", "insight", "match", "guided"]),
+      label: zod.string(),
+      outcome: zod.string(),
+      prices: zod.array(
+        zod.object({
+          cadence: zod.enum(["free", "monthly", "annual", "quarterly"]),
+          amountCents: zod
+            .number()
+            .min(getCommercialPlansResponsePlansItemPricesItemAmountCentsMin),
+        }),
+      ),
+      monthlyRangeCents: zod.union([
+        zod.object({
+          min: zod
+            .number()
+            .min(getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMinMin),
+          max: zod
+            .number()
+            .min(getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMaxMin),
+        }),
+        zod.null(),
+      ]),
+      includes: zod.array(zod.string()),
+      upgradeCta: zod.string().nullable(),
+      nextPlanKey: zod
+        .union([
+          zod.literal("member"),
+          zod.literal("insight"),
+          zod.literal("match"),
+          zod.literal("guided"),
+          zod.literal(null),
+        ])
+        .nullable(),
+      entitlements: zod.object({
+        fullMirror: zod.boolean(),
+        expandedPlay: zod.boolean(),
+        selectedSources: zod.boolean(),
+        activeMatching: zod.boolean(),
+        humanGuidance: zod.boolean(),
+      }),
+    }),
+  ),
+});

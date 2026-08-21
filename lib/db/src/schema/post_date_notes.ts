@@ -7,6 +7,7 @@ import {
   boolean,
   integer,
   index,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -39,6 +40,8 @@ export const postDateNotesTable = pgTable(
     id: serial("id").primaryKey(),
     userId: varchar("user_id"),
     anonymousClaimToken: varchar("anonymous_claim_token"),
+    /** Optional MatchLab connection this private debrief belongs to. */
+    connectionId: uuid("connection_id"),
     /** When the date itself happened (nullable; UI may default to "today"). */
     dateAt: timestamp("date_at"),
     personLabel: varchar("person_label", { length: 120 }),
@@ -61,6 +64,7 @@ export const postDateNotesTable = pgTable(
       t.createdAt,
     ),
     index("post_date_notes_user_date_idx").on(t.userId, t.dateAt),
+    index("post_date_notes_connection_user_idx").on(t.connectionId, t.userId),
   ],
 );
 
@@ -73,6 +77,7 @@ export const insertPostDateNoteSchema = createInsertSchema(postDateNotesTable, {
   followUpPlanned: z.boolean().default(false),
   outcome: z.enum(POST_DATE_OUTCOMES).nullish(),
   linkedAuditId: z.number().int().positive().nullish(),
+  connectionId: z.string().uuid().nullish(),
 }).omit({
   id: true,
   createdAt: true,

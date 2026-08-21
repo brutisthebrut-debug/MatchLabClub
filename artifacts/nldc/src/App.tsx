@@ -1,10 +1,14 @@
-import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
+import {
+  Switch,
+  Route,
+  Router as WouterRouter,
+  Redirect,
+  useLocation,
+} from "wouter";
 import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ReadinessRewardWatcher } from "@/components/climb/ReadinessRewardWatcher";
-
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -19,6 +23,7 @@ import { hasCompletedOnboarding } from "@/lib/onboardingState";
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Landing = lazy(() => import("@/pages/Landing"));
+const Today = lazy(() => import("@/pages/Today"));
 const Wizard = lazy(() => import("@/pages/Wizard"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Report = lazy(() => import("@/pages/Report"));
@@ -61,7 +66,9 @@ const ProgressFollowUp = lazy(() => import("@/pages/ProgressFollowUp"));
 const ProgressScorecard = lazy(() => import("@/pages/ProgressScorecard"));
 const ProgressFeed = lazy(() => import("@/pages/ProgressFeed"));
 const ProgressControl = lazy(() => import("@/pages/ProgressControl"));
-const ProgressInsightsRoadmap = lazy(() => import("@/pages/ProgressInsightsRoadmap"));
+const ProgressInsightsRoadmap = lazy(
+  () => import("@/pages/ProgressInsightsRoadmap"),
+);
 const ProgressReadiness = lazy(() => import("@/pages/ProgressReadiness"));
 const ProgressCompanion = lazy(() => import("@/pages/ProgressCompanion"));
 const WellnessCenter = lazy(() => import("@/pages/WellnessCenter"));
@@ -72,14 +79,17 @@ const Copilot = lazy(() => import("@/pages/Copilot"));
 const StartMyReset = lazy(() => import("@/pages/copilot/StartMyReset"));
 const HelpMeReply = lazy(() => import("@/pages/copilot/HelpMeReply"));
 const ImproveMyProfile = lazy(() => import("@/pages/copilot/ImproveMyProfile"));
-const DebriefWhatHappened = lazy(() => import("@/pages/copilot/DebriefWhatHappened"));
+const DebriefWhatHappened = lazy(
+  () => import("@/pages/copilot/DebriefWhatHappened"),
+);
 const WeeklyGrowthPlan = lazy(() => import("@/pages/copilot/WeeklyGrowthPlan"));
 const PrepareForDate = lazy(() => import("@/pages/copilot/PrepareForDate"));
-const FounderDemoJourney = lazy(() => import("@/pages/copilot/FounderDemoJourney"));
+const FounderDemoJourney = lazy(
+  () => import("@/pages/copilot/FounderDemoJourney"),
+);
 const FlirtCoach = lazy(() => import("@/pages/copilot/FlirtCoach"));
 const Account = lazy(() => import("@/pages/Account"));
 const Sessions = lazy(() => import("@/pages/Sessions"));
-const Quiz = lazy(() => import("@/pages/Quiz"));
 const Gallery = lazy(() => import("@/pages/Gallery"));
 const ConnectionCenter = lazy(() => import("@/pages/ConnectionCenter"));
 const Matches = lazy(() => import("@/pages/Matches"));
@@ -114,6 +124,9 @@ const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Quizzes = lazy(() => import("@/pages/Quizzes"));
 const QuizPlay = lazy(() => import("@/pages/QuizPlay"));
 const SelfHub = lazy(() => import("@/pages/SelfHub"));
+const MyMatchLab = lazy(() => import("@/pages/MyMatchLab"));
+const Journey = lazy(() => import("@/pages/Journey"));
+const Play = lazy(() => import("@/pages/Play"));
 const Matching = lazy(() => import("@/pages/Matching"));
 const MatchPath = lazy(() => import("@/pages/MatchPath"));
 const Verification = lazy(() => import("@/pages/Verification"));
@@ -129,11 +142,16 @@ function ClaimAnonymousGate() {
 }
 
 // First-run gate. Sends a brand-new authenticated user into the guided onboarding
-// flow exactly once, only when they land on a home surface (/your-mirror, /me, or
-// /dashboard) and the account has no real signal yet. A returning user with any
+// flow exactly once, only when they land on a home surface (/today, /your-mirror,
+// /me, or /dashboard) and the account has no real signal yet. A returning user with any
 // data, or anyone who has finished or skipped onboarding in this browser, is never
 // redirected.
-const ONBOARDING_ENTRY_ROUTES = new Set(["/dashboard", "/me", "/your-mirror"]);
+const ONBOARDING_ENTRY_ROUTES = new Set([
+  "/today",
+  "/dashboard",
+  "/me",
+  "/your-mirror",
+]);
 
 function OnboardingGate() {
   const [location, setLocation] = useLocation();
@@ -186,12 +204,35 @@ function ScrollToTop() {
   return null;
 }
 
+export function RouteLoadingFallback() {
+  return (
+    <div
+      className="mesh-bg flex min-h-screen items-center justify-center px-4"
+      data-testid="route-loading"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="glass-strong w-full max-w-md rounded-[2rem] p-7 text-center">
+        <div className="mx-auto h-10 w-10 animate-pulse rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B]" />
+        <p className="mt-4 text-sm font-semibold text-foreground">
+          Echo is getting this ready.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Your account data will appear when the page is ready. No placeholder
+          data will take its place.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Router() {
   usePageTracking();
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RouteLoadingFallback />}>
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/today" component={Today} />
         <Route path="/start" component={Wizard} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/report/:id" component={Report} />
@@ -221,7 +262,9 @@ function Router() {
         <Route path="/checkout/success" component={CheckoutSuccess} />
         <Route path="/checkout/cancel" component={CheckoutCancel} />
         <Route path="/checkout/:product">
-          {(params: { product?: string } | null) => <Checkout product={params?.product ?? "dating-reset"} />}
+          {(params: { product?: string } | null) => (
+            <Checkout product={params?.product ?? "dating-reset"} />
+          )}
         </Route>
         <Route path="/founder" component={Founder} />
         <Route path="/partners/shebangs" component={ShebangsPartner} />
@@ -250,7 +293,10 @@ function Router() {
         <Route path="/progress/scorecard" component={ProgressScorecard} />
         <Route path="/progress/feed" component={ProgressFeed} />
         <Route path="/progress/control" component={ProgressControl} />
-        <Route path="/progress/insights-roadmap" component={ProgressInsightsRoadmap} />
+        <Route
+          path="/progress/insights-roadmap"
+          component={ProgressInsightsRoadmap}
+        />
         <Route path="/progress/readiness" component={ProgressReadiness} />
         <Route path="/progress/companion" component={ProgressCompanion} />
         {/* Wellness & Control */}
@@ -268,7 +314,10 @@ function Router() {
         <Route path="/copilot/prep" component={PrepareForDate} />
         <Route path="/copilot/demo" component={FounderDemoJourney} />
         <Route path="/copilot/flirt" component={FlirtCoach} />
-        <Route path="/me" component={SelfHub} />
+        <Route path="/me" component={MyMatchLab} />
+        <Route path="/me/details" component={SelfHub} />
+        <Route path="/journey" component={Journey} />
+        <Route path="/play" component={Play} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/matching" component={Matching} />
         <Route path="/match-path" component={MatchPath} />
@@ -277,7 +326,9 @@ function Router() {
         <Route path="/milestones" component={Milestones} />
         <Route path="/account" component={Account} />
         <Route path="/account/sessions" component={Sessions} />
-        <Route path="/quiz" component={Quiz} />
+        <Route path="/quiz">
+          <Redirect to="/quizzes" />
+        </Route>
         <Route path="/gallery" component={Gallery} />
         <Route path="/connections" component={ConnectionCenter} />
         <Route path="/matches" component={Matches} />
@@ -303,11 +354,15 @@ function Router() {
         <Route path="/trash" component={Trash} />
         <Route path="/quizzes" component={Quizzes} />
         <Route path="/quizzes/:slug">
-          {(params: { slug?: string } | null) => <QuizPlay slug={params?.slug ?? ""} />}
+          {(params: { slug?: string } | null) => (
+            <QuizPlay slug={params?.slug ?? ""} />
+          )}
         </Route>
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug">
-          {(params: { slug?: string } | null) => <BlogPost slug={params?.slug ?? ""} />}
+          {(params: { slug?: string } | null) => (
+            <BlogPost slug={params?.slug ?? ""} />
+          )}
         </Route>
         <Route component={NotFound} />
       </Switch>
@@ -325,7 +380,6 @@ function App() {
           <OnboardingGate />
           <Router />
         </WouterRouter>
-        <ReadinessRewardWatcher />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

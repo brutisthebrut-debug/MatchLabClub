@@ -12,6 +12,7 @@ import {
   clampCandor,
   personaLabel,
   buildReaction,
+  chooseEchoNextMove,
 } from "./companionEngine";
 
 const AI_TELL_WORDS =
@@ -95,11 +96,111 @@ describe("buildCompanionView", () => {
 
   it("changes the challenge wording with candor but always tells the truth", () => {
     const portrait = makePortrait(emptyBreakdown(), 0);
-    const gentle = buildCompanionView({ portrait, persona: "calm_mentor", candor: 1 });
-    const blunt = buildCompanionView({ portrait, persona: "tough_coach", candor: 3 });
+    const gentle = buildCompanionView({
+      portrait,
+      persona: "calm_mentor",
+      candor: 1,
+    });
+    const blunt = buildCompanionView({
+      portrait,
+      persona: "tough_coach",
+      candor: 3,
+    });
     expect(gentle.challenge).not.toEqual(blunt.challenge);
     assertVoiceClean(gentle.challenge ?? "");
     assertVoiceClean(blunt.challenge ?? "");
+  });
+});
+
+describe("chooseEchoNextMove", () => {
+  const profileMove = {
+    label: "Share a little more",
+    detail: "Help Echo replace a guess with evidence.",
+    href: "/play",
+    points: 12,
+  };
+
+  it("prioritizes a real proposal over every lower-priority task", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: true,
+      unreadConnection: { id: "connection-1", unreadCount: 2 },
+      pendingDebriefConnectionId: "connection-2",
+      overdueCommitment: "send the message",
+      pendingLearning: true,
+      profileMove,
+    });
+    expect(move.label).toMatch(/proposal/i);
+    expect(move.href).toBe("/matches");
+    expect(move.points).toBe(0);
+  });
+
+  it("returns an unread mutual conversation before profile work", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: { id: "connection-1", unreadCount: 2 },
+      pendingDebriefConnectionId: "connection-2",
+      overdueCommitment: null,
+      pendingLearning: false,
+      profileMove,
+    });
+    expect(move.href).toBe("/matches/connection-1");
+    expect(move.detail).toMatch(/2 unread messages/i);
+  });
+
+  it("brings a completed date back to Echo for a private debrief", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      pendingDebriefConnectionId: "connection-2",
+      overdueCommitment: "send the message.",
+      pendingLearning: true,
+      profileMove,
+    });
+    expect(move.href).toBe("/copilot/debrief?connectionId=connection-2");
+    expect(move.label).toMatch(/date felt/i);
+    expect(move.detail).toMatch(/before anything becomes profile truth/i);
+  });
+
+  it("holds the member to an overdue commitment before suggesting a tool", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      pendingDebriefConnectionId: null,
+      overdueCommitment: "send the message.",
+      pendingLearning: true,
+      profileMove,
+    });
+    expect(move.label).toMatch(/promise/i);
+    expect(move.detail).toMatch(/send the message/i);
+  });
+
+  it("asks the member to confirm a pending learning before profile work", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      pendingDebriefConnectionId: null,
+      overdueCommitment: null,
+      pendingLearning: true,
+      profileMove,
+    });
+    expect(move.href).toBe("/echo#echo-learning");
+    expect(move.label).toMatch(/Echo thinks it learned/i);
+    expect(move.detail).toMatch(/confirm|correct|set it aside/i);
+    expect(move.points).toBe(0);
+  });
+
+  it("keeps profile suggestions qualitative and removes score rewards", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      pendingDebriefConnectionId: null,
+      overdueCommitment: null,
+      pendingLearning: false,
+      profileMove,
+    });
+    expect(move.href).toBe("/play");
+    expect(move.points).toBe(0);
+    expect(move.detail).not.toMatch(/score|points?|earn/i);
   });
 });
 
@@ -124,9 +225,15 @@ describe("deriveObservations", () => {
 
 describe("detectCommitment", () => {
   it("extracts clear first-person future intent", () => {
-    expect(detectCommitment("I'll message her back tonight")).toMatch(/message her back tonight/);
-    expect(detectCommitment("I am going to update my bio")).toMatch(/update my bio/);
-    expect(detectCommitment("i will finish the quiz")).toMatch(/finish the quiz/);
+    expect(detectCommitment("I'll message her back tonight")).toMatch(
+      /message her back tonight/,
+    );
+    expect(detectCommitment("I am going to update my bio")).toMatch(
+      /update my bio/,
+    );
+    expect(detectCommitment("i will finish the quiz")).toMatch(
+      /finish the quiz/,
+    );
   });
 
   it("ignores text with no commitment", () => {
@@ -136,15 +243,16 @@ describe("detectCommitment", () => {
 });
 
 describe("answerCompanion", () => {
-  it("answers a where-do-I-stand question with the real score", () => {
+  it("answers a where-do-I-stand question with qualitative evidence", () => {
     const view = buildCompanionView({
       portrait: makePortrait(emptyBreakdown(), 12),
       persona: "best_friend",
       candor: 2,
     });
     const res = answerCompanion(view, "where do I stand?");
-    expect(res.answer).toMatch(/12/);
-    expect(res.grounding).toContain("readiness score");
+    expect(res.answer).toMatch(/meaningful gaps/i);
+    expect(res.answer).not.toMatch(/12|score|points?|earned/i);
+    expect(res.grounding).toContain("profile evidence");
     assertVoiceClean(res.answer);
   });
 
@@ -181,7 +289,12 @@ describe("reviewMessage", () => {
   });
 
   it("handles a received message with its own framing", () => {
-    const r = reviewMessage("what are you up to this weekend?", "received", "calm_mentor", 2);
+    const r = reviewMessage(
+      "what are you up to this weekend?",
+      "received",
+      "calm_mentor",
+      2,
+    );
     expect(r.strengths.length).toBeGreaterThan(0);
     expect(r.suggestion.length).toBeGreaterThan(0);
     assertVoiceClean(r.suggestion);
@@ -200,7 +313,9 @@ describe("buildReaction", () => {
     return Object.fromEntries(portrait.known.map((k) => [k.key, k.coverage]));
   }
 
-  function breakdownWith(overrides: Record<string, number>): ReadinessBreakdown {
+  function breakdownWith(
+    overrides: Record<string, number>,
+  ): ReadinessBreakdown {
     return { ...emptyBreakdown(), ...overrides } as ReadinessBreakdown;
   }
 
@@ -270,7 +385,10 @@ describe("buildReaction", () => {
 
   it("does not use the dates copy when another lane moved more than post-date", () => {
     const before = makePortrait(emptyBreakdown(), 30);
-    const after = makePortrait(breakdownWith({ wellness: 80, postDate: 30 }), 42);
+    const after = makePortrait(
+      breakdownWith({ wellness: 80, postDate: 30 }),
+      42,
+    );
     const r = buildReaction({
       portrait: after,
       previousScore: before.readinessScore,
@@ -283,9 +401,12 @@ describe("buildReaction", () => {
     expect(r.nowSee).toMatch(/finally read/i);
   });
 
-  it("celebrates crossing the matching threshold and exposes eligibility", () => {
+  it("marks the internal evidence threshold without promising matching access", () => {
     const before = makePortrait(breakdownWith({ wellness: 40 }), 45);
-    const after = makePortrait(breakdownWith({ wellness: 80, compass: 70 }), 55);
+    const after = makePortrait(
+      breakdownWith({ wellness: 80, compass: 70 }),
+      55,
+    );
     const r = buildReaction({
       portrait: after,
       previousScore: before.readinessScore,
@@ -296,7 +417,10 @@ describe("buildReaction", () => {
     expect(r.tone).toBe("crossing");
     expect(r.crossedThreshold).toBe(true);
     expect(r.eligible).toBe(true);
-    expect(r.headline).toMatch(/matching is open/i);
+    expect(r.headline).toMatch(
+      /profile read|profile review|thoughtful review|proper read/i,
+    );
+    expect(r.headline).not.toMatch(/matching is open|earned|\b55\b|\b50\b/i);
   });
 
   it("names a dip honestly without a nowSee", () => {
@@ -312,7 +436,7 @@ describe("buildReaction", () => {
     expect(r.tone).toBe("dip");
     expect(r.delta).toBeLessThan(0);
     expect(r.nowSee).toBeNull();
-    expect(r.headline).toMatch(/slip|down/i);
+    expect(r.headline).toMatch(/less certain|went quiet|fuzzy/i);
   });
 
   it("treats a flat read with no lane movement as steady and silent", () => {

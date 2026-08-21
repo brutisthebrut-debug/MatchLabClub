@@ -1,9 +1,9 @@
-# NLDC — Vision: The Operating System for Your Dating Life
+# MatchLab Club — Vision: The Operating System for Your Dating Life
 
 > A living, consent-first psychological profile that gets sharper the more honest signals it sees.
 > Dating apps see your swipes. We see the whole human — but only what they choose to share. That's the moat.
 
-This is a strategy doc. It's the map. The code today implements **Phase 0** only — everything below it is the multi-quarter roadmap, in priority order, with the gaps called out honestly.
+This document preserves the long-range product strategy. `ROADMAP.md` is the delivery source of truth for the current milestone and overrides older phase language below whenever the two conflict. The active milestone is the simplified Echo-led v1 shell, not a broad redesign or connector expansion.
 
 ---
 

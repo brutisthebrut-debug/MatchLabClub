@@ -55,6 +55,8 @@ vi.mock("@workspace/api-client-react", () => ({
   useDismissWellnessInference: () => ({ mutateAsync: dismissMutate, isPending: false }),
   getGetWellnessDailyQueryKey: () => ["wellness-daily"],
   getGetMatchingStateQueryKey: () => ["matching-state"],
+  getGetCompanionQueryKey: () => ["companion"],
+  getGetMyJourneySummaryQueryKey: () => ["journey-summary"],
 }));
 
 let authState = { isAuthenticated: true, isLoading: false, user: { id: "u1" } as unknown };
@@ -108,7 +110,7 @@ describe("WellnessInferences (confirm-before-write)", () => {
     expect(dismissMutate).not.toHaveBeenCalled();
   });
 
-  it("confirm sends the edited answer and invalidates list + daily + matching", async () => {
+  it("confirm sends the edited answer and refreshes every connected surface", async () => {
     const invalidateSpy = vi.spyOn(qc, "invalidateQueries");
 
     render(
@@ -134,6 +136,8 @@ describe("WellnessInferences (confirm-before-write)", () => {
     expect(invalidatedKeys).toContain("wellness-inferences");
     expect(invalidatedKeys).toContain("wellness-daily");
     expect(invalidatedKeys).toContain("matching-state");
+    expect(invalidatedKeys).toContain("companion");
+    expect(invalidatedKeys).toContain("journey-summary");
   });
 
   it("dismiss sends only the id and does not write an answer", async () => {
@@ -167,7 +171,7 @@ describe("WellnessInferences (confirm-before-write)", () => {
     expect(confirmMutate).not.toHaveBeenCalled();
   });
 
-  it("shows non-actionable demo examples when there is nothing pending", () => {
+  it("shows an honest empty state when there is nothing pending", () => {
     listData = { inferences: [] };
 
     render(
@@ -176,12 +180,12 @@ describe("WellnessInferences (confirm-before-write)", () => {
       </Wrap>,
     );
 
-    // Never empty: demo examples render, but they are not confirmable.
-    expect(screen.getAllByTestId("inference-example").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("inferences-empty")).toBeTruthy();
+    expect(screen.queryByTestId("inference-example")).toBeNull();
     expect(screen.queryByTestId("inference-input-11")).toBeNull();
   });
 
-  it("anon sees a sign-in hint and the generate button is disabled", () => {
+  it("does not render account learning controls for an anonymous visitor", () => {
     authState = { isAuthenticated: false, isLoading: false, user: null };
     listData = undefined;
 
@@ -191,7 +195,8 @@ describe("WellnessInferences (confirm-before-write)", () => {
       </Wrap>,
     );
 
-    expect((screen.getByTestId("inferences-generate") as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getAllByTestId("inference-example").length).toBeGreaterThan(0);
+    expect(screen.queryByTestId("wellness-inferences")).toBeNull();
+    expect(screen.queryByTestId("inferences-generate")).toBeNull();
+    expect(screen.queryByTestId("inference-example")).toBeNull();
   });
 });

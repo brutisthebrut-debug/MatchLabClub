@@ -67,6 +67,7 @@ vi.mock("@/components/ui/toast", async () => {
     ToastAction: ({
       children,
       onClick,
+      altText,
       ...rest
     }: {
       children: React.ReactNode;
@@ -74,7 +75,7 @@ vi.mock("@/components/ui/toast", async () => {
       altText?: string;
       [key: string]: unknown;
     }) => (
-      <button onClick={onClick} {...rest}>
+      <button onClick={onClick} aria-label={altText} {...rest}>
         {children}
       </button>
     ),

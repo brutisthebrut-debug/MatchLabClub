@@ -26,6 +26,7 @@ import { startAutoProposalJob } from "./lib/autoProposalJob";
 import { startProposalExpiryJob } from "./lib/proposalExpiryJob";
 import { startCompanionNudgeJob } from "./lib/companionNudgeJob";
 import { initStripe } from "./lib/initStripe";
+import { assertConnectedBetaRuntime } from "./lib/runtimeSafety";
 
 Sentry.setupExpressErrorHandler(app);
 
@@ -42,6 +43,8 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+assertConnectedBetaRuntime();
 
 app.listen(port, (err) => {
   if (err) {

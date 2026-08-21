@@ -17,11 +17,10 @@ import {
   useCreateQuizResult,
   useGetMatchingState,
   getGetMatchingStateQueryKey,
+  getListImportsQueryKey,
 } from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { trackEvent } from "@/lib/analytics";
 import {
   getQuizBySlug,
@@ -98,13 +97,8 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
     query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
   });
   // The single highest-leverage signal to feed next, surfaced on the result so
-  // every quiz ends by pointing at the next thing that moves readiness.
+  // every quiz ends by pointing at the next thing that deepens the picture.
   const nextSignal = matchingState.data?.nextActions?.[0] ?? null;
-  // Current readiness, so the quiz result ties visibly into the climbing meter
-  // rather than just naming an abstract next step. Null for signed-out users.
-  const readinessScore = matchingState.data?.readiness.score ?? null;
-  const climb = useReadinessClimb({ enabled: isAuthenticated });
-
   const [answers, setAnswers] = useState<number[]>(() =>
     quiz ? Array(quiz.questions.length).fill(-1) : [],
   );
@@ -113,6 +107,9 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
   const [override, setOverride] = useState<ArchetypeOverride>({});
   const [usedFallback, setUsedFallback] = useState(false);
   const [savedToWellness, setSavedToWellness] = useState(false);
+  const [profileSync, setProfileSync] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
 
   const progress = useMemo(() => {
     if (!quiz) return 0;
@@ -167,6 +164,37 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
     }, 400);
   }
 
+  function persistDerivedResult(
+    archetypeKey: string,
+    archetypeName: string,
+  ) {
+    setProfileSync("saving");
+    createQuizResult.mutate(
+      {
+        data: {
+          slug: quiz!.slug,
+          archetypeKey,
+          archetypeName,
+          dimensions: quiz!.feeds,
+        },
+      },
+      {
+        onSuccess: () => {
+          setProfileSync("saved");
+          queryClient.invalidateQueries({
+            queryKey: getGetMatchingStateQueryKey(),
+          });
+          queryClient.invalidateQueries({
+            queryKey: getListImportsQueryKey(),
+          });
+        },
+        onError: () => {
+          setProfileSync("error");
+        },
+      },
+    );
+  }
+
   async function handleSubmit() {
     const archetypeKey = scoreQuiz(quiz!, answers);
     if (!archetypeKey) return;
@@ -189,31 +217,9 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
       questions_answered: answers.filter(a => a >= 0).length,
     });
 
-    // Feed the Mirror: record the derived result (which quiz, which archetype,
-    // the dimensions it informs) as a signal so finishing a quiz nudges Match
-    // Readiness. Works for anon and signed-in alike (server stamps the anon
-    // claim cookie). Only the derived result moves, never the raw answers.
-    // Fire-and-forget: a failed write must never block the result reveal.
-    // Snapshot readiness the instant before the signal lands so the result can
-    // animate the real climb this quiz produced.
-    climb.snapshot();
-    createQuizResult.mutate(
-      {
-        data: {
-          slug: quiz!.slug,
-          archetypeKey,
-          archetypeName: base.name,
-          dimensions: quiz!.feeds,
-        },
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: getGetMatchingStateQueryKey(),
-          });
-        },
-      },
-    );
+    // The derived result updates the member model immediately. More granular
+    // wellness mappings remain a separate, explicit member choice below.
+    persistDerivedResult(archetypeKey, base.name);
 
     const summary = quiz!.questions
       .map((q, qi) => {
@@ -305,6 +311,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
     setOverride({});
     setUsedFallback(false);
     setSavedToWellness(false);
+    setProfileSync("idle");
   }
 
   const currentQ = quiz.questions[step];
@@ -448,14 +455,6 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                   />
                 )}
 
-                {isAuthenticated && climb.before !== null && (
-                  <ReadinessClimbReveal
-                    from={climb.before}
-                    to={climb.current}
-                    className="glass border border-foreground/10 rounded-[2rem] p-8"
-                  />
-                )}
-
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Insight */}
                   <div className="glass border border-foreground/10 rounded-[2rem] p-8 hover:border-[hsl(248_62%_52%/0.3)] transition-colors">
@@ -482,11 +481,44 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <Eye className="w-5 h-5 text-[hsl(248_62%_52%)]" />
-                    <h3 className="font-bold text-foreground text-lg">What your Mirror just learned</h3>
+                    <h3 className="font-bold text-foreground text-lg">
+                      {profileSync === "saved"
+                        ? "What your Mirror learned"
+                        : profileSync === "error"
+                          ? "Your result needs another try"
+                          : "Saving this to your Mirror"}
+                    </h3>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                    This result is now part of how I read you. It sharpened these parts of your picture:
+                    {profileSync === "saved"
+                      ? "Your derived result is now part of your member record. It sharpened these parts of your picture:"
+                      : profileSync === "error"
+                        ? "You can keep reading this result, but it did not reach your member record. Nothing is being claimed as learned until the save succeeds."
+                        : "Your result is visible now. I am saving the derived pattern and the dimensions it informs, never your raw answer choices."}
                   </p>
+                  {profileSync === "error" && result && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full font-bold mb-5"
+                      onClick={() =>
+                        persistDerivedResult(
+                          result,
+                          quiz.archetypes[result]!.name,
+                        )
+                      }
+                      disabled={createQuizResult.isPending}
+                    >
+                      {createQuizResult.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                          Saving…
+                        </>
+                      ) : (
+                        "Try saving again"
+                      )}
+                    </Button>
+                  )}
                   <div className="flex flex-wrap gap-2 mb-6">
                     {quiz.feeds.map((d) => (
                       <span
@@ -503,27 +535,11 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                         <TrendingUp className="w-4 h-4 text-[hsl(326_100%_59%)]" />
                         <p className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Your next best signal</p>
                       </div>
-                      {readinessScore !== null && (
-                        <span
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(248_62%_52%/0.1)] border border-[hsl(248_62%_52%/0.25)] px-3 py-1 text-xs font-bold text-[hsl(248_62%_62%)]"
-                          data-testid="quizplay-readiness-score"
-                        >
-                          Readiness {readinessScore}
-                        </span>
-                      )}
                     </div>
                     {nextSignal ? (
                       <>
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <p className="text-base font-bold text-foreground">{nextSignal.label}</p>
-                          {nextSignal.points > 0 && (
-                            <span
-                              className="inline-flex items-center rounded-full bg-[hsl(326_100%_59%/0.1)] border border-[hsl(326_100%_59%/0.25)] px-2.5 py-0.5 text-xs font-bold text-[hsl(326_100%_59%)]"
-                              data-testid="quizplay-next-points"
-                            >
-                              +{nextSignal.points} pts
-                            </span>
-                          )}
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4">{nextSignal.detail}</p>
                         <Button asChild variant="outline" className="rounded-full font-bold border-foreground/20 hover:bg-foreground/5">
@@ -533,7 +549,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     ) : (
                       <>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                          Open your Mirror to see the full picture I have of you, and the single next thing that moves your readiness.
+                          Open your Mirror to see the full picture I have of you, and the single next thing that would deepen it.
                         </p>
                         <Button asChild variant="outline" className="rounded-full font-bold border-foreground/20 hover:bg-foreground/5">
                           <Link href="/your-mirror">See your Mirror <ArrowRight className="ml-2 w-4 h-4" /></Link>
@@ -599,9 +615,9 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                         <Award className="w-8 h-8 text-[hsl(326_100%_59%)]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-lg font-bold text-foreground mb-2">Keep this result forever</h4>
+                        <h4 className="text-lg font-bold text-foreground mb-2">Take this result with you</h4>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4 sm:mb-0 max-w-md">
-                          Sign in to save results across devices and let every quiz answer feed your full Connection Style readout.
+                          This derived result is saved for this browser. Sign in to carry it across devices and connect it to your member record.
                         </p>
                       </div>
                       <Button asChild className="rounded-full bg-foreground text-background hover:bg-foreground/90 font-bold px-6 h-12 w-full sm:w-auto flex-shrink-0">
@@ -614,10 +630,14 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                 <div className="mt-8">
                   <ToolHandoff
                     testId="quizplay-handoff"
-                    fedLine="This quiz just fed your Mirror. The more you feed it, the better it reads you, and the closer you get to matching."
+                    fedLine={
+                      profileSync === "saved"
+                        ? "This derived result is in your Mirror now. More signals help Echo reflect patterns with greater confidence."
+                        : "Your result is ready. I will only call it part of your Mirror after the server confirms the save."
+                    }
                     steps={[
                       { label: "See your Mirror", href: "/your-mirror", desc: "See the full picture I have of you." },
-                      { label: "Map your wellness", href: "/wellness", desc: "Answer a few more questions to raise your readiness." },
+                      { label: "Map your wellness", href: "/wellness", desc: "Help Echo understand another part of how you connect." },
                       { label: "Take another quiz", href: "/quizzes", desc: "Each one adds a new angle on you." },
                     ]}
                   />

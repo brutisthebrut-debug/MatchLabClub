@@ -29,10 +29,15 @@ const DEMO_CONNECTIONS: Connection[] = [
     status: "active",
     closedReason: null,
     closedByYou: false,
+    dateStage: "connected",
+    datePlannedAt: null,
+    dateCompletedAt: null,
+    debriefNoteId: null,
     unreadCount: 2,
     createdAt: new Date(Date.now() - 3_600_000).toISOString(),
     lastMessageAt: new Date(Date.now() - 1_800_000).toISOString(),
-    lastMessagePreview: "Glad we matched. Your readiness profile is impressive.",
+    lastMessagePreview:
+      "Glad we matched. What are you looking forward to this week?",
   },
   {
     id: "demo-2",
@@ -40,10 +45,15 @@ const DEMO_CONNECTIONS: Connection[] = [
     status: "active",
     closedReason: null,
     closedByYou: false,
+    dateStage: "connected",
+    datePlannedAt: null,
+    dateCompletedAt: null,
+    debriefNoteId: null,
     unreadCount: 0,
     createdAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
     lastMessageAt: new Date(Date.now() - 86_400_000).toISOString(),
-    lastMessagePreview: "That sounds like a great weekend. Want to compare notes?",
+    lastMessagePreview:
+      "That sounds like a great weekend. Want to compare notes?",
   },
 ];
 
@@ -80,13 +90,14 @@ export default function ConnectionsScreen() {
     },
   });
 
-  const connections = isDemo
-    ? DEMO_CONNECTIONS
-    : (connectionsQuery.data ?? []);
+  const connections = isDemo ? DEMO_CONNECTIONS : (connectionsQuery.data ?? []);
 
-  const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
+  const topInset =
+    Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =
-    Platform.OS === "web" ? Math.max(insets.bottom, 34) + 84 : insets.bottom + 80;
+    Platform.OS === "web"
+      ? Math.max(insets.bottom, 34) + 84
+      : insets.bottom + 80;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -121,7 +132,9 @@ export default function ConnectionsScreen() {
             <Text style={[styles.signinText, { color: colors.foreground }]}>
               This is a sample. Sign in to see your real conversations.
             </Text>
-            <View style={[styles.signinBtn, { backgroundColor: colors.primary }]}>
+            <View
+              style={[styles.signinBtn, { backgroundColor: colors.primary }]}
+            >
               <Text
                 style={[
                   styles.signinBtnText,
@@ -183,10 +196,15 @@ export default function ConnectionsScreen() {
                       style={[styles.rowName, { color: colors.foreground }]}
                       numberOfLines={1}
                     >
-                      {c.status === "closed" ? "Closed conversation" : "Your match"}
+                      {c.status === "closed"
+                        ? "Closed conversation"
+                        : "Your match"}
                     </Text>
                     <Text
-                      style={[styles.rowWhen, { color: colors.mutedForeground }]}
+                      style={[
+                        styles.rowWhen,
+                        { color: colors.mutedForeground },
+                      ]}
                     >
                       {formatWhen(c.lastMessageAt ?? c.createdAt)}
                     </Text>
@@ -198,7 +216,8 @@ export default function ConnectionsScreen() {
                     ]}
                     numberOfLines={1}
                   >
-                    {c.lastMessagePreview ?? "Say hello to start the conversation."}
+                    {c.lastMessagePreview ??
+                      "Say hello to start the conversation."}
                   </Text>
                 </View>
                 {c.unreadCount > 0 ? (

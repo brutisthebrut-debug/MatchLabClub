@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { desc, eq } from "drizzle-orm";
 import { db, dailySparkAnswersTable } from "@workspace/db";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 import { CreateDailySparkAnswerBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -57,6 +58,11 @@ router.post("/me/daily-spark", async (req, res): Promise<void> => {
       set: { choice: parsed.data.choice, updatedAt: new Date() },
     })
     .returning();
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: req.user.id,
+    props: { source: "daily-spark", questionId: parsed.data.questionId },
+  });
   res.status(201).json(serialize(row));
 });
 

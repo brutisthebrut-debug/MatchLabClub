@@ -12,6 +12,7 @@ import {
   userBlocksTable,
   userReportsTable,
   companionNotificationsTable,
+  postDateNotesTable,
   insertConnectionMessageSchema,
   SAFETY_REASONS,
   type MatchConnection,
@@ -25,6 +26,7 @@ import { generateConnectionStarters, generateDateIdeas } from "../lib/aiEngine";
 import { generate } from "../lib/aiService";
 import { canonicalizeCity, titleCaseCity } from "../lib/geo";
 import { getPlacesProvider, type PlaceSuggestion } from "../lib/placesProvider";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
 
@@ -49,19 +51,56 @@ function counterpartOf(connection: MatchConnection, userId: string): string {
 function serializeConnection(
   connection: MatchConnection,
   userId: string,
-  extra?: { unreadCount?: number; lastMessagePreview?: string | null },
+  extra?: {
+    unreadCount?: number;
+    lastMessagePreview?: string | null;
+    debriefNoteId?: number | null;
+  },
 ) {
+  const debriefNoteId = extra?.debriefNoteId ?? null;
+  const dateStage = debriefNoteId
+    ? "debrief_saved"
+    : connection.dateCompletedAt
+      ? "date_completed"
+      : connection.datePlannedAt
+        ? "date_planned"
+        : "connected";
   return {
     id: connection.id,
     counterpartUserId: counterpartOf(connection, userId),
     status: connection.status,
     closedReason: connection.closedReason ?? null,
     closedByYou: connection.closedByUserId === userId,
+    dateStage,
+    datePlannedAt: toIso(connection.datePlannedAt),
+    dateCompletedAt: toIso(connection.dateCompletedAt),
+    debriefNoteId,
     lastMessageAt: toIso(connection.lastMessageAt),
     createdAt: toIso(connection.createdAt),
     unreadCount: extra?.unreadCount ?? 0,
     lastMessagePreview: extra?.lastMessagePreview ?? null,
   };
+}
+
+async function activeDebriefId(
+  connection: MatchConnection,
+  userId: string,
+): Promise<number | null> {
+  if (!connection.dateCompletedAt) return null;
+  const [row] = await db
+    .select({ id: postDateNotesTable.id })
+    .from(postDateNotesTable)
+    .where(
+      and(
+        eq(postDateNotesTable.connectionId, connection.id),
+        eq(postDateNotesTable.userId, userId),
+        isNull(postDateNotesTable.deletedAt),
+        gt(postDateNotesTable.createdAt, connection.dateCompletedAt),
+      ),
+    )
+    .orderBy(desc(postDateNotesTable.createdAt))
+    .limit(1);
+  return row?.id ?? null;
 }
 
 function serializeMessage(message: ConnectionMessage, userId: string) {
@@ -120,53 +159,58 @@ async function isBlockedPair(a: string, b: string): Promise<boolean> {
 // GET /me/connections — the member's conversation list, most recently active
 // first. Each row carries the counterpart id, the unread count, and a short
 // preview of the latest message.
-router.get("/me/connections", async (req: Request, res: Response): Promise<void> => {
-  if (!req.user?.id) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
-  const userId = req.user.id;
-  const connections = await db
-    .select()
-    .from(matchConnectionsTable)
-    .where(
-      or(
-        eq(matchConnectionsTable.userLowId, userId),
-        eq(matchConnectionsTable.userHighId, userId),
-      ),
-    )
-    .orderBy(
-      desc(matchConnectionsTable.lastMessageAt),
-      desc(matchConnectionsTable.createdAt),
-    );
-
-  const out = [];
-  for (const connection of connections) {
-    const [unread] = await db
-      .select({ value: sql<number>`count(*)::int` })
-      .from(connectionMessagesTable)
+router.get(
+  "/me/connections",
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const userId = req.user.id;
+    const connections = await db
+      .select()
+      .from(matchConnectionsTable)
       .where(
-        and(
-          eq(connectionMessagesTable.connectionId, connection.id),
-          ne(connectionMessagesTable.senderUserId, userId),
-          isNull(connectionMessagesTable.readAt),
+        or(
+          eq(matchConnectionsTable.userLowId, userId),
+          eq(matchConnectionsTable.userHighId, userId),
         ),
+      )
+      .orderBy(
+        desc(matchConnectionsTable.lastMessageAt),
+        desc(matchConnectionsTable.createdAt),
       );
-    const [latest] = await db
-      .select({ body: connectionMessagesTable.body })
-      .from(connectionMessagesTable)
-      .where(eq(connectionMessagesTable.connectionId, connection.id))
-      .orderBy(desc(connectionMessagesTable.id))
-      .limit(1);
-    out.push(
-      serializeConnection(connection, userId, {
-        unreadCount: unread?.value ?? 0,
-        lastMessagePreview: latest?.body ? latest.body.slice(0, 140) : null,
-      }),
-    );
-  }
-  res.json(out);
-});
+
+    const out = [];
+    for (const connection of connections) {
+      const [unread] = await db
+        .select({ value: sql<number>`count(*)::int` })
+        .from(connectionMessagesTable)
+        .where(
+          and(
+            eq(connectionMessagesTable.connectionId, connection.id),
+            ne(connectionMessagesTable.senderUserId, userId),
+            isNull(connectionMessagesTable.readAt),
+          ),
+        );
+      const [latest] = await db
+        .select({ body: connectionMessagesTable.body })
+        .from(connectionMessagesTable)
+        .where(eq(connectionMessagesTable.connectionId, connection.id))
+        .orderBy(desc(connectionMessagesTable.id))
+        .limit(1);
+      const debriefNoteId = await activeDebriefId(connection, userId);
+      out.push(
+        serializeConnection(connection, userId, {
+          unreadCount: unread?.value ?? 0,
+          lastMessagePreview: latest?.body ? latest.body.slice(0, 140) : null,
+          debriefNoteId,
+        }),
+      );
+    }
+    res.json(out);
+  },
+);
 
 // GET /me/connections/:id — a single conversation's metadata.
 router.get(
@@ -185,7 +229,120 @@ router.get(
       res.status(404).json({ error: "Connection not found" });
       return;
     }
-    res.json(serializeConnection(connection, userId));
+    const debriefNoteId = await activeDebriefId(connection, userId);
+    res.json(serializeConnection(connection, userId, { debriefNoteId }));
+  },
+);
+
+const ConnectionDateStateBody = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("plan"),
+    occurredAt: z.iso.datetime({ offset: true }),
+  }),
+  z.object({
+    action: z.literal("complete"),
+    occurredAt: z.iso.datetime({ offset: true }).optional(),
+  }),
+]);
+
+// PATCH /me/connections/:id/date-state — persist the shared date lifecycle.
+// The plan/completion fact is shared by the pair; each person's debrief remains
+// private in post_date_notes and only affects their own serialized stage.
+router.patch(
+  "/me/connections/:id/date-state",
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const userId = req.user.id;
+    const parsed = ConnectionDateStateBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const connection = await loadConnectionForUser(
+      String(req.params.id ?? ""),
+      userId,
+    );
+    if (!connection) {
+      res.status(404).json({ error: "Connection not found" });
+      return;
+    }
+    if (connection.status !== "active") {
+      res.status(409).json({ error: "This conversation is closed" });
+      return;
+    }
+    if (parsed.data.action === "plan" && connection.dateCompletedAt) {
+      res.status(409).json({
+        error:
+          "This date is already complete and cannot be moved back to planned",
+      });
+      return;
+    }
+    if (parsed.data.action === "complete" && connection.dateCompletedAt) {
+      const debriefNoteId = await activeDebriefId(connection, userId);
+      res.json(serializeConnection(connection, userId, { debriefNoteId }));
+      return;
+    }
+
+    const now = new Date();
+    const occurredAt = parsed.data.occurredAt
+      ? new Date(parsed.data.occurredAt)
+      : now;
+    if (Number.isNaN(occurredAt.getTime())) {
+      res.status(400).json({ error: "Invalid date" });
+      return;
+    }
+
+    let patch: Partial<typeof matchConnectionsTable.$inferInsert>;
+    let step: "date_planned" | "date_completed";
+    if (parsed.data.action === "plan") {
+      const earliest = now.getTime() - 24 * 60 * 60 * 1000;
+      const latest = now.getTime() + 366 * 24 * 60 * 60 * 1000;
+      if (occurredAt.getTime() < earliest || occurredAt.getTime() > latest) {
+        res.status(400).json({
+          error: "Choose a date between now and one year from now",
+        });
+        return;
+      }
+      patch = { datePlannedAt: occurredAt, dateCompletedAt: null };
+      step = "date_planned";
+    } else {
+      if (occurredAt.getTime() > now.getTime() + 5 * 60 * 1000) {
+        res
+          .status(400)
+          .json({ error: "A completed date cannot be in the future" });
+        return;
+      }
+      patch = {
+        datePlannedAt: connection.datePlannedAt ?? occurredAt,
+        dateCompletedAt: occurredAt,
+      };
+      step = "date_completed";
+    }
+
+    const [updated] = await db
+      .update(matchConnectionsTable)
+      .set(patch)
+      .where(eq(matchConnectionsTable.id, connection.id))
+      .returning();
+    const changed =
+      step === "date_planned"
+        ? toIso(connection.datePlannedAt) !== occurredAt.toISOString() ||
+          connection.dateCompletedAt !== null
+        : connection.dateCompletedAt === null;
+    if (changed) {
+      void recordJourneyEvent({
+        eventType: "match_step",
+        userId,
+        props: { step },
+      });
+    }
+    const debriefNoteId = await activeDebriefId(updated ?? connection, userId);
+    res.json(
+      serializeConnection(updated ?? connection, userId, { debriefNoteId }),
+    );
   },
 );
 
@@ -260,9 +417,9 @@ router.post(
         ),
       );
     if ((recent?.value ?? 0) >= SEND_MAX_PER_WINDOW) {
-      res
-        .status(429)
-        .json({ error: "You are sending messages too quickly. Try again in a moment." });
+      res.status(429).json({
+        error: "You are sending messages too quickly. Try again in a moment.",
+      });
       return;
     }
 
@@ -281,10 +438,7 @@ router.post(
 
     void notifyNewMessage(connection, counterpart);
 
-    req.log.info(
-      { connectionId: connection.id },
-      "connection.message sent",
-    );
+    req.log.info({ connectionId: connection.id }, "connection.message sent");
     res.status(201).json(serializeMessage(message!, userId));
   },
 );
@@ -325,7 +479,10 @@ router.post(
         and(
           eq(companionNotificationsTable.userId, userId),
           eq(companionNotificationsTable.kind, "match_message"),
-          eq(companionNotificationsTable.ctaHref, `/connections/${connection.id}`),
+          eq(
+            companionNotificationsTable.ctaHref,
+            `/connections/${connection.id}`,
+          ),
           isNull(companionNotificationsTable.readAt),
         ),
       );
@@ -353,11 +510,18 @@ router.post(
     }
     const [updated] = await db
       .update(matchConnectionsTable)
-      .set({ status: "closed", closedReason: "unmatch", closedByUserId: userId })
+      .set({
+        status: "closed",
+        closedReason: "unmatch",
+        closedByUserId: userId,
+      })
       .where(eq(matchConnectionsTable.id, connection.id))
       .returning();
     req.log.info({ connectionId: connection.id }, "connection.unmatched");
-    res.json(serializeConnection(updated ?? connection, userId));
+    const debriefNoteId = await activeDebriefId(updated ?? connection, userId);
+    res.json(
+      serializeConnection(updated ?? connection, userId, { debriefNoteId }),
+    );
   },
 );
 
@@ -412,7 +576,10 @@ router.post(
       { connectionId: connection.id, reason: parsed.data.reason },
       "connection.reported",
     );
-    res.json(serializeConnection(updated ?? connection, userId));
+    const debriefNoteId = await activeDebriefId(updated ?? connection, userId);
+    res.json(
+      serializeConnection(updated ?? connection, userId, { debriefNoteId }),
+    );
   },
 );
 
@@ -632,7 +799,9 @@ router.get(
         ctx.compatibilityScore != null
           ? `Compatibility score (0 to 100, context only, never quote it back): ${ctx.compatibilityScore}`
           : "Compatibility score: not available",
-        ctx.matchSummary ? `Aggregate match summary: ${ctx.matchSummary}` : null,
+        ctx.matchSummary
+          ? `Aggregate match summary: ${ctx.matchSummary}`
+          : null,
         `Readiness phrasing for the match: ${ctx.readinessSummary}`,
       ]
         .filter((line): line is string => Boolean(line))
@@ -876,7 +1045,11 @@ router.post(
 
       if (!aiResult.isFallback && aiResult.validated && aiResult.output) {
         const parsed = JSON.parse(aiResult.output) as {
-          ideas?: { title?: unknown; description?: unknown; category?: unknown }[];
+          ideas?: {
+            title?: unknown;
+            description?: unknown;
+            category?: unknown;
+          }[];
         };
         const clean = Array.isArray(parsed.ideas)
           ? parsed.ideas
