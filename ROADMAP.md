@@ -503,7 +503,7 @@ a horizontally scaled public beta.
 
 ## Batch 8C — Echo-owned orchestration
 
-Status: **Implementation complete; final repository validation pending**
+Status: **Complete and green**
 
 Goal: make Echo the backend-owned guide for the signed-in experience instead of
 letting individual pages independently decide what matters next.
@@ -531,6 +531,10 @@ letting individual pages independently decide what matters next.
 | Progress language | Companion reactions and answers still exposed score/threshold and “earned matching” language | Evidence changes are described as clearer or less certain understanding | Profile depth is evidence, not human worth, package access, or entitlement to a person |
 | Page responsibility | Pages could behave like separate tools under a persistent Echo widget | Echo directs; pages execute the workflow and preserve the durable record | This is the product's governing interaction model |
 | Scope | Five destinations and the selected beta capability set | Unchanged | This consolidates orchestration; it does not restore the old tool drawer |
+
+Validation evidence: [CI run #123](https://github.com/brutisthebrut-debug/MatchLabClub/actions/runs/32520056215)
+passed full monorepo typecheck, lint, schema drift, voice lint, web tests and
+production build, plus the complete Postgres-backed API suite.
 
 Remaining Echo integration work is explicit: proposed learnings still need a
 member confirmation/correction step before becoming profile truth; every
