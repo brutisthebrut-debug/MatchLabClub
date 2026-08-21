@@ -124,6 +124,13 @@ preserved Flags/Care Dialect sources count toward consistency days. Batch 8B is
 code-complete and green, but hosted claim/cross-device proof and Play-table
 privacy export/deletion parity remain open beta gates.
 
+Batch 9A now closes account-deletion parity for selected Play data. Both
+deletion endpoints use one purge registry, and a Postgres regression proves the
+direct activity rows, Care Dialect, Journey instrumentation, Quiz Lab, and This
+or That records are removed with the account. This does not close the whole
+privacy gate: downloadable export, retention, and consent-revocation parity
+still require a complete first-party table registry and drift protection.
+
 An unrestricted full beta also requires Batch 9 production hardening. Scheduled
 jobs currently start inside each API process, production schema application still
 uses `drizzle-kit push`, and the required security-header/rate-limit, tested
