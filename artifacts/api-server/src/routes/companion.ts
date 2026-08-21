@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from "express";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   db,
   companionStateTable,
@@ -8,6 +8,9 @@ import {
   companionCommitmentsTable,
   companionNotificationsTable,
   companionChannelPrefsTable,
+  matchProposalsTable,
+  matchConnectionsTable,
+  connectionMessagesTable,
   type CompanionState as CompanionStateRow,
   type CompanionChannelPrefs as CompanionChannelPrefsRow,
 } from "@workspace/db";
@@ -41,6 +44,7 @@ import {
   clampCandor,
   personaLabel,
   buildReaction,
+  chooseEchoNextMove,
   type CompanionPersona,
   type MessageDirection,
 } from "../lib/companionEngine";
@@ -249,6 +253,66 @@ function settingsPayload(
   };
 }
 
+async function loadEchoJourneyState(userId: string): Promise<{
+  pendingProposal: boolean;
+  unreadConnection: { id: string; unreadCount: number } | null;
+}> {
+  const [proposal] = await db
+    .select({ id: matchProposalsTable.id })
+    .from(matchProposalsTable)
+    .where(
+      and(
+        eq(matchProposalsTable.userId, userId),
+        eq(matchProposalsTable.status, "proposed"),
+      ),
+    )
+    .orderBy(desc(matchProposalsTable.createdAt))
+    .limit(1);
+
+  const connections = await db
+    .select({ id: matchConnectionsTable.id })
+    .from(matchConnectionsTable)
+    .where(
+      and(
+        eq(matchConnectionsTable.status, "active"),
+        or(
+          eq(matchConnectionsTable.userLowId, userId),
+          eq(matchConnectionsTable.userHighId, userId),
+        ),
+      ),
+    )
+    .orderBy(
+      desc(matchConnectionsTable.lastMessageAt),
+      desc(matchConnectionsTable.createdAt),
+    )
+    .limit(50);
+
+  for (const connection of connections) {
+    const [unread] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(connectionMessagesTable)
+      .where(
+        and(
+          eq(connectionMessagesTable.connectionId, connection.id),
+          ne(connectionMessagesTable.senderUserId, userId),
+          isNull(connectionMessagesTable.readAt),
+        ),
+      );
+    const unreadCount = Number(unread?.count ?? 0);
+    if (unreadCount > 0) {
+      return {
+        pendingProposal: Boolean(proposal),
+        unreadConnection: { id: connection.id, unreadCount },
+      };
+    }
+  }
+
+  return {
+    pendingProposal: Boolean(proposal),
+    unreadConnection: null,
+  };
+}
+
 router.get("/me/companion", async (req, res): Promise<void> => {
   const userId = req.user?.id;
   if (!userId) {
@@ -264,7 +328,10 @@ router.get("/me/companion", async (req, res): Promise<void> => {
   const persona = normalizePersona(state?.persona);
   const candor = clampCandor(state?.candor);
 
-  const openCommitments = await loadOpenCommitments(userId);
+  const [openCommitments, journeyState] = await Promise.all([
+    loadOpenCommitments(userId),
+    loadEchoJourneyState(userId),
+  ]);
   const now = Date.now();
   const view = buildCompanionView({
     portrait,
@@ -279,6 +346,22 @@ router.get("/me/companion", async (req, res): Promise<void> => {
             ? new Date(c.dueAt).getTime() < now
             : false,
     })),
+  });
+
+  const overdueCommitment =
+    openCommitments.find((commitment) => {
+      if (!commitment.dueAt) return false;
+      const dueAt =
+        commitment.dueAt instanceof Date
+          ? commitment.dueAt.getTime()
+          : new Date(commitment.dueAt).getTime();
+      return dueAt < now;
+    })?.body ?? null;
+  const nextMove = chooseEchoNextMove({
+    pendingProposal: journeyState.pendingProposal,
+    unreadConnection: journeyState.unreadConnection,
+    overdueCommitment,
+    profileMove: view.oneThing,
   });
 
   const observations = await db
@@ -309,7 +392,7 @@ router.get("/me/companion", async (req, res): Promise<void> => {
       greeting: view.greeting,
       read: view.read,
       challenge: view.challenge,
-      nextMove: view.oneThing,
+      nextMove,
       readinessScore: view.readinessScore,
       threshold: view.threshold,
       eligible: view.eligible,
