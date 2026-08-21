@@ -141,7 +141,7 @@ export const MEMBER_DATA_TABLE_NAMES = MEMBER_DATA_REGISTRY.map(
   (entry) => entry.table,
 );
 
-function identifier(name: string): SQL {
+function identifier(name: string) {
   return sql.identifier(name);
 }
 
