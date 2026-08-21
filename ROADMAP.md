@@ -54,18 +54,18 @@ Repository evidence on audit head `fc341c6`:
 
 ### Authoritative beta capability matrix
 
-| Member job / platform area   | Actual code truth                                                                                                                                                                                                                                                                | Status now                                                 | Blocking proof or work                                                                                                                                                    |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Echo orchestration           | Companion API owns one next move across proposals, unread conversations, commitments, reviewed learning, and profile uncertainty. Confirm/correct/dismiss writes use the existing wellness record.                                                                               | **Code-proven; runtime pending**                           | Prove a hosted Echo-directed journey and verify every selected write refreshes My MatchLab/Journey across devices.                                                        |
-| Signed-in shell              | Five overview destinations exist. The audit found persistent numeric readiness, reward, and competing matching-action components plus a broad legacy “Show all” drawer. Batch 8E removed those active-shell conflicts and kept only deliberate secondary workspaces.             | **Code-proven; route disposition ongoing**                 | Prove the corrected shell in the connected runtime; then complete the remaining route disposition ledger instead of exposing legacy route parity.                         |
-| My MatchLab / Mirror         | Account summary, Mirror, wellness, journal, photos, imports, consent, matching, and billing contracts are durable. My MatchLab reads real account state.                                                                                                                         | **Partial**                                                | Consolidate the selected sources into one understandable member model; prove correction, permission changes, and cross-device visibility.                                 |
-| Quiz Lab and bounded Play    | Quiz results persist/dedupe/claim and write Journey events; six selected Play families have durable records represented in Journey; selected Play deletion is tested.                                                                                                            | **Code-proven; runtime and export pending**                | Hosted signup/claim/retake proof, explicit wellness-save acceptance, and export parity.                                                                                   |
-| Matches                      | Proposal decisions, mutual yes, reveal consent, connections, messages, unmatch, report/block, reveal-safe profile, starters, and date ideas are implemented. Batch 8F adds persisted date planning/completion, a member-private connection debrief, and tentative Echo learning. | **Implementation complete; repository validation pending** | Pass the full gate, then prove the proposal-to-learning journey in the connected runtime.                                                                                 |
-| Commercial plans and billing | Member/Insight/Match/Guided catalog, Match/Guided search entitlement, Stripe lifecycle reconciliation, Checkout, status, and Portal exist; Guided selling is disabled.                                                                                                           | **Code-proven; runtime pending**                           | Configure real test-mode Prices/webhook/OIDC/domains and prove purchase, cancellation, payment recovery, and founder-grant behavior.                                      |
-| Privacy and member control   | Session revocation and broad account deletion exist; selected Play deletion is covered. Export currently includes only user, audits, profiles, coaching messages, insights, journal, and post-date notes.                                                                        | **Partial; full-beta blocker**                             | Build one first-party data registry for export/deletion/retention/consent revocation and add drift tests for every member-data table.                                     |
-| Production operations        | Connected-beta startup validation exists and fails closed on key config errors.                                                                                                                                                                                                  | **Pending; full-beta blocker**                             | Move jobs out of API replicas, use versioned migrations, add headers/CSP/rate limits/body scopes, prove backup/restore, monitoring/rollback, and staff safety escalation. |
-| Connected acceptance         | No hosted build currently proves signup through debrief, billing recovery, account claim, deletion/export, or Daniel + Lissa review.                                                                                                                                             | **Not proven**                                             | Deploy one canonical runtime and execute the blocking browser journeys against it.                                                                                        |
-| Landing page                 | Earlier copy was partially aligned, but final promise/design alignment is intentionally deferred.                                                                                                                                                                                | **Deferred by founder decision**                           | Update only after the signed-in backend-connected experience is accepted.                                                                                                 |
+| Member job / platform area   | Actual code truth                                                                                                                                                                                                                                                    | Status now                                                 | Blocking proof or work                                                                                                                                                      |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Echo orchestration           | Companion API owns one next move across proposals, unread conversations, commitments, reviewed learning, and profile uncertainty. Confirm/correct/dismiss writes use the existing wellness record.                                                                   | **Code-proven; runtime pending**                           | Prove a hosted Echo-directed journey and verify every selected write refreshes My MatchLab/Journey across devices.                                                          |
+| Signed-in shell              | Five overview destinations exist. The audit found persistent numeric readiness, reward, and competing matching-action components plus a broad legacy “Show all” drawer. Batch 8E removed those active-shell conflicts and kept only deliberate secondary workspaces. | **Code-proven; route disposition ongoing**                 | Prove the corrected shell in the connected runtime; then complete the remaining route disposition ledger instead of exposing legacy route parity.                           |
+| My MatchLab / Mirror         | Account summary, Mirror, wellness, journal, photos, imports, consent, matching, and billing contracts are durable. My MatchLab reads real account state.                                                                                                             | **Partial**                                                | Consolidate the selected sources into one understandable member model; prove correction, permission changes, and cross-device visibility.                                   |
+| Quiz Lab and bounded Play    | Quiz results persist/dedupe/claim and write Journey events; six selected Play families have durable records represented in Journey; selected Play deletion is tested.                                                                                                | **Code-proven; runtime and export pending**                | Hosted signup/claim/retake proof, explicit wellness-save acceptance, and export parity.                                                                                     |
+| Matches                      | Proposal decisions, mutual yes, reveal consent, connections, messages, unmatch, report/block, reveal-safe profile, starters, date ideas, persisted date completion, private debrief, and confirm-before-learning are implemented.                                    | **Code-proven; runtime pending**                           | Prove the proposal-to-learning journey in the connected runtime.                                                                                                            |
+| Commercial plans and billing | Member/Insight/Match/Guided catalog, Match/Guided search entitlement, Stripe lifecycle reconciliation, Checkout, status, and Portal exist; Guided selling is disabled.                                                                                               | **Code-proven; runtime pending**                           | Configure real test-mode Prices/webhook/OIDC/domains and prove purchase, cancellation, payment recovery, and founder-grant behavior.                                        |
+| Privacy and member control   | Batch 9B adds one registry used by export and both deletion paths, explicit retention/consent dispositions, secret sanitization, AI-revocation cleanup, and schema drift detection.                                                                                  | **Implementation complete; repository validation pending** | Pass the full gate, then prove export, consent revocation, and deletion against one hosted account; object-storage deletion and operational retention evidence remain open. |
+| Production operations        | Connected-beta startup validation exists and fails closed on key config errors.                                                                                                                                                                                      | **Pending; full-beta blocker**                             | Move jobs out of API replicas, use versioned migrations, add headers/CSP/rate limits/body scopes, prove backup/restore, monitoring/rollback, and staff safety escalation.   |
+| Connected acceptance         | No hosted build currently proves signup through debrief, billing recovery, account claim, deletion/export, or Daniel + Lissa review.                                                                                                                                 | **Not proven**                                             | Deploy one canonical runtime and execute the blocking browser journeys against it.                                                                                          |
+| Landing page                 | Earlier copy was partially aligned, but final promise/design alignment is intentionally deferred.                                                                                                                                                                    | **Deferred by founder decision**                           | Update only after the signed-in backend-connected experience is accepted.                                                                                                   |
 
 ### Roadmap reconciliation delta — 2026-08-21
 
@@ -688,7 +688,7 @@ and connected-runtime acceptance. The landing page remains last.
 
 ## Batch 8F — Persisted date, debrief, and Echo learning
 
-Status: **Implementation complete; repository validation pending**
+Status: **Code-proven; connected-runtime acceptance pending**
 
 Goal: close the gap where Matches presented date and debrief stages that the
 connection record could not remember.
@@ -722,13 +722,74 @@ connection record could not remember.
 | Product surface   | The debrief still returned to Wingman-era tools                                                             | The flow returns to Echo, Matches, and Journey                                            | Consolidation means preserving the capability inside the approved experience |
 | Scope             | A general multi-date relationship tracker was not selected for beta                                         | The beta state machine covers the first considered introduction through its first debrief | Close the promised journey without expanding into relationship management    |
 
-After this batch passes repository validation, the next code lane is the
-authoritative first-party privacy registry, followed by connected-runtime
-acceptance. The landing page remains last.
+CI run #138 passed full monorepo typecheck, lint, schema drift, voice lint, web
+tests/build, the complete Postgres-backed API suite, and the versioned migration.
+The next lane is the authoritative first-party privacy registry, followed by
+connected-runtime acceptance. The landing page remains last.
+
+## Batch 9B — Authoritative first-party privacy registry
+
+Status: **Implementation complete; repository validation pending**
+
+- Declare each first-party member-data table once with its ownership rule,
+  export treatment, retention class, and AI-consent disposition.
+- Build downloadable export datasets from that registry while omitting OAuth
+  and one-time secrets and sanitizing session, push, verification, and Stripe
+  references.
+- Use the same registry as a final hard-delete safety net in both account
+  closing paths, preserving the existing member receipt while catching tables
+  added after the legacy lists.
+- Remove unconfirmed wellness inference and undismissed Echo observations when
+  account-level AI content consent is revoked; future AI calls remain blocked
+  by the existing consent gate.
+- Discover directly user-linked Drizzle tables in a drift test and fail when a
+  new table has no privacy disposition.
+- Prove deletion for previously uncovered Wingman ratings, Cosmic charts,
+  verification state, and Mirror digest preferences with Postgres coverage.
+
+This is an engineering completeness control, not a legal-certification claim.
+Connected acceptance, object-storage deletion evidence, and scheduled retention
+operations remain separate launch gates.
 
 ## Definition of done
 
 The milestone is complete when:
 
 - Only the five approved primary destinations appear in signed-in navigation.
-- Echo is persistent and provides a useful next action without ove
+- Echo is persistent and provides a useful next action without overclaiming.
+- Every original capability has an explicit integrated, contextual, or parked
+  disposition; no working behavior disappears silently.
+- Every capability selected for beta passes its route-to-record-to-learning
+  matrix, including persistence, ownership/claim, profile or Journey effect,
+  consent/deletion, and connected end-to-end acceptance.
+- No browser-local result or readiness counter is treated as proof of durable
+  profile integration.
+- Readiness, search activity, and market availability are visibly distinct.
+- Member, Insight, Match, and Guided are represented by one backend contract;
+  Match/Guided search access is enforced server-side.
+- Stripe lifecycle events idempotently grant, preserve, or revoke non-beta paid
+  access without overriding founder grants or selling unstaffed Guided service.
+- Landing and signed-in experiences tell the same story.
+- Automated typecheck, web tests, API tests, schema drift, lint, and voice lint
+  pass on the final branch.
+- Daniel and Lissa complete an acceptance review of the same canonical build.
+- A connected beta refuses to boot unless its provider-neutral runtime, non-Replit
+  OIDC, secure origin boundary, Postgres, Stripe test mode, and canonical Price IDs
+  pass the startup preflight.
+- A connected beta proves web, API, auth/session, Postgres, and plan assignment
+  together; a static artifact does not satisfy this gate.
+- Full beta runs scheduled work through a single-executor model, deploys only
+  versioned database migrations, and has verified HTTP hardening, monitoring,
+  backup/restore, privacy export/deletion, and staffed safety operations.
+- The next milestone is selected from evidence, not from feature enthusiasm.
+
+## Explicitly parked during this milestone
+
+- Broad visual reinvention.
+- New primary navigation destinations.
+- Dating-app OAuth.
+- After-dark mode.
+- Connector expansion that does not directly unblock the approved v1 journey.
+- Monetization changes unrelated to validating the simplified shell.
+- Selling or reviving the legacy Signal Audit, Dating Reset, or Wingman offers as
+  canonical beta packages.

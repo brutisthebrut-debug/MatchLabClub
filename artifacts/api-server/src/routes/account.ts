@@ -72,6 +72,11 @@ import { describeIpLocation } from "../lib/geoLocation";
 import { sendMail } from "../lib/mailer";
 import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
 import { purgePlayData } from "../lib/playPrivacy";
+import {
+  exportMemberDatasets,
+  purgeRegisteredMemberData,
+  purgeRevokedAiDerivedData,
+} from "../lib/memberDataRegistry";
 
 const router: IRouter = Router();
 
@@ -85,7 +90,10 @@ function getOrigin(req: Request): string {
   return originFor(req);
 }
 
-function sendExpiredExport(req: Request, res: import("express").Response): void {
+function sendExpiredExport(
+  req: Request,
+  res: import("express").Response,
+): void {
   sendExpiredLink(req, res, {
     pageTitle: "Export link expired, MatchLab Club",
     heading: "This export link can&rsquo;t be used anymore",
@@ -120,12 +128,7 @@ router.get("/account/sessions", async (req, res): Promise<void> => {
       channel: sessionsTable.channel,
     })
     .from(sessionsTable)
-    .where(
-      and(
-        eq(sessionsTable.userId, userId),
-        gt(sessionsTable.expire, now),
-      ),
-    )
+    .where(and(eq(sessionsTable.userId, userId), gt(sessionsTable.expire, now)))
     .orderBy(desc(sessionsTable.lastSeenAt));
 
   res.json(
@@ -160,9 +163,7 @@ router.delete("/account/sessions", async (req, res): Promise<void> => {
     .where(
       and(
         eq(sessionsTable.userId, userId),
-        callerSid
-          ? ne(sessionsTable.sid, callerSid)
-          : sql`true`,
+        callerSid ? ne(sessionsTable.sid, callerSid) : sql`true`,
       ),
     )
     .returning({ sid: sessionsTable.sid });
@@ -195,10 +196,7 @@ router.delete("/account/sessions/:sid", async (req, res): Promise<void> => {
   const deleted = await db
     .delete(sessionsTable)
     .where(
-      and(
-        eq(sessionsTable.sid, targetSid),
-        eq(sessionsTable.userId, userId),
-      ),
+      and(eq(sessionsTable.sid, targetSid), eq(sessionsTable.userId, userId)),
     )
     .returning({ sid: sessionsTable.sid });
 
@@ -213,10 +211,7 @@ router.delete("/account/sessions/:sid", async (req, res): Promise<void> => {
     res.clearCookie(SESSION_COOKIE, { path: "/" });
   }
 
-  req.log.info(
-    { userId, targetSid },
-    "Revoked a single session for user",
-  );
+  req.log.info({ userId, targetSid }, "Revoked a single session for user");
 
   res.json(
     RevokeOneSessionResponse.parse({
@@ -234,32 +229,33 @@ router.get("/account/summary", async (req, res): Promise<void> => {
 
   const userId = req.user.id;
 
-  const [audits, profiles, messages, insights, journalEntries, postDateNotes] = await Promise.all([
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(auditsTable)
-      .where(eq(auditsTable.userId, userId)),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(profilesTable)
-      .where(eq(profilesTable.userId, userId)),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(messageCoachingSessionsTable)
-      .where(eq(messageCoachingSessionsTable.userId, userId)),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(emailInsightsTable)
-      .where(eq(emailInsightsTable.userId, userId)),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(journalEntriesTable)
-      .where(eq(journalEntriesTable.userId, userId)),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(postDateNotesTable)
-      .where(eq(postDateNotesTable.userId, userId)),
-  ]);
+  const [audits, profiles, messages, insights, journalEntries, postDateNotes] =
+    await Promise.all([
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(auditsTable)
+        .where(eq(auditsTable.userId, userId)),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(profilesTable)
+        .where(eq(profilesTable.userId, userId)),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(messageCoachingSessionsTable)
+        .where(eq(messageCoachingSessionsTable.userId, userId)),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.userId, userId)),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(journalEntriesTable)
+        .where(eq(journalEntriesTable.userId, userId)),
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(postDateNotesTable)
+        .where(eq(postDateNotesTable.userId, userId)),
+    ]);
 
   res.json(
     GetAccountSummaryResponse.parse({
@@ -274,7 +270,15 @@ router.get("/account/summary", async (req, res): Promise<void> => {
 });
 
 async function buildExportPayload(userId: string) {
-  const [userRow, audits, profiles, messages, insights, journalEntries, postDateNotes] = await Promise.all([
+  const [
+    userRow,
+    audits,
+    profiles,
+    messages,
+    insights,
+    journalEntries,
+    postDateNotes,
+  ] = await Promise.all([
     db.select().from(usersTable).where(eq(usersTable.id, userId)),
     db
       .select()
@@ -311,6 +315,8 @@ async function buildExportPayload(userId: string) {
   const u = userRow[0];
   if (!u) return null;
 
+  const datasets = await exportMemberDatasets(db, userId, u.email);
+
   return ExportMyDataResponse.parse({
     exportedAt: new Date().toISOString(),
     user: {
@@ -342,6 +348,7 @@ async function buildExportPayload(userId: string) {
       updatedAt: toIso(p.updatedAt),
       deletedAt: p.deletedAt ? toIso(p.deletedAt) : null,
     })),
+    datasets,
   });
 }
 
@@ -567,10 +574,7 @@ router.get(
 
     const filename = `nldc-data-export-${new Date().toISOString().split("T")[0]}.json`;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`,
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(JSON.stringify(payload, null, 2));
 
     if (payload.user.email) {
@@ -636,7 +640,9 @@ router.delete("/account", async (req, res): Promise<void> => {
   // first-party personal reflections and must be hard-deleted, including any
   // soft-deleted rows still sitting in the user's trash.
   await Promise.all([
-    db.delete(journalEntriesTable).where(eq(journalEntriesTable.userId, userId)),
+    db
+      .delete(journalEntriesTable)
+      .where(eq(journalEntriesTable.userId, userId)),
     db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
     db.delete(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
     db
@@ -657,14 +663,26 @@ router.delete("/account", async (req, res): Promise<void> => {
   // account goes. Each is best-effort independent; one failure shouldn't
   // strand the rest.
   await Promise.all([
-    db.delete(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
-    db.delete(wellnessInferencesTable).where(eq(wellnessInferencesTable.userId, userId)),
+    db
+      .delete(wellnessAnswersTable)
+      .where(eq(wellnessAnswersTable.userId, userId)),
+    db
+      .delete(wellnessInferencesTable)
+      .where(eq(wellnessInferencesTable.userId, userId)),
     db.delete(wellnessTagsTable).where(eq(wellnessTagsTable.userId, userId)),
-    db.delete(compatibilityReadsTable).where(eq(compatibilityReadsTable.userId, userId)),
-    db.delete(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)),
-    db.delete(coachFollowUpsTable).where(eq(coachFollowUpsTable.userId, userId)),
+    db
+      .delete(compatibilityReadsTable)
+      .where(eq(compatibilityReadsTable.userId, userId)),
+    db
+      .delete(importedSourcesTable)
+      .where(eq(importedSourcesTable.userId, userId)),
+    db
+      .delete(coachFollowUpsTable)
+      .where(eq(coachFollowUpsTable.userId, userId)),
     db.delete(waitlistTable).where(eq(waitlistTable.userId, userId)),
-    db.delete(loginNotificationsTable).where(eq(loginNotificationsTable.userId, userId)),
+    db
+      .delete(loginNotificationsTable)
+      .where(eq(loginNotificationsTable.userId, userId)),
     purgePlayData(db, userId),
     db
       .delete(connectorConnectionsTable)
@@ -677,8 +695,12 @@ router.delete("/account", async (req, res): Promise<void> => {
   // notification feed, and channel preferences (including any phone number for
   // SMS). All first-party personal data; wiped with the account.
   await Promise.all([
-    db.delete(companionStateTable).where(eq(companionStateTable.userId, userId)),
-    db.delete(companionMessagesTable).where(eq(companionMessagesTable.userId, userId)),
+    db
+      .delete(companionStateTable)
+      .where(eq(companionStateTable.userId, userId)),
+    db
+      .delete(companionMessagesTable)
+      .where(eq(companionMessagesTable.userId, userId)),
     db
       .delete(companionObservationsTable)
       .where(eq(companionObservationsTable.userId, userId)),
@@ -743,6 +765,11 @@ router.delete("/account", async (req, res): Promise<void> => {
   await db
     .delete(profilePhotosTable)
     .where(eq(profilePhotosTable.userId, userId));
+
+  // One authoritative registry is the final deletion safety net for both
+  // account-closing paths. It catches new or previously missed first-party
+  // tables while the legacy counts above remain compatible with the receipt.
+  await purgeRegisteredMemberData(db, userId, recipient?.email ?? null);
 
   // Delete every active session belonging to this user (session JSONB
   // payload stores `user.id`).
@@ -862,7 +889,9 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
 
   const parsed = DeleteMyAccountConfirmedBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Confirmation is required to delete your account." });
+    res
+      .status(400)
+      .json({ error: "Confirmation is required to delete your account." });
     return;
   }
 
@@ -876,7 +905,8 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
   const userEmail = userRow[0]?.email ?? null;
   if (!userEmail) {
     res.status(400).json({
-      error: "Your account has no email on file, so we can't confirm the delete.",
+      error:
+        "Your account has no email on file, so we can't confirm the delete.",
     });
     return;
   }
@@ -884,7 +914,8 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
   const provided = parsed.data.confirmation.trim().toLowerCase();
   if (provided !== expected) {
     res.status(400).json({
-      error: "That didn't match your account email. Type it exactly to confirm.",
+      error:
+        "That didn't match your account email. Type it exactly to confirm.",
     });
     return;
   }
@@ -1229,6 +1260,15 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .returning({ userId: companionChannelPrefsTable.userId });
       tables["companion_channel_prefs"] = companionPrefsDel.length;
 
+      const registryCounts = await purgeRegisteredMemberData(
+        tx,
+        userId,
+        userEmail,
+      );
+      for (const [table, count] of Object.entries(registryCounts)) {
+        tables[table] = (tables[table] ?? 0) + count;
+      }
+
       // ── Finally the user row itself ───────────────────────────────────
       const userDel = await tx
         .delete(usersTable)
@@ -1337,6 +1377,9 @@ router.post("/me/consent/ai-content", async (req, res): Promise<void> => {
       grantedAt: usersTable.aiContentConsentGrantedAt,
       revokedAt: usersTable.aiContentConsentRevokedAt,
     });
+  if (!parsed.data.granted) {
+    await purgeRevokedAiDerivedData(db, req.user.id);
+  }
   req.log.info(
     { userId: req.user.id, granted: parsed.data.granted },
     "User updated AI content consent",

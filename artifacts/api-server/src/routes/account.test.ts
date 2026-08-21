@@ -1,11 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import express, {
   type Express,
   type Request,
@@ -19,16 +12,20 @@ import {
   db,
   pool,
   careDialectProfilesTable,
+  cosmicChartsTable,
   dailySparkAnswersTable,
   dataExportTokensTable,
   flagSelectionsTable,
   importedSourcesTable,
   journeyEventsTable,
+  mirrorDigestPrefsTable,
   predictionResponsesTable,
   scenarioResponsesTable,
   timeCapsulesTable,
+  userVerificationsTable,
   usersTable,
   wyrAnswersTable,
+  wingmanSelfRatingsTable,
 } from "@workspace/db";
 import accountRouter from "./account";
 
@@ -202,7 +199,6 @@ describe("GET /api/account/export/download/:token", () => {
   });
 });
 
-
 describe("POST /api/me/account/delete Play privacy", () => {
   it("purges every selected Play record and its Journey instrumentation", async () => {
     const userId = `test-play-delete-${crypto.randomBytes(6).toString("hex")}`;
@@ -285,7 +281,10 @@ describe("POST /api/me/account/delete Play privacy", () => {
     });
 
     const remaining = await Promise.all([
-      db.select().from(wyrAnswersTable).where(eq(wyrAnswersTable.userId, userId)),
+      db
+        .select()
+        .from(wyrAnswersTable)
+        .where(eq(wyrAnswersTable.userId, userId)),
       db
         .select()
         .from(dailySparkAnswersTable)
@@ -320,6 +319,79 @@ describe("POST /api/me/account/delete Play privacy", () => {
         .where(eq(importedSourcesTable.userId, userId)),
     ]);
 
+    expect(remaining.every((rows) => rows.length === 0)).toBe(true);
+  });
+});
+
+describe("POST /api/me/account/delete registry coverage", () => {
+  it("purges first-party tables that were outside the legacy delete lists", async () => {
+    const userId = `test-registry-delete-${crypto.randomBytes(6).toString("hex")}`;
+    const email = `${userId}@example.com`;
+
+    await db.insert(usersTable).values({ id: userId, email });
+    await Promise.all([
+      db.insert(wingmanSelfRatingsTable).values({
+        userId,
+        warmth: 3,
+        humor: 3,
+        drive: 3,
+        openness: 3,
+        steadiness: 3,
+      }),
+      db.insert(cosmicChartsTable).values({
+        userId,
+        birthDate: "1990-01-01",
+        birthPlace: "New York, NY",
+        birthLat: 40.7128,
+        birthLng: -74.006,
+        placements: {
+          mode: "sunOnly",
+          sun: { sign: "Capricorn", degree: 10 },
+          moon: null,
+          rising: null,
+          midheaven: null,
+          bodies: [],
+          traits: { novelty: 0.5, stability: 0.5, expression: 0.5, depth: 0.5 },
+          elements: { fire: 0, earth: 1, air: 0, water: 0 },
+          modalities: { cardinal: 1, fixed: 0, mutable: 0 },
+        },
+      }),
+      db.insert(userVerificationsTable).values({ userId }),
+      db.insert(mirrorDigestPrefsTable).values({ userId }),
+    ]);
+
+    const res = await request(app)
+      .post("/api/me/account/delete")
+      .set("x-test-user-id", userId)
+      .send({ confirmation: email });
+
+    expect(res.status).toBe(200);
+    expect(res.body.tables).toMatchObject({
+      wingman_self_ratings: 1,
+      cosmic_charts: 1,
+      user_verifications: 1,
+      mirror_digest_prefs: 1,
+      users: 1,
+    });
+
+    const remaining = await Promise.all([
+      db
+        .select()
+        .from(wingmanSelfRatingsTable)
+        .where(eq(wingmanSelfRatingsTable.userId, userId)),
+      db
+        .select()
+        .from(cosmicChartsTable)
+        .where(eq(cosmicChartsTable.userId, userId)),
+      db
+        .select()
+        .from(userVerificationsTable)
+        .where(eq(userVerificationsTable.userId, userId)),
+      db
+        .select()
+        .from(mirrorDigestPrefsTable)
+        .where(eq(mirrorDigestPrefsTable.userId, userId)),
+    ]);
     expect(remaining.every((rows) => rows.length === 0)).toBe(true);
   });
 });

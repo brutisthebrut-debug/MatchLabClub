@@ -139,12 +139,13 @@ preserved Flags/Care Dialect sources count toward consistency days. Batch 8B is
 code-complete and green, but hosted claim/cross-device proof and Play-table
 privacy export/deletion parity remain open beta gates.
 
-Batch 9A now closes account-deletion parity for selected Play data. Both
-deletion endpoints use one purge registry, and a Postgres regression proves the
-direct activity rows, Care Dialect, Journey instrumentation, Quiz Lab, and This
-or That records are removed with the account. This does not close the whole
-privacy gate: downloadable export, retention, and consent-revocation parity
-still require a complete first-party table registry and drift protection.
+Batch 9A closes account-deletion parity for selected Play data. Batch 9B extends
+that into one first-party registry used by downloadable export and both account
+deletion paths. Every registered table declares export, retention, and consent
+treatment; credentials are omitted or sanitized, AI-consent revocation clears
+tentative derived records, and schema drift fails when a new user-linked table
+has no disposition. Hosted export/delete proof, object-storage cleanup, and
+operational retention evidence remain open launch gates.
 
 Matches is now following the same route-to-record-to-learning rule. A completed
 date brings the member back to one Echo-led debrief; the saved reflection is

@@ -136,22 +136,20 @@ export interface AuditInput {
   biggestChallenge?: string | null;
 }
 
-export type AuditStatus = typeof AuditStatus[keyof typeof AuditStatus];
-
+export type AuditStatus = (typeof AuditStatus)[keyof typeof AuditStatus];
 
 export const AuditStatus = {
-  pending: 'pending',
-  generating: 'generating',
-  complete: 'complete',
-  error: 'error',
+  pending: "pending",
+  generating: "generating",
+  complete: "complete",
+  error: "error",
 } as const;
 
-export type AuditSource = typeof AuditSource[keyof typeof AuditSource];
-
+export type AuditSource = (typeof AuditSource)[keyof typeof AuditSource];
 
 export const AuditSource = {
-  manual: 'manual',
-  screenshot: 'screenshot',
+  manual: "manual",
+  screenshot: "screenshot",
 } as const;
 
 export interface RewrittenPrompt {
@@ -160,13 +158,13 @@ export interface RewrittenPrompt {
   tip: string;
 }
 
-export type PhotoGuidanceItemStatus = typeof PhotoGuidanceItemStatus[keyof typeof PhotoGuidanceItemStatus];
-
+export type PhotoGuidanceItemStatus =
+  (typeof PhotoGuidanceItemStatus)[keyof typeof PhotoGuidanceItemStatus];
 
 export const PhotoGuidanceItemStatus = {
-  good: 'good',
-  needs_work: 'needs_work',
-  missing: 'missing',
+  good: "good",
+  needs_work: "needs_work",
+  missing: "missing",
 } as const;
 
 export interface PhotoGuidanceItem {
@@ -195,13 +193,13 @@ export interface ReportChangeSummary {
   removedRisks: string[];
 }
 
-export type PhotoObservationAssessment = typeof PhotoObservationAssessment[keyof typeof PhotoObservationAssessment];
-
+export type PhotoObservationAssessment =
+  (typeof PhotoObservationAssessment)[keyof typeof PhotoObservationAssessment];
 
 export const PhotoObservationAssessment = {
-  strong: 'strong',
-  okay: 'okay',
-  needs_work: 'needs_work',
+  strong: "strong",
+  okay: "okay",
+  needs_work: "needs_work",
 } as const;
 
 export interface PhotoObservation {
@@ -261,12 +259,12 @@ export interface AuditReport {
 /**
  * The field that best matched the search query.
  */
-export type AuditMatchContextMatchedField = typeof AuditMatchContextMatchedField[keyof typeof AuditMatchContextMatchedField];
-
+export type AuditMatchContextMatchedField =
+  (typeof AuditMatchContextMatchedField)[keyof typeof AuditMatchContextMatchedField];
 
 export const AuditMatchContextMatchedField = {
-  name: 'name',
-  bio: 'bio',
+  name: "name",
+  bio: "bio",
 } as const;
 
 export interface AuditMatchContext {
@@ -301,9 +299,9 @@ export interface Audit {
   /** @nullable */
   biggestChallenge?: string | null;
   /**
-     * Dating app the audit originated from (e.g. "Hinge"), detected from OCR or supplied by the client.
-     * @nullable
-     */
+   * Dating app the audit originated from (e.g. "Hinge"), detected from OCR or supplied by the client.
+   * @nullable
+   */
   sourceApp?: string | null;
   status: AuditStatus;
   source: AuditSource;
@@ -315,9 +313,9 @@ export interface Audit {
    */
   report?: AuditReport | null;
   /**
-     * ISO timestamp the stored report was generated. Null if no report has been generated yet.
-     * @nullable
-     */
+   * ISO timestamp the stored report was generated. Null if no report has been generated yet.
+   * @nullable
+   */
   reportGeneratedAt?: string | null;
   /** The mini-report from the immediately prior regeneration, kept so
   users can see what changed. Null when the audit has never been
@@ -325,14 +323,14 @@ export interface Audit {
    */
   previousReport?: AuditReport | null;
   /**
-     * Readiness score from the prior regeneration (null if never regenerated).
-     * @nullable
-     */
+   * Readiness score from the prior regeneration (null if never regenerated).
+   * @nullable
+   */
   previousReadinessScore?: number | null;
   /**
-     * ISO timestamp of the prior regeneration's report (null if never regenerated).
-     * @nullable
-     */
+   * ISO timestamp of the prior regeneration's report (null if never regenerated).
+   * @nullable
+   */
   previousReportGeneratedAt?: string | null;
   createdAt: string;
   /**
@@ -367,9 +365,9 @@ export interface CorrectSourceAppInput {
 export interface CorrectSourceAppResult {
   success: true;
   /**
-     * The updated sourceApp value now stored on the audit.
-     * @nullable
-     */
+   * The updated sourceApp value now stored on the audit.
+   * @nullable
+   */
   sourceApp: string | null;
 }
 
@@ -383,9 +381,9 @@ export interface AuditReportVersion {
    */
   changeSummary?: ReportChangeSummary | null;
   /**
-     * Engine version tag at the time this version was produced.
-     * @nullable
-     */
+   * Engine version tag at the time this version was produced.
+   * @nullable
+   */
   engineVersion?: string | null;
   /** ISO timestamp this version was generated. */
   generatedAt: string;
@@ -419,15 +417,15 @@ export interface ScreenshotExtractInput {
   imageBase64: string;
 }
 
-export type ScreenshotExtractResultLowConfidenceFieldsItem = typeof ScreenshotExtractResultLowConfidenceFieldsItem[keyof typeof ScreenshotExtractResultLowConfidenceFieldsItem];
-
+export type ScreenshotExtractResultLowConfidenceFieldsItem =
+  (typeof ScreenshotExtractResultLowConfidenceFieldsItem)[keyof typeof ScreenshotExtractResultLowConfidenceFieldsItem];
 
 export const ScreenshotExtractResultLowConfidenceFieldsItem = {
-  firstName: 'firstName',
-  age: 'age',
-  sourceApp: 'sourceApp',
-  bio: 'bio',
-  prompts: 'prompts',
+  firstName: "firstName",
+  age: "age",
+  sourceApp: "sourceApp",
+  bio: "bio",
+  prompts: "prompts",
 } as const;
 
 export interface ScreenshotExtractResult {
@@ -456,12 +454,12 @@ export interface ChatScreenshotExtractInput {
 /**
  * Who sent this message — "them" for the match, "you" for the user.
  */
-export type ChatSpeakerTurnSpeaker = typeof ChatSpeakerTurnSpeaker[keyof typeof ChatSpeakerTurnSpeaker];
-
+export type ChatSpeakerTurnSpeaker =
+  (typeof ChatSpeakerTurnSpeaker)[keyof typeof ChatSpeakerTurnSpeaker];
 
 export const ChatSpeakerTurnSpeaker = {
-  them: 'them',
-  you: 'you',
+  them: "them",
+  you: "you",
 } as const;
 
 export interface ChatSpeakerTurn {
@@ -478,9 +476,9 @@ export interface ChatScreenshotExtractResult {
    */
   conversationText: string;
   /**
-     * Detected source app — "Hinge", "Bumble", "Tinder", or null when undetectable.
-     * @nullable
-     */
+   * Detected source app — "Hinge", "Bumble", "Tinder", or null when undetectable.
+   * @nullable
+   */
   sourceApp?: string | null;
   rawOcrText: string;
   /** Ordered list of inferred speaker turns extracted from the screenshot.
@@ -533,26 +531,26 @@ export interface ScreenshotAuditInput {
      */
   imageMediaType?: string | null;
   /**
-     * Optional name (e.g. the match's first name pulled from the profile).
-     * @nullable
-     */
+   * Optional name (e.g. the match's first name pulled from the profile).
+   * @nullable
+   */
   firstName?: string | null;
   /**
-     * Optional age, used when supplying corrected fields.
-     * @nullable
-     */
+   * Optional age, used when supplying corrected fields.
+   * @nullable
+   */
   age?: number | null;
   /** @nullable */
   datingGoal?: string | null;
   /**
-     * Which dating app the screenshot was taken from (e.g. "Hinge").
-     * @nullable
-     */
+   * Which dating app the screenshot was taken from (e.g. "Hinge").
+   * @nullable
+   */
   sourceApp?: string | null;
   /**
-     * Corrected bio text. When present, OCR is skipped.
-     * @nullable
-     */
+   * Corrected bio text. When present, OCR is skipped.
+   * @nullable
+   */
   bio?: string | null;
   /** Corrected prompts. Only used when `bio` is provided. */
   prompts?: string[];
@@ -631,18 +629,18 @@ export interface MessageCoachingInput {
   /** @nullable */
   goal?: string | null;
   /**
-     * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder"). Used to tune coach output.
-     * @nullable
-     */
+   * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder"). Used to tune coach output.
+   * @nullable
+   */
   sourceApp?: string | null;
 }
 
-export type MessageCoachingSessionStatus = typeof MessageCoachingSessionStatus[keyof typeof MessageCoachingSessionStatus];
-
+export type MessageCoachingSessionStatus =
+  (typeof MessageCoachingSessionStatus)[keyof typeof MessageCoachingSessionStatus];
 
 export const MessageCoachingSessionStatus = {
-  pending: 'pending',
-  complete: 'complete',
+  pending: "pending",
+  complete: "complete",
 } as const;
 
 export interface MessageCoachingSession {
@@ -653,9 +651,9 @@ export interface MessageCoachingSession {
   /** @nullable */
   goal?: string | null;
   /**
-     * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder").
-     * @nullable
-     */
+   * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder").
+   * @nullable
+   */
   sourceApp?: string | null;
   status: MessageCoachingSessionStatus;
   createdAt: string;
@@ -667,13 +665,13 @@ export interface SuggestedReply {
   rationale: string;
 }
 
-export type SafetyCheckRisk = typeof SafetyCheckRisk[keyof typeof SafetyCheckRisk];
-
+export type SafetyCheckRisk =
+  (typeof SafetyCheckRisk)[keyof typeof SafetyCheckRisk];
 
 export const SafetyCheckRisk = {
-  none: 'none',
-  low: 'low',
-  elevated: 'elevated',
+  none: "none",
+  low: "low",
+  elevated: "elevated",
 } as const;
 
 /**
@@ -707,51 +705,53 @@ stored.
  */
 export interface MessageSafetyCheckInput {
   /**
-     * @minLength 1
-     * @maxLength 4000
-     */
+   * @minLength 1
+   * @maxLength 4000
+   */
   draft: string;
   /**
-     * @maxLength 8000
-     * @nullable
-     */
+   * @maxLength 8000
+   * @nullable
+   */
   conversationContext?: string | null;
 }
 
 /**
  * @nullable
  */
-export type ReportUserInputSubjectType = typeof ReportUserInputSubjectType[keyof typeof ReportUserInputSubjectType] | null;
-
+export type ReportUserInputSubjectType =
+  | (typeof ReportUserInputSubjectType)[keyof typeof ReportUserInputSubjectType]
+  | null;
 
 export const ReportUserInputSubjectType = {
-  member: 'member',
-  off_platform: 'off_platform',
+  member: "member",
+  off_platform: "off_platform",
 } as const;
 
-export type ReportUserInputReason = typeof ReportUserInputReason[keyof typeof ReportUserInputReason];
-
+export type ReportUserInputReason =
+  (typeof ReportUserInputReason)[keyof typeof ReportUserInputReason];
 
 export const ReportUserInputReason = {
-  fake_profile: 'fake_profile',
-  harassment: 'harassment',
-  inappropriate: 'inappropriate',
-  scam: 'scam',
-  underage: 'underage',
-  safety: 'safety',
-  other: 'other',
+  fake_profile: "fake_profile",
+  harassment: "harassment",
+  inappropriate: "inappropriate",
+  scam: "scam",
+  underage: "underage",
+  safety: "safety",
+  other: "other",
 } as const;
 
 /**
  * @nullable
  */
-export type ReportUserInputContext = typeof ReportUserInputContext[keyof typeof ReportUserInputContext] | null;
-
+export type ReportUserInputContext =
+  | (typeof ReportUserInputContext)[keyof typeof ReportUserInputContext]
+  | null;
 
 export const ReportUserInputContext = {
-  match: 'match',
-  conversation: 'conversation',
-  profile: 'profile',
+  match: "match",
+  conversation: "conversation",
+  profile: "profile",
 } as const;
 
 /**
@@ -768,22 +768,22 @@ export interface ReportUserInput {
   /** @nullable */
   subjectType?: ReportUserInputSubjectType;
   /**
-     * @maxLength 120
-     * @nullable
-     */
+   * @maxLength 120
+   * @nullable
+   */
   externalApp?: string | null;
   /**
-     * @maxLength 120
-     * @nullable
-     */
+   * @maxLength 120
+   * @nullable
+   */
   externalLabel?: string | null;
   reason: ReportUserInputReason;
   /** @nullable */
   context?: ReportUserInputContext;
   /**
-     * @maxLength 1000
-     * @nullable
-     */
+   * @maxLength 1000
+   * @nullable
+   */
   note?: string | null;
 }
 
@@ -795,17 +795,18 @@ export interface ReportAck {
 /**
  * @nullable
  */
-export type BlockUserInputReason = typeof BlockUserInputReason[keyof typeof BlockUserInputReason] | null;
-
+export type BlockUserInputReason =
+  | (typeof BlockUserInputReason)[keyof typeof BlockUserInputReason]
+  | null;
 
 export const BlockUserInputReason = {
-  fake_profile: 'fake_profile',
-  harassment: 'harassment',
-  inappropriate: 'inappropriate',
-  scam: 'scam',
-  underage: 'underage',
-  safety: 'safety',
-  other: 'other',
+  fake_profile: "fake_profile",
+  harassment: "harassment",
+  inappropriate: "inappropriate",
+  scam: "scam",
+  underage: "underage",
+  safety: "safety",
+  other: "other",
 } as const;
 
 export interface BlockUserInput {
@@ -829,21 +830,21 @@ export interface UnblockAck {
   ok: boolean;
 }
 
-export type FounderReportSubjectType = typeof FounderReportSubjectType[keyof typeof FounderReportSubjectType];
-
+export type FounderReportSubjectType =
+  (typeof FounderReportSubjectType)[keyof typeof FounderReportSubjectType];
 
 export const FounderReportSubjectType = {
-  member: 'member',
-  off_platform: 'off_platform',
+  member: "member",
+  off_platform: "off_platform",
 } as const;
 
-export type FounderReportStatus = typeof FounderReportStatus[keyof typeof FounderReportStatus];
-
+export type FounderReportStatus =
+  (typeof FounderReportStatus)[keyof typeof FounderReportStatus];
 
 export const FounderReportStatus = {
-  open: 'open',
-  reviewed: 'reviewed',
-  dismissed: 'dismissed',
+  open: "open",
+  reviewed: "reviewed",
+  dismissed: "dismissed",
 } as const;
 
 export interface FounderReport {
@@ -871,25 +872,25 @@ export interface ListFounderReportsResponse {
   reports: FounderReport[];
 }
 
-export type UpdateReportStatusInputStatus = typeof UpdateReportStatusInputStatus[keyof typeof UpdateReportStatusInputStatus];
-
+export type UpdateReportStatusInputStatus =
+  (typeof UpdateReportStatusInputStatus)[keyof typeof UpdateReportStatusInputStatus];
 
 export const UpdateReportStatusInputStatus = {
-  open: 'open',
-  reviewed: 'reviewed',
-  dismissed: 'dismissed',
+  open: "open",
+  reviewed: "reviewed",
+  dismissed: "dismissed",
 } as const;
 
 export interface UpdateReportStatusInput {
   status: UpdateReportStatusInputStatus;
 }
 
-export type RehearsalTurnRole = typeof RehearsalTurnRole[keyof typeof RehearsalTurnRole];
-
+export type RehearsalTurnRole =
+  (typeof RehearsalTurnRole)[keyof typeof RehearsalTurnRole];
 
 export const RehearsalTurnRole = {
-  you: 'you',
-  them: 'them',
+  you: "you",
+  them: "them",
 } as const;
 
 export interface RehearsalTurn {
@@ -911,14 +912,14 @@ export interface RehearsalTurnResult {
   isFallback: boolean;
 }
 
-export type CoachFollowUpInputAnswer = typeof CoachFollowUpInputAnswer[keyof typeof CoachFollowUpInputAnswer];
-
+export type CoachFollowUpInputAnswer =
+  (typeof CoachFollowUpInputAnswer)[keyof typeof CoachFollowUpInputAnswer];
 
 export const CoachFollowUpInputAnswer = {
-  sent: 'sent',
-  not_sent: 'not_sent',
-  snoozed: 'snoozed',
-  dismissed: 'dismissed',
+  sent: "sent",
+  not_sent: "not_sent",
+  snoozed: "snoozed",
+  dismissed: "dismissed",
 } as const;
 
 export interface CoachFollowUpInput {
@@ -930,12 +931,13 @@ export interface CoachFollowUpInput {
 /**
  * @nullable
  */
-export type CoachFollowUpStatsLastAnswer = typeof CoachFollowUpStatsLastAnswer[keyof typeof CoachFollowUpStatsLastAnswer] | null;
-
+export type CoachFollowUpStatsLastAnswer =
+  | (typeof CoachFollowUpStatsLastAnswer)[keyof typeof CoachFollowUpStatsLastAnswer]
+  | null;
 
 export const CoachFollowUpStatsLastAnswer = {
-  sent: 'sent',
-  not_sent: 'not_sent',
+  sent: "sent",
+  not_sent: "not_sent",
 } as const;
 
 export interface CoachFollowUpStats {
@@ -953,12 +955,13 @@ export interface CoachFollowUpStats {
 /**
  * @nullable
  */
-export type CoachFollowUpRecordedLastAnswer = typeof CoachFollowUpRecordedLastAnswer[keyof typeof CoachFollowUpRecordedLastAnswer] | null;
-
+export type CoachFollowUpRecordedLastAnswer =
+  | (typeof CoachFollowUpRecordedLastAnswer)[keyof typeof CoachFollowUpRecordedLastAnswer]
+  | null;
 
 export const CoachFollowUpRecordedLastAnswer = {
-  sent: 'sent',
-  not_sent: 'not_sent',
+  sent: "sent",
+  not_sent: "not_sent",
 } as const;
 
 /**
@@ -991,9 +994,9 @@ export interface CoachFollowUpTimelineBucket {
   /** sentCount + notSentCount for this week */
   total: number;
   /**
-     * sentCount / total, or null when total is 0
-     * @nullable
-     */
+   * sentCount / total, or null when total is 0
+   * @nullable
+   */
   sendThroughRate: number | null;
 }
 
@@ -1016,23 +1019,23 @@ export interface EmailInsightInput {
   consentGiven?: boolean;
 }
 
-export type EmailInsightStatus = typeof EmailInsightStatus[keyof typeof EmailInsightStatus];
-
+export type EmailInsightStatus =
+  (typeof EmailInsightStatus)[keyof typeof EmailInsightStatus];
 
 export const EmailInsightStatus = {
-  pending: 'pending',
-  analyzing: 'analyzing',
-  complete: 'complete',
-  error: 'error',
+  pending: "pending",
+  analyzing: "analyzing",
+  complete: "complete",
+  error: "error",
 } as const;
 
 export interface EmailInsight {
   id: number;
   sourceLabel: string;
   /**
-     * Source platform the messages came from (e.g. "Hinge", "Bumble", "Tinder", "iMessage", "Email").
-     * @nullable
-     */
+   * Source platform the messages came from (e.g. "Hinge", "Bumble", "Tinder", "iMessage", "Email").
+   * @nullable
+   */
   sourceApp?: string | null;
   pastedContent: string;
   consentGiven?: boolean;
@@ -1049,9 +1052,9 @@ export interface CommunicationPattern {
 export interface EmailInsightAnalysis {
   insightId: number;
   /**
-     * Source platform the engine tuned its analysis for, if any.
-     * @nullable
-     */
+   * Source platform the engine tuned its analysis for, if any.
+   * @nullable
+   */
   sourceApp?: string | null;
   communicationPatterns: CommunicationPattern[];
   attachmentStyle: string;
@@ -1084,14 +1087,14 @@ export interface InsightsRollupSource {
   summary: string;
 }
 
-export type InsightsRollupComparisonTrait = typeof InsightsRollupComparisonTrait[keyof typeof InsightsRollupComparisonTrait];
-
+export type InsightsRollupComparisonTrait =
+  (typeof InsightsRollupComparisonTrait)[keyof typeof InsightsRollupComparisonTrait];
 
 export const InsightsRollupComparisonTrait = {
-  warmth: 'warmth',
-  curiosity: 'curiosity',
-  verbosity: 'verbosity',
-  humor: 'humor',
+  warmth: "warmth",
+  curiosity: "curiosity",
+  verbosity: "verbosity",
+  humor: "humor",
 } as const;
 
 export interface InsightsRollupComparison {
@@ -1135,22 +1138,21 @@ export interface WaitlistStats {
   nextMilestone: number;
 }
 
-export type AiStatusMode = typeof AiStatusMode[keyof typeof AiStatusMode];
-
+export type AiStatusMode = (typeof AiStatusMode)[keyof typeof AiStatusMode];
 
 export const AiStatusMode = {
-  live: 'live',
-  fallback: 'fallback',
-  'setup-needed': 'setup-needed',
+  live: "live",
+  fallback: "fallback",
+  "setup-needed": "setup-needed",
 } as const;
 
-export type AiStatusSource = typeof AiStatusSource[keyof typeof AiStatusSource];
-
+export type AiStatusSource =
+  (typeof AiStatusSource)[keyof typeof AiStatusSource];
 
 export const AiStatusSource = {
-  direct: 'direct',
-  'replit-proxy': 'replit-proxy',
-  none: 'none',
+  direct: "direct",
+  "replit-proxy": "replit-proxy",
+  none: "none",
 } as const;
 
 export interface AiStatus {
@@ -1200,14 +1202,14 @@ export interface AiContextInput {
 
 export interface AiEnhanceInput {
   /**
-     * @minLength 1
-     * @maxLength 80
-     */
+   * @minLength 1
+   * @maxLength 80
+   */
   toolName: string;
   /**
-     * @minLength 1
-     * @maxLength 4000
-     */
+   * @minLength 1
+   * @maxLength 4000
+   */
   prompt: string;
   context?: AiContextInput;
   /** When true, asks the model to return a valid JSON object (response_format json_object). Use for structured tool outputs. */
@@ -1216,9 +1218,9 @@ export interface AiEnhanceInput {
 
 export interface AiTestInput {
   /**
-     * @minLength 1
-     * @maxLength 2000
-     */
+   * @minLength 1
+   * @maxLength 2000
+   */
   sample: string;
   context?: AiContextInput;
 }
@@ -1231,6 +1233,15 @@ export interface AccountSummary {
   journalEntries: number;
   postDateNotes: number;
 }
+
+export type AccountExportDatasetsItem = { [key: string]: unknown };
+
+/**
+ * Registry-backed first-party datasets keyed by database table. Security secrets and ephemeral credentials are omitted or sanitized.
+ */
+export type AccountExportDatasets = {
+  [key: string]: AccountExportDatasetsItem[];
+};
 
 export interface AccountExportUser {
   id: string;
@@ -1252,10 +1263,10 @@ export interface JournalEntry {
   body: string;
   tags: string[];
   /**
-     * @minimum 1
-     * @maximum 5
-     * @nullable
-     */
+   * @minimum 1
+   * @maximum 5
+   * @nullable
+   */
   mood?: number | null;
   /** @nullable */
   linkedAuditId?: number | null;
@@ -1265,14 +1276,14 @@ export interface JournalEntry {
   deletedAt?: string | null;
 }
 
-export type PostDateOutcome = typeof PostDateOutcome[keyof typeof PostDateOutcome];
-
+export type PostDateOutcome =
+  (typeof PostDateOutcome)[keyof typeof PostDateOutcome];
 
 export const PostDateOutcome = {
-  another_date: 'another_date',
-  no_more: 'no_more',
-  unsure: 'unsure',
-  ghosted: 'ghosted',
+  another_date: "another_date",
+  no_more: "no_more",
+  unsure: "unsure",
+  ghosted: "ghosted",
 } as const;
 
 export interface PostDateNote {
@@ -1308,14 +1319,16 @@ export interface AccountExport {
   insights: EmailInsight[];
   journalEntries: JournalEntry[];
   postDateNotes: PostDateNote[];
+  /** Registry-backed first-party datasets keyed by database table. Security secrets and ephemeral credentials are omitted or sanitized. */
+  datasets: AccountExportDatasets;
 }
 
 export interface BulkDeleteAuditsInput {
   /**
-     * List of audit ids to delete. Ids the caller does not own are silently skipped.
-     * @minItems 1
-     * @maxItems 200
-     */
+   * List of audit ids to delete. Ids the caller does not own are silently skipped.
+   * @minItems 1
+   * @maxItems 200
+   */
   ids: number[];
 }
 
@@ -1370,12 +1383,13 @@ export interface EmailMyDataExportResult {
  * Which app the user signed in from.
  * @nullable
  */
-export type MySessionChannel = typeof MySessionChannel[keyof typeof MySessionChannel] | null;
-
+export type MySessionChannel =
+  | (typeof MySessionChannel)[keyof typeof MySessionChannel]
+  | null;
 
 export const MySessionChannel = {
-  web: 'web',
-  mobile: 'mobile',
+  web: "web",
+  mobile: "mobile",
 } as const;
 
 export interface MySession {
@@ -1388,19 +1402,19 @@ export interface MySession {
   /** ISO timestamp after which this session is automatically invalid. */
   expiresAt?: string;
   /**
-     * Raw user-agent string captured at sign-in. May be null for older sessions.
-     * @nullable
-     */
+   * Raw user-agent string captured at sign-in. May be null for older sessions.
+   * @nullable
+   */
   userAgent?: string | null;
   /**
-     * A friendly summary of the browser and OS, e.g. "Chrome on macOS".
-     * @nullable
-     */
+   * A friendly summary of the browser and OS, e.g. "Chrome on macOS".
+   * @nullable
+   */
   deviceLabel?: string | null;
   /**
-     * IP address captured at sign-in. May be null for older sessions.
-     * @nullable
-     */
+   * IP address captured at sign-in. May be null for older sessions.
+   * @nullable
+   */
   ip?: string | null;
   /**
      * Coarse geolocation derived from the sign-in IP, e.g. "Berlin, DE" or "Brooklyn, NY, US". Null when the IP is private, missing, or cannot be resolved. Computed at query time — no third-party calls are made.
@@ -1409,9 +1423,9 @@ export interface MySession {
      */
   ipLocation?: string | null;
   /**
-     * Which app the user signed in from.
-     * @nullable
-     */
+   * Which app the user signed in from.
+   * @nullable
+   */
   channel?: MySessionChannel;
   /** True if this is the session making the request. */
   current: boolean;
@@ -1441,17 +1455,17 @@ export interface DeleteMyAccountResult {
 
 export interface DeleteAccountInput {
   /**
-     * Must equal the signed-in user's email address (case-insensitive). The endpoint compares lowercased values, so any-case input is accepted as long as the trimmed text matches the account email.
-     * @minLength 1
-     * @maxLength 320
-     */
+   * Must equal the signed-in user's email address (case-insensitive). The endpoint compares lowercased values, so any-case input is accepted as long as the trimmed text matches the account email.
+   * @minLength 1
+   * @maxLength 320
+   */
   confirmation: string;
 }
 
 /**
  * Row counts deleted per table, keyed by database table name. Always includes every user-scoped table considered, even when the count is zero, so the client can show a faithful summary.
  */
-export type DeleteAccountResultTables = {[key: string]: number};
+export type DeleteAccountResultTables = { [key: string]: number };
 
 export interface DeleteAccountResult {
   deleted: true;
@@ -1473,15 +1487,15 @@ export interface TrustLedgerEntry {
   /** How many units of this source count toward Match Readiness. This can be narrower than storedCount, since some stored rows (a one-line journal note, an unreflected post-date stub) are held but do not move readiness. */
   count: number;
   /**
-     * How many raw units of this source the machine actually holds, i.e. exactly how many rows a purge would remove. Drives held and purgeable.
-     * @minimum 0
-     */
+   * How many raw units of this source the machine actually holds, i.e. exactly how many rows a purge would remove. Drives held and purgeable.
+   * @minimum 0
+   */
   storedCount: number;
   /**
-     * Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.
-     * @minimum 0
-     * @maximum 100
-     */
+   * Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.
+   * @minimum 0
+   * @maximum 100
+   */
   coverage: number;
   /** Plain-English line describing what this source tells the machine at its current coverage, derived from the registry. */
   summary: string;
@@ -1515,10 +1529,10 @@ export interface PurgeTrustSourceResult {
 
 export interface RegisterPushTokenInput {
   /**
-     * Expo push token obtained via expo-notifications on the device.
-     * @minLength 1
-     * @maxLength 512
-     */
+   * Expo push token obtained via expo-notifications on the device.
+   * @minLength 1
+   * @maxLength 512
+   */
   token: string;
 }
 
@@ -1540,13 +1554,13 @@ export interface EngineMeta {
   engineVersion: string;
 }
 
-export type AiTestResultMode = typeof AiTestResultMode[keyof typeof AiTestResultMode];
-
+export type AiTestResultMode =
+  (typeof AiTestResultMode)[keyof typeof AiTestResultMode];
 
 export const AiTestResultMode = {
-  live: 'live',
-  fallback: 'fallback',
-  'setup-needed': 'setup-needed',
+  live: "live",
+  fallback: "fallback",
+  "setup-needed": "setup-needed",
 } as const;
 
 export interface AiTestResult {
@@ -1576,14 +1590,14 @@ export interface GeoipRefreshResult {
 
 export interface TrashPurgeHeartbeat {
   /**
-     * ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.
-     * @nullable
-     */
+   * ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.
+   * @nullable
+   */
   lastSuccessAt: string | null;
   /**
-     * Milliseconds since the last successful run, or null if it has never run.
-     * @nullable
-     */
+   * Milliseconds since the last successful run, or null if it has never run.
+   * @nullable
+   */
   ageMs: number | null;
   /** The staleness threshold in milliseconds. If ageMs exceeds this, stale is true. */
   staleThresholdMs: number;
@@ -1594,25 +1608,25 @@ export interface TrashPurgeHeartbeat {
 /**
  * Where the invitee sits in the matching pool. "joined" means signed up but no pool membership row yet.
  */
-export type MeReferralInviteeStatus = typeof MeReferralInviteeStatus[keyof typeof MeReferralInviteeStatus];
-
+export type MeReferralInviteeStatus =
+  (typeof MeReferralInviteeStatus)[keyof typeof MeReferralInviteeStatus];
 
 export const MeReferralInviteeStatus = {
-  joined: 'joined',
-  building: 'building',
-  ready: 'ready',
-  paused: 'paused',
-  concierge_only: 'concierge_only',
-  off: 'off',
+  joined: "joined",
+  building: "building",
+  ready: "ready",
+  paused: "paused",
+  concierge_only: "concierge_only",
+  off: "off",
 } as const;
 
 export interface MeReferralInvitee {
   /** The invitee's first name, or "A new member" when no name is on file. Never an email or any other private field. */
   displayName: string;
   /**
-     * When the invitee was attributed to this inviter, or null if unknown.
-     * @nullable
-     */
+   * When the invitee was attributed to this inviter, or null if unknown.
+   * @nullable
+   */
   joinedAt: string | null;
   /** Where the invitee sits in the matching pool. "joined" means signed up but no pool membership row yet. */
   status: MeReferralInviteeStatus;
@@ -1689,9 +1703,9 @@ export type FounderFunnelSummaryStagesItem = {
   /** Distinct users who reached this stage. */
   count: number;
   /**
-     * count divided by the previous stage count. Null for the first stage. Zero when the previous stage is zero.
-     * @nullable
-     */
+   * count divided by the previous stage count. Null for the first stage. Zero when the previous stage is zero.
+   * @nullable
+   */
   conversionFromPrev: number | null;
 };
 
@@ -1708,40 +1722,40 @@ export interface FounderFunnelSummary {
 
 export interface LifePulseInput {
   /**
-     * Subjective sleep quality last night (1 worst, 5 best).
-     * @minimum 1
-     * @maximum 5
-     */
+   * Subjective sleep quality last night (1 worst, 5 best).
+   * @minimum 1
+   * @maximum 5
+   */
   sleep: number;
   /**
-     * Subjective energy right now (1 depleted, 5 charged).
-     * @minimum 1
-     * @maximum 5
-     */
+   * Subjective energy right now (1 depleted, 5 charged).
+   * @minimum 1
+   * @maximum 5
+   */
   energy: number;
   /**
-     * Social fuel — how much capacity for connection (1 drained, 5 lit up).
-     * @minimum 1
-     * @maximum 5
-     */
+   * Social fuel — how much capacity for connection (1 drained, 5 lit up).
+   * @minimum 1
+   * @maximum 5
+   */
   social: number;
   /**
-     * Money headspace (1 stressed, 5 unbothered).
-     * @minimum 1
-     * @maximum 5
-     */
+   * Money headspace (1 stressed, 5 unbothered).
+   * @minimum 1
+   * @maximum 5
+   */
   money: number;
   /**
-     * General mental clarity (1 foggy, 5 sharp).
-     * @minimum 1
-     * @maximum 5
-     */
+   * General mental clarity (1 foggy, 5 sharp).
+   * @minimum 1
+   * @maximum 5
+   */
   headspace: number;
   /**
-     * Optional short note about today.
-     * @maxLength 500
-     * @nullable
-     */
+   * Optional short note about today.
+   * @maxLength 500
+   * @nullable
+   */
   note?: string | null;
 }
 
@@ -1774,13 +1788,13 @@ export interface MirrorTrendTheme {
   lastSeenAuditId: number | null;
 }
 
-export type MirrorTrendThemeShiftDirection = typeof MirrorTrendThemeShiftDirection[keyof typeof MirrorTrendThemeShiftDirection];
-
+export type MirrorTrendThemeShiftDirection =
+  (typeof MirrorTrendThemeShiftDirection)[keyof typeof MirrorTrendThemeShiftDirection];
 
 export const MirrorTrendThemeShiftDirection = {
-  emerged: 'emerged',
-  faded: 'faded',
-  steady: 'steady',
+  emerged: "emerged",
+  faded: "faded",
+  steady: "steady",
 } as const;
 
 export interface MirrorTrendThemeShift {
@@ -1791,13 +1805,13 @@ export interface MirrorTrendThemeShift {
   direction: MirrorTrendThemeShiftDirection;
 }
 
-export type MirrorTrendScoreDeltaDirection = typeof MirrorTrendScoreDeltaDirection[keyof typeof MirrorTrendScoreDeltaDirection];
-
+export type MirrorTrendScoreDeltaDirection =
+  (typeof MirrorTrendScoreDeltaDirection)[keyof typeof MirrorTrendScoreDeltaDirection];
 
 export const MirrorTrendScoreDeltaDirection = {
-  up: 'up',
-  down: 'down',
-  flat: 'flat',
+  up: "up",
+  down: "down",
+  flat: "flat",
 } as const;
 
 export interface MirrorTrendScoreDelta {
@@ -1835,13 +1849,13 @@ export interface MirrorTrendScorePoint {
   createdAt: string;
 }
 
-export type MirrorTrendSignalTone = typeof MirrorTrendSignalTone[keyof typeof MirrorTrendSignalTone];
-
+export type MirrorTrendSignalTone =
+  (typeof MirrorTrendSignalTone)[keyof typeof MirrorTrendSignalTone];
 
 export const MirrorTrendSignalTone = {
-  positive: 'positive',
-  watch: 'watch',
-  neutral: 'neutral',
+  positive: "positive",
+  watch: "watch",
+  neutral: "neutral",
 } as const;
 
 export interface MirrorTrendSignal {
@@ -1851,14 +1865,14 @@ export interface MirrorTrendSignal {
 
 export interface MirrorTrendOutcomeStreak {
   /**
-     * Consecutive most-recent post-date notes whose outcome is "another_date".
-     * @minimum 0
-     */
+   * Consecutive most-recent post-date notes whose outcome is "another_date".
+   * @minimum 0
+   */
   positiveStreak: number;
   /**
-     * Most recent recorded outcome, or null if no notes have one.
-     * @nullable
-     */
+   * Most recent recorded outcome, or null if no notes have one.
+   * @nullable
+   */
   latestOutcome: string | null;
   /** @minimum 0 */
   totalWithOutcome: number;
@@ -1868,22 +1882,22 @@ export interface MirrorTrendJournalingStreak {
   /** @minimum 0 */
   currentStreakDays: number;
   /**
-     * @minimum 0
-     * @maximum 14
-     */
+   * @minimum 0
+   * @maximum 14
+   */
   daysInLast14: number;
   /** @minimum 0 */
   totalEntries: number;
 }
 
-export type MirrorTrendMoodTrendDirection = typeof MirrorTrendMoodTrendDirection[keyof typeof MirrorTrendMoodTrendDirection];
-
+export type MirrorTrendMoodTrendDirection =
+  (typeof MirrorTrendMoodTrendDirection)[keyof typeof MirrorTrendMoodTrendDirection];
 
 export const MirrorTrendMoodTrendDirection = {
-  rising: 'rising',
-  falling: 'falling',
-  steady: 'steady',
-  unknown: 'unknown',
+  rising: "rising",
+  falling: "falling",
+  steady: "steady",
+  unknown: "unknown",
 } as const;
 
 export interface MirrorTrendMoodTrend {
@@ -1905,9 +1919,9 @@ export interface MirrorTrendReport {
   engagementWindow: MirrorTrendEngagementWindow;
   readinessSignals: MirrorTrendSignal[];
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   readinessScore: number;
   scoreHistory: MirrorTrendScorePoint[];
   headlineInsight: string;
@@ -1921,14 +1935,14 @@ export interface MirrorKnownDimension {
   key: string;
   label: string;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   coverage: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   confidence: number;
   insight: string;
   dimensions: string[];
@@ -1950,29 +1964,29 @@ export interface MirrorNextSignal {
   points: number;
 }
 
-export type MirrorPortraitStage = typeof MirrorPortraitStage[keyof typeof MirrorPortraitStage];
-
+export type MirrorPortraitStage =
+  (typeof MirrorPortraitStage)[keyof typeof MirrorPortraitStage];
 
 export const MirrorPortraitStage = {
-  outline: 'outline',
-  forming: 'forming',
-  sharp: 'sharp',
-  vivid: 'vivid',
+  outline: "outline",
+  forming: "forming",
+  sharp: "sharp",
+  vivid: "vivid",
 } as const;
 
 export interface MirrorPortrait {
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   readinessScore: number;
   stage: MirrorPortraitStage;
   stageLabel: string;
   stageBlurb: string;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   coveragePercent: number;
   headline: string;
   known: MirrorKnownDimension[];
@@ -1983,18 +1997,18 @@ export interface MirrorPortrait {
   totalDates: number;
   eligible: boolean;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   threshold: number;
   engineVersion: string;
 }
 
 export interface MirrorAskInput {
   /**
-     * @minLength 1
-     * @maxLength 2000
-     */
+   * @minLength 1
+   * @maxLength 2000
+   */
   question: string;
 }
 
@@ -2005,23 +2019,23 @@ export interface MirrorAskResult {
   isFallback: boolean;
 }
 
-export type CompanionPersona = typeof CompanionPersona[keyof typeof CompanionPersona];
-
+export type CompanionPersona =
+  (typeof CompanionPersona)[keyof typeof CompanionPersona];
 
 export const CompanionPersona = {
-  best_friend: 'best_friend',
-  tough_coach: 'tough_coach',
-  witty_sibling: 'witty_sibling',
-  calm_mentor: 'calm_mentor',
+  best_friend: "best_friend",
+  tough_coach: "tough_coach",
+  witty_sibling: "witty_sibling",
+  calm_mentor: "calm_mentor",
 } as const;
 
-export type CompanionObservationSeverity = typeof CompanionObservationSeverity[keyof typeof CompanionObservationSeverity];
-
+export type CompanionObservationSeverity =
+  (typeof CompanionObservationSeverity)[keyof typeof CompanionObservationSeverity];
 
 export const CompanionObservationSeverity = {
-  praise: 'praise',
-  note: 'note',
-  challenge: 'challenge',
+  praise: "praise",
+  note: "note",
+  challenge: "challenge",
 } as const;
 
 export interface CompanionObservation {
@@ -2033,13 +2047,13 @@ export interface CompanionObservation {
   createdAt: string;
 }
 
-export type CompanionCommitmentStatus = typeof CompanionCommitmentStatus[keyof typeof CompanionCommitmentStatus];
-
+export type CompanionCommitmentStatus =
+  (typeof CompanionCommitmentStatus)[keyof typeof CompanionCommitmentStatus];
 
 export const CompanionCommitmentStatus = {
-  open: 'open',
-  done: 'done',
-  missed: 'missed',
+  open: "open",
+  done: "done",
+  missed: "missed",
 } as const;
 
 export interface CompanionCommitment {
@@ -2061,9 +2075,9 @@ export interface CompanionNextMove {
 export interface CompanionSettings {
   persona: CompanionPersona;
   /**
-     * @minimum 1
-     * @maximum 3
-     */
+   * @minimum 1
+   * @maximum 3
+   */
   candor: number;
   inApp: boolean;
   email: boolean;
@@ -2078,14 +2092,14 @@ export interface CompanionState {
   challenge: string | null;
   nextMove: CompanionNextMove | null;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   readinessScore: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   threshold: number;
   eligible: boolean;
   observations: CompanionObservation[];
@@ -2097,18 +2111,18 @@ export interface CompanionState {
 
 export interface CompanionSayInput {
   /**
-     * @minLength 1
-     * @maxLength 2000
-     */
+   * @minLength 1
+   * @maxLength 2000
+   */
   message: string;
 }
 
-export type CompanionTurnRole = typeof CompanionTurnRole[keyof typeof CompanionTurnRole];
-
+export type CompanionTurnRole =
+  (typeof CompanionTurnRole)[keyof typeof CompanionTurnRole];
 
 export const CompanionTurnRole = {
-  user: 'user',
-  echo: 'echo',
+  user: "user",
+  echo: "echo",
 } as const;
 
 export interface CompanionTurn {
@@ -2125,19 +2139,19 @@ export interface CompanionSayResult {
   commitment?: CompanionCommitment | null;
 }
 
-export type CompanionReviewInputDirection = typeof CompanionReviewInputDirection[keyof typeof CompanionReviewInputDirection];
-
+export type CompanionReviewInputDirection =
+  (typeof CompanionReviewInputDirection)[keyof typeof CompanionReviewInputDirection];
 
 export const CompanionReviewInputDirection = {
-  sending: 'sending',
-  received: 'received',
+  sending: "sending",
+  received: "received",
 } as const;
 
 export interface CompanionReviewInput {
   /**
-     * @minLength 1
-     * @maxLength 4000
-     */
+   * @minLength 1
+   * @maxLength 4000
+   */
   text: string;
   direction: CompanionReviewInputDirection;
 }
@@ -2157,14 +2171,14 @@ export interface ReactionLaneMove {
   to: number;
 }
 
-export type CompanionReactionTone = typeof CompanionReactionTone[keyof typeof CompanionReactionTone];
-
+export type CompanionReactionTone =
+  (typeof CompanionReactionTone)[keyof typeof CompanionReactionTone];
 
 export const CompanionReactionTone = {
-  rise: 'rise',
-  crossing: 'crossing',
-  dip: 'dip',
-  steady: 'steady',
+  rise: "rise",
+  crossing: "crossing",
+  dip: "dip",
+  steady: "steady",
 } as const;
 
 export type CompanionReactionNextMove = null | {
@@ -2225,9 +2239,9 @@ export interface CompanionUnreadCount {
 export interface CompanionSettingsInput {
   persona?: CompanionPersona;
   /**
-     * @minimum 1
-     * @maximum 3
-     */
+   * @minimum 1
+   * @maximum 3
+   */
   candor?: number;
   inApp?: boolean;
   email?: boolean;
@@ -2237,59 +2251,59 @@ export interface CompanionSettingsInput {
 
 export interface JournalEntryInput {
   /**
-     * Optional curated prompt the entry answers. Null = freeform.
-     * @maxLength 500
-     * @nullable
-     */
+   * Optional curated prompt the entry answers. Null = freeform.
+   * @maxLength 500
+   * @nullable
+   */
   prompt?: string | null;
   /**
-     * @minLength 1
-     * @maxLength 20000
-     */
+   * @minLength 1
+   * @maxLength 20000
+   */
   body: string;
   /**
-     * Free-form tags (e.g. "weekly", "intention", "reflection").
-     * @maxItems 20
-     */
+   * Free-form tags (e.g. "weekly", "intention", "reflection").
+   * @maxItems 20
+   */
   tags?: string[];
   /**
-     * Self-reported mood, 1 (low) to 5 (high). Null = not provided.
-     * @minimum 1
-     * @maximum 5
-     * @nullable
-     */
+   * Self-reported mood, 1 (low) to 5 (high). Null = not provided.
+   * @minimum 1
+   * @maximum 5
+   * @nullable
+   */
   mood?: number | null;
   /**
-     * Optional cross-reference to an audit this entry reflects on.
-     * @minimum 1
-     * @nullable
-     */
+   * Optional cross-reference to an audit this entry reflects on.
+   * @minimum 1
+   * @nullable
+   */
   linkedAuditId?: number | null;
 }
 
 export interface JournalEntryPatch {
   /**
-     * @maxLength 500
-     * @nullable
-     */
+   * @maxLength 500
+   * @nullable
+   */
   prompt?: string | null;
   /**
-     * @minLength 1
-     * @maxLength 20000
-     */
+   * @minLength 1
+   * @maxLength 20000
+   */
   body?: string;
   /** @maxItems 20 */
   tags?: string[];
   /**
-     * @minimum 1
-     * @maximum 5
-     * @nullable
-     */
+   * @minimum 1
+   * @maximum 5
+   * @nullable
+   */
   mood?: number | null;
   /**
-     * @minimum 1
-     * @nullable
-     */
+   * @minimum 1
+   * @nullable
+   */
   linkedAuditId?: number | null;
   /** If true, clears `deletedAt` so the entry leaves the trash. */
   restore?: boolean;
@@ -2308,31 +2322,31 @@ export interface DeleteJournalEntryResult {
 
 export interface PostDateNoteInput {
   /**
-     * Optional mutual connection this private debrief belongs to.
-     * @nullable
-     */
+   * Optional mutual connection this private debrief belongs to.
+   * @nullable
+   */
   connectionId?: string | null;
   /**
-     * When the date itself happened. Null = unspecified.
-     * @nullable
-     */
+   * When the date itself happened. Null = unspecified.
+   * @nullable
+   */
   dateAt?: string | null;
   /**
-     * Free-form label for the person. Copy encourages first-name-only.
-     * @maxLength 120
-     * @nullable
-     */
+   * Free-form label for the person. Copy encourages first-name-only.
+   * @maxLength 120
+   * @nullable
+   */
   personLabel?: string | null;
   /**
-     * Origin platform (e.g. "hinge", "bumble", "tinder").
-     * @maxLength 40
-     * @nullable
-     */
+   * Origin platform (e.g. "hinge", "bumble", "tinder").
+   * @maxLength 40
+   * @nullable
+   */
   platform?: string | null;
   /**
-     * @minLength 1
-     * @maxLength 20000
-     */
+   * @minLength 1
+   * @maxLength 20000
+   */
   summary: string;
   /** @maxLength 20000 */
   whatWentWell?: string;
@@ -2341,9 +2355,9 @@ export interface PostDateNoteInput {
   followUpPlanned?: boolean;
   outcome?: PostDateOutcome | null;
   /**
-     * @minimum 1
-     * @nullable
-     */
+   * @minimum 1
+   * @nullable
+   */
   linkedAuditId?: number | null;
 }
 
@@ -2351,19 +2365,19 @@ export interface PostDateNotePatch {
   /** @nullable */
   dateAt?: string | null;
   /**
-     * @maxLength 120
-     * @nullable
-     */
+   * @maxLength 120
+   * @nullable
+   */
   personLabel?: string | null;
   /**
-     * @maxLength 40
-     * @nullable
-     */
+   * @maxLength 40
+   * @nullable
+   */
   platform?: string | null;
   /**
-     * @minLength 1
-     * @maxLength 20000
-     */
+   * @minLength 1
+   * @maxLength 20000
+   */
   summary?: string;
   /** @maxLength 20000 */
   whatWentWell?: string;
@@ -2372,9 +2386,9 @@ export interface PostDateNotePatch {
   followUpPlanned?: boolean;
   outcome?: PostDateOutcome | null;
   /**
-     * @minimum 1
-     * @nullable
-     */
+   * @minimum 1
+   * @nullable
+   */
   linkedAuditId?: number | null;
   restore?: boolean;
 }
@@ -2389,50 +2403,50 @@ export interface DeletePostDateNoteResult {
   deletedId: number;
 }
 
-export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
-
+export type WellnessConsentLevel =
+  (typeof WellnessConsentLevel)[keyof typeof WellnessConsentLevel];
 
 export const WellnessConsentLevel = {
-  coaching: 'coaching',
-  matching: 'matching',
-  research: 'research',
-  all: 'all',
+  coaching: "coaching",
+  matching: "matching",
+  research: "research",
+  all: "all",
 } as const;
 
 export interface WellnessAnswerInput {
   /**
-     * @minLength 1
-     * @maxLength 120
-     */
+   * @minLength 1
+   * @maxLength 120
+   */
   questionId: string;
   /**
-     * @minLength 1
-     * @maxLength 40
-     */
+   * @minLength 1
+   * @maxLength 40
+   */
   dimension: string;
   /**
-     * @maxLength 80
-     * @nullable
-     */
+   * @maxLength 80
+   * @nullable
+   */
   category?: string | null;
   /**
-     * @minLength 1
-     * @maxLength 1000
-     */
+   * @minLength 1
+   * @maxLength 1000
+   */
   questionText: string;
   /**
-     * @minLength 1
-     * @maxLength 5000
-     */
+   * @minLength 1
+   * @maxLength 5000
+   */
   answer: string;
   consentLevel?: WellnessConsentLevel;
 }
 
 export interface WellnessAnswerPatch {
   /**
-     * @minLength 1
-     * @maxLength 5000
-     */
+   * @minLength 1
+   * @maxLength 5000
+   */
   answer?: string;
   consentLevel?: WellnessConsentLevel;
 }
@@ -2514,10 +2528,10 @@ export interface WellnessInferenceGenerateResult {
 
 export interface WellnessInferenceConfirmInput {
   /**
-     * Optional edited answer; defaults to the suggested answer.
-     * @minLength 1
-     * @maxLength 5000
-     */
+   * Optional edited answer; defaults to the suggested answer.
+   * @minLength 1
+   * @maxLength 5000
+   */
   answer?: string;
 }
 
@@ -2534,19 +2548,19 @@ export interface WellnessInferenceDismissResult {
 
 export interface WellnessTagInput {
   /**
-     * @minLength 1
-     * @maxLength 80
-     */
+   * @minLength 1
+   * @maxLength 80
+   */
   tag: string;
   /**
-     * @minLength 1
-     * @maxLength 120
-     */
+   * @minLength 1
+   * @maxLength 120
+   */
   label: string;
   /**
-     * @minLength 1
-     * @maxLength 40
-     */
+   * @minLength 1
+   * @maxLength 40
+   */
   category: string;
   approvedForMatching?: boolean;
   hidden?: boolean;
@@ -2554,9 +2568,9 @@ export interface WellnessTagInput {
 
 export interface WellnessTagPatch {
   /**
-     * @minLength 1
-     * @maxLength 120
-     */
+   * @minLength 1
+   * @maxLength 120
+   */
   label?: string;
   approvedForMatching?: boolean;
   hidden?: boolean;
@@ -2627,44 +2641,44 @@ export interface MeConsent {
    */
   aiContent: boolean;
   /**
-     * Last time the user flipped the AI content consent boolean.
-     * @nullable
-     */
+   * Last time the user flipped the AI content consent boolean.
+   * @nullable
+   */
   aiContentUpdatedAt: string | null;
 }
 
 /**
  * How often the proactive Mirror digest is sent.
  */
-export type DigestPreferencesStateFrequency = typeof DigestPreferencesStateFrequency[keyof typeof DigestPreferencesStateFrequency];
-
+export type DigestPreferencesStateFrequency =
+  (typeof DigestPreferencesStateFrequency)[keyof typeof DigestPreferencesStateFrequency];
 
 export const DigestPreferencesStateFrequency = {
-  weekly: 'weekly',
-  biweekly: 'biweekly',
-  off: 'off',
+  weekly: "weekly",
+  biweekly: "biweekly",
+  off: "off",
 } as const;
 
 export interface DigestPreferencesState {
   /** How often the proactive Mirror digest is sent. */
   frequency: DigestPreferencesStateFrequency;
   /**
-     * When the most recent digest was sent, or null if never.
-     * @nullable
-     */
+   * When the most recent digest was sent, or null if never.
+   * @nullable
+   */
   lastSentAt: string | null;
 }
 
 /**
  * The cadence to set for the Mirror digest.
  */
-export type SetDigestPreferencesInputFrequency = typeof SetDigestPreferencesInputFrequency[keyof typeof SetDigestPreferencesInputFrequency];
-
+export type SetDigestPreferencesInputFrequency =
+  (typeof SetDigestPreferencesInputFrequency)[keyof typeof SetDigestPreferencesInputFrequency];
 
 export const SetDigestPreferencesInputFrequency = {
-  weekly: 'weekly',
-  biweekly: 'biweekly',
-  off: 'off',
+  weekly: "weekly",
+  biweekly: "biweekly",
+  off: "off",
 } as const;
 
 export interface SetDigestPreferencesInput {
@@ -2674,22 +2688,22 @@ export interface SetDigestPreferencesInput {
 
 export interface CreateInstagramPasteInput {
   /**
-     * The user's current Instagram bio text.
-     * @minLength 1
-     * @maxLength 500
-     */
+   * The user's current Instagram bio text.
+   * @minLength 1
+   * @maxLength 500
+   */
   bio: string;
   /**
-     * Five to ten recent Instagram captions, one per array item.
-     * @maxItems 10
-     */
+   * Five to ten recent Instagram captions, one per array item.
+   * @maxItems 10
+   */
   recentCaptions: string[];
 }
 
 export interface CreateInstagramPasteResult {
   id: number;
-  source: 'instagram-paste';
-  status: 'pending';
+  source: "instagram-paste";
+  status: "pending";
   uploadedAt: string;
 }
 
@@ -2713,9 +2727,9 @@ export interface CreateSourcePasteInput {
      */
   items: string[];
   /**
-     * Optional free-text context the user adds about the source.
-     * @maxLength 1000
-     */
+   * Optional free-text context the user adds about the source.
+   * @maxLength 1000
+   */
   note?: string;
 }
 
@@ -2723,7 +2737,7 @@ export interface CreateSourcePasteResult {
   id: number;
   /** The source key the row was tagged with. */
   source: string;
-  status: 'complete';
+  status: "complete";
   /** Number of non-empty items stored for this paste. */
   itemCount: number;
   uploadedAt: string;
@@ -2731,51 +2745,51 @@ export interface CreateSourcePasteResult {
 
 export interface CreateVoiceIntroInput {
   /**
-     * How many seconds the user spoke. Derived in the browser.
-     * @minimum 0
-     * @maximum 600
-     */
+   * How many seconds the user spoke. Derived in the browser.
+   * @minimum 0
+   * @maximum 600
+   */
   durationSec: number;
   /**
-     * Average loudness of the speech, normalized 0-1. A derived acoustic metric only; the audio it came from is never uploaded.
-     * @minimum 0
-     * @maximum 1
-     */
+   * Average loudness of the speech, normalized 0-1. A derived acoustic metric only; the audio it came from is never uploaded.
+   * @minimum 0
+   * @maximum 1
+   */
   energy: number;
   /**
-     * How much the loudness varies over time, normalized 0-1 (expressive vs flat). Derived in the browser.
-     * @minimum 0
-     * @maximum 1
-     */
+   * How much the loudness varies over time, normalized 0-1 (expressive vs flat). Derived in the browser.
+   * @minimum 0
+   * @maximum 1
+   */
   dynamics: number;
   /**
-     * Speech onsets per second, a proxy for how fast and animated the delivery is. Derived in the browser.
-     * @minimum 0
-     * @maximum 10
-     */
+   * Speech onsets per second, a proxy for how fast and animated the delivery is. Derived in the browser.
+   * @minimum 0
+   * @maximum 10
+   */
   pace: number;
   /**
-     * Fraction of the take that was speech rather than silence, 0-1. Derived in the browser.
-     * @minimum 0
-     * @maximum 1
-     */
+   * Fraction of the take that was speech rather than silence, 0-1. Derived in the browser.
+   * @minimum 0
+   * @maximum 1
+   */
   speechRatio: number;
 }
 
 /**
  * `pending` while the read is being written, `complete` once the deterministic or Claude read is stored.
  */
-export type CreateVoiceIntroResultStatus = typeof CreateVoiceIntroResultStatus[keyof typeof CreateVoiceIntroResultStatus];
-
+export type CreateVoiceIntroResultStatus =
+  (typeof CreateVoiceIntroResultStatus)[keyof typeof CreateVoiceIntroResultStatus];
 
 export const CreateVoiceIntroResultStatus = {
-  pending: 'pending',
-  complete: 'complete',
+  pending: "pending",
+  complete: "complete",
 } as const;
 
 export interface CreateVoiceIntroResult {
   id: number;
-  source: 'voice-intro';
+  source: "voice-intro";
   /** `pending` while the read is being written, `complete` once the deterministic or Claude read is stored. */
   status: CreateVoiceIntroResultStatus;
   uploadedAt: string;
@@ -2783,9 +2797,9 @@ export interface CreateVoiceIntroResult {
 
 export interface ReceiptEntry {
   /**
-     * The sender shown on the confirmation, if known. Never the body.
-     * @nullable
-     */
+   * The sender shown on the confirmation, if known. Never the body.
+   * @nullable
+   */
   sender?: string | null;
   /** The subject line of the confirmation. Never the body. */
   subject: string;
@@ -2795,15 +2809,15 @@ export interface ReceiptEntry {
 
 export interface ReceiptInputEntry {
   /**
-     * The subject line of the confirmation. The body is never accepted.
-     * @minLength 1
-     * @maxLength 300
-     */
+   * The subject line of the confirmation. The body is never accepted.
+   * @minLength 1
+   * @maxLength 300
+   */
   subject: string;
   /**
-     * Optional sender shown on the confirmation.
-     * @maxLength 200
-     */
+   * Optional sender shown on the confirmation.
+   * @maxLength 200
+   */
   sender?: string;
   /** Optional time the confirmation was received; defaults to now. */
   receivedAt?: string;
@@ -2811,22 +2825,22 @@ export interface ReceiptInputEntry {
 
 export interface AddReceiptsInput {
   /**
-     * @minItems 1
-     * @maxItems 50
-     */
+   * @minItems 1
+   * @maxItems 50
+   */
   entries: ReceiptInputEntry[];
 }
 
 export interface ReceiptsInbox {
   /**
-     * The user's forwarding handle, or null before activation.
-     * @nullable
-     */
+   * The user's forwarding handle, or null before activation.
+   * @nullable
+   */
   handle: string | null;
   /**
-     * The full forwarding address, or null before activation.
-     * @nullable
-     */
+   * The full forwarding address, or null before activation.
+   * @nullable
+   */
   address: string | null;
   /** Running count of confirmations captured. Drives the receipts lane. */
   count: number;
@@ -2836,22 +2850,22 @@ export interface ReceiptsInbox {
 
 export interface CreateQuizResultInput {
   /**
-     * The quiz's stable slug, e.g. `attachment-style`.
-     * @minLength 1
-     * @maxLength 64
-     */
+   * The quiz's stable slug, e.g. `attachment-style`.
+   * @minLength 1
+   * @maxLength 64
+   */
   slug: string;
   /**
-     * The scored archetype key for this completion.
-     * @minLength 1
-     * @maxLength 64
-     */
+   * The scored archetype key for this completion.
+   * @minLength 1
+   * @maxLength 64
+   */
   archetypeKey: string;
   /**
-     * Human-readable archetype name, stored for the user's own review.
-     * @minLength 1
-     * @maxLength 120
-     */
+   * Human-readable archetype name, stored for the user's own review.
+   * @minLength 1
+   * @maxLength 120
+   */
   archetypeName: string;
   /**
      * The wellness or matching dimensions this quiz informs, taught to the
@@ -2871,87 +2885,93 @@ export interface CreateQuizResultResult {
   archetypeName: string;
   /** How many distinct quizzes the owner has now completed, after deduping retakes of the same quiz. This is the count that fills the quiz lane. */
   distinctQuizzes: number;
-  status: 'complete';
+  status: "complete";
   uploadedAt: string;
 }
 
 /**
  * Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.
  */
-export interface CareDialectDistribution {[key: string]: number}
+export interface CareDialectDistribution {
+  [key: string]: number;
+}
 
 /**
  * The dialect the user guessed they primarily give.
  * @nullable
  */
-export type CareDialectProfileSelfGive = typeof CareDialectProfileSelfGive[keyof typeof CareDialectProfileSelfGive] | null;
-
+export type CareDialectProfileSelfGive =
+  | (typeof CareDialectProfileSelfGive)[keyof typeof CareDialectProfileSelfGive]
+  | null;
 
 export const CareDialectProfileSelfGive = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
 /**
  * The dialect the user guessed they most want to receive.
  * @nullable
  */
-export type CareDialectProfileSelfReceive = typeof CareDialectProfileSelfReceive[keyof typeof CareDialectProfileSelfReceive] | null;
-
+export type CareDialectProfileSelfReceive =
+  | (typeof CareDialectProfileSelfReceive)[keyof typeof CareDialectProfileSelfReceive]
+  | null;
 
 export const CareDialectProfileSelfReceive = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
 /**
  * The top scored give dialect, or null when untested.
  * @nullable
  */
-export type CareDialectProfileTestedGiveTop = typeof CareDialectProfileTestedGiveTop[keyof typeof CareDialectProfileTestedGiveTop] | null;
-
+export type CareDialectProfileTestedGiveTop =
+  | (typeof CareDialectProfileTestedGiveTop)[keyof typeof CareDialectProfileTestedGiveTop]
+  | null;
 
 export const CareDialectProfileTestedGiveTop = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
 /**
  * The top scored receive dialect, or null when untested.
  * @nullable
  */
-export type CareDialectProfileTestedReceiveTop = typeof CareDialectProfileTestedReceiveTop[keyof typeof CareDialectProfileTestedReceiveTop] | null;
-
+export type CareDialectProfileTestedReceiveTop =
+  | (typeof CareDialectProfileTestedReceiveTop)[keyof typeof CareDialectProfileTestedReceiveTop]
+  | null;
 
 export const CareDialectProfileTestedReceiveTop = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
-export type CareDialectComparisonAlignment = typeof CareDialectComparisonAlignment[keyof typeof CareDialectComparisonAlignment];
-
+export type CareDialectComparisonAlignment =
+  (typeof CareDialectComparisonAlignment)[keyof typeof CareDialectComparisonAlignment];
 
 export const CareDialectComparisonAlignment = {
-  aligned: 'aligned',
-  partial: 'partial',
-  surprising: 'surprising',
-  unknown: 'unknown',
+  aligned: "aligned",
+  partial: "partial",
+  surprising: "surprising",
+  unknown: "unknown",
 } as const;
 
 /**
@@ -2975,32 +2995,32 @@ export interface CareDialectProfile {
   /** True when this is the signed-out demo example, not real data. */
   isDemo: boolean;
   /**
-     * The dialect the user guessed they primarily give.
-     * @nullable
-     */
+   * The dialect the user guessed they primarily give.
+   * @nullable
+   */
   selfGive: CareDialectProfileSelfGive;
   /**
-     * The dialect the user guessed they most want to receive.
-     * @nullable
-     */
+   * The dialect the user guessed they most want to receive.
+   * @nullable
+   */
   selfReceive: CareDialectProfileSelfReceive;
   testedGiveDistribution: CareDialectDistribution;
   /**
-     * The top scored give dialect, or null when untested.
-     * @nullable
-     */
+   * The top scored give dialect, or null when untested.
+   * @nullable
+   */
   testedGiveTop: CareDialectProfileTestedGiveTop;
   testedReceiveDistribution: CareDialectDistribution;
   /**
-     * The top scored receive dialect, or null when untested.
-     * @nullable
-     */
+   * The top scored receive dialect, or null when untested.
+   * @nullable
+   */
   testedReceiveTop: CareDialectProfileTestedReceiveTop;
   comparison: CareDialectComparison;
   /**
-     * Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.
-     * @nullable
-     */
+   * Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.
+   * @nullable
+   */
   narrative: string | null;
   /** @nullable */
   updatedAt: string | null;
@@ -3009,34 +3029,34 @@ export interface CareDialectProfile {
 /**
  * Stable provider key.
  */
-export type ConnectorStatusProvider = typeof ConnectorStatusProvider[keyof typeof ConnectorStatusProvider];
-
+export type ConnectorStatusProvider =
+  (typeof ConnectorStatusProvider)[keyof typeof ConnectorStatusProvider];
 
 export const ConnectorStatusProvider = {
-  'google-calendar': 'google-calendar',
-  spotify: 'spotify',
-  'instagram-oauth': 'instagram-oauth',
-  strava: 'strava',
-  fitbit: 'fitbit',
-  exist: 'exist',
-  oura: 'oura',
-  trakt: 'trakt',
-  github: 'github',
-  reddit: 'reddit',
-  discord: 'discord',
+  "google-calendar": "google-calendar",
+  spotify: "spotify",
+  "instagram-oauth": "instagram-oauth",
+  strava: "strava",
+  fitbit: "fitbit",
+  exist: "exist",
+  oura: "oura",
+  trakt: "trakt",
+  github: "github",
+  reddit: "reddit",
+  discord: "discord",
 } as const;
 
 /**
  * Lifecycle of the live connection.
  */
-export type ConnectorStatusStatus = typeof ConnectorStatusStatus[keyof typeof ConnectorStatusStatus];
-
+export type ConnectorStatusStatus =
+  (typeof ConnectorStatusStatus)[keyof typeof ConnectorStatusStatus];
 
 export const ConnectorStatusStatus = {
-  available: 'available',
-  connected: 'connected',
-  error: 'error',
-  disconnected: 'disconnected',
+  available: "available",
+  connected: "connected",
+  error: "error",
+  disconnected: "disconnected",
 } as const;
 
 /**
@@ -3058,24 +3078,24 @@ export interface ConnectorStatus {
   /** True when the connector's credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503. */
   configured: boolean;
   /**
-     * Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.
-     * @nullable
-     */
+   * Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.
+   * @nullable
+   */
   derivedCount: number | null;
   /**
-     * ISO timestamp of the last sync attempt.
-     * @nullable
-     */
+   * ISO timestamp of the last sync attempt.
+   * @nullable
+   */
   lastSyncAt: string | null;
   /**
-     * ISO timestamp of the last successful sync.
-     * @nullable
-     */
+   * ISO timestamp of the last successful sync.
+   * @nullable
+   */
   lastSuccessAt: string | null;
   /**
-     * Machine-readable code for the last error, null when healthy.
-     * @nullable
-     */
+   * Machine-readable code for the last error, null when healthy.
+   * @nullable
+   */
   lastErrorCode: string | null;
   /** One-line summary of what this connector returns. */
   description: string;
@@ -3095,55 +3115,57 @@ export interface ConnectorsStatusResponse {
 /**
  * @nullable
  */
-export type SaveCareDialectInputSelfGive = typeof SaveCareDialectInputSelfGive[keyof typeof SaveCareDialectInputSelfGive] | null;
-
+export type SaveCareDialectInputSelfGive =
+  | (typeof SaveCareDialectInputSelfGive)[keyof typeof SaveCareDialectInputSelfGive]
+  | null;
 
 export const SaveCareDialectInputSelfGive = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
 /**
  * @nullable
  */
-export type SaveCareDialectInputSelfReceive = typeof SaveCareDialectInputSelfReceive[keyof typeof SaveCareDialectInputSelfReceive] | null;
-
+export type SaveCareDialectInputSelfReceive =
+  | (typeof SaveCareDialectInputSelfReceive)[keyof typeof SaveCareDialectInputSelfReceive]
+  | null;
 
 export const SaveCareDialectInputSelfReceive = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
-export type SaveCareDialectInputGiveAnswersItem = typeof SaveCareDialectInputGiveAnswersItem[keyof typeof SaveCareDialectInputGiveAnswersItem];
-
+export type SaveCareDialectInputGiveAnswersItem =
+  (typeof SaveCareDialectInputGiveAnswersItem)[keyof typeof SaveCareDialectInputGiveAnswersItem];
 
 export const SaveCareDialectInputGiveAnswersItem = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
-export type SaveCareDialectInputReceiveAnswersItem = typeof SaveCareDialectInputReceiveAnswersItem[keyof typeof SaveCareDialectInputReceiveAnswersItem];
-
+export type SaveCareDialectInputReceiveAnswersItem =
+  (typeof SaveCareDialectInputReceiveAnswersItem)[keyof typeof SaveCareDialectInputReceiveAnswersItem];
 
 export const SaveCareDialectInputReceiveAnswersItem = {
-  spokenWarmth: 'spokenWarmth',
-  helpingHands: 'helpingHands',
-  thoughtfulTokens: 'thoughtfulTokens',
-  undividedTime: 'undividedTime',
-  closeContact: 'closeContact',
-  steadyPresence: 'steadyPresence',
+  spokenWarmth: "spokenWarmth",
+  helpingHands: "helpingHands",
+  thoughtfulTokens: "thoughtfulTokens",
+  undividedTime: "undividedTime",
+  closeContact: "closeContact",
+  steadyPresence: "steadyPresence",
 } as const;
 
 /**
@@ -3155,16 +3177,16 @@ export interface SaveCareDialectInput {
   /** @nullable */
   selfReceive?: SaveCareDialectInputSelfReceive;
   /**
-     * Per-answer chosen dialect for the give axis.
-     * @minItems 1
-     * @maxItems 30
-     */
+   * Per-answer chosen dialect for the give axis.
+   * @minItems 1
+   * @maxItems 30
+   */
   giveAnswers: SaveCareDialectInputGiveAnswersItem[];
   /**
-     * Per-answer chosen dialect for the receive axis.
-     * @minItems 1
-     * @maxItems 30
-     */
+   * Per-answer chosen dialect for the receive axis.
+   * @minItems 1
+   * @maxItems 30
+   */
   receiveAnswers: SaveCareDialectInputReceiveAnswersItem[];
 }
 
@@ -3181,24 +3203,24 @@ export type CompassReadInputAiResult = { [key: string]: unknown } | null;
 
 export interface CompassReadInput {
   /**
-     * The connection-style label the user picked.
-     * @minLength 1
-     * @maxLength 200
-     */
+   * The connection-style label the user picked.
+   * @minLength 1
+   * @maxLength 200
+   */
   connectionStyle: string;
   /** @maxItems 20 */
   patterns: string[];
   /**
-     * @maxLength 2000
-     * @nullable
-     */
+   * @maxLength 2000
+   * @nullable
+   */
   notes?: string | null;
   /** The deterministic compass output shown to the user. */
   deterministicResult: CompassReadInputDeterministicResult;
   /**
-     * The AI-enhanced compass output when present, otherwise null.
-     * @nullable
-     */
+   * The AI-enhanced compass output when present, otherwise null.
+   * @nullable
+   */
   aiResult?: CompassReadInputAiResult;
 }
 
@@ -3209,13 +3231,13 @@ export type CompassReadDeterministicResult = { [key: string]: unknown };
  */
 export type CompassReadAiResult = { [key: string]: unknown } | null;
 
-export type CompassReadMode = typeof CompassReadMode[keyof typeof CompassReadMode];
-
+export type CompassReadMode =
+  (typeof CompassReadMode)[keyof typeof CompassReadMode];
 
 export const CompassReadMode = {
-  live: 'live',
-  fallback: 'fallback',
-  'setup-needed': 'setup-needed',
+  live: "live",
+  fallback: "fallback",
+  "setup-needed": "setup-needed",
 } as const;
 
 export interface CompassRead {
@@ -3288,24 +3310,24 @@ export interface CompassSignalContext {
 deterministic ranking. Composition only, never appearance.
 
  */
-export type PhotoLabPhotoInputShotType = typeof PhotoLabPhotoInputShotType[keyof typeof PhotoLabPhotoInputShotType];
-
+export type PhotoLabPhotoInputShotType =
+  (typeof PhotoLabPhotoInputShotType)[keyof typeof PhotoLabPhotoInputShotType];
 
 export const PhotoLabPhotoInputShotType = {
-  solo_face: 'solo_face',
-  full_body: 'full_body',
-  activity: 'activity',
-  group: 'group',
-  candid: 'candid',
-  other: 'other',
+  solo_face: "solo_face",
+  full_body: "full_body",
+  activity: "activity",
+  group: "group",
+  candid: "candid",
+  other: "other",
 } as const;
 
 export interface PhotoLabPhotoInput {
   /**
-     * Caller-assigned id so the ranking maps back to the photo.
-     * @minLength 1
-     * @maxLength 120
-     */
+   * Caller-assigned id so the ranking maps back to the photo.
+   * @minLength 1
+   * @maxLength 120
+   */
   id: string;
   /** What kind of shot this is, declared by the member. Drives the
   deterministic ranking. Composition only, never appearance.
@@ -3324,24 +3346,24 @@ export interface PhotoLabPhotoInput {
      */
   imageBase64?: string | null;
   /**
-     * MIME type of the image (e.g. "image/png") for the vision call.
-     * @nullable
-     */
+   * MIME type of the image (e.g. "image/png") for the vision call.
+   * @nullable
+   */
   imageMediaType?: string | null;
 }
 
 export interface PhotoLabRankInput {
   /**
-     * @minItems 1
-     * @maxItems 6
-     */
+   * @minItems 1
+   * @maxItems 6
+   */
   photos: PhotoLabPhotoInput[];
   /** @nullable */
   datingGoal?: string | null;
   /**
-     * Which dating app the photos are for (e.g. "Hinge").
-     * @nullable
-     */
+   * Which dating app the photos are for (e.g. "Hinge").
+   * @nullable
+   */
   sourceApp?: string | null;
 }
 
@@ -3355,13 +3377,13 @@ export interface PhotoLabRankedPhoto {
   notes: string[];
 }
 
-export type PhotoLabChecklistItemStatus = typeof PhotoLabChecklistItemStatus[keyof typeof PhotoLabChecklistItemStatus];
-
+export type PhotoLabChecklistItemStatus =
+  (typeof PhotoLabChecklistItemStatus)[keyof typeof PhotoLabChecklistItemStatus];
 
 export const PhotoLabChecklistItemStatus = {
-  good: 'good',
-  needs_work: 'needs_work',
-  missing: 'missing',
+  good: "good",
+  needs_work: "needs_work",
+  missing: "missing",
 } as const;
 
 export interface PhotoLabChecklistItem {
@@ -3370,13 +3392,13 @@ export interface PhotoLabChecklistItem {
   advice: string;
 }
 
-export type PhotoLabVisionItemAssessment = typeof PhotoLabVisionItemAssessment[keyof typeof PhotoLabVisionItemAssessment];
-
+export type PhotoLabVisionItemAssessment =
+  (typeof PhotoLabVisionItemAssessment)[keyof typeof PhotoLabVisionItemAssessment];
 
 export const PhotoLabVisionItemAssessment = {
-  strong: 'strong',
-  okay: 'okay',
-  needs_work: 'needs_work',
+  strong: "strong",
+  okay: "okay",
+  needs_work: "needs_work",
 } as const;
 
 export interface PhotoLabVisionItem {
@@ -3394,9 +3416,9 @@ and never stored.
 export interface PhotoLabVisionAnalysis {
   summary: string;
   /**
-     * The vision pass's lead-shot pick, mapped to an input id.
-     * @nullable
-     */
+   * The vision pass's lead-shot pick, mapped to an input id.
+   * @nullable
+   */
   leadShotId?: string | null;
   /** @nullable */
   leadShotReason?: string | null;
@@ -3418,12 +3440,12 @@ export interface PhotoLabMirrorTieIn {
 /**
  * Whether the opt-in Claude vision pass actually ran.
  */
-export type PhotoLabRankResultVisionMode = typeof PhotoLabRankResultVisionMode[keyof typeof PhotoLabRankResultVisionMode];
-
+export type PhotoLabRankResultVisionMode =
+  (typeof PhotoLabRankResultVisionMode)[keyof typeof PhotoLabRankResultVisionMode];
 
 export const PhotoLabRankResultVisionMode = {
-  live: 'live',
-  fallback: 'fallback',
+  live: "live",
+  fallback: "fallback",
 } as const;
 
 /**
@@ -3459,10 +3481,10 @@ export interface CompassScreenshotExtractResult {
 
 export interface CalendarImportBody {
   /**
-     * The full text contents of a .ics calendar file.
-     * @minLength 1
-     * @maxLength 2000000
-     */
+   * The full text contents of a .ics calendar file.
+   * @minLength 1
+   * @maxLength 2000000
+   */
   icsContent: string;
 }
 
@@ -3511,15 +3533,15 @@ export interface DeleteImportResult {
 
 export interface AskFounderCopilotInput {
   /**
-     * Free-form strategic question for Echo.
-     * @minLength 4
-     * @maxLength 2000
-     */
+   * Free-form strategic question for Echo.
+   * @minLength 4
+   * @maxLength 2000
+   */
   question: string;
   /**
-     * Optional one-line context the founder wants Echo to consider (a metric, a moment, a specific signup).
-     * @maxLength 1000
-     */
+   * Optional one-line context the founder wants Echo to consider (a metric, a moment, a specific signup).
+   * @maxLength 1000
+   */
   contextHint?: string;
 }
 
@@ -3553,70 +3575,71 @@ export interface MatchPreferences {
 
 export interface MatchPreferencesInput {
   /**
-     * @minimum 18
-     * @maximum 120
-     * @nullable
-     */
+   * @minimum 18
+   * @maximum 120
+   * @nullable
+   */
   ageMin?: number | null;
   /**
-     * @minimum 18
-     * @maximum 120
-     * @nullable
-     */
+   * @minimum 18
+   * @maximum 120
+   * @nullable
+   */
   ageMax?: number | null;
   /**
-     * @minimum 0
-     * @maximum 20000
-     * @nullable
-     */
+   * @minimum 0
+   * @maximum 20000
+   * @nullable
+   */
   distanceKm?: number | null;
   /**
-     * @maxLength 64
-     * @nullable
-     */
+   * @maxLength 64
+   * @nullable
+   */
   genderPreference?: string | null;
   /**
-     * @maxItems 50
-     * @nullable
-     */
+   * @maxItems 50
+   * @nullable
+   */
   dealBreakers?: string[] | null;
   /**
-     * @maxItems 50
-     * @nullable
-     */
+   * @maxItems 50
+   * @nullable
+   */
   mustHaves?: string[] | null;
   /**
-     * @maxLength 120
-     * @nullable
-     */
+   * @maxLength 120
+   * @nullable
+   */
   cityHint?: string | null;
 }
 
-export type MatchPoolMembershipStatus = typeof MatchPoolMembershipStatus[keyof typeof MatchPoolMembershipStatus];
-
+export type MatchPoolMembershipStatus =
+  (typeof MatchPoolMembershipStatus)[keyof typeof MatchPoolMembershipStatus];
 
 export const MatchPoolMembershipStatus = {
-  off: 'off',
-  building: 'building',
-  ready: 'ready',
-  paused: 'paused',
-  concierge_only: 'concierge_only',
+  off: "off",
+  building: "building",
+  ready: "ready",
+  paused: "paused",
+  concierge_only: "concierge_only",
 } as const;
 
 /**
  * @nullable
  */
-export type MatchPoolMembershipTier = typeof MatchPoolMembershipTier[keyof typeof MatchPoolMembershipTier] | null;
-
+export type MatchPoolMembershipTier =
+  | (typeof MatchPoolMembershipTier)[keyof typeof MatchPoolMembershipTier]
+  | null;
 
 export const MatchPoolMembershipTier = {
-  member: 'member',
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
-  free: 'free',
-  reset: 'reset',
-  wingman: 'wingman',
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
+  free: "free",
+  reset: "reset",
+  wingman: "wingman",
 } as const;
 
 export interface MatchPoolMembership {
@@ -3631,44 +3654,44 @@ export interface MatchPoolMembership {
   updatedAt: string;
 }
 
-export type MatchPoolMembershipInputStatus = typeof MatchPoolMembershipInputStatus[keyof typeof MatchPoolMembershipInputStatus];
-
+export type MatchPoolMembershipInputStatus =
+  (typeof MatchPoolMembershipInputStatus)[keyof typeof MatchPoolMembershipInputStatus];
 
 export const MatchPoolMembershipInputStatus = {
-  off: 'off',
-  building: 'building',
-  ready: 'ready',
-  paused: 'paused',
+  off: "off",
+  building: "building",
+  ready: "ready",
+  paused: "paused",
 } as const;
 
 export interface MatchPoolMembershipInput {
   status: MatchPoolMembershipInputStatus;
   /**
-     * @maxLength 280
-     * @nullable
-     */
+   * @maxLength 280
+   * @nullable
+   */
   pausedReason?: string | null;
 }
 
-export type MatchProposalSource = typeof MatchProposalSource[keyof typeof MatchProposalSource];
-
+export type MatchProposalSource =
+  (typeof MatchProposalSource)[keyof typeof MatchProposalSource];
 
 export const MatchProposalSource = {
-  internal: 'internal',
-  external_paste: 'external_paste',
-  concierge: 'concierge',
+  internal: "internal",
+  external_paste: "external_paste",
+  concierge: "concierge",
 } as const;
 
-export type MatchProposalStatus = typeof MatchProposalStatus[keyof typeof MatchProposalStatus];
-
+export type MatchProposalStatus =
+  (typeof MatchProposalStatus)[keyof typeof MatchProposalStatus];
 
 export const MatchProposalStatus = {
-  proposed: 'proposed',
-  user_yes: 'user_yes',
-  user_no: 'user_no',
-  mutual_yes: 'mutual_yes',
-  expired: 'expired',
-  completed: 'completed',
+  proposed: "proposed",
+  user_yes: "user_yes",
+  user_no: "user_no",
+  mutual_yes: "mutual_yes",
+  expired: "expired",
+  completed: "completed",
 } as const;
 
 export interface MatchProposal {
@@ -3678,24 +3701,24 @@ export interface MatchProposal {
   proposedToUserId: string | null;
   source: MatchProposalSource;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   compatibilityScore: number;
   /** @nullable */
   summary: string | null;
   status: MatchProposalStatus;
   /**
-     * A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.
-     * @minimum 0
-     * @maximum 100
-     * @nullable
-     */
+   * A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.
+   * @minimum 0
+   * @maximum 100
+   * @nullable
+   */
   cosmicResonance: number | null;
   /**
-     * A short, light note for the resonance garnish. Null when either person has no chart.
-     * @nullable
-     */
+   * A short, light note for the resonance garnish. Null when either person has no chart.
+   * @nullable
+   */
   cosmicResonanceNote: string | null;
   createdAt: string;
   updatedAt: string;
@@ -3709,10 +3732,10 @@ export interface EchoMatchReadNextStep {
 export interface EchoMatchRead {
   headline: string;
   /**
-     * How confident Echo's read is, derived from signal coverage and readiness.
-     * @minimum 0
-     * @maximum 100
-     */
+   * How confident Echo's read is, derived from signal coverage and readiness.
+   * @minimum 0
+   * @maximum 100
+   */
   confidence: number;
   /** What Echo can see in the user's accumulated signals (aggregate only). */
   reading: string[];
@@ -3721,10 +3744,10 @@ export interface EchoMatchRead {
   /** Human label for the search radius, e.g. "inside your 35-mile radius". */
   radiusLabel: string;
   /**
-     * Readiness points still needed to join the pool, 0 when eligible.
-     * @minimum 0
-     * @maximum 100
-     */
+   * Readiness points still needed to join the pool, 0 when eligible.
+   * @minimum 0
+   * @maximum 100
+   */
   gapToPool: number;
   nextStep: EchoMatchReadNextStep | null;
   /** True when the Claude layer produced this read, false on the deterministic baseline. */
@@ -3746,19 +3769,19 @@ export interface ErrorEnvelope {
 
 export interface UploadUrlRequest {
   /**
-     * Original file name.
-     * @minLength 1
-     */
+   * Original file name.
+   * @minLength 1
+   */
   name: string;
   /**
-     * File size in bytes.
-     * @minimum 1
-     */
+   * File size in bytes.
+   * @minimum 1
+   */
   size: number;
   /**
-     * MIME type of the file (e.g. `image/jpeg`).
-     * @minLength 1
-     */
+   * MIME type of the file (e.g. `image/jpeg`).
+   * @minLength 1
+   */
   contentType: string;
 }
 
@@ -3795,34 +3818,35 @@ export interface RevealConsentState {
   revealConsent: boolean;
 }
 
-export type ConnectionStatus = typeof ConnectionStatus[keyof typeof ConnectionStatus];
-
+export type ConnectionStatus =
+  (typeof ConnectionStatus)[keyof typeof ConnectionStatus];
 
 export const ConnectionStatus = {
-  active: 'active',
-  closed: 'closed',
+  active: "active",
+  closed: "closed",
 } as const;
 
 /**
  * @nullable
  */
-export type ConnectionClosedReason = typeof ConnectionClosedReason[keyof typeof ConnectionClosedReason] | null;
-
+export type ConnectionClosedReason =
+  | (typeof ConnectionClosedReason)[keyof typeof ConnectionClosedReason]
+  | null;
 
 export const ConnectionClosedReason = {
-  unmatch: 'unmatch',
-  block: 'block',
-  report: 'report',
+  unmatch: "unmatch",
+  block: "block",
+  report: "report",
 } as const;
 
-export type ConnectionDateStage = typeof ConnectionDateStage[keyof typeof ConnectionDateStage];
-
+export type ConnectionDateStage =
+  (typeof ConnectionDateStage)[keyof typeof ConnectionDateStage];
 
 export const ConnectionDateStage = {
-  connected: 'connected',
-  date_planned: 'date_planned',
-  date_completed: 'date_completed',
-  debrief_saved: 'debrief_saved',
+  connected: "connected",
+  date_planned: "date_planned",
+  date_completed: "date_completed",
+  debrief_saved: "debrief_saved",
 } as const;
 
 export interface Connection {
@@ -3838,9 +3862,9 @@ export interface Connection {
   /** @nullable */
   dateCompletedAt: string | null;
   /**
-     * The signed-in member's active private debrief, never the counterpart's.
-     * @nullable
-     */
+   * The signed-in member's active private debrief, never the counterpart's.
+   * @nullable
+   */
   debriefNoteId: number | null;
   unreadCount: number;
   createdAt: string;
@@ -3850,13 +3874,15 @@ export interface Connection {
   lastMessagePreview: string | null;
 }
 
-export type ConnectionDateStateInput = {
-  action: 'plan';
-  occurredAt: string;
-} | {
-  action: 'complete';
-  occurredAt?: string;
-};
+export type ConnectionDateStateInput =
+  | {
+      action: "plan";
+      occurredAt: string;
+    }
+  | {
+      action: "complete";
+      occurredAt?: string;
+    };
 
 export interface ConnectionMessage {
   id: string;
@@ -3872,23 +3898,23 @@ export interface ConnectionMessage {
 
 export interface SendMessageInput {
   /**
-     * @minLength 1
-     * @maxLength 4000
-     */
+   * @minLength 1
+   * @maxLength 4000
+   */
   body: string;
 }
 
-export type ReportConnectionInputReason = typeof ReportConnectionInputReason[keyof typeof ReportConnectionInputReason];
-
+export type ReportConnectionInputReason =
+  (typeof ReportConnectionInputReason)[keyof typeof ReportConnectionInputReason];
 
 export const ReportConnectionInputReason = {
-  fake_profile: 'fake_profile',
-  harassment: 'harassment',
-  inappropriate: 'inappropriate',
-  scam: 'scam',
-  underage: 'underage',
-  safety: 'safety',
-  other: 'other',
+  fake_profile: "fake_profile",
+  harassment: "harassment",
+  inappropriate: "inappropriate",
+  scam: "scam",
+  underage: "underage",
+  safety: "safety",
+  other: "other",
 } as const;
 
 export interface ReportConnectionInput {
@@ -3916,16 +3942,16 @@ export interface RevealCard {
   /** Aggregate values phrasing, never raw signals. */
   valuesSummary: string;
   /**
-     * Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.
-     * @minimum 0
-     * @maximum 100
-     * @nullable
-     */
+   * Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.
+   * @minimum 0
+   * @maximum 100
+   * @nullable
+   */
   compatibilityScore: number | null;
   /**
-     * Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.
-     * @nullable
-     */
+   * Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.
+   * @nullable
+   */
   matchSummary: string | null;
 }
 
@@ -3939,12 +3965,12 @@ export interface ConnectionStarter {
 /**
  * Which lane produced these openers. "ai" only when the deep AI lane was used.
  */
-export type ConnectionStartersMode = typeof ConnectionStartersMode[keyof typeof ConnectionStartersMode];
-
+export type ConnectionStartersMode =
+  (typeof ConnectionStartersMode)[keyof typeof ConnectionStartersMode];
 
 export const ConnectionStartersMode = {
-  deterministic: 'deterministic',
-  ai: 'ai',
+  deterministic: "deterministic",
+  ai: "ai",
 } as const;
 
 export interface ConnectionStarters {
@@ -3965,12 +3991,12 @@ export interface DateIdea {
 /**
  * Which lane produced these ideas. "ai" only when the deep AI lane was used.
  */
-export type ConnectionDateIdeasMode = typeof ConnectionDateIdeasMode[keyof typeof ConnectionDateIdeasMode];
-
+export type ConnectionDateIdeasMode =
+  (typeof ConnectionDateIdeasMode)[keyof typeof ConnectionDateIdeasMode];
 
 export const ConnectionDateIdeasMode = {
-  deterministic: 'deterministic',
-  ai: 'ai',
+  deterministic: "deterministic",
+  ai: "ai",
 } as const;
 
 export interface ConnectionDateIdeas {
@@ -3981,34 +4007,34 @@ export interface ConnectionDateIdeas {
   locationLabel: string;
 }
 
-export type MatchExternalReadInputSource = typeof MatchExternalReadInputSource[keyof typeof MatchExternalReadInputSource];
-
+export type MatchExternalReadInputSource =
+  (typeof MatchExternalReadInputSource)[keyof typeof MatchExternalReadInputSource];
 
 export const MatchExternalReadInputSource = {
-  hinge: 'hinge',
-  tinder: 'tinder',
-  bumble: 'bumble',
-  grindr: 'grindr',
-  feeld: 'feeld',
-  her: 'her',
-  facebookDating: 'facebookDating',
-  other: 'other',
+  hinge: "hinge",
+  tinder: "tinder",
+  bumble: "bumble",
+  grindr: "grindr",
+  feeld: "feeld",
+  her: "her",
+  facebookDating: "facebookDating",
+  other: "other",
 } as const;
 
 export interface MatchExternalReadInput {
   /**
-     * @minLength 1
-     * @maxLength 20000
-     */
+   * @minLength 1
+   * @maxLength 20000
+   */
   profileText: string;
   source: MatchExternalReadInputSource;
 }
 
 export interface MatchExternalReadResult {
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   score: number;
   highlights: string[];
   frictions: string[];
@@ -4021,12 +4047,12 @@ export interface CosmicPlacement {
   degree: number;
 }
 
-export type CosmicPlacementsMode = typeof CosmicPlacementsMode[keyof typeof CosmicPlacementsMode];
-
+export type CosmicPlacementsMode =
+  (typeof CosmicPlacementsMode)[keyof typeof CosmicPlacementsMode];
 
 export const CosmicPlacementsMode = {
-  full: 'full',
-  sunOnly: 'sunOnly',
+  full: "full",
+  sunOnly: "sunOnly",
 } as const;
 
 export type CosmicPlacementsMidheaven = {
@@ -4070,12 +4096,12 @@ export interface CosmicPlacements {
   modalities: CosmicPlacementsModalities;
 }
 
-export type CosmicReadingSource = typeof CosmicReadingSource[keyof typeof CosmicReadingSource];
-
+export type CosmicReadingSource =
+  (typeof CosmicReadingSource)[keyof typeof CosmicReadingSource];
 
 export const CosmicReadingSource = {
-  deterministic: 'deterministic',
-  claude: 'claude',
+  deterministic: "deterministic",
+  claude: "claude",
 } as const;
 
 /**
@@ -4093,9 +4119,9 @@ export interface CosmicReading {
   topTrait: string;
   source: CosmicReadingSource;
   /**
-     * Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.
-     * @nullable
-     */
+   * Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.
+   * @nullable
+   */
   deep?: CosmicReadingDeep;
 }
 
@@ -4116,43 +4142,43 @@ export interface CosmicChartInput {
   /** ISO date, YYYY-MM-DD. */
   birthDate: string;
   /**
-     * HH:MM 24h, or null when the user does not know their birth time.
-     * @nullable
-     */
+   * HH:MM 24h, or null when the user does not know their birth time.
+   * @nullable
+   */
   birthTime?: string | null;
   /** @maxLength 160 */
   birthPlace: string;
   /**
-     * @minimum -90
-     * @maximum 90
-     */
+   * @minimum -90
+   * @maximum 90
+   */
   birthLat: number;
   /**
-     * @minimum -180
-     * @maximum 180
-     */
+   * @minimum -180
+   * @maximum 180
+   */
   birthLng: number;
 }
 
-export type CosmicReactionInputReaction = typeof CosmicReactionInputReaction[keyof typeof CosmicReactionInputReaction];
-
+export type CosmicReactionInputReaction =
+  (typeof CosmicReactionInputReaction)[keyof typeof CosmicReactionInputReaction];
 
 export const CosmicReactionInputReaction = {
-  resonant: 'resonant',
-  mixed: 'mixed',
-  off: 'off',
+  resonant: "resonant",
+  mixed: "mixed",
+  off: "off",
 } as const;
 
 export interface CosmicReactionInput {
   reaction: CosmicReactionInputReaction;
 }
 
-export type CosmicLineAngle = typeof CosmicLineAngle[keyof typeof CosmicLineAngle];
-
+export type CosmicLineAngle =
+  (typeof CosmicLineAngle)[keyof typeof CosmicLineAngle];
 
 export const CosmicLineAngle = {
-  MC: 'MC',
-  IC: 'IC',
+  MC: "MC",
+  IC: "IC",
 } as const;
 
 export interface CosmicLine {
@@ -4165,12 +4191,12 @@ export interface CosmicLine {
   meaning: string;
 }
 
-export type CosmicLoveLineCityAngle = typeof CosmicLoveLineCityAngle[keyof typeof CosmicLoveLineCityAngle];
-
+export type CosmicLoveLineCityAngle =
+  (typeof CosmicLoveLineCityAngle)[keyof typeof CosmicLoveLineCityAngle];
 
 export const CosmicLoveLineCityAngle = {
-  MC: 'MC',
-  IC: 'IC',
+  MC: "MC",
+  IC: "IC",
 } as const;
 
 export interface CosmicLoveLineCity {
@@ -4187,12 +4213,12 @@ export interface CosmicLoveLineCity {
 /**
  * Lines are only computed in full mode (a birth time was given).
  */
-export type CosmicLinesMode = typeof CosmicLinesMode[keyof typeof CosmicLinesMode];
-
+export type CosmicLinesMode =
+  (typeof CosmicLinesMode)[keyof typeof CosmicLinesMode];
 
 export const CosmicLinesMode = {
-  full: 'full',
-  sunOnly: 'sunOnly',
+  full: "full",
+  sunOnly: "sunOnly",
 } as const;
 
 export interface CosmicLines {
@@ -4225,172 +4251,172 @@ export interface CosmicWeather {
 
 export interface MatchReadinessBreakdown {
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   compass: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   journal: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   wellness: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   hingeImport: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   postDate: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   wins: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   calendar: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   audits: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   coaching: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   instagram: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   lifePulse: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   taste: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   lifestyle: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   quizzes: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   receipts: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   music: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   vitality: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   communities: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   curiosity: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   film: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   reading: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   wyr: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   dailySpark: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   flags: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   consistency: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   scenarioReels: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   selfAwareness: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   timeCapsule: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   externalCalibration: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   cosmicProfile: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   relocationOpen: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   verification: number;
 }
 
 export interface MatchReadiness {
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   score: number;
   breakdown: MatchReadinessBreakdown;
 }
@@ -4403,10 +4429,10 @@ export interface ReadinessNextAction {
   /** One spoken-English line on why this moves the needle. */
   detail: string;
   /**
-     * Approximate readiness points this action would add.
-     * @minimum 0
-     * @maximum 100
-     */
+   * Approximate readiness points this action would add.
+   * @minimum 0
+   * @maximum 100
+   */
   points: number;
   /** In-app route the user should go to. */
   href: string;
@@ -4416,9 +4442,9 @@ export interface ReadinessHistoryPoint {
   /** Calendar day (YYYY-MM-DD, UTC) of the snapshot. */
   day: string;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   score: number;
 }
 
@@ -4448,21 +4474,21 @@ export interface ReadinessLearning {
   /** Spoken-English read of what the recent outcomes suggest. */
   headline: string;
   /**
-     * How many date outcomes the user has logged.
-     * @minimum 0
-     */
+   * How many date outcomes the user has logged.
+   * @minimum 0
+   */
   totalDates: number;
   /**
-     * The day-one readiness score, served to the user today.
-     * @minimum 0
-     * @maximum 100
-     */
+   * The day-one readiness score, served to the user today.
+   * @minimum 0
+   * @maximum 100
+   */
   baseScore: number;
   /**
-     * The would-be readiness score if the outcome tilt were applied. Observational only in shadow mode.
-     * @minimum 0
-     * @maximum 100
-     */
+   * The would-be readiness score if the outcome tilt were applied. Observational only in shadow mode.
+   * @minimum 0
+   * @maximum 100
+   */
   observedScore: number;
   /** observedScore minus baseScore. Can be negative. */
   delta: number;
@@ -4470,61 +4496,62 @@ export interface ReadinessLearning {
   leaningInto: string[];
 }
 
-export type MatchingStatePoolStatus = typeof MatchingStatePoolStatus[keyof typeof MatchingStatePoolStatus];
-
+export type MatchingStatePoolStatus =
+  (typeof MatchingStatePoolStatus)[keyof typeof MatchingStatePoolStatus];
 
 export const MatchingStatePoolStatus = {
-  off: 'off',
-  building: 'building',
-  ready: 'ready',
-  paused: 'paused',
-  concierge_only: 'concierge_only',
+  off: "off",
+  building: "building",
+  ready: "ready",
+  paused: "paused",
+  concierge_only: "concierge_only",
 } as const;
 
 /**
  * Canonical plan key retained for compatibility. Prefer plan.key.
  * @deprecated
  */
-export type MatchingStateTier = typeof MatchingStateTier[keyof typeof MatchingStateTier];
-
+export type MatchingStateTier =
+  (typeof MatchingStateTier)[keyof typeof MatchingStateTier];
 
 export const MatchingStateTier = {
-  member: 'member',
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
 } as const;
 
-export type CommercialPlanAssignmentKey = typeof CommercialPlanAssignmentKey[keyof typeof CommercialPlanAssignmentKey];
-
+export type CommercialPlanAssignmentKey =
+  (typeof CommercialPlanAssignmentKey)[keyof typeof CommercialPlanAssignmentKey];
 
 export const CommercialPlanAssignmentKey = {
-  member: 'member',
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
 } as const;
 
-export type CommercialPlanAssignmentSource = typeof CommercialPlanAssignmentSource[keyof typeof CommercialPlanAssignmentSource];
-
+export type CommercialPlanAssignmentSource =
+  (typeof CommercialPlanAssignmentSource)[keyof typeof CommercialPlanAssignmentSource];
 
 export const CommercialPlanAssignmentSource = {
-  default: 'default',
-  canonical: 'canonical',
-  legacy: 'legacy',
+  default: "default",
+  canonical: "canonical",
+  legacy: "legacy",
 } as const;
 
 /**
  * @nullable
  */
-export type CommercialPlanAssignmentNextPlanKey = typeof CommercialPlanAssignmentNextPlanKey[keyof typeof CommercialPlanAssignmentNextPlanKey] | null;
-
+export type CommercialPlanAssignmentNextPlanKey =
+  | (typeof CommercialPlanAssignmentNextPlanKey)[keyof typeof CommercialPlanAssignmentNextPlanKey]
+  | null;
 
 export const CommercialPlanAssignmentNextPlanKey = {
-  member: 'member',
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
 } as const;
 
 export interface CommercialPlanAssignment {
@@ -4566,22 +4593,22 @@ export interface ReadinessDelta {
  */
 export interface ActivityStreak {
   /**
-     * Consecutive active days ending today, or yesterday if today is not yet active. 0 once the run has lapsed.
-     * @minimum 0
-     */
+   * Consecutive active days ending today, or yesterday if today is not yet active. 0 once the run has lapsed.
+   * @minimum 0
+   */
   current: number;
   /**
-     * Longest consecutive run of active days ever.
-     * @minimum 0
-     */
+   * Longest consecutive run of active days ever.
+   * @minimum 0
+   */
   longest: number;
   /** True when the user has already fed a signal today (UTC). */
   activeToday: boolean;
   /**
-     * How many of the last 14 days (inclusive of today) had activity.
-     * @minimum 0
-     * @maximum 14
-     */
+   * How many of the last 14 days (inclusive of today) had activity.
+   * @minimum 0
+   * @maximum 14
+   */
   daysActiveLast14: number;
 }
 
@@ -4591,9 +4618,9 @@ export interface MatchingState {
   /** Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched. */
   revealConsent?: boolean;
   /**
-     * Canonical plan key retained for compatibility. Prefer plan.key.
-     * @deprecated
-     */
+   * Canonical plan key retained for compatibility. Prefer plan.key.
+   * @deprecated
+   */
   tier: MatchingStateTier;
   plan: CommercialPlanAssignment;
   /** True only when the account has Match or Guided active-search access and its pool state is active. Candidate-pool opt-in alone does not make search active. */
@@ -4602,10 +4629,10 @@ export interface MatchingState {
   /** True when profile evidence is at or above readinessThreshold. This is distinct from plan access, active search, market availability, and whether an introduction exists. */
   eligible: boolean;
   /**
-     * Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).
-     * @minimum 0
-     * @maximum 100
-     */
+   * Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).
+   * @minimum 0
+   * @maximum 100
+   */
   readinessThreshold: number;
   /** @minimum 0 */
   cityDensity: number;
@@ -4626,22 +4653,22 @@ export interface BenchmarkLane {
   /** Signal lane id, matching a MatchReadinessBreakdown key. */
   key: string;
   /**
-     * The caller's own coverage for this lane.
-     * @minimum 0
-     * @maximum 100
-     */
+   * The caller's own coverage for this lane.
+   * @minimum 0
+   * @maximum 100
+   */
   coverage: number;
   /**
-     * The cohort's median coverage for this lane.
-     * @minimum 0
-     * @maximum 100
-     */
+   * The cohort's median coverage for this lane.
+   * @minimum 0
+   * @maximum 100
+   */
   cohortMedian: number;
   /**
-     * Where the caller sits within the cohort for this lane, as a percentile (share of the cohort at or below the caller's coverage).
-     * @minimum 0
-     * @maximum 100
-     */
+   * Where the caller sits within the cohort for this lane, as a percentile (share of the cohort at or below the caller's coverage).
+   * @minimum 0
+   * @maximum 100
+   */
   percentile: number;
 }
 
@@ -4654,14 +4681,14 @@ export interface MatchingBenchmarks {
   /** The normalized goal bucket the cohort is built from (e.g. long-term, casual, friends-first, exploring). */
   goal: string;
   /**
-     * Number of other users in the caller's goal cohort.
-     * @minimum 0
-     */
+   * Number of other users in the caller's goal cohort.
+   * @minimum 0
+   */
   cohortSize: number;
   /**
-     * Minimum cohort size required before benchmarks are shown.
-     * @minimum 0
-     */
+   * Minimum cohort size required before benchmarks are shown.
+   * @minimum 0
+   */
   minCohort: number;
   /** Per-lane standing, one entry per readiness signal lane. */
   lanes: BenchmarkLane[];
@@ -4672,19 +4699,19 @@ export interface MatchingBenchmarks {
  */
 export interface UserJourneySummary {
   /**
-     * Count of signals the caller fed in the last 7 days.
-     * @minimum 0
-     */
+   * Count of signals the caller fed in the last 7 days.
+   * @minimum 0
+   */
   signalsFedThisWeek: number;
   /**
-     * Total readiness points the caller gained in the last 7 days, summed from their readiness-gain events.
-     * @minimum 0
-     */
+   * Total readiness points the caller gained in the last 7 days, summed from their readiness-gain events.
+   * @minimum 0
+   */
   readinessGainedThisWeek: number;
   /**
-     * Count of tools the caller completed in the last 7 days.
-     * @minimum 0
-     */
+   * Count of tools the caller completed in the last 7 days.
+   * @minimum 0
+   */
   toolsCompletedThisWeek: number;
   /** True when the caller has any journey event on record, so the client can show a first-week welcome state instead of zeros. */
   hasHistory: boolean;
@@ -4693,13 +4720,13 @@ export interface UserJourneySummary {
 /**
  * Visual tier of the unlock.
  */
-export type AchievementTier = typeof AchievementTier[keyof typeof AchievementTier];
-
+export type AchievementTier =
+  (typeof AchievementTier)[keyof typeof AchievementTier];
 
 export const AchievementTier = {
-  bronze: 'bronze',
-  silver: 'silver',
-  gold: 'gold',
+  bronze: "bronze",
+  silver: "silver",
+  gold: "gold",
 } as const;
 
 /**
@@ -4719,14 +4746,14 @@ export interface Achievement {
   /** Short noun for progress copy, e.g. "signals" or "days". */
   unit: string;
   /**
-     * Value the metric must reach to unlock. The "match ready" unlock uses the live readiness threshold.
-     * @minimum 1
-     */
+   * Value the metric must reach to unlock. The "match ready" unlock uses the live readiness threshold.
+   * @minimum 1
+   */
   target: number;
   /**
-     * Current progress toward the target, clamped to the target.
-     * @minimum 0
-     */
+   * Current progress toward the target, clamped to the target.
+   * @minimum 0
+   */
   progress: number;
   /** True when the unlock has been earned. */
   unlocked: boolean;
@@ -4739,14 +4766,14 @@ export interface UserAchievements {
   /** Every unlock, locked and unlocked, in journey order. */
   achievements: Achievement[];
   /**
-     * How many unlocks the caller has earned.
-     * @minimum 0
-     */
+   * How many unlocks the caller has earned.
+   * @minimum 0
+   */
   unlockedCount: number;
   /**
-     * Total number of unlocks on the board.
-     * @minimum 0
-     */
+   * Total number of unlocks on the board.
+   * @minimum 0
+   */
   totalCount: number;
 }
 
@@ -4768,22 +4795,22 @@ export interface SignalMapLane {
   /** Human label for the lane. */
   label: string;
   /**
-     * How full this lane is, from the readiness breakdown.
-     * @minimum 0
-     * @maximum 100
-     */
+   * How full this lane is, from the readiness breakdown.
+   * @minimum 0
+   * @maximum 100
+   */
   coverage: number;
   /**
-     * How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.
-     * @minimum 0
-     * @maximum 100
-     */
+   * How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.
+   * @minimum 0
+   * @maximum 100
+   */
   weightPercent: number;
   /**
-     * Rough confidence in this lane's predictive value.
-     * @minimum 0
-     * @maximum 100
-     */
+   * Rough confidence in this lane's predictive value.
+   * @minimum 0
+   * @maximum 100
+   */
   confidence: number;
   /** Wellness or personality dimensions this lane informs. */
   dimensions: string[];
@@ -4798,20 +4825,20 @@ export interface SignalMapLane {
  */
 export interface SignalMap {
   /**
-     * Overall fullness of the picture, equal to the readiness score (the weighted coverage across every lane).
-     * @minimum 0
-     * @maximum 100
-     */
+   * Overall fullness of the picture, equal to the readiness score (the weighted coverage across every lane).
+   * @minimum 0
+   * @maximum 100
+   */
   densityPercent: number;
   /**
-     * How many lanes have any signal.
-     * @minimum 0
-     */
+   * How many lanes have any signal.
+   * @minimum 0
+   */
   lanesActive: number;
   /**
-     * Total number of lanes the machine reads.
-     * @minimum 0
-     */
+   * Total number of lanes the machine reads.
+   * @minimum 0
+   */
   totalLanes: number;
   /** Every lane, active ones first (fullest coverage first), then blind spots ordered by how much filling them would matter. */
   lanes: SignalMapLane[];
@@ -4819,15 +4846,15 @@ export interface SignalMap {
   topBlindSpot: SignalMapLane | null;
 }
 
-export type DatingWinCategory = typeof DatingWinCategory[keyof typeof DatingWinCategory];
-
+export type DatingWinCategory =
+  (typeof DatingWinCategory)[keyof typeof DatingWinCategory];
 
 export const DatingWinCategory = {
-  'sent-it': 'sent-it',
-  'great-convo': 'great-convo',
-  'got-a-date': 'got-a-date',
-  'noticed-something': 'noticed-something',
-  'personal-win': 'personal-win',
+  "sent-it": "sent-it",
+  "great-convo": "great-convo",
+  "got-a-date": "got-a-date",
+  "noticed-something": "noticed-something",
+  "personal-win": "personal-win",
 } as const;
 
 export interface DatingWin {
@@ -4837,35 +4864,35 @@ export interface DatingWin {
   createdAt: string;
 }
 
-export type DatingWinInputCategory = typeof DatingWinInputCategory[keyof typeof DatingWinInputCategory];
-
+export type DatingWinInputCategory =
+  (typeof DatingWinInputCategory)[keyof typeof DatingWinInputCategory];
 
 export const DatingWinInputCategory = {
-  'sent-it': 'sent-it',
-  'great-convo': 'great-convo',
-  'got-a-date': 'got-a-date',
-  'noticed-something': 'noticed-something',
-  'personal-win': 'personal-win',
+  "sent-it": "sent-it",
+  "great-convo": "great-convo",
+  "got-a-date": "got-a-date",
+  "noticed-something": "noticed-something",
+  "personal-win": "personal-win",
 } as const;
 
 export interface DatingWinInput {
   category: DatingWinInputCategory;
   /**
-     * @minLength 1
-     * @maxLength 2000
-     */
+   * @minLength 1
+   * @maxLength 2000
+   */
   body: string;
 }
 
-export type GrowthEventType = typeof GrowthEventType[keyof typeof GrowthEventType];
-
+export type GrowthEventType =
+  (typeof GrowthEventType)[keyof typeof GrowthEventType];
 
 export const GrowthEventType = {
-  experiment_tried: 'experiment_tried',
-  what_changed: 'what_changed',
-  pattern_broken: 'pattern_broken',
-  follow_up_logged: 'follow_up_logged',
-  commitment_kept: 'commitment_kept',
+  experiment_tried: "experiment_tried",
+  what_changed: "what_changed",
+  pattern_broken: "pattern_broken",
+  follow_up_logged: "follow_up_logged",
+  commitment_kept: "commitment_kept",
 } as const;
 
 export interface GrowthEvent {
@@ -4874,15 +4901,15 @@ export interface GrowthEvent {
   createdAt: string;
 }
 
-export type GrowthEventInputType = typeof GrowthEventInputType[keyof typeof GrowthEventInputType];
-
+export type GrowthEventInputType =
+  (typeof GrowthEventInputType)[keyof typeof GrowthEventInputType];
 
 export const GrowthEventInputType = {
-  experiment_tried: 'experiment_tried',
-  what_changed: 'what_changed',
-  pattern_broken: 'pattern_broken',
-  follow_up_logged: 'follow_up_logged',
-  commitment_kept: 'commitment_kept',
+  experiment_tried: "experiment_tried",
+  what_changed: "what_changed",
+  pattern_broken: "pattern_broken",
+  follow_up_logged: "follow_up_logged",
+  commitment_kept: "commitment_kept",
 } as const;
 
 export interface GrowthEventInput {
@@ -4905,14 +4932,14 @@ export interface UserVerification {
   /** True when the ID check confirmed the holder is 18 or older. */
   ageOver18: boolean;
   /**
-     * How many verification tiers the user has cleared.
-     * @minimum 0
-     */
+   * How many verification tiers the user has cleared.
+   * @minimum 0
+   */
   verifiedTiers: number;
   /**
-     * Total tiers the climb can reach (phone, selfie, ID).
-     * @minimum 1
-     */
+   * Total tiers the climb can reach (phone, selfie, ID).
+   * @minimum 1
+   */
   tierTotal: number;
   /** True when at least one tier has cleared; drives the badge. */
   isVerified: boolean;
@@ -4935,9 +4962,9 @@ export interface IdentityVerificationResult {
 
 export interface SelfieVerificationImage {
   /**
-     * Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.
-     * @minLength 1
-     */
+   * Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.
+   * @minLength 1
+   */
   imageBase64: string;
   /** Optional MIME type hint, e.g. "image/jpeg". */
   imageMediaType?: string | null;
@@ -4946,34 +4973,34 @@ export interface SelfieVerificationImage {
 export interface SelfieVerificationCheckInput {
   selfie: SelfieVerificationImage;
   /**
-     * The profile photos to compare the selfie against, read in the moment.
-     * @minItems 1
-     * @maxItems 5
-     */
+   * The profile photos to compare the selfie against, read in the moment.
+   * @minItems 1
+   * @maxItems 5
+   */
   profilePhotos: SelfieVerificationImage[];
 }
 
 /**
  * Soft consistency outcome. "consistent" looks like the same person and awards the tier; "inconsistent" looks like a different person; "unclear" could not tell. Never a liveness or identity proof.
  */
-export type SelfieVerificationResultVerdict = typeof SelfieVerificationResultVerdict[keyof typeof SelfieVerificationResultVerdict];
-
+export type SelfieVerificationResultVerdict =
+  (typeof SelfieVerificationResultVerdict)[keyof typeof SelfieVerificationResultVerdict];
 
 export const SelfieVerificationResultVerdict = {
-  consistent: 'consistent',
-  inconsistent: 'inconsistent',
-  unclear: 'unclear',
+  consistent: "consistent",
+  inconsistent: "inconsistent",
+  unclear: "unclear",
 } as const;
 
 /**
  * "live" when the Claude vision check ran; "fallback" when consent was off, the daily cap was hit, or the call could not run. Fallback never awards the tier.
  */
-export type SelfieVerificationResultMode = typeof SelfieVerificationResultMode[keyof typeof SelfieVerificationResultMode];
-
+export type SelfieVerificationResultMode =
+  (typeof SelfieVerificationResultMode)[keyof typeof SelfieVerificationResultMode];
 
 export const SelfieVerificationResultMode = {
-  live: 'live',
-  fallback: 'fallback',
+  live: "live",
+  fallback: "fallback",
 } as const;
 
 export interface SelfieVerificationResult {
@@ -4990,19 +5017,19 @@ export interface SelfieVerificationResult {
 
 export interface PhoneVerificationStartInput {
   /**
-     * Phone number in E.164 form, e.g. "+14155550123".
-     * @minLength 5
-     * @maxLength 32
-     */
+   * Phone number in E.164 form, e.g. "+14155550123".
+   * @minLength 5
+   * @maxLength 32
+   */
   phone: string;
 }
 
-export type PhoneVerificationStartResultTransport = typeof PhoneVerificationStartResultTransport[keyof typeof PhoneVerificationStartResultTransport];
-
+export type PhoneVerificationStartResultTransport =
+  (typeof PhoneVerificationStartResultTransport)[keyof typeof PhoneVerificationStartResultTransport];
 
 export const PhoneVerificationStartResultTransport = {
-  twilio: 'twilio',
-  log: 'log',
+  twilio: "twilio",
+  log: "log",
 } as const;
 
 export interface PhoneVerificationStartResult {
@@ -5012,23 +5039,23 @@ export interface PhoneVerificationStartResult {
 
 export interface PhoneVerificationCheckInput {
   /**
-     * @minLength 5
-     * @maxLength 32
-     */
+   * @minLength 5
+   * @maxLength 32
+   */
   phone: string;
   /**
-     * @minLength 4
-     * @maxLength 10
-     */
+   * @minLength 4
+   * @maxLength 10
+   */
   code: string;
 }
 
-export type PhoneVerificationCheckResultTransport = typeof PhoneVerificationCheckResultTransport[keyof typeof PhoneVerificationCheckResultTransport];
-
+export type PhoneVerificationCheckResultTransport =
+  (typeof PhoneVerificationCheckResultTransport)[keyof typeof PhoneVerificationCheckResultTransport];
 
 export const PhoneVerificationCheckResultTransport = {
-  twilio: 'twilio',
-  log: 'log',
+  twilio: "twilio",
+  log: "log",
 } as const;
 
 export interface PhoneVerificationCheckResult {
@@ -5037,12 +5064,12 @@ export interface PhoneVerificationCheckResult {
   verification: UserVerification;
 }
 
-export type WyrAnswerChoice = typeof WyrAnswerChoice[keyof typeof WyrAnswerChoice];
-
+export type WyrAnswerChoice =
+  (typeof WyrAnswerChoice)[keyof typeof WyrAnswerChoice];
 
 export const WyrAnswerChoice = {
-  a: 'a',
-  b: 'b',
+  a: "a",
+  b: "b",
 } as const;
 
 export interface WyrAnswer {
@@ -5051,19 +5078,19 @@ export interface WyrAnswer {
   createdAt: string;
 }
 
-export type WyrAnswerInputChoice = typeof WyrAnswerInputChoice[keyof typeof WyrAnswerInputChoice];
-
+export type WyrAnswerInputChoice =
+  (typeof WyrAnswerInputChoice)[keyof typeof WyrAnswerInputChoice];
 
 export const WyrAnswerInputChoice = {
-  a: 'a',
-  b: 'b',
+  a: "a",
+  b: "b",
 } as const;
 
 export interface WyrAnswerInput {
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
+   * @minLength 1
+   * @maxLength 64
+   */
   promptId: string;
   choice: WyrAnswerInputChoice;
 }
@@ -5076,14 +5103,14 @@ export interface DailySparkAnswer {
 
 export interface DailySparkAnswerInput {
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
+   * @minLength 1
+   * @maxLength 64
+   */
   questionId: string;
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
+   * @minLength 1
+   * @maxLength 64
+   */
   choice: string;
 }
 
@@ -5108,47 +5135,47 @@ export interface ScenarioResponse {
 
 export interface ScenarioResponseInput {
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
+   * @minLength 1
+   * @maxLength 64
+   */
   scenarioId: string;
   /**
-     * @minLength 1
-     * @maxLength 16
-     */
+   * @minLength 1
+   * @maxLength 16
+   */
   optionId: string;
 }
 
 export interface PredictionResponse {
   itemId: string;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   predicted: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   actual: number;
   createdAt: string;
 }
 
 export interface PredictionResponseInput {
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
+   * @minLength 1
+   * @maxLength 64
+   */
   itemId: string;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   predicted: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   actual: number;
 }
 
@@ -5160,9 +5187,9 @@ export interface TimeCapsule {
 
 export interface TimeCapsuleInput {
   /**
-     * @minLength 1
-     * @maxLength 280
-     */
+   * @minLength 1
+   * @maxLength 280
+   */
   body: string;
 }
 
@@ -5176,46 +5203,46 @@ export interface WingmanRatings {
 
 export interface WingmanRatingsInput {
   /**
-     * @minimum 1
-     * @maximum 5
-     */
+   * @minimum 1
+   * @maximum 5
+   */
   warmth: number;
   /**
-     * @minimum 1
-     * @maximum 5
-     */
+   * @minimum 1
+   * @maximum 5
+   */
   humor: number;
   /**
-     * @minimum 1
-     * @maximum 5
-     */
+   * @minimum 1
+   * @maximum 5
+   */
   drive: number;
   /**
-     * @minimum 1
-     * @maximum 5
-     */
+   * @minimum 1
+   * @maximum 5
+   */
   openness: number;
   /**
-     * @minimum 1
-     * @maximum 5
-     */
+   * @minimum 1
+   * @maximum 5
+   */
   steadiness: number;
 }
 
 export interface WingmanInviteInput {
   /**
-     * @maxLength 60
-     * @nullable
-     */
+   * @maxLength 60
+   * @nullable
+   */
   friendLabel?: string | null;
 }
 
-export type WingmanInviteStatus = typeof WingmanInviteStatus[keyof typeof WingmanInviteStatus];
-
+export type WingmanInviteStatus =
+  (typeof WingmanInviteStatus)[keyof typeof WingmanInviteStatus];
 
 export const WingmanInviteStatus = {
-  pending: 'pending',
-  answered: 'answered',
+  pending: "pending",
+  answered: "answered",
 } as const;
 
 export interface WingmanInvite {
@@ -5225,9 +5252,9 @@ export interface WingmanInvite {
   status: WingmanInviteStatus;
   createdAt: string;
   /**
-     * Fresh signed share path, present only for pending invites.
-     * @nullable
-     */
+   * Fresh signed share path, present only for pending invites.
+   * @nullable
+   */
   path?: string | null;
 }
 
@@ -5268,39 +5295,39 @@ export interface WingmanAnswerAck {
 export interface MatchPoolIneligible {
   error: string;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   readinessScore: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
+   * @minimum 0
+   * @maximum 100
+   */
   readinessThreshold: number;
 }
 
-export type MatchingPlanRequiredCode = typeof MatchingPlanRequiredCode[keyof typeof MatchingPlanRequiredCode];
-
+export type MatchingPlanRequiredCode =
+  (typeof MatchingPlanRequiredCode)[keyof typeof MatchingPlanRequiredCode];
 
 export const MatchingPlanRequiredCode = {
-  active_matching_plan_required: 'active_matching_plan_required',
+  active_matching_plan_required: "active_matching_plan_required",
 } as const;
 
-export type MatchingPlanRequiredRequiredPlan = typeof MatchingPlanRequiredRequiredPlan[keyof typeof MatchingPlanRequiredRequiredPlan];
-
+export type MatchingPlanRequiredRequiredPlan =
+  (typeof MatchingPlanRequiredRequiredPlan)[keyof typeof MatchingPlanRequiredRequiredPlan];
 
 export const MatchingPlanRequiredRequiredPlan = {
-  match: 'match',
+  match: "match",
 } as const;
 
-export type MatchingPlanRequiredCurrentPlan = typeof MatchingPlanRequiredCurrentPlan[keyof typeof MatchingPlanRequiredCurrentPlan];
-
+export type MatchingPlanRequiredCurrentPlan =
+  (typeof MatchingPlanRequiredCurrentPlan)[keyof typeof MatchingPlanRequiredCurrentPlan];
 
 export const MatchingPlanRequiredCurrentPlan = {
-  member: 'member',
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
 } as const;
 
 export interface MatchingPlanRequired {
@@ -5310,14 +5337,14 @@ export interface MatchingPlanRequired {
   currentPlan: MatchingPlanRequiredCurrentPlan;
 }
 
-export type CommercialPlanPriceCadence = typeof CommercialPlanPriceCadence[keyof typeof CommercialPlanPriceCadence];
-
+export type CommercialPlanPriceCadence =
+  (typeof CommercialPlanPriceCadence)[keyof typeof CommercialPlanPriceCadence];
 
 export const CommercialPlanPriceCadence = {
-  free: 'free',
-  monthly: 'monthly',
-  annual: 'annual',
-  quarterly: 'quarterly',
+  free: "free",
+  monthly: "monthly",
+  annual: "annual",
+  quarterly: "quarterly",
 } as const;
 
 export interface CommercialPlanPrice {
@@ -5341,27 +5368,28 @@ export interface CommercialPlanEntitlements {
   humanGuidance: boolean;
 }
 
-export type CommercialPlanKey = typeof CommercialPlanKey[keyof typeof CommercialPlanKey];
-
+export type CommercialPlanKey =
+  (typeof CommercialPlanKey)[keyof typeof CommercialPlanKey];
 
 export const CommercialPlanKey = {
-  member: 'member',
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
 } as const;
 
 /**
  * @nullable
  */
-export type CommercialPlanNextPlanKey = typeof CommercialPlanNextPlanKey[keyof typeof CommercialPlanNextPlanKey] | null;
-
+export type CommercialPlanNextPlanKey =
+  | (typeof CommercialPlanNextPlanKey)[keyof typeof CommercialPlanNextPlanKey]
+  | null;
 
 export const CommercialPlanNextPlanKey = {
-  member: 'member',
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
 } as const;
 
 export interface CommercialPlan {
@@ -5382,21 +5410,21 @@ export interface CommercialPlansResponse {
   plans: CommercialPlan[];
 }
 
-export type BillingCheckoutRequestPlanKey = typeof BillingCheckoutRequestPlanKey[keyof typeof BillingCheckoutRequestPlanKey];
-
+export type BillingCheckoutRequestPlanKey =
+  (typeof BillingCheckoutRequestPlanKey)[keyof typeof BillingCheckoutRequestPlanKey];
 
 export const BillingCheckoutRequestPlanKey = {
-  insight: 'insight',
-  match: 'match',
+  insight: "insight",
+  match: "match",
 } as const;
 
-export type BillingCheckoutRequestCadence = typeof BillingCheckoutRequestCadence[keyof typeof BillingCheckoutRequestCadence];
-
+export type BillingCheckoutRequestCadence =
+  (typeof BillingCheckoutRequestCadence)[keyof typeof BillingCheckoutRequestCadence];
 
 export const BillingCheckoutRequestCadence = {
-  monthly: 'monthly',
-  annual: 'annual',
-  quarterly: 'quarterly',
+  monthly: "monthly",
+  annual: "annual",
+  quarterly: "quarterly",
 } as const;
 
 export interface BillingCheckoutRequest {
@@ -5408,29 +5436,30 @@ export interface BillingRedirectResponse {
   url: string;
 }
 
-export type BillingStatusResponseBillingState = typeof BillingStatusResponseBillingState[keyof typeof BillingStatusResponseBillingState];
-
+export type BillingStatusResponseBillingState =
+  (typeof BillingStatusResponseBillingState)[keyof typeof BillingStatusResponseBillingState];
 
 export const BillingStatusResponseBillingState = {
-  beta_grant: 'beta_grant',
-  active: 'active',
-  trialing: 'trialing',
-  past_due: 'past_due',
-  incomplete: 'incomplete',
-  inactive: 'inactive',
-  unavailable: 'unavailable',
+  beta_grant: "beta_grant",
+  active: "active",
+  trialing: "trialing",
+  past_due: "past_due",
+  incomplete: "incomplete",
+  inactive: "inactive",
+  unavailable: "unavailable",
 } as const;
 
 /**
  * @nullable
  */
-export type BillingStatusResponseStripePlanKey = typeof BillingStatusResponseStripePlanKey[keyof typeof BillingStatusResponseStripePlanKey] | null;
-
+export type BillingStatusResponseStripePlanKey =
+  | (typeof BillingStatusResponseStripePlanKey)[keyof typeof BillingStatusResponseStripePlanKey]
+  | null;
 
 export const BillingStatusResponseStripePlanKey = {
-  insight: 'insight',
-  match: 'match',
-  guided: 'guided',
+  insight: "insight",
+  match: "match",
+  guided: "guided",
 } as const;
 
 export interface BillingStatusResponse {
@@ -5448,106 +5477,106 @@ export interface BillingStatusResponse {
 export type AuthorizationSessionHeaderParameter = string;
 
 export type BeginBrowserLoginParams = {
-returnTo?: string;
+  returnTo?: string;
 };
 
 export type HandleBrowserLoginCallbackParams = {
-code?: string;
-state?: string;
-iss?: string;
+  code?: string;
+  state?: string;
+  iss?: string;
 };
 
 export type UnregisterPushTokenParams = {
-token: string;
+  token: string;
 };
 
 export type ListJournalEntriesParams = {
-view?: ListJournalEntriesView;
-/**
- * Optional case-insensitive substring filter on prompt + body.
- */
-q?: string;
-/**
- * Filter to entries that carry this tag.
- * @maxLength 40
- */
-tag?: string;
-/**
- * ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.
- */
-dateFrom?: string;
-/**
- * ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.
- */
-dateTo?: string;
-/**
- * @minimum 1
- * @maximum 200
- */
-limit?: number;
-/**
- * @minimum 0
- */
-offset?: number;
+  view?: ListJournalEntriesView;
+  /**
+   * Optional case-insensitive substring filter on prompt + body.
+   */
+  q?: string;
+  /**
+   * Filter to entries that carry this tag.
+   * @maxLength 40
+   */
+  tag?: string;
+  /**
+   * ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.
+   */
+  dateFrom?: string;
+  /**
+   * ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.
+   */
+  dateTo?: string;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
+  /**
+   * @minimum 0
+   */
+  offset?: number;
 };
 
-export type ListJournalEntriesView = typeof ListJournalEntriesView[keyof typeof ListJournalEntriesView];
-
+export type ListJournalEntriesView =
+  (typeof ListJournalEntriesView)[keyof typeof ListJournalEntriesView];
 
 export const ListJournalEntriesView = {
-  active: 'active',
-  trash: 'trash',
-  all: 'all',
+  active: "active",
+  trash: "trash",
+  all: "all",
 } as const;
 
 export type ListPostDateNotesParams = {
-view?: ListPostDateNotesView;
-q?: string;
-outcome?: ListPostDateNotesOutcome;
-/**
- * @maxLength 40
- */
-platform?: string;
-/**
- * ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.
- */
-dateFrom?: string;
-/**
- * ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.
- */
-dateTo?: string;
-/**
- * @minimum 1
- * @maximum 200
- */
-limit?: number;
-/**
- * @minimum 0
- */
-offset?: number;
+  view?: ListPostDateNotesView;
+  q?: string;
+  outcome?: ListPostDateNotesOutcome;
+  /**
+   * @maxLength 40
+   */
+  platform?: string;
+  /**
+   * ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.
+   */
+  dateFrom?: string;
+  /**
+   * ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.
+   */
+  dateTo?: string;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
+  /**
+   * @minimum 0
+   */
+  offset?: number;
 };
 
-export type ListPostDateNotesView = typeof ListPostDateNotesView[keyof typeof ListPostDateNotesView];
-
+export type ListPostDateNotesView =
+  (typeof ListPostDateNotesView)[keyof typeof ListPostDateNotesView];
 
 export const ListPostDateNotesView = {
-  active: 'active',
-  trash: 'trash',
-  all: 'all',
+  active: "active",
+  trash: "trash",
+  all: "all",
 } as const;
 
-export type ListPostDateNotesOutcome = typeof ListPostDateNotesOutcome[keyof typeof ListPostDateNotesOutcome];
-
+export type ListPostDateNotesOutcome =
+  (typeof ListPostDateNotesOutcome)[keyof typeof ListPostDateNotesOutcome];
 
 export const ListPostDateNotesOutcome = {
-  another_date: 'another_date',
-  no_more: 'no_more',
-  unsure: 'unsure',
-  ghosted: 'ghosted',
+  another_date: "another_date",
+  no_more: "no_more",
+  unsure: "unsure",
+  ghosted: "ghosted",
 } as const;
 
 export type ListWellnessAnswersParams = {
-dimension?: string;
+  dimension?: string;
 };
 
 export type DeleteWellnessTag200 = {
@@ -5556,66 +5585,66 @@ export type DeleteWellnessTag200 = {
 };
 
 export type ListAuditsParams = {
-source?: ListAuditsSource;
-/**
- * Case-insensitive substring search across firstName and bio.
- */
-q?: string;
-/**
- * Sort order for results.
- */
-sort?: ListAuditsSort;
-/**
+  source?: ListAuditsSource;
+  /**
+   * Case-insensitive substring search across firstName and bio.
+   */
+  q?: string;
+  /**
+   * Sort order for results.
+   */
+  sort?: ListAuditsSort;
+  /**
  * Filter by readiness score band. `low` = <55, `medium` = 55-74,
 `high` = >=75. Audits without a score are excluded when set.
 
  */
-scoreRange?: ListAuditsScoreRange;
-/**
- * Maximum number of audits to return (1-100). Defaults to 50.
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-/**
- * Number of audits to skip for pagination.
- * @minimum 0
- */
-offset?: number;
+  scoreRange?: ListAuditsScoreRange;
+  /**
+   * Maximum number of audits to return (1-100). Defaults to 50.
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * Number of audits to skip for pagination.
+   * @minimum 0
+   */
+  offset?: number;
 };
 
-export type ListAuditsSource = typeof ListAuditsSource[keyof typeof ListAuditsSource];
-
+export type ListAuditsSource =
+  (typeof ListAuditsSource)[keyof typeof ListAuditsSource];
 
 export const ListAuditsSource = {
-  manual: 'manual',
-  screenshot: 'screenshot',
+  manual: "manual",
+  screenshot: "screenshot",
 } as const;
 
-export type ListAuditsSort = typeof ListAuditsSort[keyof typeof ListAuditsSort];
-
+export type ListAuditsSort =
+  (typeof ListAuditsSort)[keyof typeof ListAuditsSort];
 
 export const ListAuditsSort = {
-  newest: 'newest',
-  topScore: 'topScore',
+  newest: "newest",
+  topScore: "topScore",
 } as const;
 
-export type ListAuditsScoreRange = typeof ListAuditsScoreRange[keyof typeof ListAuditsScoreRange];
-
+export type ListAuditsScoreRange =
+  (typeof ListAuditsScoreRange)[keyof typeof ListAuditsScoreRange];
 
 export const ListAuditsScoreRange = {
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
+  low: "low",
+  medium: "medium",
+  high: "high",
 } as const;
 
 export type ListExpiringTrashedAuditsParams = {
-/**
- * Number of days of headroom to look ahead. Defaults to 3.
- * @minimum 1
- * @maximum 30
- */
-withinDays?: number;
+  /**
+   * Number of days of headroom to look ahead. Defaults to 3.
+   * @minimum 1
+   * @maximum 30
+   */
+  withinDays?: number;
 };
 
 export type CorrectAuditSourceApp400 = {
@@ -5647,16 +5676,16 @@ export type ExtractMessageScreenshot400 = {
 };
 
 export type GetFounderReportsParams = {
-status?: GetFounderReportsStatus;
+  status?: GetFounderReportsStatus;
 };
 
-export type GetFounderReportsStatus = typeof GetFounderReportsStatus[keyof typeof GetFounderReportsStatus];
-
+export type GetFounderReportsStatus =
+  (typeof GetFounderReportsStatus)[keyof typeof GetFounderReportsStatus];
 
 export const GetFounderReportsStatus = {
-  open: 'open',
-  reviewed: 'reviewed',
-  dismissed: 'dismissed',
+  open: "open",
+  reviewed: "reviewed",
+  dismissed: "dismissed",
 } as const;
 
 export type RehearsalTurn400 = {
@@ -5736,36 +5765,35 @@ export type DismissCompanionObservation404 = {
 };
 
 export type GetAiFallbackRateParams = {
-/**
- * @minLength 1
- * @maxLength 80
- */
-toolName: string;
-/**
- * How many recent requests to consider (1-200, defaults to 20).
- * @minimum 1
- * @maximum 200
- */
-windowSize?: number;
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  toolName: string;
+  /**
+   * How many recent requests to consider (1-200, defaults to 20).
+   * @minimum 1
+   * @maximum 200
+   */
+  windowSize?: number;
 };
 
 export type TestAiParams = {
-key?: string;
+  key?: string;
 };
 
 export type RefreshGeoipParams = {
-key?: string;
+  key?: string;
 };
 
 export type GetFounderReferralsParams = {
-key?: string;
+  key?: string;
 };
 
 export type GetFounderFunnelParams = {
-key?: string;
+  key?: string;
 };
 
 export type AskFounderCopilotParams = {
-key?: string;
+  key?: string;
 };
-

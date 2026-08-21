@@ -5,13 +5,14 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
-import type { AccountExportUser } from './accountExportUser';
-import type { Audit } from './audit';
-import type { DatingProfile } from './datingProfile';
-import type { EmailInsight } from './emailInsight';
-import type { JournalEntry } from './journalEntry';
-import type { MessageCoachingSession } from './messageCoachingSession';
-import type { PostDateNote } from './postDateNote';
+import type { AccountExportDatasets } from "./accountExportDatasets";
+import type { AccountExportUser } from "./accountExportUser";
+import type { Audit } from "./audit";
+import type { DatingProfile } from "./datingProfile";
+import type { EmailInsight } from "./emailInsight";
+import type { JournalEntry } from "./journalEntry";
+import type { MessageCoachingSession } from "./messageCoachingSession";
+import type { PostDateNote } from "./postDateNote";
 
 export interface AccountExport {
   /** ISO timestamp of when the export was generated. */
@@ -23,4 +24,6 @@ export interface AccountExport {
   insights: EmailInsight[];
   journalEntries: JournalEntry[];
   postDateNotes: PostDateNote[];
+  /** Registry-backed first-party datasets keyed by database table. Security secrets and ephemeral credentials are omitted or sanitized. */
+  datasets: AccountExportDatasets;
 }

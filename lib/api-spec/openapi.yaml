@@ -8313,6 +8313,7 @@ components:
           insights,
           journalEntries,
           postDateNotes,
+          datasets,
         ]
       properties:
         exportedAt:
@@ -8344,6 +8345,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PostDateNote"
+        datasets:
+          type: object
+          description: Registry-backed first-party datasets keyed by database table. Security secrets and ephemeral credentials are omitted or sanitized.
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
 
     AccountExportUser:
       type: object
