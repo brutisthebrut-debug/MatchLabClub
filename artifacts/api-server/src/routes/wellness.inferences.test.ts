@@ -137,3 +137,82 @@ describe("POST /api/me/wellness/inferences/generate — counterpart-leak guard",
     expect(res.status).toBe(401);
   });
 });
+
+
+async function seedPendingInference(userId: string) {
+  const { db, wellnessInferencesTable } = await import("../lib/testDb");
+  const [row] = await db
+    .insert(wellnessInferencesTable)
+    .values({
+      userId,
+      dimension: "emotional",
+      inferredQuestionId: "inferred:emotional:1",
+      questionText: "What helps you feel emotionally safe?",
+      suggestedAnswer: "I need steadiness and room to explain myself.",
+      sourceKind: "journal",
+      rationale: "Noticed in your own writing.",
+      mode: "deterministic",
+      status: "pending",
+    })
+    .returning();
+  return row!;
+}
+
+describe("member-reviewed wellness learning", () => {
+  it("writes the member's corrected wording through the normal answer path", async () => {
+    const inference = await seedPendingInference(USER);
+    testApp.setUser({ id: USER });
+
+    const corrected =
+      "I need consistency, and I also need direct communication.";
+    const res = await request(testApp.app)
+      .post(`/api/me/wellness/inferences/${inference.id}/confirm`)
+      .send({ answer: corrected });
+
+    expect(res.status).toBe(200);
+    expect(res.body.confirmed).toBe(true);
+    expect(res.body.inference.status).toBe("confirmed");
+    expect(res.body.answer.answer).toBe(corrected);
+    expect(res.body.answer.questionId).toBe("inferred:emotional:1");
+
+    const pending = await request(testApp.app).get(
+      "/api/me/wellness/inferences",
+    );
+    expect(pending.status).toBe(200);
+    expect(pending.body.inferences).toEqual([]);
+  });
+
+  it("dismisses a tentative learning without creating profile evidence", async () => {
+    const inference = await seedPendingInference(USER);
+    testApp.setUser({ id: USER });
+
+    const res = await request(testApp.app)
+      .post(`/api/me/wellness/inferences/${inference.id}/dismiss`)
+      .send({});
+
+    expect(res.status).toBe(200);
+    expect(res.body.dismissed).toBe(true);
+    expect(res.body.inference.status).toBe("dismissed");
+
+    const { db, wellnessAnswersTable } = await import("../lib/testDb");
+    const answers = await db.select().from(wellnessAnswersTable);
+    expect(
+      answers.some(
+        (answer) =>
+          answer.userId === USER &&
+          answer.questionId === "inferred:emotional:1",
+      ),
+    ).toBe(false);
+  });
+
+  it("does not let another member resolve someone else's learning", async () => {
+    const inference = await seedPendingInference(USER);
+    testApp.setUser({ id: `${USER}-other` });
+
+    const res = await request(testApp.app)
+      .post(`/api/me/wellness/inferences/${inference.id}/confirm`)
+      .send({ answer: "This should never be written." });
+
+    expect(res.status).toBe(404);
+  });
+});
