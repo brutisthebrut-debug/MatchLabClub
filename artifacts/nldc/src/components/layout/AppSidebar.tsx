@@ -191,7 +191,7 @@ function NextBestAction({ onNavigate }: { onNavigate: () => void }) {
       enabled: isAuthenticated,
     },
   });
-  const action = data?.oneThing;
+  const action = data?.nextMove;
   if (!action) return null;
 
   return (
