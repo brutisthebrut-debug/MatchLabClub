@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { desc, eq } from "drizzle-orm";
 import { db, wyrAnswersTable } from "@workspace/db";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 import { CreateWouldYouRatherAnswerBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -57,6 +58,11 @@ router.post("/me/would-you-rather", async (req, res): Promise<void> => {
       set: { choice: parsed.data.choice, updatedAt: new Date() },
     })
     .returning();
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: req.user.id,
+    props: { source: "would-you-rather", promptId: parsed.data.promptId },
+  });
   res.status(201).json(serialize(row));
 });
 
