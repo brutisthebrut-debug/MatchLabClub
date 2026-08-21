@@ -147,6 +147,8 @@ export * from './connection';
 export * from './connectionClosedReason';
 export * from './connectionDateIdeas';
 export * from './connectionDateIdeasMode';
+export * from './connectionDateStage';
+export * from './connectionDateStateInput';
 export * from './connectionMessage';
 export * from './connectionStarter';
 export * from './connectionStarters';

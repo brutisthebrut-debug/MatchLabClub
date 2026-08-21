@@ -333,7 +333,23 @@ export default function Matches() {
   const hasOpenProposal = proposalList.some((proposal) =>
     ["proposed", "user_yes"].includes(proposal.status),
   );
-  const lifecycleIndex = hasMutualReveal ? 2 : hasOpenProposal ? 1 : 0;
+  const hasSavedDebrief = connectionList.some(
+    (connection) => connection.dateStage === "debrief_saved",
+  );
+  const hasDate = connectionList.some((connection) =>
+    ["date_planned", "date_completed", "debrief_saved"].includes(
+      connection.dateStage,
+    ),
+  );
+  const lifecycleIndex = hasSavedDebrief
+    ? 4
+    : hasDate
+      ? 3
+      : hasMutualReveal
+        ? 2
+        : hasOpenProposal
+          ? 1
+          : 0;
   const loading =
     matching.isLoading || proposals.isLoading || connections.isLoading;
   const failed = matching.isError || proposals.isError || connections.isError;

@@ -35,9 +35,11 @@ entitlement.
 
 The Matches destination presents waiting, proposal, mutual reveal, date, and
 debrief as one understandable path. Proposal decisions, mutual connections,
-messages, reveal consent, safety actions, and date ideas are durable. Date
-planned/completed and debrief are not yet persisted as connection lifecycle
-states, so that backend integration remains open. Signed-out review uses a
+messages, reveal consent, safety actions, and date ideas are durable. Batch 8F
+adds the missing connection lifecycle: a shared date plan, shared completion,
+each member's private debrief, and a tentative Echo learning that requires
+confirm/correct/dismiss before it becomes profile truth. Repository validation
+for that batch is still pending. Signed-out review uses a
 labeled process preview only; fake people, messages, and implied availability do
 not stand in for member data.
 
@@ -143,6 +145,12 @@ direct activity rows, Care Dialect, Journey instrumentation, Quiz Lab, and This
 or That records are removed with the account. This does not close the whole
 privacy gate: downloadable export, retention, and consent-revocation parity
 still require a complete first-party table registry and drift protection.
+
+Matches is now following the same route-to-record-to-learning rule. A completed
+date brings the member back to one Echo-led debrief; the saved reflection is
+private to that member, while the date fact is shared by the pair. Echo proposes
+one bounded learning from the member's own words, but the existing wellness
+confirmation path remains the only way it can become profile evidence.
 
 An unrestricted full beta also requires Batch 9 production hardening. Scheduled
 jobs currently start inside each API process, production schema application still

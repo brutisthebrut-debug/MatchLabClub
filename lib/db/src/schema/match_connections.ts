@@ -39,7 +39,9 @@ export type ConnectionClosedReason = (typeof CONNECTION_CLOSED_REASONS)[number];
 export const matchConnectionsTable = pgTable(
   "match_connections",
   {
-    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     // Always the lexicographically smaller / larger of the two member ids, so a
     // pair maps to exactly one row no matter who said yes first.
     userLowId: varchar("user_low_id").notNull(),
@@ -47,6 +49,11 @@ export const matchConnectionsTable = pgTable(
     status: varchar("status").notNull().default("active"),
     closedReason: varchar("closed_reason"),
     closedByUserId: varchar("closed_by_user_id"),
+    // Shared lifecycle facts for the pair. A debrief remains private and lives
+    // in post_date_notes; these timestamps only say that a date was planned or
+    // completed so both members see the same relationship state.
+    datePlannedAt: timestamp("date_planned_at", { withTimezone: true }),
+    dateCompletedAt: timestamp("date_completed_at", { withTimezone: true }),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

@@ -25,7 +25,10 @@ export async function ensureConnection(
     .insert(matchConnectionsTable)
     .values({ userLowId: pair.userLowId, userHighId: pair.userHighId })
     .onConflictDoNothing({
-      target: [matchConnectionsTable.userLowId, matchConnectionsTable.userHighId],
+      target: [
+        matchConnectionsTable.userLowId,
+        matchConnectionsTable.userHighId,
+      ],
     })
     .returning();
   if (inserted[0]) {
@@ -51,7 +54,13 @@ export async function ensureConnection(
     }
     const [reopened] = await db
       .update(matchConnectionsTable)
-      .set({ status: "active", closedReason: null, closedByUserId: null })
+      .set({
+        status: "active",
+        closedReason: null,
+        closedByUserId: null,
+        datePlannedAt: null,
+        dateCompletedAt: null,
+      })
       .where(eq(matchConnectionsTable.id, existing[0].id))
       .returning();
     return { connection: reopened ?? existing[0], created: false };

@@ -33,12 +33,14 @@ export const wellnessInferencesTable = pgTable(
     /** Synthetic question id, e.g. "inferred:emotional:1". Namespaced so it
      *  never collides with hand-written ("emotional.confidence") or daily
      *  ("daily:emotional:1") wellness answers. */
-    inferredQuestionId: varchar("inferred_question_id", { length: 120 }).notNull(),
+    inferredQuestionId: varchar("inferred_question_id", {
+      length: 120,
+    }).notNull(),
     /** Canonical question text shown on confirm and stored on the written answer. */
     questionText: text("question_text").notNull(),
     /** The suggested answer drawn from the user's own words. */
     suggestedAnswer: text("suggested_answer").notNull(),
-    /** Where it came from: "journal" | "audit" | "coach" | "writing". */
+    /** Where it came from: journal, audit, coach, writing, or post_date. */
     sourceKind: varchar("source_kind", { length: 40 }).notNull(),
     /** Short, non-PII explanation of why this was surfaced. */
     rationale: text("rationale"),
@@ -51,7 +53,10 @@ export const wellnessInferencesTable = pgTable(
   },
   (t) => [
     index("wellness_inferences_user_status_idx").on(t.userId, t.status),
-    index("wellness_inferences_user_qid_idx").on(t.userId, t.inferredQuestionId),
+    index("wellness_inferences_user_qid_idx").on(
+      t.userId,
+      t.inferredQuestionId,
+    ),
   ],
 );
 

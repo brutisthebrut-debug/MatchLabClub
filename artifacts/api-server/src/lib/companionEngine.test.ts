@@ -96,8 +96,16 @@ describe("buildCompanionView", () => {
 
   it("changes the challenge wording with candor but always tells the truth", () => {
     const portrait = makePortrait(emptyBreakdown(), 0);
-    const gentle = buildCompanionView({ portrait, persona: "calm_mentor", candor: 1 });
-    const blunt = buildCompanionView({ portrait, persona: "tough_coach", candor: 3 });
+    const gentle = buildCompanionView({
+      portrait,
+      persona: "calm_mentor",
+      candor: 1,
+    });
+    const blunt = buildCompanionView({
+      portrait,
+      persona: "tough_coach",
+      candor: 3,
+    });
     expect(gentle.challenge).not.toEqual(blunt.challenge);
     assertVoiceClean(gentle.challenge ?? "");
     assertVoiceClean(blunt.challenge ?? "");
@@ -116,6 +124,7 @@ describe("chooseEchoNextMove", () => {
     const move = chooseEchoNextMove({
       pendingProposal: true,
       unreadConnection: { id: "connection-1", unreadCount: 2 },
+      pendingDebriefConnectionId: "connection-2",
       overdueCommitment: "send the message",
       pendingLearning: true,
       profileMove,
@@ -129,6 +138,7 @@ describe("chooseEchoNextMove", () => {
     const move = chooseEchoNextMove({
       pendingProposal: false,
       unreadConnection: { id: "connection-1", unreadCount: 2 },
+      pendingDebriefConnectionId: "connection-2",
       overdueCommitment: null,
       pendingLearning: false,
       profileMove,
@@ -137,10 +147,25 @@ describe("chooseEchoNextMove", () => {
     expect(move.detail).toMatch(/2 unread messages/i);
   });
 
+  it("brings a completed date back to Echo for a private debrief", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      pendingDebriefConnectionId: "connection-2",
+      overdueCommitment: "send the message.",
+      pendingLearning: true,
+      profileMove,
+    });
+    expect(move.href).toBe("/copilot/debrief?connectionId=connection-2");
+    expect(move.label).toMatch(/date felt/i);
+    expect(move.detail).toMatch(/before anything becomes profile truth/i);
+  });
+
   it("holds the member to an overdue commitment before suggesting a tool", () => {
     const move = chooseEchoNextMove({
       pendingProposal: false,
       unreadConnection: null,
+      pendingDebriefConnectionId: null,
       overdueCommitment: "send the message.",
       pendingLearning: true,
       profileMove,
@@ -153,6 +178,7 @@ describe("chooseEchoNextMove", () => {
     const move = chooseEchoNextMove({
       pendingProposal: false,
       unreadConnection: null,
+      pendingDebriefConnectionId: null,
       overdueCommitment: null,
       pendingLearning: true,
       profileMove,
@@ -167,6 +193,7 @@ describe("chooseEchoNextMove", () => {
     const move = chooseEchoNextMove({
       pendingProposal: false,
       unreadConnection: null,
+      pendingDebriefConnectionId: null,
       overdueCommitment: null,
       pendingLearning: false,
       profileMove,
@@ -198,9 +225,15 @@ describe("deriveObservations", () => {
 
 describe("detectCommitment", () => {
   it("extracts clear first-person future intent", () => {
-    expect(detectCommitment("I'll message her back tonight")).toMatch(/message her back tonight/);
-    expect(detectCommitment("I am going to update my bio")).toMatch(/update my bio/);
-    expect(detectCommitment("i will finish the quiz")).toMatch(/finish the quiz/);
+    expect(detectCommitment("I'll message her back tonight")).toMatch(
+      /message her back tonight/,
+    );
+    expect(detectCommitment("I am going to update my bio")).toMatch(
+      /update my bio/,
+    );
+    expect(detectCommitment("i will finish the quiz")).toMatch(
+      /finish the quiz/,
+    );
   });
 
   it("ignores text with no commitment", () => {
@@ -256,7 +289,12 @@ describe("reviewMessage", () => {
   });
 
   it("handles a received message with its own framing", () => {
-    const r = reviewMessage("what are you up to this weekend?", "received", "calm_mentor", 2);
+    const r = reviewMessage(
+      "what are you up to this weekend?",
+      "received",
+      "calm_mentor",
+      2,
+    );
     expect(r.strengths.length).toBeGreaterThan(0);
     expect(r.suggestion.length).toBeGreaterThan(0);
     assertVoiceClean(r.suggestion);
@@ -275,7 +313,9 @@ describe("buildReaction", () => {
     return Object.fromEntries(portrait.known.map((k) => [k.key, k.coverage]));
   }
 
-  function breakdownWith(overrides: Record<string, number>): ReadinessBreakdown {
+  function breakdownWith(
+    overrides: Record<string, number>,
+  ): ReadinessBreakdown {
     return { ...emptyBreakdown(), ...overrides } as ReadinessBreakdown;
   }
 
@@ -345,7 +385,10 @@ describe("buildReaction", () => {
 
   it("does not use the dates copy when another lane moved more than post-date", () => {
     const before = makePortrait(emptyBreakdown(), 30);
-    const after = makePortrait(breakdownWith({ wellness: 80, postDate: 30 }), 42);
+    const after = makePortrait(
+      breakdownWith({ wellness: 80, postDate: 30 }),
+      42,
+    );
     const r = buildReaction({
       portrait: after,
       previousScore: before.readinessScore,
@@ -360,7 +403,10 @@ describe("buildReaction", () => {
 
   it("marks the internal evidence threshold without promising matching access", () => {
     const before = makePortrait(breakdownWith({ wellness: 40 }), 45);
-    const after = makePortrait(breakdownWith({ wellness: 80, compass: 70 }), 55);
+    const after = makePortrait(
+      breakdownWith({ wellness: 80, compass: 70 }),
+      55,
+    );
     const r = buildReaction({
       portrait: after,
       previousScore: before.readinessScore,
@@ -371,7 +417,9 @@ describe("buildReaction", () => {
     expect(r.tone).toBe("crossing");
     expect(r.crossedThreshold).toBe(true);
     expect(r.eligible).toBe(true);
-    expect(r.headline).toMatch(/profile read|profile review|thoughtful review|proper read/i);
+    expect(r.headline).toMatch(
+      /profile read|profile review|thoughtful review|proper read/i,
+    );
     expect(r.headline).not.toMatch(/matching is open|earned|\b55\b|\b50\b/i);
   });
 

@@ -54,29 +54,29 @@ Repository evidence on audit head `fc341c6`:
 
 ### Authoritative beta capability matrix
 
-| Member job / platform area | Actual code truth | Status now | Blocking proof or work |
-| --- | --- | --- | --- |
-| Echo orchestration | Companion API owns one next move across proposals, unread conversations, commitments, reviewed learning, and profile uncertainty. Confirm/correct/dismiss writes use the existing wellness record. | **Code-proven; runtime pending** | Prove a hosted Echo-directed journey and verify every selected write refreshes My MatchLab/Journey across devices. |
-| Signed-in shell | Five overview destinations exist. The audit found persistent numeric readiness, reward, and competing matching-action components plus a broad legacy “Show all” drawer. Batch 8E removed those active-shell conflicts and kept only deliberate secondary workspaces. | **Code-proven; route disposition ongoing** | Prove the corrected shell in the connected runtime; then complete the remaining route disposition ledger instead of exposing legacy route parity. |
-| My MatchLab / Mirror | Account summary, Mirror, wellness, journal, photos, imports, consent, matching, and billing contracts are durable. My MatchLab reads real account state. | **Partial** | Consolidate the selected sources into one understandable member model; prove correction, permission changes, and cross-device visibility. |
-| Quiz Lab and bounded Play | Quiz results persist/dedupe/claim and write Journey events; six selected Play families have durable records represented in Journey; selected Play deletion is tested. | **Code-proven; runtime and export pending** | Hosted signup/claim/retake proof, explicit wellness-save acceptance, and export parity. |
-| Matches | Proposal decisions, mutual yes, reveal consent, connections, messages, unmatch, report/block, reveal-safe profile, starters, and date ideas are implemented. | **Partial** | Date planned/completed and debrief are currently presentation/links, not a connection-level persisted state machine. Add that state and test the full proposal-to-learning journey. |
-| Commercial plans and billing | Member/Insight/Match/Guided catalog, Match/Guided search entitlement, Stripe lifecycle reconciliation, Checkout, status, and Portal exist; Guided selling is disabled. | **Code-proven; runtime pending** | Configure real test-mode Prices/webhook/OIDC/domains and prove purchase, cancellation, payment recovery, and founder-grant behavior. |
-| Privacy and member control | Session revocation and broad account deletion exist; selected Play deletion is covered. Export currently includes only user, audits, profiles, coaching messages, insights, journal, and post-date notes. | **Partial; full-beta blocker** | Build one first-party data registry for export/deletion/retention/consent revocation and add drift tests for every member-data table. |
-| Production operations | Connected-beta startup validation exists and fails closed on key config errors. | **Pending; full-beta blocker** | Move jobs out of API replicas, use versioned migrations, add headers/CSP/rate limits/body scopes, prove backup/restore, monitoring/rollback, and staff safety escalation. |
-| Connected acceptance | No hosted build currently proves signup through debrief, billing recovery, account claim, deletion/export, or Daniel + Lissa review. | **Not proven** | Deploy one canonical runtime and execute the blocking browser journeys against it. |
-| Landing page | Earlier copy was partially aligned, but final promise/design alignment is intentionally deferred. | **Deferred by founder decision** | Update only after the signed-in backend-connected experience is accepted. |
+| Member job / platform area   | Actual code truth                                                                                                                                                                                                                                                                | Status now                                                 | Blocking proof or work                                                                                                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Echo orchestration           | Companion API owns one next move across proposals, unread conversations, commitments, reviewed learning, and profile uncertainty. Confirm/correct/dismiss writes use the existing wellness record.                                                                               | **Code-proven; runtime pending**                           | Prove a hosted Echo-directed journey and verify every selected write refreshes My MatchLab/Journey across devices.                                                        |
+| Signed-in shell              | Five overview destinations exist. The audit found persistent numeric readiness, reward, and competing matching-action components plus a broad legacy “Show all” drawer. Batch 8E removed those active-shell conflicts and kept only deliberate secondary workspaces.             | **Code-proven; route disposition ongoing**                 | Prove the corrected shell in the connected runtime; then complete the remaining route disposition ledger instead of exposing legacy route parity.                         |
+| My MatchLab / Mirror         | Account summary, Mirror, wellness, journal, photos, imports, consent, matching, and billing contracts are durable. My MatchLab reads real account state.                                                                                                                         | **Partial**                                                | Consolidate the selected sources into one understandable member model; prove correction, permission changes, and cross-device visibility.                                 |
+| Quiz Lab and bounded Play    | Quiz results persist/dedupe/claim and write Journey events; six selected Play families have durable records represented in Journey; selected Play deletion is tested.                                                                                                            | **Code-proven; runtime and export pending**                | Hosted signup/claim/retake proof, explicit wellness-save acceptance, and export parity.                                                                                   |
+| Matches                      | Proposal decisions, mutual yes, reveal consent, connections, messages, unmatch, report/block, reveal-safe profile, starters, and date ideas are implemented. Batch 8F adds persisted date planning/completion, a member-private connection debrief, and tentative Echo learning. | **Implementation complete; repository validation pending** | Pass the full gate, then prove the proposal-to-learning journey in the connected runtime.                                                                                 |
+| Commercial plans and billing | Member/Insight/Match/Guided catalog, Match/Guided search entitlement, Stripe lifecycle reconciliation, Checkout, status, and Portal exist; Guided selling is disabled.                                                                                                           | **Code-proven; runtime pending**                           | Configure real test-mode Prices/webhook/OIDC/domains and prove purchase, cancellation, payment recovery, and founder-grant behavior.                                      |
+| Privacy and member control   | Session revocation and broad account deletion exist; selected Play deletion is covered. Export currently includes only user, audits, profiles, coaching messages, insights, journal, and post-date notes.                                                                        | **Partial; full-beta blocker**                             | Build one first-party data registry for export/deletion/retention/consent revocation and add drift tests for every member-data table.                                     |
+| Production operations        | Connected-beta startup validation exists and fails closed on key config errors.                                                                                                                                                                                                  | **Pending; full-beta blocker**                             | Move jobs out of API replicas, use versioned migrations, add headers/CSP/rate limits/body scopes, prove backup/restore, monitoring/rollback, and staff safety escalation. |
+| Connected acceptance         | No hosted build currently proves signup through debrief, billing recovery, account claim, deletion/export, or Daniel + Lissa review.                                                                                                                                             | **Not proven**                                             | Deploy one canonical runtime and execute the blocking browser journeys against it.                                                                                        |
+| Landing page                 | Earlier copy was partially aligned, but final promise/design alignment is intentionally deferred.                                                                                                                                                                                | **Deferred by founder decision**                           | Update only after the signed-in backend-connected experience is accepted.                                                                                                 |
 
 ### Roadmap reconciliation delta — 2026-08-21
 
-| Before this audit | After this audit | Why |
-| --- | --- | --- |
-| “Complete” often mixed code, runtime, and acceptance | Every status is qualified as code-proven, runtime-proven, accepted, partial, or parked | Prevent reassurance from substituting for evidence |
-| Matches was described as a complete waiting-to-debrief lifecycle | Proposal-to-connection is real; date/debrief persistence is explicitly open | The UI sequence was ahead of the data model |
-| Echo pages were qualitative, so shell drift was assumed closed | Persistent shell score/reward and competing-action code was found and moved into Batch 8E | Echo must drive the whole signed-in experience, not only Today and `/echo` |
-| Five primary links were treated as consolidation | 108 web route nodes and a legacy tool drawer require an explicit disposition/decommission pass | Hiding route parity behind “Show all” is not consolidation |
-| Green CI was summarized as successful artifact publication | Build success and upload failure are reported separately | GitHub artifact quota currently blocks a fresh exact-build review download |
-| Controlled-beta foundations were the active lane | Full-beta integration closure plus connected proof is the active lane; landing remains last | Cofounder launch expectations require selected features and safety gates, not a shell-only beta |
+| Before this audit                                                | After this audit                                                                               | Why                                                                                             |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| “Complete” often mixed code, runtime, and acceptance             | Every status is qualified as code-proven, runtime-proven, accepted, partial, or parked         | Prevent reassurance from substituting for evidence                                              |
+| Matches was described as a complete waiting-to-debrief lifecycle | Proposal-to-connection is real; date/debrief persistence is explicitly open                    | The UI sequence was ahead of the data model                                                     |
+| Echo pages were qualitative, so shell drift was assumed closed   | Persistent shell score/reward and competing-action code was found and moved into Batch 8E      | Echo must drive the whole signed-in experience, not only Today and `/echo`                      |
+| Five primary links were treated as consolidation                 | 108 web route nodes and a legacy tool drawer require an explicit disposition/decommission pass | Hiding route parity behind “Show all” is not consolidation                                      |
+| Green CI was summarized as successful artifact publication       | Build success and upload failure are reported separately                                       | GitHub artifact quota currently blocks a fresh exact-build review download                      |
+| Controlled-beta foundations were the active lane                 | Full-beta integration closure plus connected proof is the active lane; landing remains last    | Cofounder launch expectations require selected features and safety gates, not a shell-only beta |
 
 ## Roadmap delta — 2026-08-04
 
@@ -109,12 +109,12 @@ The milestone and product direction did not change. This slice converts the
 connected-beta environment from a documented checklist into an enforced startup
 contract.
 
-| Area | Previous roadmap | Updated implementation contract | Why |
-| --- | --- | --- | --- |
-| Connected runtime | Required variables were documented, but a deployment could boot with migration fallbacks or missing beta settings | `CONNECTED_BETA=true` fails startup unless production mode, public origins, non-Replit OIDC, Postgres, Stripe test mode, canonical Price IDs, secure cookies, and the handoff secret are explicit | A controlled beta must fail closed instead of appearing healthy while auth or billing silently uses the wrong environment. |
-| Development auth | `NODE_ENV !== production` enabled the seeded test-login | Development auth requires both non-production mode and `ALLOW_DEV_AUTH=true`; connected beta rejects the flag | An unset or mistaken `NODE_ENV` must never expose an auth bypass. |
-| Product and design | Echo Journey, five destinations, and capability consolidation were protected | Unchanged | Runtime hardening serves the approved experience; it does not restore legacy pages or expand visible feature count. |
-| Live evidence | Hosted runtime proof remained open | Still open after code validation | Preflight proves configuration coherence, not a real signup, payment, cancellation, or recovery. |
+| Area               | Previous roadmap                                                                                                  | Updated implementation contract                                                                                                                                                                   | Why                                                                                                                        |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Connected runtime  | Required variables were documented, but a deployment could boot with migration fallbacks or missing beta settings | `CONNECTED_BETA=true` fails startup unless production mode, public origins, non-Replit OIDC, Postgres, Stripe test mode, canonical Price IDs, secure cookies, and the handoff secret are explicit | A controlled beta must fail closed instead of appearing healthy while auth or billing silently uses the wrong environment. |
+| Development auth   | `NODE_ENV !== production` enabled the seeded test-login                                                           | Development auth requires both non-production mode and `ALLOW_DEV_AUTH=true`; connected beta rejects the flag                                                                                     | An unset or mistaken `NODE_ENV` must never expose an auth bypass.                                                          |
+| Product and design | Echo Journey, five destinations, and capability consolidation were protected                                      | Unchanged                                                                                                                                                                                         | Runtime hardening serves the approved experience; it does not restore legacy pages or expand visible feature count.        |
+| Live evidence      | Hosted runtime proof remained open                                                                                | Still open after code validation                                                                                                                                                                  | Preflight proves configuration coherence, not a real signup, payment, cancellation, or recovery.                           |
 
 ## Commercial package contract
 
@@ -464,12 +464,12 @@ Status: **Complete in code; validated by CI run #117. Connected-runtime evidence
 
 ##### Roadmap delta — 2026-08-21 (Batch 8B)
 
-| Decision | Before | After | Why |
-| --- | --- | --- | --- |
-| Play completion | A route and signal count could be mistaken for a complete activity integration | Every activity in the bounded catalog now has a durable record represented in Journey | Members need to see what became part of their MatchLab history |
-| Consistency | Daily Spark, Flags, and Care Dialect could move profile evidence without counting the activity day | Those sources now share the same activity-day truth as the other selected games | The product should not contradict itself about whether the member showed up |
-| Scope | Audit could be misread as permission to restore old games | Catalog and navigation remain unchanged | Consolidation, not route parity, remains binding |
-| Remaining proof | Repository health could be read as full completion | Hosted account claim, cross-device history, privacy export/deletion, and E2E evidence stay open | Code truth and launch evidence are separate gates |
+| Decision        | Before                                                                                             | After                                                                                           | Why                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Play completion | A route and signal count could be mistaken for a complete activity integration                     | Every activity in the bounded catalog now has a durable record represented in Journey           | Members need to see what became part of their MatchLab history              |
+| Consistency     | Daily Spark, Flags, and Care Dialect could move profile evidence without counting the activity day | Those sources now share the same activity-day truth as the other selected games                 | The product should not contradict itself about whether the member showed up |
+| Scope           | Audit could be misread as permission to restore old games                                          | Catalog and navigation remain unchanged                                                         | Consolidation, not route parity, remains binding                            |
+| Remaining proof | Repository health could be read as full completion                                                 | Hosted account claim, cross-device history, privacy export/deletion, and E2E evidence stay open | Code truth and launch evidence are separate gates                           |
 
 ### Batch 9 — Production safety and launch operations
 
@@ -494,13 +494,12 @@ Status: **Complete in code; validated by CI run #119. Full export/retention pari
 
 ##### Roadmap delta — 2026-08-21 (Batch 9A)
 
-| Decision | Before | After | Why |
-| --- | --- | --- | --- |
-| Sequencing | Privacy deletion parity sat entirely behind the broader production-hardening batch | Play deletion parity moved forward immediately after Play became a beta-selected durable record | A beta feature cannot be considered integrated while account deletion can orphan its data |
-| Deletion implementation | Two deletion paths maintained overlapping table lists independently | One shared Play purge registry serves both paths | The old structure made silent privacy drift likely |
-| Privacy completion | Export, deletion, retention, and consent were one open line | Play deletion is complete; export and broader retention/consent parity stay explicitly open | Passing one privacy operation must not be presented as passing all of them |
-| Product scope | Selected Play activities remained bounded | Unchanged | This is safety integration, not feature expansion |
-
+| Decision                | Before                                                                             | After                                                                                           | Why                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Sequencing              | Privacy deletion parity sat entirely behind the broader production-hardening batch | Play deletion parity moved forward immediately after Play became a beta-selected durable record | A beta feature cannot be considered integrated while account deletion can orphan its data |
+| Deletion implementation | Two deletion paths maintained overlapping table lists independently                | One shared Play purge registry serves both paths                                                | The old structure made silent privacy drift likely                                        |
+| Privacy completion      | Export, deletion, retention, and consent were one open line                        | Play deletion is complete; export and broader retention/consent parity stay explicitly open     | Passing one privacy operation must not be presented as passing all of them                |
+| Product scope           | Selected Play activities remained bounded                                          | Unchanged                                                                                       | This is safety integration, not feature expansion                                         |
 
 A small founder-controlled cohort may run on one explicitly constrained API
 instance while this batch is completed. It must not be described or operated as
@@ -529,12 +528,12 @@ a horizontally scaled public beta.
 
 ### Roadmap delta — 2026-08-21 (full-beta clarification)
 
-| Decision | Before this audit | After this audit | Why |
-| --- | --- | --- | --- |
-| Release claim | Green code plus a connected runtime could be read as the remaining beta boundary | Those gates qualify a controlled beta only; full-feature beta additionally requires Batch 8 integration evidence | CI proves contracts compile and tests pass, not that every selected member job forms a complete product journey |
-| Feature completeness | Original capability disposition was tracked at the family level | Every beta-included capability now needs a route-to-record-to-learning acceptance row | The quiz audit found a healthy canonical server path alongside a local-only legacy path and local-only result presentation |
-| Quiz truth | “Quizzes, games, results” could be read as uniformly complete | Canonical Quiz Lab and Care Dialect are partially/strongly integrated; legacy `/quiz` and server-backed result history remain open decisions | We must not tell beta members or founders that all quizzes update the profile when they do not |
-| Scope | Preserve useful original capability without route parity | Unchanged | This is a verification and consolidation gate, not permission to restore the old tool drawer |
+| Decision             | Before this audit                                                                | After this audit                                                                                                                             | Why                                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Release claim        | Green code plus a connected runtime could be read as the remaining beta boundary | Those gates qualify a controlled beta only; full-feature beta additionally requires Batch 8 integration evidence                             | CI proves contracts compile and tests pass, not that every selected member job forms a complete product journey            |
+| Feature completeness | Original capability disposition was tracked at the family level                  | Every beta-included capability now needs a route-to-record-to-learning acceptance row                                                        | The quiz audit found a healthy canonical server path alongside a local-only legacy path and local-only result presentation |
+| Quiz truth           | “Quizzes, games, results” could be read as uniformly complete                    | Canonical Quiz Lab and Care Dialect are partially/strongly integrated; legacy `/quiz` and server-backed result history remain open decisions | We must not tell beta members or founders that all quizzes update the profile when they do not                             |
+| Scope                | Preserve useful original capability without route parity                         | Unchanged                                                                                                                                    | This is a verification and consolidation gate, not permission to restore the old tool drawer                               |
 
 ### Roadmap note — 2026-08-04 (Batch 7B)
 
@@ -582,12 +581,12 @@ letting individual pages independently decide what matters next.
 
 ### Roadmap delta — 2026-08-21 (Echo ownership)
 
-| Decision | Before this batch | After this batch | Why |
-| --- | --- | --- | --- |
-| One next move | Today independently combined proposals, conversations, and matching-state actions | Echo's backend chooses the move and Today renders that decision | Echo cannot drive the experience if pages invent competing priorities |
-| Progress language | Companion reactions and answers still exposed score/threshold and “earned matching” language | Evidence changes are described as clearer or less certain understanding | Profile depth is evidence, not human worth, package access, or entitlement to a person |
-| Page responsibility | Pages could behave like separate tools under a persistent Echo widget | Echo directs; pages execute the workflow and preserve the durable record | This is the product's governing interaction model |
-| Scope | Five destinations and the selected beta capability set | Unchanged | This consolidates orchestration; it does not restore the old tool drawer |
+| Decision            | Before this batch                                                                            | After this batch                                                         | Why                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| One next move       | Today independently combined proposals, conversations, and matching-state actions            | Echo's backend chooses the move and Today renders that decision          | Echo cannot drive the experience if pages invent competing priorities                  |
+| Progress language   | Companion reactions and answers still exposed score/threshold and “earned matching” language | Evidence changes are described as clearer or less certain understanding  | Profile depth is evidence, not human worth, package access, or entitlement to a person |
+| Page responsibility | Pages could behave like separate tools under a persistent Echo widget                        | Echo directs; pages execute the workflow and preserve the durable record | This is the product's governing interaction model                                      |
+| Scope               | Five destinations and the selected beta capability set                                       | Unchanged                                                                | This consolidates orchestration; it does not restore the old tool drawer               |
 
 Validation evidence: [CI run #123](https://github.com/brutisthebrut-debug/MatchLabClub/actions/runs/32520056215)
 passed full monorepo typecheck, lint, schema drift, voice lint, web tests and
@@ -631,23 +630,23 @@ best-effort step did not invalidate the code gate.
 
 ### Signed-in loading audit
 
-| Destination | Account-backed inputs | Loading and failure contract |
-| --- | --- | --- |
-| Today | Echo companion and matching state | Waits for both; never builds a sample next move |
-| Matches | Matching state, proposals, and mutual connections | Waits for all three; never inserts sample people |
-| My MatchLab | Account summary, matching, AI consent, and billing | Core account failure is explicit; billing degrades in its own bounded state |
-| Journey | Durable insights, journal, dates, connections, Play records, and imports | Waits for every selected record family; never replaces history with a demo feed |
-| Play | Bounded activity catalog | Static catalog is immediately usable; each activity owns its account write state |
-| Echo | Companion, matching, notifications, and pending learnings | Companion state remains primary; tentative learnings load and fail independently without sample substitution |
+| Destination | Account-backed inputs                                                    | Loading and failure contract                                                                                 |
+| ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Today       | Echo companion and matching state                                        | Waits for both; never builds a sample next move                                                              |
+| Matches     | Matching state, proposals, and mutual connections                        | Waits for all three; never inserts sample people                                                             |
+| My MatchLab | Account summary, matching, AI consent, and billing                       | Core account failure is explicit; billing degrades in its own bounded state                                  |
+| Journey     | Durable insights, journal, dates, connections, Play records, and imports | Waits for every selected record family; never replaces history with a demo feed                              |
+| Play        | Bounded activity catalog                                                 | Static catalog is immediately usable; each activity owns its account write state                             |
+| Echo        | Companion, matching, notifications, and pending learnings                | Companion state remains primary; tentative learnings load and fail independently without sample substitution |
 
 ### Roadmap delta — 2026-08-21 (confirmed learning and loading)
 
-| Decision | Before this batch | After this batch | Why |
-| --- | --- | --- | --- |
-| Confirm-before-write | Backend and older wellness UI already supported it, but Echo did not prioritize the pending decision | Echo directs the member to the existing confirm/correct/dismiss record | Consolidation means moving a working capability into the right member job, not rebuilding it |
-| Cross-surface refresh | Confirmation refreshed wellness and matching only | Echo and Journey summary refresh from the same durable write | Every page must reflect one shared member record |
-| Empty and loading truth | Pending-inference loading could look like example content; lazy routes could be blank | Explicit loading/error/empty states and a router-level Echo loader | A signed-in member should always know whether real account data is loading, empty, or unavailable |
-| Landing page | Could be changed while backend integration was still moving | Explicitly deferred to the final alignment pass | The front door should describe the accepted product, not chase an unfinished backend |
+| Decision                | Before this batch                                                                                    | After this batch                                                       | Why                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Confirm-before-write    | Backend and older wellness UI already supported it, but Echo did not prioritize the pending decision | Echo directs the member to the existing confirm/correct/dismiss record | Consolidation means moving a working capability into the right member job, not rebuilding it      |
+| Cross-surface refresh   | Confirmation refreshed wellness and matching only                                                    | Echo and Journey summary refresh from the same durable write           | Every page must reflect one shared member record                                                  |
+| Empty and loading truth | Pending-inference loading could look like example content; lazy routes could be blank                | Explicit loading/error/empty states and a router-level Echo loader     | A signed-in member should always know whether real account data is loading, empty, or unavailable |
+| Landing page            | Could be changed while backend integration was still moving                                          | Explicitly deferred to the final alignment pass                        | The front door should describe the accepted product, not chase an unfinished backend              |
 
 Remaining work after this batch: prove the confirm/correct journey in the
 connected runtime, extend the same reviewed-learning contract to any additional
@@ -687,45 +686,49 @@ After this code-proven correction, the next implementation slice is the persiste
 Matches date/debrief state machine, followed by the complete privacy registry
 and connected-runtime acceptance. The landing page remains last.
 
+## Batch 8F — Persisted date, debrief, and Echo learning
+
+Status: **Implementation complete; repository validation pending**
+
+Goal: close the gap where Matches presented date and debrief stages that the
+connection record could not remember.
+
+- Persist one shared first-date plan and completion state on the mutual
+  connection; both members see the same relationship fact.
+- Keep each debrief private to its author by linking the existing post-date note
+  to the connection without exposing it to the counterpart.
+- Derive the member's connection stage from durable records: connected, date
+  planned, date completed, or debrief saved.
+- Let Echo prioritize a completed date that still needs a debrief, after a real
+  proposal or unread mutual conversation and before generic profile work.
+- Create one bounded, deterministic tentative learning from the member's saved
+  debrief. It remains pending until the existing confirm/correct/dismiss path
+  resolves it; saving a debrief never writes profile truth directly.
+- Reuse the existing Journey event, post-date note, wellness inference, Matches,
+  and Echo contracts instead of adding a parallel date product.
+- Replace the linked debrief's remaining Wingman-era handoff and legacy routes
+  with Echo, Matches, Journey, and the approved confirmation flow.
+- Add Postgres-backed regression coverage for shared plan/completion, private
+  debrief visibility, tentative learning, ownership, premature writes, and
+  duplicate protection.
+
+### Roadmap delta — 2026-08-21 (Batch 8F)
+
+| Decision          | Before                                                                                                      | After                                                                                     | Why                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Date lifecycle    | Date ideas and UI stages existed without connection-level state                                             | Plan and completion are durable shared connection facts                                   | The product must remember the action it tells members to take                |
+| Debrief ownership | Generic post-date notes were durable but disconnected from a MatchLab introduction                          | A debrief can be privately linked to the member's mutual connection                       | The counterpart must never see someone else's reflection                     |
+| Echo learning     | Post-date coverage affected derived readiness, but the connection flow did not create a reviewable learning | A linked debrief creates a tentative inference that still requires member approval        | Echo should learn from real dates without silently rewriting the profile     |
+| Product surface   | The debrief still returned to Wingman-era tools                                                             | The flow returns to Echo, Matches, and Journey                                            | Consolidation means preserving the capability inside the approved experience |
+| Scope             | A general multi-date relationship tracker was not selected for beta                                         | The beta state machine covers the first considered introduction through its first debrief | Close the promised journey without expanding into relationship management    |
+
+After this batch passes repository validation, the next code lane is the
+authoritative first-party privacy registry, followed by connected-runtime
+acceptance. The landing page remains last.
+
 ## Definition of done
 
 The milestone is complete when:
 
 - Only the five approved primary destinations appear in signed-in navigation.
-- Echo is persistent and provides a useful next action without overclaiming.
-- Every original capability has an explicit integrated, contextual, or parked
-  disposition; no working behavior disappears silently.
-- Every capability selected for beta passes its route-to-record-to-learning
-  matrix, including persistence, ownership/claim, profile or Journey effect,
-  consent/deletion, and connected end-to-end acceptance.
-- No browser-local result or readiness counter is treated as proof of durable
-  profile integration.
-- Readiness, search activity, and market availability are visibly distinct.
-- Member, Insight, Match, and Guided are represented by one backend contract;
-  Match/Guided search access is enforced server-side.
-- Stripe lifecycle events idempotently grant, preserve, or revoke non-beta paid
-  access without overriding founder grants or selling unstaffed Guided service.
-- Landing and signed-in experiences tell the same story.
-- Automated typecheck, web tests, API tests, schema drift, lint, and voice lint
-  pass on the final branch.
-- Daniel and Lissa complete an acceptance review of the same canonical build.
-- A connected beta refuses to boot unless its provider-neutral runtime, non-Replit
-  OIDC, secure origin boundary, Postgres, Stripe test mode, and canonical Price IDs
-  pass the startup preflight.
-- A connected beta proves web, API, auth/session, Postgres, and plan assignment
-  together; a static artifact does not satisfy this gate.
-- Full beta runs scheduled work through a single-executor model, deploys only
-  versioned database migrations, and has verified HTTP hardening, monitoring,
-  backup/restore, privacy export/deletion, and staffed safety operations.
-- The next milestone is selected from evidence, not from feature enthusiasm.
-
-## Explicitly parked during this milestone
-
-- Broad visual reinvention.
-- New primary navigation destinations.
-- Dating-app OAuth.
-- After-dark mode.
-- Connector expansion that does not directly unblock the approved v1 journey.
-- Monetization changes unrelated to validating the simplified shell.
-- Selling or reviving the legacy Signal Audit, Dating Reset, or Wingman offers as
-  canonical beta packages.
+- Echo is persistent and provides a useful next action without ove

@@ -25,7 +25,9 @@ export const COMPANION_PERSONAS: CompanionPersona[] = [
   "calm_mentor",
 ];
 
-export function normalizePersona(raw: string | null | undefined): CompanionPersona {
+export function normalizePersona(
+  raw: string | null | undefined,
+): CompanionPersona {
   if (raw && (COMPANION_PERSONAS as string[]).includes(raw)) {
     return raw as CompanionPersona;
   }
@@ -33,7 +35,8 @@ export function normalizePersona(raw: string | null | undefined): CompanionPerso
 }
 
 export function clampCandor(raw: number | null | undefined): number {
-  const n = typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : 2;
+  const n =
+    typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : 2;
   return Math.min(3, Math.max(1, n));
 }
 
@@ -113,6 +116,7 @@ export interface EchoNextMove {
 export interface EchoJourneyState {
   pendingProposal: boolean;
   unreadConnection: { id: string; unreadCount: number } | null;
+  pendingDebriefConnectionId: string | null;
   overdueCommitment: string | null;
   pendingLearning: boolean;
   profileMove: EchoNextMove | null;
@@ -138,6 +142,16 @@ export function chooseEchoNextMove(input: EchoJourneyState): EchoNextMove {
       label: "Return to your conversation",
       detail: `${count} unread ${count === 1 ? "message" : "messages"} in a mutual introduction.`,
       href: `/matches/${input.unreadConnection.id}`,
+      points: 0,
+    };
+  }
+
+  if (input.pendingDebriefConnectionId) {
+    return {
+      label: "Tell me how the date felt",
+      detail:
+        "The date happened. Give me the honest version while it is still fresh, and I will show you what I think it means before anything becomes profile truth.",
+      href: `/copilot/debrief?connectionId=${input.pendingDebriefConnectionId}`,
       points: 0,
     };
   }
@@ -264,16 +278,14 @@ export function deriveObservations(
       out.push({
         kind: "readiness_rise",
         severity: "praise",
-        body:
-          "I have a clearer read than the last time I looked. That is real progress, not a number pretending to know you.",
+        body: "I have a clearer read than the last time I looked. That is real progress, not a number pretending to know you.",
         signalId: null,
       });
     } else if (delta <= -4) {
       out.push({
         kind: "readiness_dip",
         severity: "challenge",
-        body:
-          "Part of the picture became less certain. Something went quiet, and I would rather name it than pretend I still know.",
+        body: "Part of the picture became less certain. Something went quiet, and I would rather name it than pretend I still know.",
         signalId: null,
       });
     }
@@ -338,7 +350,12 @@ export interface ReadinessReaction {
   headline: string;
   nowSee: string | null;
   lanesMoved: ReactionLaneMove[];
-  nextMove: { label: string; detail: string; href: string; points: number } | null;
+  nextMove: {
+    label: string;
+    detail: string;
+    href: string;
+    points: number;
+  } | null;
 }
 
 export interface BuildReactionInput {
@@ -409,10 +426,7 @@ function crossingHeadline(persona: CompanionPersona): string {
   }
 }
 
-function dipHeadline(
-  persona: CompanionPersona,
-  candor: number,
-): string {
+function dipHeadline(persona: CompanionPersona, candor: number): string {
   const word = candorWord(candor);
   switch (persona) {
     case "tough_coach":
@@ -459,7 +473,8 @@ function reactionNowSee(
  * real change.
  */
 export function buildReaction(input: BuildReactionInput): ReadinessReaction {
-  const { portrait, previousScore, previousCoverageByKey, persona, candor } = input;
+  const { portrait, previousScore, previousCoverageByKey, persona, candor } =
+    input;
   const toScore = portrait.readinessScore;
   const threshold = portrait.threshold;
   const eligible = portrait.eligible;
@@ -489,7 +504,12 @@ export function buildReaction(input: BuildReactionInput): ReadinessReaction {
     ? portrait.known
         .map((dim) => {
           const prev = previousCoverageByKey[dim.key] ?? 0;
-          return { key: dim.key, label: dim.label, from: prev, to: dim.coverage };
+          return {
+            key: dim.key,
+            label: dim.label,
+            from: prev,
+            to: dim.coverage,
+          };
         })
         .filter((m) => m.to - m.from >= 1)
         .sort((a, b) => b.to - b.from - (a.to - a.from))
@@ -592,8 +612,11 @@ export function answerCompanion(
 
   const asksWhereStand =
     /(where|how).*(stand|doing|at)|ready|progress|score|readiness/.test(q);
-  const asksWhatNext = /(what|next|should i|do now|improve|better|move)/.test(q);
-  const asksAboutMe = /(who am i|about me|see in me|know about me|read on me)/.test(q);
+  const asksWhatNext = /(what|next|should i|do now|improve|better|move)/.test(
+    q,
+  );
+  const asksAboutMe =
+    /(who am i|about me|see in me|know about me|read on me)/.test(q);
 
   if (asksAboutMe || (!asksWhereStand && !asksWhatNext)) {
     lines.push(view.read);
@@ -672,46 +695,71 @@ export function reviewMessage(
   const hasQuestion = /\?/.test(trimmed);
   const exclaimCount = (trimmed.match(/!/g) ?? []).length;
   const lower = trimmed.toLowerCase();
-  const lowEffort = /^(hey|hi|hello|sup|yo|wyd|hbu|nm u)[.!? ]*$/i.test(trimmed);
+  const lowEffort = /^(hey|hi|hello|sup|yo|wyd|hbu|nm u)[.!? ]*$/i.test(
+    trimmed,
+  );
   const allCaps =
-    trimmed.length > 12 && trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed);
+    trimmed.length > 12 &&
+    trimmed === trimmed.toUpperCase() &&
+    /[A-Z]/.test(trimmed);
   const apologyOpen = /^(sorry|sry|apolog)/i.test(trimmed);
 
   if (direction === "sending") {
     if (hasQuestion) {
-      strengths.push("You asked a question, which gives them a real reason to reply.");
+      strengths.push(
+        "You asked a question, which gives them a real reason to reply.",
+      );
     } else {
-      risks.push("There is no question here, so the burden to keep it going falls on them.");
+      risks.push(
+        "There is no question here, so the burden to keep it going falls on them.",
+      );
     }
     if (lowEffort) {
-      risks.push("This reads as low effort. It tells them almost nothing about you.");
+      risks.push(
+        "This reads as low effort. It tells them almost nothing about you.",
+      );
     }
     if (wordCount > 90) {
-      risks.push("It is long. Early on, a wall of text can feel like pressure.");
+      risks.push(
+        "It is long. Early on, a wall of text can feel like pressure.",
+      );
     } else if (wordCount >= 8 && wordCount <= 60) {
-      strengths.push("The length is in a good range, enough to land, not so much it overwhelms.");
+      strengths.push(
+        "The length is in a good range, enough to land, not so much it overwhelms.",
+      );
     }
     if (exclaimCount >= 3) {
-      risks.push("The exclamation marks are doing a lot of work. Let the words carry it.");
+      risks.push(
+        "The exclamation marks are doing a lot of work. Let the words carry it.",
+      );
     }
     if (allCaps) {
       risks.push("All caps reads as shouting. Drop it to normal case.");
     }
     if (apologyOpen) {
-      risks.push("Opening with an apology puts you on the back foot before you have said anything.");
+      risks.push(
+        "Opening with an apology puts you on the back foot before you have said anything.",
+      );
     }
   } else {
     if (hasQuestion) {
-      strengths.push("They asked you something, which means there is interest and an easy opening.");
+      strengths.push(
+        "They asked you something, which means there is interest and an easy opening.",
+      );
     } else {
-      risks.push("They did not ask anything, so you will have to create the next thread yourself.");
+      risks.push(
+        "They did not ask anything, so you will have to create the next thread yourself.",
+      );
     }
     if (lowEffort) {
-      risks.push("Their message is thin. Match a little above their effort, not below it.");
+      risks.push(
+        "Their message is thin. Match a little above their effort, not below it.",
+      );
     }
   }
 
-  const verdictWord = candor >= 3 ? "Straight read" : candor <= 1 ? "Soft read" : "Honest read";
+  const verdictWord =
+    candor >= 3 ? "Straight read" : candor <= 1 ? "Soft read" : "Honest read";
   let verdict: string;
   if (risks.length === 0) {
     verdict = `${verdictWord}: this is solid. I would send it close to as-is.`;

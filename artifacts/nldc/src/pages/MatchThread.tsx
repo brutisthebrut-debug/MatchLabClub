@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
+  CalendarCheck,
   Flag,
   Heart,
   MapPin,
@@ -37,6 +38,7 @@ import {
   useGetConnectionStarters,
   getGetConnectionStartersQueryKey,
   useSuggestConnectionDateIdeas,
+  useUpdateConnectionDateState,
   useCheckOutgoingMessage,
   useSendConnectionMessage,
   useMarkConnectionRead,
@@ -44,6 +46,7 @@ import {
   useReportConnection,
   getGetConnectionsQueryKey,
   type ConnectionMessage,
+  type Connection,
   type ConnectionStarter,
   type DateIdea,
   type ReportConnectionInputReason,
@@ -66,15 +69,16 @@ function photoSrc(url: string): string {
   return `/api/${url}`;
 }
 
-const REPORT_REASONS: { value: ReportConnectionInputReason; label: string }[] = [
-  { value: "harassment", label: "Harassment or abuse" },
-  { value: "inappropriate", label: "Inappropriate content" },
-  { value: "fake_profile", label: "Fake profile" },
-  { value: "scam", label: "Scam or spam" },
-  { value: "safety", label: "Safety concern" },
-  { value: "underage", label: "Looks underage" },
-  { value: "other", label: "Something else" },
-];
+const REPORT_REASONS: { value: ReportConnectionInputReason; label: string }[] =
+  [
+    { value: "harassment", label: "Harassment or abuse" },
+    { value: "inappropriate", label: "Inappropriate content" },
+    { value: "fake_profile", label: "Fake profile" },
+    { value: "scam", label: "Scam or spam" },
+    { value: "safety", label: "Safety concern" },
+    { value: "underage", label: "Looks underage" },
+    { value: "other", label: "Something else" },
+  ];
 
 // Demo compatibility + openers so the page never looks empty for signed-out
 // visitors. The real values come from the API once you sign in.
@@ -133,7 +137,7 @@ const DEMO_MESSAGES: ConnectionMessage[] = [
     id: "d1",
     connectionId: "demo",
     senderUserId: "them",
-    body: "Hey, glad we matched. Your readiness profile is impressive.",
+    body: "Hey, glad we matched. What are you looking forward to this week?",
     mine: false,
     createdAt: new Date(Date.now() - 5_400_000).toISOString(),
     readAt: new Date().toISOString(),
@@ -483,10 +487,8 @@ export default function MatchThread() {
               data-testid="banner-thread-closed"
             >
               This conversation is closed
-              {connection?.closedReason
-                ? ` (${connection.closedReason})`
-                : ""}
-              . You can no longer send messages here.
+              {connection?.closedReason ? ` (${connection.closedReason})` : ""}.
+              You can no longer send messages here.
             </div>
           )}
 
@@ -551,7 +553,10 @@ export default function MatchThread() {
                 <div>
                   <div className="flex items-center gap-2.5 mb-3">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(245_58%_62%)] to-[hsl(326_100%_62%)] flex items-center justify-center">
-                      <Heart className="w-4 h-4 text-white" aria-hidden="true" />
+                      <Heart
+                        className="w-4 h-4 text-white"
+                        aria-hidden="true"
+                      />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">
@@ -560,7 +565,10 @@ export default function MatchThread() {
                           : "Your match"}
                       </p>
                       {!reveal.revealed && (
-                        <Badge variant="secondary" className="text-[10px] mt-0.5">
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] mt-0.5"
+                        >
                           Name and photos hidden until they opt in
                         </Badge>
                       )}
@@ -712,6 +720,16 @@ export default function MatchThread() {
             </div>
           )}
 
+          {!closed && connection && (
+            <div className="mt-4">
+              <DateLifecycleCard
+                id={id}
+                connection={connection}
+                onChanged={invalidateThread}
+              />
+            </div>
+          )}
+
           <div className="mt-5 flex items-start gap-2.5">
             <Shield
               className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 mt-0.5"
@@ -726,6 +744,157 @@ export default function MatchThread() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+function DateLifecycleCard({
+  id,
+  connection,
+  onChanged,
+}: {
+  id: string;
+  connection: Connection;
+  onChanged: () => void;
+}) {
+  const { toast } = useToast();
+  const updateDate = useUpdateConnectionDateState();
+  const [plannedAt, setPlannedAt] = useState("");
+  const stage = connection.dateStage;
+
+  const savePlan = () => {
+    if (!plannedAt || updateDate.isPending) return;
+    const date = new Date(plannedAt);
+    if (Number.isNaN(date.getTime())) {
+      toast({ title: "Choose a valid date and time." });
+      return;
+    }
+    updateDate.mutate(
+      { id, data: { action: "plan", occurredAt: date.toISOString() } },
+      {
+        onSuccess: () => {
+          setPlannedAt("");
+          onChanged();
+          toast({ title: "Date plan saved." });
+        },
+        onError: () => toast({ title: "That date plan could not be saved." }),
+      },
+    );
+  };
+
+  const markComplete = () => {
+    if (updateDate.isPending) return;
+    updateDate.mutate(
+      { id, data: { action: "complete" } },
+      {
+        onSuccess: () => {
+          onChanged();
+          toast({ title: "Date marked complete. Echo is ready when you are." });
+        },
+        onError: () => toast({ title: "That update could not be saved." }),
+      },
+    );
+  };
+
+  return (
+    <motion.div
+      {...fadeUp(0.05)}
+      className="glass rounded-2xl border border-[hsl(326_100%_62%/0.2)] p-4"
+      data-testid="card-date-lifecycle"
+    >
+      <div className="mb-1.5 flex items-center gap-2">
+        <CalendarCheck
+          className="h-4 w-4 text-[hsl(326_100%_70%)]"
+          aria-hidden="true"
+        />
+        <p className="text-sm font-semibold text-foreground">
+          Your next real step
+        </p>
+      </div>
+
+      {stage === "connected" && (
+        <>
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground/70">
+            If you both make a plan, save the time here. Echo will bring you
+            back afterward, without turning the date into a performance score.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="datetime-local"
+              value={plannedAt}
+              onChange={(event) => setPlannedAt(event.target.value)}
+              className="h-9 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-foreground"
+              data-testid="input-date-plan"
+            />
+            <Button
+              size="sm"
+              className="rounded-full"
+              onClick={savePlan}
+              disabled={!plannedAt || updateDate.isPending}
+              data-testid="button-save-date-plan"
+            >
+              Save the plan
+            </Button>
+          </div>
+        </>
+      )}
+
+      {stage === "date_planned" && (
+        <>
+          <p className="text-sm text-foreground">
+            Planned for{" "}
+            {connection.datePlannedAt
+              ? new Date(connection.datePlannedAt).toLocaleString()
+              : "the time you chose"}
+          </p>
+          <p className="mb-3 mt-1 text-xs text-muted-foreground/60">
+            Come back when it happened. Your private debrief is never shared
+            with the other person.
+          </p>
+          <Button
+            size="sm"
+            className="rounded-full"
+            onClick={markComplete}
+            disabled={updateDate.isPending}
+            data-testid="button-complete-date"
+          >
+            Mark the date complete
+          </Button>
+        </>
+      )}
+
+      {stage === "date_completed" && (
+        <>
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground/70">
+            The date happened. Tell Echo what felt natural, what felt off, and
+            what you want to remember. Echo will ask before saving any learning
+            to your profile.
+          </p>
+          <Link href={`/copilot/debrief?connectionId=${id}`}>
+            <Button
+              size="sm"
+              className="rounded-full"
+              data-testid="button-start-debrief"
+            >
+              Debrief with Echo
+            </Button>
+          </Link>
+        </>
+      )}
+
+      {stage === "debrief_saved" && (
+        <>
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground/70">
+            Your debrief is saved privately. Echo has a tentative learning ready
+            for you to confirm, correct, or dismiss.
+          </p>
+          <Link href="/echo#echo-learning">
+            <Button size="sm" variant="secondary" className="rounded-full">
+              Review what Echo learned
+            </Button>
+          </Link>
+        </>
+      )}
+    </motion.div>
   );
 }
 
@@ -837,7 +1006,10 @@ function DateIdeasCard({ id, isDemo }: { id: string; isDemo: boolean }) {
       data-testid="card-date-ideas"
     >
       <div className="flex items-center gap-2 mb-1.5">
-        <MapPin className="w-4 h-4 text-[hsl(326_100%_70%)]" aria-hidden="true" />
+        <MapPin
+          className="w-4 h-4 text-[hsl(326_100%_70%)]"
+          aria-hidden="true"
+        />
         <p className="text-sm font-semibold text-foreground">
           Date ideas {locationLabel ?? "near both of you"}
         </p>
