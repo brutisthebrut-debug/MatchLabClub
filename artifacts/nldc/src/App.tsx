@@ -92,7 +92,6 @@ const FounderDemoJourney = lazy(
 const FlirtCoach = lazy(() => import("@/pages/copilot/FlirtCoach"));
 const Account = lazy(() => import("@/pages/Account"));
 const Sessions = lazy(() => import("@/pages/Sessions"));
-const Quiz = lazy(() => import("@/pages/Quiz"));
 const Gallery = lazy(() => import("@/pages/Gallery"));
 const ConnectionCenter = lazy(() => import("@/pages/ConnectionCenter"));
 const Matches = lazy(() => import("@/pages/Matches"));
@@ -307,7 +306,9 @@ function Router() {
         <Route path="/milestones" component={Milestones} />
         <Route path="/account" component={Account} />
         <Route path="/account/sessions" component={Sessions} />
-        <Route path="/quiz" component={Quiz} />
+        <Route path="/quiz">
+          <Redirect to="/quizzes" />
+        </Route>
         <Route path="/gallery" component={Gallery} />
         <Route path="/connections" component={ConnectionCenter} />
         <Route path="/matches" component={Matches} />
