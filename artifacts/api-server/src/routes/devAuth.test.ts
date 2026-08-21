@@ -33,6 +33,7 @@ vi.mock("drizzle-orm", async () => {
 });
 
 const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
+const ORIGINAL_ALLOW_DEV_AUTH = process.env.ALLOW_DEV_AUTH;
 
 function makeApp(): Express {
   const app = express();
@@ -52,6 +53,7 @@ let app: Express;
 
 beforeAll(async () => {
   process.env.NODE_ENV = "development";
+  process.env.ALLOW_DEV_AUTH = "true";
   const { default: devAuthRouter } = await import("./devAuth");
   app = makeApp();
   app.use("/api", devAuthRouter);
@@ -59,10 +61,12 @@ beforeAll(async () => {
 
 afterAll(() => {
   process.env.NODE_ENV = ORIGINAL_NODE_ENV;
+  process.env.ALLOW_DEV_AUTH = ORIGINAL_ALLOW_DEV_AUTH;
 });
 
 beforeEach(async () => {
   process.env.NODE_ENV = "development";
+  process.env.ALLOW_DEV_AUTH = "true";
   const { resetTestDb } = await import("../lib/testDb");
   resetTestDb();
 });
@@ -133,6 +137,16 @@ describe("dev test-user preview", () => {
     expect(res.headers["location"]).toBe("/");
   });
 
+  it("404s every dev route unless development auth is explicitly enabled", async () => {
+    delete process.env.ALLOW_DEV_AUTH;
+    const index = await request(app).get("/api/dev");
+    expect(index.status).toBe(404);
+    const login = await request(app).get("/api/dev/login?state=power");
+    expect(login.status).toBe(404);
+    const { dumpTable } = await import("../lib/testDb");
+    expect(dumpTable("users").length).toBe(0);
+    expect(dumpTable("sessions").length).toBe(0);
+  });
   it("404s every dev route in production", async () => {
     process.env.NODE_ENV = "production";
     const index = await request(app).get("/api/dev");
