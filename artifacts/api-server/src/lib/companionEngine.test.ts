@@ -12,6 +12,7 @@ import {
   clampCandor,
   personaLabel,
   buildReaction,
+  chooseEchoNextMove,
 } from "./companionEngine";
 
 const AI_TELL_WORDS =
@@ -103,6 +104,61 @@ describe("buildCompanionView", () => {
   });
 });
 
+describe("chooseEchoNextMove", () => {
+  const profileMove = {
+    label: "Share a little more",
+    detail: "Help Echo replace a guess with evidence.",
+    href: "/play",
+    points: 12,
+  };
+
+  it("prioritizes a real proposal over every lower-priority task", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: true,
+      unreadConnection: { id: "connection-1", unreadCount: 2 },
+      overdueCommitment: "send the message",
+      profileMove,
+    });
+    expect(move.label).toMatch(/proposal/i);
+    expect(move.href).toBe("/matches");
+    expect(move.points).toBe(0);
+  });
+
+  it("returns an unread mutual conversation before profile work", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: { id: "connection-1", unreadCount: 2 },
+      overdueCommitment: null,
+      profileMove,
+    });
+    expect(move.href).toBe("/matches/connection-1");
+    expect(move.detail).toMatch(/2 unread messages/i);
+  });
+
+  it("holds the member to an overdue commitment before suggesting a tool", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      overdueCommitment: "send the message.",
+      profileMove,
+    });
+    expect(move.label).toMatch(/promise/i);
+    expect(move.detail).toMatch(/send the message/i);
+  });
+
+  it("keeps profile suggestions qualitative and removes score rewards", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      overdueCommitment: null,
+      profileMove,
+    });
+    expect(move.href).toBe("/play");
+    expect(move.points).toBe(0);
+    expect(move.detail).not.toMatch(/score|points?|earn/i);
+  });
+});
+
 describe("deriveObservations", () => {
   it("praises a real readiness rise and challenges a dip", () => {
     const portrait = makePortrait(emptyBreakdown(), 30);
@@ -136,15 +192,16 @@ describe("detectCommitment", () => {
 });
 
 describe("answerCompanion", () => {
-  it("answers a where-do-I-stand question with the real score", () => {
+  it("answers a where-do-I-stand question with qualitative evidence", () => {
     const view = buildCompanionView({
       portrait: makePortrait(emptyBreakdown(), 12),
       persona: "best_friend",
       candor: 2,
     });
     const res = answerCompanion(view, "where do I stand?");
-    expect(res.answer).toMatch(/12/);
-    expect(res.grounding).toContain("readiness score");
+    expect(res.answer).toMatch(/meaningful gaps/i);
+    expect(res.answer).not.toMatch(/12|score|points?|earned/i);
+    expect(res.grounding).toContain("profile evidence");
     assertVoiceClean(res.answer);
   });
 
@@ -283,7 +340,7 @@ describe("buildReaction", () => {
     expect(r.nowSee).toMatch(/finally read/i);
   });
 
-  it("celebrates crossing the matching threshold and exposes eligibility", () => {
+  it("marks the internal evidence threshold without promising matching access", () => {
     const before = makePortrait(breakdownWith({ wellness: 40 }), 45);
     const after = makePortrait(breakdownWith({ wellness: 80, compass: 70 }), 55);
     const r = buildReaction({
@@ -296,7 +353,8 @@ describe("buildReaction", () => {
     expect(r.tone).toBe("crossing");
     expect(r.crossedThreshold).toBe(true);
     expect(r.eligible).toBe(true);
-    expect(r.headline).toMatch(/matching is open/i);
+    expect(r.headline).toMatch(/profile read|profile review|thoughtful review|proper read/i);
+    expect(r.headline).not.toMatch(/matching is open|earned|\b55\b|\b50\b/i);
   });
 
   it("names a dip honestly without a nowSee", () => {
