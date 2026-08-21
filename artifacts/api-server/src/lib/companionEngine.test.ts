@@ -117,6 +117,7 @@ describe("chooseEchoNextMove", () => {
       pendingProposal: true,
       unreadConnection: { id: "connection-1", unreadCount: 2 },
       overdueCommitment: "send the message",
+      pendingLearning: true,
       profileMove,
     });
     expect(move.label).toMatch(/proposal/i);
@@ -129,6 +130,7 @@ describe("chooseEchoNextMove", () => {
       pendingProposal: false,
       unreadConnection: { id: "connection-1", unreadCount: 2 },
       overdueCommitment: null,
+      pendingLearning: false,
       profileMove,
     });
     expect(move.href).toBe("/matches/connection-1");
@@ -140,10 +142,25 @@ describe("chooseEchoNextMove", () => {
       pendingProposal: false,
       unreadConnection: null,
       overdueCommitment: "send the message.",
+      pendingLearning: true,
       profileMove,
     });
     expect(move.label).toMatch(/promise/i);
     expect(move.detail).toMatch(/send the message/i);
+  });
+
+  it("asks the member to confirm a pending learning before profile work", () => {
+    const move = chooseEchoNextMove({
+      pendingProposal: false,
+      unreadConnection: null,
+      overdueCommitment: null,
+      pendingLearning: true,
+      profileMove,
+    });
+    expect(move.href).toBe("/echo#echo-learning");
+    expect(move.label).toMatch(/Echo thinks it learned/i);
+    expect(move.detail).toMatch(/confirm|correct|set it aside/i);
+    expect(move.points).toBe(0);
   });
 
   it("keeps profile suggestions qualitative and removes score rewards", () => {
@@ -151,6 +168,7 @@ describe("chooseEchoNextMove", () => {
       pendingProposal: false,
       unreadConnection: null,
       overdueCommitment: null,
+      pendingLearning: false,
       profileMove,
     });
     expect(move.href).toBe("/play");
