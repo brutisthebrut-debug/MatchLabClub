@@ -12,6 +12,8 @@ dispatches. All checks below must pass before changes can be merged.
 | `schema-drift`  | `pnpm --filter @workspace/db run check-schema-drift`                      | yes      |
 | `voice-lint`    | `pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts` | yes      |
 | `web-tests`     | `pnpm --filter @workspace/nldc run test`                                  | yes      |
+| `web-build`     | `pnpm --filter @workspace/nldc run build`                                 | yes      |
+| artifact upload | `actions/upload-artifact`                                                   | no       |
 
 Any red validation blocks merges.
 
@@ -23,6 +25,11 @@ The GitHub workflow groups the gate into two jobs:
   full typecheck, root lint, schema drift, voice lint, and nldc web tests.
 - `API tests` uses an ephemeral Postgres 16 service, pushes the current schema,
   and runs the API suite.
+
+The production web build is blocking. Uploading that build as a downloadable
+review artifact is best-effort because GitHub can reject uploads when the
+account-level Actions storage quota is full; an upload failure does not weaken
+or bypass typecheck, tests, lint, schema, voice, or build validation.
 
 The Playwright e2e suite remains manual until its Replit-only reverse-proxy
 assumption is removed. See `MIGRATION.md` section 6.9.
