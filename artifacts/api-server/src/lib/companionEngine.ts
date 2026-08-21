@@ -114,6 +114,7 @@ export interface EchoJourneyState {
   pendingProposal: boolean;
   unreadConnection: { id: string; unreadCount: number } | null;
   overdueCommitment: string | null;
+  pendingLearning: boolean;
   profileMove: EchoNextMove | null;
 }
 
@@ -146,6 +147,16 @@ export function chooseEchoNextMove(input: EchoJourneyState): EchoNextMove {
       label: "Keep the promise you made",
       detail: `You asked me to remember that you would ${input.overdueCommitment.replace(/\.$/, "")}. Let us deal with it honestly.`,
       href: "/echo",
+      points: 0,
+    };
+  }
+
+  if (input.pendingLearning) {
+    return {
+      label: "Check what Echo thinks it learned",
+      detail:
+        "I noticed a possible pattern in your own words. It stays tentative until you confirm it, correct it, or set it aside.",
+      href: "/echo#echo-learning",
       points: 0,
     };
   }
