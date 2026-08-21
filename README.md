@@ -91,6 +91,13 @@ and Guided billing stays disabled until human capacity is defined. The approved
 pricing, checkout return, and My MatchLab billing controls now use the same typed
 contract. One connected test-mode runtime journey remains an open evidence gate.
 
+A hosted beta opts into the strict startup contract with `CONNECTED_BETA=true`.
+The API then refuses to boot if it would use Replit OIDC fallback, insecure or
+inconsistent origins, development auth, a non-test Stripe key, missing canonical
+Price IDs, or an unsigned anonymous handoff. This validates configuration only;
+the real signup, checkout, cancellation, and recovery journey remains an open
+acceptance gate.
+
 ## Legacy capability guardrail
 
 The original route surface remains an inventory, not a second product. Matching
@@ -108,13 +115,15 @@ retired and cannot assign canonical beta access.
 pnpm install
 pnpm --filter @workspace/api-server run dev   # API on port 8080
 pnpm --filter @workspace/nldc run dev         # web on $PORT
+# Add ALLOW_DEV_AUTH=true only when the seeded development login is needed.
 ```
 
 Required env: `DATABASE_URL` (Postgres). Set `APP_ORIGINS` to the comma-separated
 web origins allowed to make credentialed API requests, for example
 `https://beta.matchlab.club,http://localhost:3000`. A portable connected runtime
 also sets `OIDC_CLIENT_ID`, `ISSUER_URL`, `API_PUBLIC_URL`, and `WEB_PUBLIC_URL`.
-Connected-beta billing requires `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and
+Connected-beta billing requires `CONNECTED_BETA=true`, production mode,
+`ANON_CLAIM_HANDOFF_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and
 the four Insight/Match Stripe Price IDs documented in `OPERATIONS.md`.
 
 ## Tech stack
