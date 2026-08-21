@@ -9,8 +9,6 @@ import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ReadinessRewardWatcher } from "@/components/climb/ReadinessRewardWatcher";
-
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -382,7 +380,6 @@ function App() {
           <OnboardingGate />
           <Router />
         </WouterRouter>
-        <ReadinessRewardWatcher />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
