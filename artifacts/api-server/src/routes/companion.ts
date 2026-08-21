@@ -11,6 +11,7 @@ import {
   matchProposalsTable,
   matchConnectionsTable,
   connectionMessagesTable,
+  wellnessInferencesTable,
   type CompanionState as CompanionStateRow,
   type CompanionChannelPrefs as CompanionChannelPrefsRow,
 } from "@workspace/db";
@@ -256,6 +257,7 @@ function settingsPayload(
 async function loadEchoJourneyState(userId: string): Promise<{
   pendingProposal: boolean;
   unreadConnection: { id: string; unreadCount: number } | null;
+  pendingLearning: boolean;
 }> {
   const [proposal] = await db
     .select({ id: matchProposalsTable.id })
@@ -267,6 +269,18 @@ async function loadEchoJourneyState(userId: string): Promise<{
       ),
     )
     .orderBy(desc(matchProposalsTable.createdAt))
+    .limit(1);
+
+  const [pendingLearning] = await db
+    .select({ id: wellnessInferencesTable.id })
+    .from(wellnessInferencesTable)
+    .where(
+      and(
+        eq(wellnessInferencesTable.userId, userId),
+        eq(wellnessInferencesTable.status, "pending"),
+      ),
+    )
+    .orderBy(desc(wellnessInferencesTable.createdAt))
     .limit(1);
 
   const connections = await db
@@ -303,6 +317,7 @@ async function loadEchoJourneyState(userId: string): Promise<{
       return {
         pendingProposal: Boolean(proposal),
         unreadConnection: { id: connection.id, unreadCount },
+        pendingLearning: Boolean(pendingLearning),
       };
     }
   }
@@ -310,6 +325,7 @@ async function loadEchoJourneyState(userId: string): Promise<{
   return {
     pendingProposal: Boolean(proposal),
     unreadConnection: null,
+    pendingLearning: Boolean(pendingLearning),
   };
 }
 
@@ -361,6 +377,7 @@ router.get("/me/companion", async (req, res): Promise<void> => {
     pendingProposal: journeyState.pendingProposal,
     unreadConnection: journeyState.unreadConnection,
     overdueCommitment,
+    pendingLearning: journeyState.pendingLearning,
     profileMove: view.oneThing,
   });
 
