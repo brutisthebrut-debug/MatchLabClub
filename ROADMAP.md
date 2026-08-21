@@ -9,19 +9,74 @@ definition of done changes.
 
 ## Active milestone
 
-**Connect the approved Echo-led experience to the minimum backend foundations
-required for a controlled beta.**
+**Close the full-beta integration gaps in the approved Echo-led experience, then
+prove the same build in a connected runtime.**
 
 The approved journey is:
 
 > Get known → understand yourself → know who you really want → wait honestly →
 > receive one considered introduction → meet → learn afterward.
 
-The shell-consolidation work remains protected and still needs Daniel + Lissa
-acceptance on a connected build. The active implementation lane has advanced to
-beta foundations: authenticated runtime, durable plan/entitlement state,
-subscription lifecycle, and controlled-cohort evidence. It is not permission
-for a broad redesign, new destination, or connector expansion.
+The design contract remains frozen: Today, Matches, My MatchLab, Journey, and
+Play are the only primary destinations; Echo owns guidance; pages execute work
+and preserve the durable record. The landing page is the final alignment pass,
+after the signed-in journey and backend claims are accepted.
+
+This milestone is no longer allowed to use “complete” without a qualifier:
+
+- **Code-proven** means the branch compiles and the relevant automated repository
+  tests pass.
+- **Runtime-proven** means the real hosted web, API, OIDC/session, Postgres, and
+  Stripe path passed end to end.
+- **Accepted** means Daniel and Lissa reviewed that same connected build.
+- **Parked** means intentionally excluded from beta with a written reason.
+
+## Current truth audit — 2026-08-21
+
+This snapshot supersedes ambiguous completion language in the historical batch
+log below. The audit reviewed all 115 files changed by draft PR #2, the mounted
+API and web entry points, 55 API routers exposing 276 route handlers, 108 web
+route nodes, the selected database schemas, runtime/operations documentation,
+and the final CI logs.
+
+Repository evidence on audit head `fc341c6`:
+
+- API: 101 test files passed, 2 provider-dependent OCR files skipped; 995 tests
+  passed and 8 skipped against Postgres 16.
+- Web: 31 test files and all 219 tests passed.
+- Full monorepo typecheck, lint, schema drift, Echo voice lint, and the production
+  web build passed.
+- The review-artifact upload did **not** pass: GitHub rejected it because the
+  repository artifact quota was full. The workflow marks that step
+  best-effort, so the overall run remained green.
+- Green repository tests are not browser E2E evidence and do not prove hosted
+  OIDC, cookies, Stripe callbacks, background jobs, backups, or human acceptance.
+
+### Authoritative beta capability matrix
+
+| Member job / platform area | Actual code truth | Status now | Blocking proof or work |
+| --- | --- | --- | --- |
+| Echo orchestration | Companion API owns one next move across proposals, unread conversations, commitments, reviewed learning, and profile uncertainty. Confirm/correct/dismiss writes use the existing wellness record. | **Code-proven; runtime pending** | Prove a hosted Echo-directed journey and verify every selected write refreshes My MatchLab/Journey across devices. |
+| Signed-in shell | Five overview destinations exist. The audit found persistent numeric readiness, reward, and competing matching-action components plus a broad legacy “Show all” drawer. Batch 8E removes those active-shell conflicts and keeps only deliberate secondary workspaces. | **Correction in progress** | CI the corrected shell; then complete the route disposition ledger instead of exposing legacy route parity. |
+| My MatchLab / Mirror | Account summary, Mirror, wellness, journal, photos, imports, consent, matching, and billing contracts are durable. My MatchLab reads real account state. | **Partial** | Consolidate the selected sources into one understandable member model; prove correction, permission changes, and cross-device visibility. |
+| Quiz Lab and bounded Play | Quiz results persist/dedupe/claim and write Journey events; six selected Play families have durable records represented in Journey; selected Play deletion is tested. | **Code-proven; runtime and export pending** | Hosted signup/claim/retake proof, explicit wellness-save acceptance, and export parity. |
+| Matches | Proposal decisions, mutual yes, reveal consent, connections, messages, unmatch, report/block, reveal-safe profile, starters, and date ideas are implemented. | **Partial** | Date planned/completed and debrief are currently presentation/links, not a connection-level persisted state machine. Add that state and test the full proposal-to-learning journey. |
+| Commercial plans and billing | Member/Insight/Match/Guided catalog, Match/Guided search entitlement, Stripe lifecycle reconciliation, Checkout, status, and Portal exist; Guided selling is disabled. | **Code-proven; runtime pending** | Configure real test-mode Prices/webhook/OIDC/domains and prove purchase, cancellation, payment recovery, and founder-grant behavior. |
+| Privacy and member control | Session revocation and broad account deletion exist; selected Play deletion is covered. Export currently includes only user, audits, profiles, coaching messages, insights, journal, and post-date notes. | **Partial; full-beta blocker** | Build one first-party data registry for export/deletion/retention/consent revocation and add drift tests for every member-data table. |
+| Production operations | Connected-beta startup validation exists and fails closed on key config errors. | **Pending; full-beta blocker** | Move jobs out of API replicas, use versioned migrations, add headers/CSP/rate limits/body scopes, prove backup/restore, monitoring/rollback, and staff safety escalation. |
+| Connected acceptance | No hosted build currently proves signup through debrief, billing recovery, account claim, deletion/export, or Daniel + Lissa review. | **Not proven** | Deploy one canonical runtime and execute the blocking browser journeys against it. |
+| Landing page | Earlier copy was partially aligned, but final promise/design alignment is intentionally deferred. | **Deferred by founder decision** | Update only after the signed-in backend-connected experience is accepted. |
+
+### Roadmap reconciliation delta — 2026-08-21
+
+| Before this audit | After this audit | Why |
+| --- | --- | --- |
+| “Complete” often mixed code, runtime, and acceptance | Every status is qualified as code-proven, runtime-proven, accepted, partial, or parked | Prevent reassurance from substituting for evidence |
+| Matches was described as a complete waiting-to-debrief lifecycle | Proposal-to-connection is real; date/debrief persistence is explicitly open | The UI sequence was ahead of the data model |
+| Echo pages were qualitative, so shell drift was assumed closed | Persistent shell score/reward and competing-action code was found and moved into Batch 8E | Echo must drive the whole signed-in experience, not only Today and `/echo` |
+| Five primary links were treated as consolidation | 108 web route nodes and a legacy tool drawer require an explicit disposition/decommission pass | Hiding route parity behind “Show all” is not consolidation |
+| Green CI was summarized as successful artifact publication | Build success and upload failure are reported separately | GitHub artifact quota currently blocks a fresh exact-build review download |
+| Controlled-beta foundations were the active lane | Full-beta integration closure plus connected proof is the active lane; landing remains last | Cofounder launch expectations require selected features and safety gates, not a shell-only beta |
 
 ## Roadmap delta — 2026-08-04
 
@@ -163,10 +218,11 @@ Status: **Complete in `agent/echo-shell-phase-0`**
 
 ### Batch 2 — Matches lifecycle consolidation
 
-Status: **Complete in `agent/echo-shell-phase-0`**
+Status: **Proposal-to-connection code-proven; date/debrief state integration pending**
 
 - Present controlled-pilot waiting, proposal, mutual reveal, date, and debrief as
-  one legible lifecycle.
+  one legible lifecycle. The visual sequence exists, but date planned/completed
+  and debrief are not yet persisted on the connection lifecycle.
 - Use seeded/demo states for product review without confusing them with real
   member availability.
 - Keep safety, consent, blocking, and reveal controls explicit.
@@ -195,8 +251,9 @@ Status: **Complete in `agent/echo-shell-phase-0`**
 Status: **In progress in `agent/echo-shell-phase-0`**
 
 - Align landing promises and signed-in language around the same journey.
-  **Complete in code.** Public copy now separates readiness from availability and
-  ends at the signed-in Today destination.
+  **Partial earlier pass; final alignment deferred by founder decision.** Public
+  copy separates readiness from availability, but final promise/design alignment
+  waits for acceptance of the connected signed-in experience.
 - Remove numeric readiness from primary member-facing surfaces and avoid any
   language that frames access, disclosure, or completion as earning a person.
   **Complete in code after visual checkpoint QA.** Landing and Today now use
@@ -416,6 +473,8 @@ Status: **Complete in code; validated by CI run #117. Connected-runtime evidence
 
 ### Batch 9 — Production safety and launch operations
 
+Status: **Pending; required before an unrestricted full-beta launch**
+
 #### Batch 9A — Play deletion parity
 
 Status: **Complete in code; validated by CI run #119. Full export/retention parity remains pending.**
@@ -442,8 +501,6 @@ Status: **Complete in code; validated by CI run #119. Full export/retention pari
 | Privacy completion | Export, deletion, retention, and consent were one open line | Play deletion is complete; export and broader retention/consent parity stay explicitly open | Passing one privacy operation must not be presented as passing all of them |
 | Product scope | Selected Play activities remained bounded | Unchanged | This is safety integration, not feature expansion |
 
-
-Status: **Pending; required before an unrestricted full-beta launch**
 
 A small founder-controlled cohort may run on one explicitly constrained API
 instance while this batch is completed. It must not be described or operated as
@@ -568,8 +625,9 @@ route or sample account data while real data is loading.
 
 Validation evidence: [CI run #128](https://github.com/brutisthebrut-debug/MatchLabClub/actions/runs/32522225255)
 passed full monorepo typecheck, lint, schema drift, Echo voice lint, every web
-test, the production web build/artifact gate, and the complete Postgres-backed
-API suite.
+test, the production web build, and the complete Postgres-backed API suite.
+Artifact upload was attempted but rejected by GitHub's storage quota; that
+best-effort step did not invalidate the code gate.
 
 ### Signed-in loading audit
 
@@ -595,6 +653,31 @@ Remaining work after this batch: prove the confirm/correct journey in the
 connected runtime, extend the same reviewed-learning contract to any additional
 structured Echo inference selected for beta, and complete the route-to-record-
 to-learning matrix before the final landing-page alignment.
+
+## Batch 8E — Audit reconciliation and Echo shell truth
+
+Status: **Implementation in progress; repository validation pending**
+
+Goal: make the persistent signed-in shell obey the same Echo-owned, qualitative
+contract already applied to Today and the Echo page.
+
+- Remove the global readiness reward watcher from the active application.
+- Remove the persistent points-to-ready Match Path bar from the active shell.
+- Make the sidebar suggestion read Echo's server-owned `oneThing`, not the
+  matching endpoint's independent next-action list.
+- Remove the broad legacy “Show all” tool drawer from signed-in navigation while
+  retaining the small set of deliberately secondary workspaces.
+- Remove numeric readiness, lane deltas, “matching is open,” and point rewards
+  from the persistent Echo panel.
+- Keep internal evidence scores available to deterministic backend logic and
+  diagnostics; do not present them as worth, progress toward a person, or an
+  entitlement unlock.
+- Fix the toast test harness so accessibility metadata does not leak onto a DOM
+  element and hide real React warnings.
+
+After this code correction, the next implementation slice is the persisted
+Matches date/debrief state machine, followed by the complete privacy registry
+and connected-runtime acceptance. The landing page remains last.
 
 ## Definition of done
 
