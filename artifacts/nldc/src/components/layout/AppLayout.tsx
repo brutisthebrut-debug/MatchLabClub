@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { MatchPathBar } from "@/components/layout/MatchPathBar";
 import { EchoPresence } from "@/components/layout/EchoPresence";
 import { GuestWorkBanner } from "@/components/auth/GuestWorkBanner";
 import { ReactNode, useState } from "react";
@@ -82,7 +81,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </Link>
           <ThemeToggle />
         </header>
-        <MatchPathBar />
         <main className="flex-1 flex flex-col">{children}</main>
       </div>
       <EchoPresence />
