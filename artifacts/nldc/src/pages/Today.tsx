@@ -11,12 +11,8 @@ import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
   getGetCompanionQueryKey,
-  getGetConnectionsQueryKey,
-  getGetMatchingProposalsQueryKey,
   getGetMatchingStateQueryKey,
   useGetCompanion,
-  useGetConnections,
-  useGetMatchingProposals,
   useGetMatchingState,
 } from "@workspace/api-client-react";
 
@@ -61,21 +57,6 @@ export default function Today() {
       retry: false,
     },
   });
-  const proposals = useGetMatchingProposals({
-    query: {
-      queryKey: getGetMatchingProposalsQueryKey(),
-      enabled: isAuthenticated,
-      retry: false,
-    },
-  });
-  const connections = useGetConnections({
-    query: {
-      queryKey: getGetConnectionsQueryKey(),
-      enabled: isAuthenticated,
-      retry: false,
-    },
-  });
-
   const state = matching.data;
   const echo = companion.data;
   const searchActive = state?.searchActive ?? false;
@@ -87,53 +68,11 @@ export default function Today() {
         ? "Paused"
         : "Not started";
   const nearbyMembers = Math.max(0, state?.cityDensity ?? 0);
-  const openProposal = (proposals.data ?? []).find(
-    (proposal) => proposal.status === "proposed",
-  );
-  const unreadConnection = (connections.data ?? []).find(
-    (connection) => connection.unreadCount > 0,
-  );
-  const backendAction = state?.nextActions?.[0] ?? null;
-  const nextAction = openProposal
-    ? {
-        label: "Consider your proposal",
-        detail:
-          "Echo has a real proposal ready. Nothing reveals unless both people choose yes.",
-        href: "/matches",
-      }
-    : unreadConnection
-      ? {
-          label: "Return to your conversation",
-          detail: `${unreadConnection.unreadCount} unread ${unreadConnection.unreadCount === 1 ? "message" : "messages"} in a mutual introduction.`,
-          href: `/matches/${unreadConnection.id}`,
-        }
-      : backendAction;
-  const nextHref =
-    nextAction?.href ??
-    (state?.eligible
-      ? state.plan.canActivateSearch
-        ? "/matching"
-        : "/pricing"
-      : "/echo");
-  const nextLabel =
-    nextAction?.label ??
-    (state?.eligible
-      ? searchActive
-        ? "Review your search"
-        : state.plan.canActivateSearch
-          ? "Choose search settings"
-          : "Explore active matching"
-      : "Tell Echo what is happening");
-  const loading =
-    companion.isLoading ||
-    matching.isLoading ||
-    proposals.isLoading ||
-    connections.isLoading;
-  const failed =
-    companion.isError ||
-    matching.isError ||
-    proposals.isError ||
-    connections.isError;
+  const nextAction = echo?.nextMove ?? null;
+  const nextHref = nextAction?.href ?? "/echo";
+  const nextLabel = nextAction?.label ?? "Tell Echo what is happening";
+  const loading = companion.isLoading || matching.isLoading;
+  const failed = companion.isError || matching.isError;
 
   return (
     <AppLayout>
