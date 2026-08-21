@@ -346,13 +346,13 @@ runtime gate.
     the member explicitly saves them; this interaction and its language require
     connected-runtime acceptance.
   - Care Dialect is server-scored and participates in compatibility reasoning.
-  - The legacy standalone `/quiz` remains browser-only and still points at a
-    retired offer. Consolidate its useful archetype into Quiz Lab or park the
-    route and remove the obsolete handoff; do not redesign it as a second quiz
-    system.
+  - The legacy standalone `/quiz` was browser-only and pointed at a retired
+    offer. **Consolidated in Batch 8A:** the URL now redirects into canonical
+    Quiz Lab instead of preserving a second quiz system.
   - Browser-local result badges are a convenience cache, not the source of
-    member truth. A signed-in result history must come from the server before
-    full-beta acceptance.
+    member truth. **Implemented in Batch 8A:** the catalog reads server-owned
+    derived quiz rows and uses the browser cache only as a labeled degraded
+    fallback.
 - Run the same integration audit across the bounded Play games, My MatchLab
   profile sources, Echo handoffs, Journey events, and the complete Matches
   lifecycle. Presence of a route or a readiness counter alone does not pass.
@@ -361,6 +361,24 @@ runtime gate.
   report/block, date/debrief, cancellation, and account deletion/export.
 - Complete cofounder acceptance against the same deployed build and cohort
   policy that beta members will use.
+
+#### Batch 8A — Canonical quiz record and consolidation
+
+Status: **Implemented in `agent/echo-shell-phase-0`; final repository and connected-runtime evidence pending**
+
+- Make the server-owned derived result the Quiz Lab history across devices;
+  browser storage remains a degraded display fallback only.
+- Keep automatic model updates limited to the derived archetype and informed
+  dimensions. Preserve the member's explicit choice before writing granular
+  wellness-answer mappings.
+- Show saving, confirmed, and failed profile-sync states honestly. Never claim
+  the Mirror learned a result that the server did not accept.
+- Redirect the browser-only legacy `/quiz` into Quiz Lab and remove its retired
+  package handoff from the beta journey.
+- Remove numeric readiness and point rewards from the quiz result so Play follows
+  the same evidence-without-worth-scoring contract as the primary experience.
+- Add focused result-history regression tests. Connected signup → quiz → account
+  claim → Mirror/Journey proof remains open until the hosted runtime exists.
 
 ### Batch 9 — Production safety and launch operations
 
