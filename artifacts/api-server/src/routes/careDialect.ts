@@ -7,6 +7,7 @@ import {
   SaveCareDialectBody,
 } from "@workspace/api-zod";
 import { generate } from "../lib/aiService";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 import {
   CARE_DIALECTS,
   buildComparison,
@@ -226,6 +227,12 @@ router.post("/me/care-dialect", async (req, res): Promise<void> => {
         updatedAt: now,
       },
     });
+
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId,
+    props: { source: "care-dialect" },
+  });
 
   const profile: CareDialectProfileData = {
     selfGive: selfGive ?? null,
