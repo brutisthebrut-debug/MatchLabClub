@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, flagSelectionsTable } from "@workspace/db";
 import { PutFlagSelectionBody } from "@workspace/api-zod";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
 
@@ -66,6 +67,11 @@ router.put("/me/flags", async (req, res): Promise<void> => {
       },
     })
     .returning();
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: req.user.id,
+    props: { source: "flags" },
+  });
   res.json(serialize(row));
 });
 
