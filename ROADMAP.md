@@ -416,6 +416,33 @@ Status: **Complete in code; validated by CI run #117. Connected-runtime evidence
 
 ### Batch 9 — Production safety and launch operations
 
+#### Batch 9A — Play deletion parity
+
+Status: **Complete in code; validated by CI run #119. Full export/retention parity remains pending.**
+
+- Route both account-deletion endpoints through one typed Play-data purge registry
+  so the legacy and confirmed GDPR paths cannot drift apart.
+- Hard-delete direct Would You Rather, Daily Spark, Flags, Scenario, Prediction,
+  Time Capsule, Care Dialect, and Journey-event rows. Quiz Lab and This or That
+  remain covered by the existing imported-source purge.
+- Return per-table deletion counts only on the confirmed receipt; never place raw
+  answer or reflection content in deletion logs.
+- Add a Postgres-backed regression that seeds every selected Play record family,
+  deletes the account, and proves every first-party row is gone.
+- Keep the larger privacy gate open: the downloadable export currently omits
+  Play and other first-party families, and retention/consent-revocation coverage
+  still needs a complete table registry and blocking drift test.
+
+##### Roadmap delta — 2026-08-21 (Batch 9A)
+
+| Decision | Before | After | Why |
+| --- | --- | --- | --- |
+| Sequencing | Privacy deletion parity sat entirely behind the broader production-hardening batch | Play deletion parity moved forward immediately after Play became a beta-selected durable record | A beta feature cannot be considered integrated while account deletion can orphan its data |
+| Deletion implementation | Two deletion paths maintained overlapping table lists independently | One shared Play purge registry serves both paths | The old structure made silent privacy drift likely |
+| Privacy completion | Export, deletion, retention, and consent were one open line | Play deletion is complete; export and broader retention/consent parity stay explicitly open | Passing one privacy operation must not be presented as passing all of them |
+| Product scope | Selected Play activities remained bounded | Unchanged | This is safety integration, not feature expansion |
+
+
 Status: **Pending; required before an unrestricted full-beta launch**
 
 A small founder-controlled cohort may run on one explicitly constrained API
