@@ -1,7 +1,6 @@
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 # MatchLab Club Delivery Roadmap
 
-Last updated: 2026-08-04
+Last updated: 2026-08-21
 
 This is the canonical delivery roadmap. `VISION.md` holds the long-range strategy;
 this file controls what the team is building now. Update this document and the
@@ -48,6 +47,19 @@ validated without implying that checkout or the connected runtime already exist.
 | Payment failure     | Undefined                                                    | `past_due` preserves existing access but never grants or upgrades; `unpaid`, paused, canceled, and failed activation revoke                  | This distinguishes a retry window from terminal nonpayment without creating free upgrades.                |
 | Refunds and credits | Undefined                                                    | Reconcile current subscription truth; refund alone is not cancellation                                                                       | Billing adjustments and service termination are different events.                                         |
 | Guided sales        | Package named, operational limits pending                    | Stripe reconciliation rejects Guided unless capacity is explicitly enabled                                                                   | The package cannot be sold honestly before staffing, scheduling, and overflow rules exist.                |
+
+## Roadmap implementation delta — 2026-08-21, connected runtime safety
+
+The milestone and product direction did not change. This slice converts the
+connected-beta environment from a documented checklist into an enforced startup
+contract.
+
+| Area | Previous roadmap | Updated implementation contract | Why |
+| --- | --- | --- | --- |
+| Connected runtime | Required variables were documented, but a deployment could boot with migration fallbacks or missing beta settings | `CONNECTED_BETA=true` fails startup unless production mode, public origins, non-Replit OIDC, Postgres, Stripe test mode, canonical Price IDs, secure cookies, and the handoff secret are explicit | A controlled beta must fail closed instead of appearing healthy while auth or billing silently uses the wrong environment. |
+| Development auth | `NODE_ENV !== production` enabled the seeded test-login | Development auth requires both non-production mode and `ALLOW_DEV_AUTH=true`; connected beta rejects the flag | An unset or mistaken `NODE_ENV` must never expose an auth bypass. |
+| Product and design | Echo Journey, five destinations, and capability consolidation were protected | Unchanged | Runtime hardening serves the approved experience; it does not restore legacy pages or expand visible feature count. |
+| Live evidence | Hosted runtime proof remained open | Still open after code validation | Preflight proves configuration coherence, not a real signup, payment, cancellation, or recovery. |
 
 ## Commercial package contract
 
@@ -218,7 +230,7 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 
 ### Batch 6 — Commercial plans and matching entitlement boundary
 
-Status: **Implemented in `agent/echo-shell-phase-0`; repository validation pending**
+Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #79**
 
 - Establish Member, Insight, Match, and Guided as one backend-owned catalog with
   the approved prices, included outcomes, entitlements, and progression prompts.
@@ -282,6 +294,22 @@ Status: **Backend and approved-design UI hookup validated by CI run #91; connect
 - Run web, API, session/auth, Postgres, and Stripe test mode together on the
   connected beta domain. **Pending deployment evidence.**
 
+##### Connected runtime safety slice — 2026-08-21
+
+Status: **Implemented in `agent/echo-shell-phase-0`; repository validation pending**
+
+- Opt a hosted beta into strict validation with `CONNECTED_BETA=true`.
+- Refuse startup when API/web origins, non-Replit OIDC, Postgres, Stripe test
+  mode, canonical Price IDs, secure cookies, or the anonymous-handoff signing
+  secret are absent or inconsistent.
+- Require `ALLOW_DEV_AUTH=true` in addition to a non-production environment
+  before the seeded development login can mount.
+- Keep Guided billing disabled and reject it in the connected-beta contract.
+- Preserve provider choice as an environment decision; no hosting vendor is
+  silently selected by this code slice.
+- Keep the live signup → checkout → entitlement → cancellation/recovery journey
+  open until it is executed against the deployed runtime.
+
 #### Batch 7C — Guided operations and cohort evidence
 
 Status: **Pending**
@@ -327,6 +355,9 @@ The milestone is complete when:
 - Automated typecheck, web tests, API tests, schema drift, lint, and voice lint
   pass on the final branch.
 - Daniel and Lissa complete an acceptance review of the same canonical build.
+- A connected beta refuses to boot unless its provider-neutral runtime, non-Replit
+  OIDC, secure origin boundary, Postgres, Stripe test mode, and canonical Price IDs
+  pass the startup preflight.
 - A connected beta proves web, API, auth/session, Postgres, and plan assignment
   together; a static artifact does not satisfy this gate.
 - The next milestone is selected from evidence, not from feature enthusiasm.
