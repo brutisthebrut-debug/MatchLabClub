@@ -98,6 +98,24 @@ Price IDs, or an unsigned anonymous handoff. This validates configuration only;
 the real signup, checkout, cancellation, and recovery journey remains an open
 acceptance gate.
 
+## Beta-readiness boundary
+
+The current branch is code-healthy and approaching a **controlled beta**. It is
+not yet evidence of a full-feature beta. Green CI proves the typed contracts and
+repository tests; it does not prove that every selected capability persists,
+appears in the member's record, affects Echo or matching as intended, and works
+through a deployed browser journey.
+
+Quiz integration illustrates the distinction. The canonical Quiz Lab stores a
+derived archetype and informed dimensions on the server, deduplicates retakes,
+survives anonymous account claim, records Journey activity, and contributes to
+the Mirror/matching signal registry. Care Dialect is server-scored. The older
+standalone `/quiz` remains browser-only, however, and the visible Quiz Lab badge
+history is still read from browser storage. Full beta therefore remains gated on
+the Batch 8 capability matrix in `ROADMAP.md`, including server-backed result
+history, the legacy-quiz consolidation decision, and connected quiz-to-profile
+acceptance.
+
 ## Legacy capability guardrail
 
 The original route surface remains an inventory, not a second product. Matching
