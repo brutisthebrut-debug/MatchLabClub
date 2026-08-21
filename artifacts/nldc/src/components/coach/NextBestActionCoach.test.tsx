@@ -35,7 +35,7 @@ import { NextBestActionCoachView } from "./NextBestActionCoach";
 const ACTION = {
   key: "wellness",
   label: "Run a wellness pass",
-  detail: "Answer a few prompts so the machine can read where your head is at.",
+  detail: "Answer a few prompts so Echo can understand where your head is at.",
   points: 12,
   href: "/wellness",
 };
@@ -43,31 +43,33 @@ const ACTION = {
 afterEach(() => cleanup());
 
 describe("NextBestActionCoachView", () => {
-  it("shows the single action with its reason, expected gain, and a CTA", () => {
+  it("shows one Echo suggestion without a score reward", () => {
     render(<NextBestActionCoachView action={ACTION} eligible={false} />);
 
     expect(screen.getByText(ACTION.label)).toBeTruthy();
     expect(screen.getByText(ACTION.detail)).toBeTruthy();
-    expect(screen.getByTestId("next-best-action-gain").textContent).toContain(
-      "+12 readiness",
-    );
+    expect(screen.getByText("Echo's suggestion")).toBeTruthy();
+    expect(screen.queryByTestId("next-best-action-gain")).toBeNull();
     const cta = screen.getByTestId("next-best-action-cta") as HTMLAnchorElement;
     expect(cta.getAttribute("href")).toBe("/wellness");
   });
 
-  it("hides the gain badge when the action is worth no points", () => {
+  it("does not restore a gain badge when the legacy action carries zero points", () => {
     render(
       <NextBestActionCoachView action={{ ...ACTION, points: 0 }} eligible={false} />,
     );
     expect(screen.queryByTestId("next-best-action-gain")).toBeNull();
   });
 
-  it("shows a match-ready state pointing at matching when eligible with no action", () => {
+  it("separates a broad profile read from matching access", () => {
     render(<NextBestActionCoachView action={null} eligible={true} />);
 
-    expect(screen.getByText("You are match ready")).toBeTruthy();
+    expect(
+      screen.getByText("Echo has enough for a real profile read"),
+    ).toBeTruthy();
+    expect(screen.getByText(/does not promise a match/i)).toBeTruthy();
     const cta = screen.getByTestId("next-best-action-cta") as HTMLAnchorElement;
-    expect(cta.getAttribute("href")).toBe("/matching");
+    expect(cta.getAttribute("href")).toBe("/echo");
   });
 
   it("renders nothing when there is no action and the user is not eligible", () => {
