@@ -25,13 +25,13 @@ export function quizResultsFromImports(
     const summary = row.parsedSummary;
     if (!summary || typeof summary !== "object") continue;
 
-    const slug = typeof summary.slug === "string" ? summary.slug.trim() : "";
+    const slug = typeof summary["slug"] === "string" ? summary["slug"].trim() : "";
     const archetypeKey =
-      typeof summary.archetypeKey === "string"
-        ? summary.archetypeKey.trim()
+      typeof summary["archetypeKey"] === "string"
+        ? summary["archetypeKey"].trim()
         : "";
     const archetypeName =
-      typeof summary.archetype === "string" ? summary.archetype.trim() : "";
+      typeof summary["archetype"] === "string" ? summary["archetype"].trim() : "";
 
     if (!slug || !archetypeKey || !archetypeName || seen.has(slug)) continue;
     seen.add(slug);
