@@ -6,6 +6,7 @@ import {
   CalendarHeart,
   Compass,
   HeartHandshake,
+  Gamepad2,
   MessageCircle,
   Sparkles,
   Trophy,
@@ -15,17 +16,28 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { useMeta } from "@/hooks/useMeta";
+import { playJourneyMomentsFromRecords } from "@/lib/playJourneyHistory";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
   getGetConnectionsQueryKey,
+  getGetDailySparkAnswersQueryKey,
   getGetDatingWinsQueryKey,
+  getGetScenarioResponsesQueryKey,
+  getGetTimeCapsulesQueryKey,
+  getGetWouldYouRatherAnswersQueryKey,
   getListCompassReadsQueryKey,
+  getListImportsQueryKey,
   getListInsightsQueryKey,
   getListJournalEntriesQueryKey,
   getListPostDateNotesQueryKey,
   useGetConnections,
+  useGetDailySparkAnswers,
   useGetDatingWins,
+  useGetScenarioResponses,
+  useGetTimeCapsules,
+  useGetWouldYouRatherAnswers,
   useListCompassReads,
+  useListImports,
   useListInsights,
   useListJournalEntries,
   useListPostDateNotes,
@@ -37,6 +49,7 @@ type JourneyKind =
   | "compatibility"
   | "introduction"
   | "date"
+  | "play"
   | "win";
 
 type JourneyEvent = {
@@ -81,6 +94,12 @@ const KIND_META: Record<
     icon: CalendarHeart,
     color: "text-[hsl(36_80%_45%)]",
     background: "bg-[hsl(36_80%_50%/0.1)]",
+  },
+  play: {
+    label: "Play",
+    icon: Gamepad2,
+    color: "text-[hsl(326_70%_58%)]",
+    background: "bg-[hsl(326_70%_58%/0.1)]",
   },
   win: {
     label: "Win",
@@ -225,6 +244,41 @@ export default function Journey() {
       retry: false,
     },
   });
+  const dailySpark = useGetDailySparkAnswers({
+    query: {
+      queryKey: getGetDailySparkAnswersQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const wouldYouRather = useGetWouldYouRatherAnswers({
+    query: {
+      queryKey: getGetWouldYouRatherAnswersQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const scenarios = useGetScenarioResponses({
+    query: {
+      queryKey: getGetScenarioResponsesQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const timeCapsules = useGetTimeCapsules({
+    query: {
+      queryKey: getGetTimeCapsulesQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const imports = useListImports({
+    query: {
+      queryKey: getListImportsQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
 
   const events = useMemo<JourneyEvent[]>(() => {
     const all: JourneyEvent[] = [
@@ -273,6 +327,16 @@ export default function Journey() {
         occurredAt: item.createdAt,
         href: "/progress/wins",
       })),
+      ...playJourneyMomentsFromRecords({
+        dailySpark: dailySpark.data ?? [],
+        wouldYouRather: wouldYouRather.data ?? [],
+        scenarios: scenarios.data ?? [],
+        timeCapsules: timeCapsules.data ?? [],
+        imports: imports.data?.imports ?? [],
+      }).map((item) => ({
+        ...item,
+        kind: "play" as const,
+      })),
       ...(connections.data ?? []).map((item) => ({
         id: `introduction-${item.id}`,
         kind: "introduction" as const,
@@ -294,10 +358,15 @@ export default function Journey() {
   }, [
     compass.data,
     connections.data,
+    dailySpark.data,
     dates.data,
+    imports.data,
     insights.data,
     journal.data,
+    scenarios.data,
+    timeCapsules.data,
     wins.data,
+    wouldYouRather.data,
   ]);
 
   const loading =
@@ -306,14 +375,24 @@ export default function Journey() {
     dates.isLoading ||
     compass.isLoading ||
     wins.isLoading ||
-    connections.isLoading;
+    connections.isLoading ||
+    dailySpark.isLoading ||
+    wouldYouRather.isLoading ||
+    scenarios.isLoading ||
+    timeCapsules.isLoading ||
+    imports.isLoading;
   const failed =
     insights.isError ||
     journal.isError ||
     dates.isError ||
     compass.isError ||
     wins.isError ||
-    connections.isError;
+    connections.isError ||
+    dailySpark.isError ||
+    wouldYouRather.isError ||
+    scenarios.isError ||
+    timeCapsules.isError ||
+    imports.isError;
 
   return (
     <AppLayout>
