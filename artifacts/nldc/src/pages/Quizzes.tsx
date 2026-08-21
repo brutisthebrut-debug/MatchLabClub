@@ -5,10 +5,12 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Clock, Award, Compass, Search, Target, Zap, HeartHandshake, Eye, BookOpen, UserCircle, Rocket, Gift, Map, Anchor, Shield, MessagesSquare } from "lucide-react";
 import { QUIZZES, readQuizResults } from "@/lib/quizzes";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SavedQuizResult } from "@/lib/quizzes";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useListImports } from "@workspace/api-client-react";
+import { quizResultsFromImports } from "@/lib/quizResultHistory";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 30 },
@@ -57,8 +59,18 @@ export default function Quizzes() {
 
   const { user } = useAuth();
   const shareRef = user?.id ? `user-${user.id}` : "quiz-catalog";
-  const [saved, setSaved] = useState<SavedQuizResult[]>([]);
-  useEffect(() => { setSaved(readQuizResults()); }, []);
+  const [browserSaved, setBrowserSaved] = useState<SavedQuizResult[]>([]);
+  const importsQuery = useListImports();
+
+  useEffect(() => {
+    setBrowserSaved(readQuizResults());
+  }, []);
+
+  const serverSaved = useMemo(
+    () => quizResultsFromImports(importsQuery.data?.imports ?? []),
+    [importsQuery.data?.imports],
+  );
+  const saved = importsQuery.isSuccess ? serverSaved : browserSaved;
 
   const orderedQuizzes = [...QUIZZES].sort((a, b) =>
     a.slug === FEATURED_QUIZ_SLUG ? -1 : b.slug === FEATURED_QUIZ_SLUG ? 1 : 0,
@@ -94,6 +106,11 @@ export default function Quizzes() {
                 <Award className="w-5 h-5 text-[hsl(43_65%_62%)]" />
                 <p className="text-sm font-bold uppercase tracking-widest text-foreground">Your Results</p>
               </div>
+              {importsQuery.isError && (
+                <p className="text-xs text-muted-foreground mb-4">
+                  Account history is unavailable right now, so these are the results saved on this browser.
+                </p>
+              )}
               <div className="flex flex-wrap gap-3">
                 {saved.map(r => (
                   <Link
