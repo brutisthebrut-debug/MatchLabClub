@@ -23,9 +23,9 @@ More detail: `PROJECT_SPECIFICATION.md` and `VISION.md` (product), `OPERATIONS.m
 
 The approved signed-in v1 has five primary destinations: **Today, Matches, My
 MatchLab, Journey, and Play**. Echo remains present across the signed-in
-experience. Existing tools and routes are preserved behind contextual hubs and
-secondary navigation, so consolidation must not delete or orphan working
-capability.
+experience. Working legacy capability stays in code until it is deliberately
+consolidated, surfaced contextually, or parked; it is not exposed through a
+catch-all tool drawer merely to preserve route parity.
 
 Profile evidence, search activity, and market availability are separate states.
 A member becoming profile-ready must never be presented as proof that an
@@ -34,8 +34,12 @@ evidence states rather than a numeric score that could imply human worth or
 entitlement.
 
 The Matches destination presents waiting, proposal, mutual reveal, date, and
-debrief as one lifecycle. Signed-out review uses a labeled process preview only;
-fake people, messages, and implied availability do not stand in for member data.
+debrief as one understandable path. Proposal decisions, mutual connections,
+messages, reveal consent, safety actions, and date ideas are durable. Date
+planned/completed and debrief are not yet persisted as connection lifecycle
+states, so that backend integration remains open. Signed-out review uses a
+labeled process preview only; fake people, messages, and implied availability do
+not stand in for member data.
 
 My MatchLab brings the member's profile model, source coverage, permissions, and
 readiness evidence into one decision view. The detailed profile workspace stays
@@ -49,17 +53,20 @@ Play is a bounded activity catalog rather than an endless feed. Every activity
 states its duration, what it teaches Echo, and the result it saves; existing game
 and quiz routes remain intact behind the catalog.
 
-The public landing page and signed-in shell now tell the same journey. Public
-copy does not promise that readiness creates availability, and the final public
-CTA hands into Today with Echo. Echo's baseline voice states uncertainty and can
-challenge a member without cruelty or false intimacy.
+The public landing page has an earlier alignment pass, including language that
+does not promise readiness creates availability. Its final promise, visual, and
+CTA alignment is intentionally deferred until the signed-in backend-connected
+journey is accepted. Echo's baseline voice states uncertainty and can challenge
+a member without cruelty or false intimacy.
 
-The current branch is also closing the connected-beta gap. Today prioritizes
-real proposals and unread mutual conversations, Echo uses the approved visual
-system without numeric readiness rewards, and the API accepts an explicit beta
-web origin through `APP_ORIGINS`. The static review artifact remains useful for
-visual acceptance, but authenticated beta acceptance requires the web, API,
-session, and database to run together.
+The current branch is also closing the connected-beta gap. Today and the
+persistent sidebar use Echo's server-owned next move; the active shell no longer
+renders readiness rewards, points-to-ready, or a competing matching action. The
+API accepts an explicit beta web origin through `APP_ORIGINS`. The existing
+static review checkpoint predates the newest backend work, and GitHub's current
+artifact quota blocks publication of a fresh exact-build download. Authenticated
+beta acceptance still requires the web, API, session, and database to run
+together.
 
 ## Commercial plans
 
@@ -99,6 +106,12 @@ the real signup, checkout, cancellation, and recovery journey remains an open
 acceptance gate.
 
 ## Beta-readiness boundary
+
+A 2026-08-21 reconciliation audited the 115-file PR delta, all 55 mounted API
+routers (276 handlers), 108 web route nodes, schemas, operations docs, and the
+final CI logs. `ROADMAP.md` is authoritative for the resulting capability
+matrix. Status words are now qualified: code-proven, runtime-proven, accepted,
+partial, or parked.
 
 The current branch is code-healthy and approaching a **controlled beta**. It is
 not yet evidence of a full-feature beta. Green CI proves the typed contracts and
@@ -204,6 +217,8 @@ Orval codegen.
 ## CI
 
 GitHub Actions (`.github/workflows/ci.yml`) is the repository gate. It runs
-typecheck, lint, API tests, schema drift, voice lint, web tests, and produces a
-reviewable web artifact for each pull request. `bitbucket-pipelines.yml` remains
+typecheck, lint, API tests, schema drift, voice lint, web tests, and a production
+web build. Artifact upload is intentionally best-effort and currently fails when
+the repository storage quota is full; a green run therefore proves the build,
+not publication of a downloadable artifact. `bitbucket-pipelines.yml` remains
 a compatibility mirror. See `CI.md` and `MIGRATION.md` section 6.9.
