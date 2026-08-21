@@ -30,9 +30,12 @@ export async function loadActivityDays(
       UNION ALL SELECT to_char(uploaded_at, 'YYYY-MM-DD') FROM imported_sources WHERE user_id = ${userId}
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM audits WHERE user_id = ${userId} AND report_generated_at IS NOT NULL
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM wyr_answers WHERE user_id = ${userId}
+      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM daily_spark_answers WHERE user_id = ${userId}
+      UNION ALL SELECT to_char(updated_at, 'YYYY-MM-DD') FROM flag_selections WHERE user_id = ${userId}
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM scenario_responses WHERE user_id = ${userId}
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM prediction_responses WHERE user_id = ${userId}
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM time_capsules WHERE user_id = ${userId}
+      UNION ALL SELECT to_char(updated_at, 'YYYY-MM-DD') FROM care_dialect_profiles WHERE user_id = ${userId}
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM wingman_invites WHERE user_id = ${userId}
     ) t
     WHERE ${sinceDay}::text IS NULL OR day >= ${sinceDay}
