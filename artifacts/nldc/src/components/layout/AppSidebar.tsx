@@ -2,41 +2,19 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
-  useGetMatchingState,
-  getGetMatchingStateQueryKey,
+  useGetCompanion,
+  getGetCompanionQueryKey,
 } from "@workspace/api-client-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { computeClimb } from "@/lib/climb";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Eye,
   Sparkles,
-  ClipboardList,
-  MessageCircle,
-  Gauge,
   BookOpen,
   Shuffle,
-  ListChecks,
   Plug,
   HeartHandshake,
-  ShieldAlert,
-  Target,
-  ImageUp,
-  Users,
-  ShieldCheck,
-  FileText,
-  Compass,
-  Images,
-  RotateCcw,
-  Flame,
-  Reply,
-  UserPen,
-  Beaker,
-  MessagesSquare,
-  Unplug,
-  Flag,
-  Share2,
   Tag,
   Newspaper,
   Ticket,
@@ -47,11 +25,12 @@ import {
   ScrollText,
   Trash2,
   Lock,
-  Trophy,
+  FileText,
   ArrowRight,
   ChevronDown,
   X,
   LogOut,
+  Target,
 } from "lucide-react";
 
 type NavLink = {
@@ -64,9 +43,9 @@ type NavLink = {
 type NavSection = {
   id: string;
   label: string;
-  // Primary links are shown whenever the section is open. Everything in `more`
-  // sits behind a "Show all" disclosure so the rail reads as a focused spine
-  // while keeping every route one click away. No page is ever orphaned.
+  // Primary links are the small set of secondary workspaces deliberately kept
+  // in the signed-in rail. Legacy routes remain in code until their capability
+  // is consolidated or parked, but they are not exposed as a tool drawer.
   primary: NavLink[];
   more: NavLink[];
 };
@@ -96,46 +75,7 @@ const SECTIONS: NavSection[] = [
       },
       { name: "Connection Center", href: "/connections", icon: Plug },
     ],
-    more: [
-      { name: "Signal Audit", href: "/start", icon: ClipboardList },
-      { name: "Audit history", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Message Studio", href: "/coach", icon: MessageCircle },
-      { name: "Readiness", href: "/progress/readiness", icon: Gauge },
-      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
-      { name: "Date Safety", href: "/date-safety", icon: ShieldAlert },
-      { name: "What it takes", href: "/match-path", icon: Target },
-      { name: "Match photos", href: "/photos", icon: ImageUp },
-      { name: "Future Connections", href: "/future-connections", icon: Users },
-      { name: "Get Verified", href: "/verification", icon: ShieldCheck },
-      { name: "Blueprint", href: "/blueprint", icon: FileText },
-      { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
-      {
-        name: "Compatibility Compass",
-        href: "/compatibility-compass",
-        icon: Compass,
-      },
-      { name: "Before & After", href: "/gallery", icon: Images },
-      { name: "Photo Lab", href: "/photo-lab", icon: Images },
-      { name: "Start My Reset", href: "/copilot/reset", icon: RotateCcw },
-      { name: "Flirt Coach", href: "/copilot/flirt", icon: Flame },
-      { name: "Help Me Reply", href: "/copilot/reply", icon: Reply },
-      { name: "Improve My Profile", href: "/copilot/profile", icon: UserPen },
-      {
-        name: "Prepare For A Date",
-        href: "/copilot/prep",
-        icon: HeartHandshake,
-      },
-      { name: "Experiments", href: "/progress/experiments", icon: Beaker },
-      { name: "Follow-Up", href: "/progress/followup", icon: ListChecks },
-      { name: "Companion", href: "/progress/companion", icon: MessagesSquare },
-      {
-        name: "Pattern Breaker",
-        href: "/progress/pattern-breaker",
-        icon: Unplug,
-      },
-      { name: "Green and red flags", href: "/flags", icon: Flag },
-      { name: "Share Card", href: "/share-card", icon: Share2 },
-    ],
+    more: [],
   },
   {
     id: "founder",
@@ -245,13 +185,13 @@ function NavRow({
 
 function NextBestAction({ onNavigate }: { onNavigate: () => void }) {
   const { isAuthenticated } = useAuth();
-  const { data } = useGetMatchingState({
+  const { data } = useGetCompanion({
     query: {
-      queryKey: getGetMatchingStateQueryKey(),
+      queryKey: getGetCompanionQueryKey(),
       enabled: isAuthenticated,
     },
   });
-  const action = data?.nextActions?.[0];
+  const action = data?.oneThing;
   if (!action) return null;
 
   return (
@@ -263,63 +203,13 @@ function NextBestAction({ onNavigate }: { onNavigate: () => void }) {
     >
       <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[hsl(248_62%_52%)]">
         <Target className="h-3.5 w-3.5" aria-hidden="true" />
-        Do this next
+        Echo's suggestion
       </span>
       <p className="mt-1 truncate text-sm font-semibold text-foreground">
         {action.label}
       </p>
       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
         {action.detail}
-      </p>
-    </Link>
-  );
-}
-
-function ClimbSummary({ onNavigate }: { onNavigate: () => void }) {
-  const { isAuthenticated } = useAuth();
-  const { data } = useGetMatchingState({
-    query: {
-      queryKey: getGetMatchingStateQueryKey(),
-      enabled: isAuthenticated,
-    },
-  });
-  if (!data) return null;
-
-  const climb = computeClimb(
-    data.readiness?.score ?? 0,
-    data.readinessThreshold ?? 50,
-  );
-  const streak = data.activityStreak?.current ?? 0;
-
-  return (
-    <Link
-      href="/milestones"
-      onClick={onNavigate}
-      className="block rounded-xl border border-foreground/8 bg-foreground/[0.02] px-3 py-2.5 transition-colors hover:bg-foreground/5"
-      data-testid="sidebar-climb-summary"
-    >
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground/60">
-          <Trophy className="h-3.5 w-3.5" aria-hidden="true" />
-          Level {climb.level}
-        </span>
-        {streak > 0 && (
-          <span className="flex items-center gap-1 text-xs font-semibold text-[hsl(20_90%_50%)]">
-            <Flame className="h-3.5 w-3.5" aria-hidden="true" />
-            {streak}
-          </span>
-        )}
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/10">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]"
-          style={{ width: `${climb.next ? climb.progressToNextPct : 100}%` }}
-        />
-      </div>
-      <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
-        {climb.next
-          ? `${climb.pointsToNext} to ${climb.next.title}`
-          : "Top of the climb"}
       </p>
     </Link>
   );
@@ -391,9 +281,6 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
         <div className="pb-2">
           <NextBestAction onNavigate={onNavigate} />
-        </div>
-        <div className="pb-2">
-          <ClimbSummary onNavigate={onNavigate} />
         </div>
         <div className="space-y-1">
           {OVERVIEW.map((link) => (
