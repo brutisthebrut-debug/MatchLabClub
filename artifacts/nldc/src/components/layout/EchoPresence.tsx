@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion, useMotionValue, animate } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@workspace/replit-auth-web";
 import { trackEvent } from "@/lib/analytics";
 import {
@@ -43,22 +43,6 @@ type EchoTurn = {
 };
 
 type Tab = "talk" | "notices" | "review";
-
-// Animated count from one score to the next so the number feels alive when a
-// reaction lands, not just swapped out.
-function CountUp({ from, to }: { from: number; to: number }): ReactElement {
-  const mv = useMotionValue(from);
-  const [display, setDisplay] = useState(from);
-  useEffect(() => {
-    const controls = animate(mv, to, {
-      duration: 1,
-      ease: "easeOut",
-      onUpdate: (v) => setDisplay(Math.round(v)),
-    });
-    return () => controls.stop();
-  }, [mv, to]);
-  return <>{display}</>;
-}
 
 function toneAccent(tone: CompanionReaction["tone"]): {
   ring: string;
@@ -149,18 +133,8 @@ function ReactionCard({
           )}
         </div>
         <div className="min-w-0 flex-1 pr-4">
-          <p className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tabular-nums text-foreground">
-              <CountUp from={reaction.fromScore} to={reaction.toScore} />
-            </span>
-            {reaction.delta !== 0 && (
-              <span className={`text-xs font-semibold ${accent.text}`}>
-                {reaction.delta > 0 ? `+${reaction.delta}` : reaction.delta}
-              </span>
-            )}
-            <span className="text-[11px] text-muted-foreground">
-              readiness
-            </span>
+          <p className={`text-[11px] font-semibold uppercase tracking-wide ${accent.text}`}>
+            Echo noticed a change
           </p>
           <p className="mt-1 text-sm font-medium text-foreground">
             {reaction.headline}
@@ -180,10 +154,7 @@ function ReactionCard({
               key={l.key}
               className="inline-flex items-center gap-1 rounded-full border border-foreground/12 bg-foreground/[0.03] px-2 py-0.5 text-[11px] text-muted-foreground"
             >
-              {l.label}
-              <span className={`font-semibold ${accent.text}`}>
-                {l.from} to {l.to}
-              </span>
+              More context about {l.label.toLowerCase()}
             </span>
           ))}
         </div>
@@ -197,7 +168,7 @@ function ReactionCard({
             className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] px-3 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
             data-testid="echo-reaction-matching"
           >
-            Matching is open
+            Review matching
             <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </button>
         ) : (
@@ -209,9 +180,6 @@ function ReactionCard({
               data-testid="echo-reaction-next"
             >
               {reaction.nextMove.label}
-              <span className={`font-semibold ${accent.text}`}>
-                +{reaction.nextMove.points}
-              </span>
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           )
@@ -234,8 +202,8 @@ function severityClass(severity: CompanionObservation["severity"]): string {
  * page. It is a floating button that opens into a panel: talk to Echo, read the
  * notices it has made on its own, and have it react to a message you share. It
  * renders nothing for anonymous or still-loading users so it never shows an empty
- * shell, and every reply invalidates the shared matching-state query so the
- * readiness spine updates the moment Echo moves it.
+ * shell. Every reply refreshes both Echo and the shared matching state, while
+ * Echo remains the single member-facing source for what to do next.
  */
 export function EchoPresence() {
   const { isAuthenticated } = useAuth();
@@ -438,7 +406,7 @@ export function EchoPresence() {
                 {data.personaLabel}
               </p>
               <p className="truncate text-[11px] text-muted-foreground">
-                Readiness {data.readinessScore} of {data.threshold}
+                Here with your profile, conversations, and next step
               </p>
             </div>
             <div className="flex items-center gap-1">
