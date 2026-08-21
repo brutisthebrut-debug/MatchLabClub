@@ -501,6 +501,43 @@ a horizontally scaled public beta.
   production build remains blocking; its downloadable artifact is best-effort
   when GitHub account storage is full.
 
+## Batch 8C — Echo-owned orchestration
+
+Status: **Implementation complete; final repository validation pending**
+
+Goal: make Echo the backend-owned guide for the signed-in experience instead of
+letting individual pages independently decide what matters next.
+
+- The companion endpoint now owns the single next move across the member
+  journey. The priority is a pending proposal, an unread mutual conversation,
+  an overdue commitment, then the highest-value profile uncertainty.
+- Today consumes Echo's next move directly. It no longer fetches proposals,
+  connections, and profile actions to assemble a separate client-side answer.
+- Echo's member-facing companion language is qualitative. Internal coverage
+  calculations may still detect that evidence changed, but members are not shown
+  readiness points, threshold crossings, “matching is open,” or language saying
+  profile work earned access to a person.
+- The reusable next-action card now presents “Echo's suggestion,” removes point
+  rewards, and distinguishes a meaningful profile review from match access or
+  market availability.
+- Deterministic policy tests lock the journey priority and prove profile
+  suggestions cannot carry score rewards.
+
+### Roadmap delta — 2026-08-21 (Echo ownership)
+
+| Decision | Before this batch | After this batch | Why |
+| --- | --- | --- | --- |
+| One next move | Today independently combined proposals, conversations, and matching-state actions | Echo's backend chooses the move and Today renders that decision | Echo cannot drive the experience if pages invent competing priorities |
+| Progress language | Companion reactions and answers still exposed score/threshold and “earned matching” language | Evidence changes are described as clearer or less certain understanding | Profile depth is evidence, not human worth, package access, or entitlement to a person |
+| Page responsibility | Pages could behave like separate tools under a persistent Echo widget | Echo directs; pages execute the workflow and preserve the durable record | This is the product's governing interaction model |
+| Scope | Five destinations and the selected beta capability set | Unchanged | This consolidates orchestration; it does not restore the old tool drawer |
+
+Remaining Echo integration work is explicit: proposed learnings still need a
+member confirmation/correction step before becoming profile truth; every
+selected Play result must prove its structured write reaches Mirror/Journey; and
+the connected runtime must prove the Echo-directed route through a real browser
+session.
+
 ## Definition of done
 
 The milestone is complete when:
