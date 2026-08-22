@@ -1,19 +1,19 @@
 # MatchLab Club
 
-AI companion that sits alongside dating apps (Tinder, Hinge, Bumble). The north
-star is readiness first, matching as the payoff: help someone become genuinely
-relationship-ready, then match them (AI-driven, radius-based) with people they
-would not find on their own. The AI is hybrid: a deterministic engine runs on
-every account by default, with Anthropic Claude layered on top, opt-in per
-account.
+Relationship decision companion with controlled introductions. MatchLab gets to
+know a member, helps them understand themselves and what they want, introduces
+one considered person when the pilot can do so honestly, and learns with them
+afterward. The AI is hybrid: a deterministic engine runs on every account by
+default, with Anthropic Claude layered on top, opt-in per account.
 
 ## Start here
 
 New to the codebase? Read in this order:
 
-1. `ARCHITECTURE.md`: guided map of the monorepo and how a request flows.
-2. `MIGRATION.md`: the plan to move off Replit to production.
-3. `replit.md`: conventions, gotchas, and product overview.
+1. `PRODUCTION_STATUS.md`: approved v1 contract, repository reality, and gates.
+2. `ARCHITECTURE.md`: guided map of the monorepo and how a request flows.
+3. `MIGRATION.md`: the plan to move off Replit to production.
+4. `replit.md`: conventions, gotchas, and product overview.
 
 More detail: `PROJECT_SPECIFICATION.md` and `VISION.md` (product), `OPERATIONS.md`
 (runbooks), `CI.md` (the CI gate).

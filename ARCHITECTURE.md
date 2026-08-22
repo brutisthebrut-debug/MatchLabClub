@@ -12,6 +12,7 @@ Read these in the order that matches your goal:
 | If you want to... | Read |
 |---|---|
 | Understand the layout and how pieces connect (you are here) | `ARCHITECTURE.md` |
+| Distinguish approved v1 behavior from what is actually shipped | `PRODUCTION_STATUS.md` |
 | Review the plan to move off Replit infrastructure | `MIGRATION.md` |
 | Understand the product vision and north star | `VISION.md`, `replit.md` |
 | See the full feature/product specification | `PROJECT_SPECIFICATION.md` |
@@ -22,13 +23,12 @@ Read these in the order that matches your goal:
 
 ## What the product is
 
-MatchLab Club is an AI companion that sits alongside dating apps (Tinder, Hinge,
-Bumble). Its north star is readiness first, matching as the payoff: help a person
-become genuinely relationship-ready, then match them (AI-driven, radius-based)
-with people they would not find on their own. The optimize-your-existing-apps
-tools (profile audits, message coaching, bio rewrites, quizzes) provide immediate
-value and, at the same time, feed one rising Match Readiness meter that gates
-matching.
+MatchLab Club is a relationship decision companion with controlled
+introductions. The approved v1 member path is: get known, understand yourself,
+clarify what you want, wait honestly, receive one considered introduction, meet,
+and learn afterward. The current repository still contains a legacy numeric
+readiness engine and route-heavy shell; those are implementation inputs, not the
+approved final member promise. See `PRODUCTION_STATUS.md` for the exact gap.
 
 The AI is hybrid. A deterministic engine runs on every account by default with no
 keys and no external calls. Anthropic Claude is layered on top, opt-in per account,
@@ -119,9 +119,11 @@ Files below are under `artifacts/api-server/src/` unless noted.
   line, UI copy). Readiness scoring and the matching prompt both derive from it,
   so a new data source is one registry entry plus its DB count, not edits spread
   across files.
-- **Readiness and matching.** `lib/readiness.ts` derives the Match Readiness
-  score/breakdown/next-actions from the registry. `lib/matching.ts` handles
-  radius-based matching and injects aggregate signal coverage (never raw content).
+- **Legacy readiness and matching.** `lib/readiness.ts` currently derives a
+  numeric score/breakdown/next-actions from the registry. `lib/matching.ts`
+  handles radius-based matching and injects aggregate signal coverage (never raw
+  content). The approved v1 translation must replace member-facing human scoring
+  with clear known/unknown state and explicit matching permissions.
 - **Auth.** `routes/auth.ts` + `lib/auth.ts` + `middlewares/authMiddleware.ts`
   implement Replit OIDC today. `routes/devAuth.ts` is a dev-only bypass. The
   anonymous-claim flow (`lib/anonClaimToken.ts`, `lib/handoffToken.ts`) lets

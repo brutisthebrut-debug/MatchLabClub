@@ -1232,6 +1232,11 @@ export interface AccountSummary {
   postDateNotes: number;
 }
 
+/**
+ * Complete user-scoped product data grouped by stable database family name. This extends the legacy top-level collections without exposing operational credentials or reusable authentication secrets.
+ */
+export type AccountExportDataFamilies = {[key: string]: unknown[]};
+
 export interface AccountExportUser {
   id: string;
   /** @nullable */
@@ -1306,6 +1311,8 @@ export interface AccountExport {
   insights: EmailInsight[];
   journalEntries: JournalEntry[];
   postDateNotes: PostDateNote[];
+  /** Complete user-scoped product data grouped by stable database family name. This extends the legacy top-level collections without exposing operational credentials or reusable authentication secrets. */
+  dataFamilies: AccountExportDataFamilies;
 }
 
 export interface BulkDeleteAuditsInput {

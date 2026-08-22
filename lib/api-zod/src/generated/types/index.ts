@@ -7,6 +7,7 @@
  */
 
 export * from './accountExport';
+export * from './accountExportDataFamilies';
 export * from './accountExportUser';
 export * from './accountSummary';
 export * from './achievement';

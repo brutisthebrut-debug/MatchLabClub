@@ -48,6 +48,18 @@ import {
   careDialectProfilesTable,
   connectorConnectionsTable,
   oauthTokensTable,
+  journeyEventsTable,
+  wyrAnswersTable,
+  dailySparkAnswersTable,
+  flagSelectionsTable,
+  scenarioResponsesTable,
+  predictionResponsesTable,
+  timeCapsulesTable,
+  wingmanInvitesTable,
+  wingmanAnswersTable,
+  wingmanSelfRatingsTable,
+  cosmicChartsTable,
+  userVerificationsTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -311,6 +323,131 @@ async function buildExportPayload(userId: string) {
   const u = userRow[0];
   if (!u) return null;
 
+  const [
+    lifePulses,
+    wellnessAnswers,
+    wellnessInferences,
+    wellnessTags,
+    compatibilityReads,
+    importedSources,
+    connectorConnections,
+    datingWins,
+    behavioralGrowthEvents,
+    matchingReadinessSnapshots,
+    matchingNudgeState,
+    mirrorDigestPrefs,
+    journeyEvents,
+    wyrAnswers,
+    dailySparkAnswers,
+    flagSelections,
+    scenarioResponses,
+    predictionResponses,
+    timeCapsules,
+    wingmanInvites,
+    wingmanAnswers,
+    wingmanSelfRatings,
+    cosmicCharts,
+    userVerifications,
+    matchPreferences,
+    matchPoolMembership,
+    matchProposals,
+    matchConnections,
+    profilePhotos,
+    aiUsageCounters,
+    companionState,
+    companionMessages,
+    companionObservations,
+    companionCommitments,
+    companionNotifications,
+    companionChannelPrefs,
+    careDialectProfiles,
+    userReports,
+    userBlocks,
+    referrals,
+  ] = await Promise.all([
+    db.select().from(lifePulsesTable).where(eq(lifePulsesTable.userId, userId)),
+    db.select().from(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
+    db.select().from(wellnessInferencesTable).where(eq(wellnessInferencesTable.userId, userId)),
+    db.select().from(wellnessTagsTable).where(eq(wellnessTagsTable.userId, userId)),
+    db.select().from(compatibilityReadsTable).where(eq(compatibilityReadsTable.userId, userId)),
+    db.select().from(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)),
+    db.select().from(connectorConnectionsTable).where(eq(connectorConnectionsTable.userId, userId)),
+    db.select().from(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
+    db.select().from(behavioralGrowthEventsTable).where(eq(behavioralGrowthEventsTable.userId, userId)),
+    db.select().from(matchingReadinessSnapshotsTable).where(eq(matchingReadinessSnapshotsTable.userId, userId)),
+    db.select().from(matchingNudgeStateTable).where(eq(matchingNudgeStateTable.userId, userId)),
+    db.select().from(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
+    db.select().from(journeyEventsTable).where(eq(journeyEventsTable.userId, userId)),
+    db.select().from(wyrAnswersTable).where(eq(wyrAnswersTable.userId, userId)),
+    db.select().from(dailySparkAnswersTable).where(eq(dailySparkAnswersTable.userId, userId)),
+    db.select().from(flagSelectionsTable).where(eq(flagSelectionsTable.userId, userId)),
+    db.select().from(scenarioResponsesTable).where(eq(scenarioResponsesTable.userId, userId)),
+    db.select().from(predictionResponsesTable).where(eq(predictionResponsesTable.userId, userId)),
+    db.select().from(timeCapsulesTable).where(eq(timeCapsulesTable.userId, userId)),
+    db.select().from(wingmanInvitesTable).where(eq(wingmanInvitesTable.userId, userId)),
+    db.select().from(wingmanAnswersTable).where(eq(wingmanAnswersTable.userId, userId)),
+    db.select().from(wingmanSelfRatingsTable).where(eq(wingmanSelfRatingsTable.userId, userId)),
+    db.select().from(cosmicChartsTable).where(eq(cosmicChartsTable.userId, userId)),
+    db.select().from(userVerificationsTable).where(eq(userVerificationsTable.userId, userId)),
+    db.select().from(matchPreferencesTable).where(eq(matchPreferencesTable.userId, userId)),
+    db.select().from(matchPoolMembershipTable).where(eq(matchPoolMembershipTable.userId, userId)),
+    db
+      .select()
+      .from(matchProposalsTable)
+      .where(
+        or(
+          eq(matchProposalsTable.userId, userId),
+          eq(matchProposalsTable.proposedToUserId, userId),
+        ),
+      ),
+    db
+      .select()
+      .from(matchConnectionsTable)
+      .where(
+        or(
+          eq(matchConnectionsTable.userLowId, userId),
+          eq(matchConnectionsTable.userHighId, userId),
+        ),
+      ),
+    db.select().from(profilePhotosTable).where(eq(profilePhotosTable.userId, userId)),
+    db.select().from(aiUsageCountersTable).where(eq(aiUsageCountersTable.userId, userId)),
+    db.select().from(companionStateTable).where(eq(companionStateTable.userId, userId)),
+    db.select().from(companionMessagesTable).where(eq(companionMessagesTable.userId, userId)),
+    db.select().from(companionObservationsTable).where(eq(companionObservationsTable.userId, userId)),
+    db.select().from(companionCommitmentsTable).where(eq(companionCommitmentsTable.userId, userId)),
+    db.select().from(companionNotificationsTable).where(eq(companionNotificationsTable.userId, userId)),
+    db.select().from(companionChannelPrefsTable).where(eq(companionChannelPrefsTable.userId, userId)),
+    db.select().from(careDialectProfilesTable).where(eq(careDialectProfilesTable.userId, userId)),
+    db.select().from(userReportsTable).where(eq(userReportsTable.reporterUserId, userId)),
+    db.select().from(userBlocksTable).where(eq(userBlocksTable.blockerUserId, userId)),
+    db
+      .select()
+      .from(referralsTable)
+      .where(
+        or(
+          eq(referralsTable.inviterUserId, userId),
+          eq(referralsTable.inviteeUserId, userId),
+        ),
+      ),
+  ]);
+
+  const auditIds = audits.map((audit) => audit.id);
+  const connectionIds = matchConnections.map((connection) => connection.id);
+  const [auditReportVersions, connectionMessages] = await Promise.all([
+    auditIds.length > 0
+      ? db
+          .select()
+          .from(auditReportVersionsTable)
+          .where(inArray(auditReportVersionsTable.auditId, auditIds))
+      : Promise.resolve([]),
+    connectionIds.length > 0
+      ? db
+          .select()
+          .from(connectionMessagesTable)
+          .where(inArray(connectionMessagesTable.connectionId, connectionIds))
+      : Promise.resolve([]),
+  ]);
+
   return ExportMyDataResponse.parse({
     exportedAt: new Date().toISOString(),
     user: {
@@ -342,6 +479,55 @@ async function buildExportPayload(userId: string) {
       updatedAt: toIso(p.updatedAt),
       deletedAt: p.deletedAt ? toIso(p.deletedAt) : null,
     })),
+    dataFamilies: {
+      account: [{
+        ...u,
+        createdAt: toIso(u.createdAt),
+        updatedAt: toIso(u.updatedAt),
+      }],
+      auditReportVersions,
+      lifePulses,
+      wellnessAnswers,
+      wellnessInferences,
+      wellnessTags,
+      compatibilityReads,
+      importedSources,
+      connectorConnections,
+      datingWins,
+      behavioralGrowthEvents,
+      matchingReadinessSnapshots,
+      matchingNudgeState,
+      mirrorDigestPrefs,
+      journeyEvents,
+      wyrAnswers,
+      dailySparkAnswers,
+      flagSelections,
+      scenarioResponses,
+      predictionResponses,
+      timeCapsules,
+      wingmanInvites,
+      wingmanAnswers,
+      wingmanSelfRatings,
+      cosmicCharts,
+      userVerifications,
+      matchPreferences,
+      matchPoolMembership,
+      matchProposals,
+      matchConnections,
+      connectionMessages,
+      profilePhotos,
+      aiUsageCounters,
+      companionState,
+      companionMessages,
+      companionObservations,
+      companionCommitments,
+      companionNotifications,
+      companionChannelPrefs,
+      careDialectProfiles,
+      userReports,
+      userBlocks,
+      referrals,
+    },
   });
 }
 
@@ -670,6 +856,26 @@ router.delete("/account", async (req, res): Promise<void> => {
       .delete(connectorConnectionsTable)
       .where(eq(connectorConnectionsTable.userId, userId)),
     db.delete(oauthTokensTable).where(eq(oauthTokensTable.userId, userId)),
+  ]);
+
+  // Product surfaces added after the original account route: Journey, Play,
+  // outside-perspective, Cosmic, verification, and Mirror delivery state.
+  // Keep this legacy route in parity while first-party clients migrate to the
+  // confirmation-gated transactional endpoint below.
+  await Promise.all([
+    db.delete(journeyEventsTable).where(eq(journeyEventsTable.userId, userId)),
+    db.delete(wyrAnswersTable).where(eq(wyrAnswersTable.userId, userId)),
+    db.delete(dailySparkAnswersTable).where(eq(dailySparkAnswersTable.userId, userId)),
+    db.delete(flagSelectionsTable).where(eq(flagSelectionsTable.userId, userId)),
+    db.delete(scenarioResponsesTable).where(eq(scenarioResponsesTable.userId, userId)),
+    db.delete(predictionResponsesTable).where(eq(predictionResponsesTable.userId, userId)),
+    db.delete(timeCapsulesTable).where(eq(timeCapsulesTable.userId, userId)),
+    db.delete(wingmanAnswersTable).where(eq(wingmanAnswersTable.userId, userId)),
+    db.delete(wingmanInvitesTable).where(eq(wingmanInvitesTable.userId, userId)),
+    db.delete(wingmanSelfRatingsTable).where(eq(wingmanSelfRatingsTable.userId, userId)),
+    db.delete(cosmicChartsTable).where(eq(cosmicChartsTable.userId, userId)),
+    db.delete(userVerificationsTable).where(eq(userVerificationsTable.userId, userId)),
+    db.delete(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
   ]);
 
   // Echo companion surfaces: the evolving model of the user, the conversation
@@ -1233,6 +1439,88 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(careDialectProfilesTable.userId, userId))
         .returning({ id: careDialectProfilesTable.id });
       tables["care_dialect_profiles"] = careDialectDel.length;
+
+      // Journey + Play + outside-perspective + identity surfaces were added
+      // after the first GDPR implementation. They are user-owned even when
+      // their user_id intentionally has no FK, so deletion must be explicit.
+      const journeyDel = await tx
+        .delete(journeyEventsTable)
+        .where(eq(journeyEventsTable.userId, userId))
+        .returning({ id: journeyEventsTable.id });
+      tables["journey_events"] = journeyDel.length;
+
+      const wyrDel = await tx
+        .delete(wyrAnswersTable)
+        .where(eq(wyrAnswersTable.userId, userId))
+        .returning({ id: wyrAnswersTable.id });
+      tables["wyr_answers"] = wyrDel.length;
+
+      const dailySparkDel = await tx
+        .delete(dailySparkAnswersTable)
+        .where(eq(dailySparkAnswersTable.userId, userId))
+        .returning({ id: dailySparkAnswersTable.id });
+      tables["daily_spark_answers"] = dailySparkDel.length;
+
+      const flagSelectionDel = await tx
+        .delete(flagSelectionsTable)
+        .where(eq(flagSelectionsTable.userId, userId))
+        .returning({ id: flagSelectionsTable.id });
+      tables["flag_selections"] = flagSelectionDel.length;
+
+      const scenarioDel = await tx
+        .delete(scenarioResponsesTable)
+        .where(eq(scenarioResponsesTable.userId, userId))
+        .returning({ id: scenarioResponsesTable.id });
+      tables["scenario_responses"] = scenarioDel.length;
+
+      const predictionDel = await tx
+        .delete(predictionResponsesTable)
+        .where(eq(predictionResponsesTable.userId, userId))
+        .returning({ id: predictionResponsesTable.id });
+      tables["prediction_responses"] = predictionDel.length;
+
+      const timeCapsuleDel = await tx
+        .delete(timeCapsulesTable)
+        .where(eq(timeCapsulesTable.userId, userId))
+        .returning({ id: timeCapsulesTable.id });
+      tables["time_capsules"] = timeCapsuleDel.length;
+
+      // Answers reference invites logically, so remove answers first.
+      const wingmanAnswerDel = await tx
+        .delete(wingmanAnswersTable)
+        .where(eq(wingmanAnswersTable.userId, userId))
+        .returning({ id: wingmanAnswersTable.id });
+      tables["wingman_answers"] = wingmanAnswerDel.length;
+
+      const wingmanInviteDel = await tx
+        .delete(wingmanInvitesTable)
+        .where(eq(wingmanInvitesTable.userId, userId))
+        .returning({ id: wingmanInvitesTable.id });
+      tables["wingman_invites"] = wingmanInviteDel.length;
+
+      const wingmanSelfDel = await tx
+        .delete(wingmanSelfRatingsTable)
+        .where(eq(wingmanSelfRatingsTable.userId, userId))
+        .returning({ userId: wingmanSelfRatingsTable.userId });
+      tables["wingman_self_ratings"] = wingmanSelfDel.length;
+
+      const cosmicDel = await tx
+        .delete(cosmicChartsTable)
+        .where(eq(cosmicChartsTable.userId, userId))
+        .returning({ id: cosmicChartsTable.id });
+      tables["cosmic_charts"] = cosmicDel.length;
+
+      const verificationDel = await tx
+        .delete(userVerificationsTable)
+        .where(eq(userVerificationsTable.userId, userId))
+        .returning({ id: userVerificationsTable.id });
+      tables["user_verifications"] = verificationDel.length;
+
+      const digestPrefsDel = await tx
+        .delete(mirrorDigestPrefsTable)
+        .where(eq(mirrorDigestPrefsTable.userId, userId))
+        .returning({ userId: mirrorDigestPrefsTable.userId });
+      tables["mirror_digest_prefs"] = digestPrefsDel.length;
 
       // ── Finally the user row itself ───────────────────────────────────
       const userDel = await tx

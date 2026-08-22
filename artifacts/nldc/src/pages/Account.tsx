@@ -29,7 +29,7 @@ import {
   useListAudits,
   getListAuditsQueryKey,
   exportMyData,
-  useDeleteMyAccount,
+  useDeleteMyAccountConfirmed,
   useGetAccountSummary,
   getGetAccountSummaryQueryKey,
   useEmailMyDataExport,
@@ -106,10 +106,11 @@ export default function Account() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const DELETE_CONFIRM_PHRASE = "delete";
+  const DELETE_CONFIRM_PHRASE = user?.email?.trim() ?? "";
   const isDeleteConfirmed =
-    deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE;
-  const deleteAccount = useDeleteMyAccount();
+    DELETE_CONFIRM_PHRASE.length > 0 &&
+    deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE.toLowerCase();
+  const deleteAccount = useDeleteMyAccountConfirmed();
   const summaryQuery = useGetAccountSummary({
     query: {
       queryKey: getGetAccountSummaryQueryKey(),
@@ -235,7 +236,9 @@ export default function Account() {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteAccount.mutateAsync();
+      await deleteAccount.mutateAsync({
+        data: { confirmation: deleteConfirmText.trim() },
+      });
       toast({
         title: "Account deleted",
         description: "Your account and all associated data have been removed.",
@@ -707,13 +710,13 @@ export default function Account() {
             </AlertDialogHeader>
             <div className="space-y-3 my-6">
               <Label htmlFor="delete-confirm-input" className="text-base text-center block">
-                Type <span className="font-bold text-foreground">delete</span> to confirm
+                Type <span className="font-bold text-foreground">{user?.email}</span> to confirm
               </Label>
               <Input
                 id="delete-confirm-input"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder="delete"
+                placeholder={user?.email ?? "Account email"}
                 autoComplete="off"
                 autoCapitalize="off"
                 autoCorrect="off"

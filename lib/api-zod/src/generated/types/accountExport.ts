@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { AccountExportDataFamilies } from './accountExportDataFamilies';
 import type { AccountExportUser } from './accountExportUser';
 import type { Audit } from './audit';
 import type { DatingProfile } from './datingProfile';
@@ -23,4 +24,6 @@ export interface AccountExport {
   insights: EmailInsight[];
   journalEntries: JournalEntry[];
   postDateNotes: PostDateNote[];
+  /** Complete user-scoped product data grouped by stable database family name. This extends the legacy top-level collections without exposing operational credentials or reusable authentication secrets. */
+  dataFamilies: AccountExportDataFamilies;
 }

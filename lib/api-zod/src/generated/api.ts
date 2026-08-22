@@ -208,9 +208,10 @@ export const GetAnonymousClaimHandoffStatusResponse = zod.object({
 
 /**
  * Returns a single JSON document containing the authenticated user's
-profile record plus every audit, dating profile, message coaching
-session, and email insight tied to that user. Intended to power a
-"Download my data" button on the account page.
+account record plus the user-facing and derived data families tied to
+that user. Operational secrets such as session ids, OAuth tokens, push
+tokens, and single-use export tokens are intentionally excluded.
+Intended to power a "Download my data" button on the account page.
 
  * @summary Download all of the signed-in user's data as JSON
  */
@@ -405,7 +406,8 @@ export const ExportMyDataResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
-}))
+})),
+  "dataFamilies": zod.record(zod.string(), zod.array(zod.unknown())).describe('Complete user-scoped product data grouped by stable database family name. This extends the legacy top-level collections without exposing operational credentials or reusable authentication secrets.')
 })
 
 
@@ -1212,7 +1214,8 @@ export const DownloadEmailedExportResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
-}))
+})),
+  "dataFamilies": zod.record(zod.string(), zod.array(zod.unknown())).describe('Complete user-scoped product data grouped by stable database family name. This extends the legacy top-level collections without exposing operational credentials or reusable authentication secrets.')
 })
 
 

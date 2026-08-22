@@ -35,9 +35,19 @@ export default defineConfig({
 
   const before = listSqlFiles(tmpOutAbs);
 
+  // Invoke the workspace-pinned binary directly. `npx` may try the network
+  // when its cache is cold, which makes this reproducibility check flaky in CI
+  // and unusable in restricted production build environments.
+  const drizzleKitBin = path.join(
+    repoDbDir,
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "drizzle-kit.cmd" : "drizzle-kit",
+  );
+
   const result = spawnSync(
-    "npx",
-    ["drizzle-kit", "generate", "--config", tmpConfigRel],
+    drizzleKitBin,
+    ["generate", "--config", tmpConfigRel],
     { cwd: repoDbDir, env, encoding: "utf8" },
   );
 
