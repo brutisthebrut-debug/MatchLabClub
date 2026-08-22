@@ -743,10 +743,11 @@ addressed.
 ### 4.10 Stripe webhooks
 
 - [ ] **REQUIRED** `stripe-replit-sync` removed *(Phase 2a)*
-- [ ] **REQUIRED** Direct webhook handler implemented and signed with `STRIPE_WEBHOOK_SECRET` *(Phase 2a)*
+- [x] **REQUIRED** Direct webhook handler implemented and signed with `STRIPE_WEBHOOK_SECRET` *(Phase 2a)*
 - [ ] **REQUIRED** Webhook endpoint registered in Stripe dashboard at production domain *(Phase 2a)*
 - [ ] **REQUIRED** End-to-end checkout flow tested in Stripe test mode against the new handler *(Phase 2a)*
-- [ ] **REQUIRED** Tier upgrade (`purchase_interest` → user tier) verified after webhook fires *(Phase 2a)*
+- [ ] **REQUIRED** Apply migration `0045`, then verify checkout, renewal, end-of-period cancellation, payment failure/recovery, one-time refund revocation, customer portal, and account-deletion renewal stop in Stripe test mode *(production trust Phase 0 / Phase 2a)*
+- [x] **REQUIRED** Manual paid-tier mutation retired; `billing_entitlements` is authoritative and `users.tier` is only synchronized from signed events *(production trust Phase 0)*
 
 ### 4.11 Google OAuth (Calendar)
 

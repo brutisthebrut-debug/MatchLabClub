@@ -67,11 +67,9 @@ export const usersTable = pgTable("users", {
   // the user landed via an Echo share URL with `?ref=user-<inviterId>`.
   invitedByUserId: varchar("invited_by_user_id"),
   invitedAt: timestamp("invited_at", { withTimezone: true }),
-  // Paid tier source-of-truth. Set manually by founder during beta after a
-  // Stripe payment lands. Values: null (free / unpaid), 'reset' ($97
-  // one-time), 'wingman' ($197/mo). Read by the matching pool to route
-  // Wingman customers into concierge_only flow. When Stripe webhook ships,
-  // this gets stamped automatically.
+  // Compatibility cache for access checks and matching routing. The durable
+  // authority is billing_entitlements; webhook reconciliation keeps this value
+  // at the highest currently active tier. Values: null, 'reset', 'wingman'.
   tier: varchar("tier"),
   tierGrantedAt: timestamp("tier_granted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })

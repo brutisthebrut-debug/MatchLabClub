@@ -129,9 +129,11 @@ Files below are under `artifacts/api-server/src/` unless noted.
   anonymous-claim flow (`lib/anonClaimToken.ts`, `lib/handoffToken.ts`) lets
   anonymous audits be reassigned on login and carried across devices. Migration
   off Replit OIDC is Phase 1 in `MIGRATION.md`.
-- **Payments.** `lib/stripeClient.ts`, `lib/initStripe.ts`, `lib/stripeReconcile.ts`,
-  `lib/webhookHandlers.ts` run Stripe through the Replit-managed integration today.
-  Migration to the direct Stripe SDK is Phase 2a in `MIGRATION.md`.
+- **Payments.** `lib/stripeClient.ts`, `lib/webhookHandlers.ts`, and
+  `lib/billingEntitlements.ts` use the direct Stripe SDK. Signed, idempotent
+  events write `stripe_events` and `billing_entitlements`; the user tier is a
+  synchronized compatibility cache. `routes/billing.ts` owns authenticated
+  Checkout and customer-portal session creation.
 - **Object storage.** `lib/objectStorage.ts` talks to a Replit sidecar today; the
   abstraction is clean and only the credential helpers change on migration
   (Phase 2b).

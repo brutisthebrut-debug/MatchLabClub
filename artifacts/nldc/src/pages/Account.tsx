@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { motion, type Variants } from "framer-motion";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@workspace/replit-auth-web";
+import { getMyBilling, openBillingPortal, type BillingState } from "@/lib/apiClient";
 import {
   useListAudits,
   getListAuditsQueryKey,
@@ -57,6 +58,7 @@ import {
   Smartphone,
   Brain,
   Sparkles,
+  CreditCard,
 } from "lucide-react";
 
 const DIGEST_FREQUENCY_OPTIONS: {
@@ -99,6 +101,8 @@ export default function Account() {
 
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   const { toast } = useToast();
+  const [billing, setBilling] = useState<BillingState | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
   const auditsQuery = useListAudits(undefined, {
     query: { queryKey: getListAuditsQueryKey(), enabled: isAuthenticated },
   });
@@ -110,6 +114,33 @@ export default function Account() {
   const isDeleteConfirmed =
     DELETE_CONFIRM_PHRASE.length > 0 &&
     deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE.toLowerCase();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setBilling(null);
+      return;
+    }
+    let cancelled = false;
+    void getMyBilling()
+      .then((state) => { if (!cancelled) setBilling(state); })
+      .catch(() => { if (!cancelled) setBilling(null); });
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
+
+  const manageBilling = async () => {
+    setBillingLoading(true);
+    try {
+      const session = await openBillingPortal();
+      window.location.assign(session.url);
+    } catch (error) {
+      toast({
+        title: "Billing portal unavailable",
+        description: error instanceof Error ? error.message : "Try again shortly.",
+        variant: "destructive",
+      });
+      setBillingLoading(false);
+    }
+  };
   const deleteAccount = useDeleteMyAccountConfirmed();
   const summaryQuery = useGetAccountSummary({
     query: {
@@ -387,6 +418,45 @@ export default function Account() {
                   <div className="text-sm text-muted-foreground mt-1">Scores, strengths, recent audits</div>
                 </div>
               </Link>
+            </motion.div>
+
+            {/* Billing state comes only from signed Stripe webhooks. */}
+            <motion.div variants={itemVariants} className="glass rounded-[2rem] p-8 md:p-10 space-y-5 border border-[hsl(248_62%_52%/0.15)] shadow-sm" data-testid="card-billing">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                <div className="h-14 w-14 rounded-[1.5rem] bg-[hsl(248_62%_52%/0.12)] flex items-center justify-center flex-shrink-0 border border-[hsl(248_62%_52%/0.2)]">
+                  <CreditCard className="h-6 w-6 text-[hsl(248_62%_62%)]" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-serif text-2xl font-bold text-foreground tracking-tight">Plan & billing</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {billing?.tier === "wingman"
+                      ? "Monthly Wingman access is active."
+                      : billing?.tier === "reset"
+                        ? "Your one-time Dating Reset access is active."
+                        : "No paid access is active on this account."}
+                  </p>
+                  {billing?.entitlements[0]?.cancelAtPeriodEnd && billing.entitlements[0].currentPeriodEnd && (
+                    <p className="text-xs text-amber-400 mt-2">
+                      Cancellation is scheduled. Access continues through {new Date(billing.entitlements[0].currentPeriodEnd).toLocaleDateString()}.
+                    </p>
+                  )}
+                </div>
+                {billing?.canManageBilling && (
+                  <Button
+                    type="button"
+                    onClick={() => void manageBilling()}
+                    disabled={billingLoading}
+                    variant="outline"
+                    className="rounded-full h-11 px-6"
+                    data-testid="button-manage-billing"
+                  >
+                    {billingLoading ? "Opening…" : "Manage billing"}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground/70">
+                Subscription changes happen in Stripe's secure portal. Cancellation stops future renewal; access ends when the paid period ends. A fully refunded one-time purchase revokes that entitlement.
+              </p>
             </motion.div>
 
             {/* Actions */}

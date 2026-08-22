@@ -93,6 +93,31 @@ export const captureLead = (data: LeadInput) =>
 export const capturePurchaseInterest = (data: PurchaseInterestInput) =>
   post<PurchaseInterest>("/purchase-interest", data);
 
+export type BillingProduct = "signal-audit" | "dating-reset" | "wingman";
+
+export interface BillingState {
+  tier: "reset" | "wingman" | null;
+  canManageBilling: boolean;
+  entitlements: Array<{
+    product: BillingProduct;
+    kind: "one_time" | "subscription";
+    status: string;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+    canceledAt: string | null;
+    refundedAt: string | null;
+    updatedAt: string;
+  }>;
+}
+
+export const getMyBilling = () => get<BillingState>("/me/billing");
+
+export const startBillingCheckout = (product: BillingProduct) =>
+  post<{ url: string }>("/me/billing/checkout", { product });
+
+export const openBillingPortal = () =>
+  post<{ url: string }>("/me/billing/portal", {});
+
 export const getFounderStats = (founderKey: string) =>
   get<FounderStats>("/founder/stats", { headers: {  } });
 
@@ -453,39 +478,6 @@ export const purgeTrashNow = (founderKey: string) =>
     }
     return (await res.json()) as PurgeTrashResponse;
   });
-
-export interface SetUserTierResponse {
-  user: {
-    id: string;
-    email: string | null;
-    tier: string | null;
-    tierGrantedAt: string | null;
-  };
-}
-
-export const setUserTier = async (
-  founderKey: string,
-  email: string,
-  tier: "free" | "reset" | "wingman" | null,
-): Promise<SetUserTierResponse> => {
-  const res = await fetch(`${BASE}/founder/users/set-tier`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ email, tier }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    try {
-      const parsed = JSON.parse(text) as { error?: string };
-      throw new Error(parsed.error || text || `HTTP ${res.status}`);
-    } catch {
-      throw new Error(text || `HTTP ${res.status}`);
-    }
-  }
-  return (await res.json()) as SetUserTierResponse;
-};
 
 export interface BackgroundJobStatus {
   jobName: string;

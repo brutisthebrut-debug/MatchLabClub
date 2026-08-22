@@ -64,33 +64,56 @@ The endpoint resolves the recipient handle back to its owning row and accumulate
 
 ## Stripe checkout operations
 
-Checkout (`/checkout/:product`) renders a Stripe Payment Link button when the corresponding env var is set, and falls back to a "save your spot" purchase-interest form when it isn't. Wiring is in `artifacts/nldc/src/pages/Checkout.tsx` (`PaidForm` reads `import.meta.env[config.stripeEnvKey]`).
+Checkout (`/checkout/:product`) now asks the signed-in API to create a short-lived
+Stripe Checkout session from a server-owned price ID. A browser redirect or
+success-page query parameter never grants access. If Stripe is not configured,
+the page falls back to the existing "save your spot" purchase-interest form.
 
-### Required env vars (frontend, `shared` environment, prefixed `VITE_` so Vite exposes them)
+### Required API-server env vars
 
-| Product | Price | Env var | Stripe URL shape |
-| --- | --- | --- | --- |
-| `signal-audit` | $29 one-time | `VITE_STRIPE_SIGNAL_AUDIT_LINK` | `https://buy.stripe.com/...` |
-| `dating-reset` | $97 one-time | `VITE_STRIPE_DATING_RESET_LINK` | `https://buy.stripe.com/...` |
-| `wingman` | $197/mo | `VITE_STRIPE_WINGMAN_LINK` | `https://buy.stripe.com/...` |
+| Setting | Env var |
+| --- | --- |
+| Stripe secret API key | `STRIPE_SECRET_KEY` |
+| Webhook endpoint signing secret | `STRIPE_WEBHOOK_SECRET` |
+| Canonical public app origin | `APP_ORIGIN` (or `PUBLIC_APP_URL`) |
+| Signal Audit one-time Price ID | `STRIPE_PRICE_SIGNAL_AUDIT` |
+| Dating Reset one-time Price ID | `STRIPE_PRICE_DATING_RESET` |
+| Monthly Wingman recurring Price ID | `STRIPE_PRICE_WINGMAN` |
 
-When all three are present, customers go straight to Stripe-hosted checkout. When any are missing, that product silently falls back to the email-capture form — safe to ship partially configured.
+The secret key and price IDs must never use a `VITE_` prefix or enter the browser
+bundle.
 
-### Creating the Payment Links in Stripe
+### Stripe dashboard setup
 
-1. Stripe Dashboard → Products → create one product per row above (one-time for the first two, monthly subscription for Wingman).
-2. Products → product → "Create payment link". Set quantity = 1, allow promotion codes, collect customer name + email.
-3. Under "After payment", set the success URL to `https://<your-domain>/checkout/success?product=<slug>` and (optionally) a cancel URL to `https://<your-domain>/checkout/cancel?product=<slug>` (use the `signal-audit` / `dating-reset` / `wingman` slug).
-4. Copy the resulting `https://buy.stripe.com/...` URL into the matching env var on Replit (Secrets → Environment variables, "shared").
-5. Restart the `artifacts/nldc: web` workflow so Vite re-reads the env.
+1. Create the three Products/Prices above and copy each `price_...` ID into the
+   matching server environment variable.
+2. Register `https://<your-domain>/api/stripe/webhook` as a webhook endpoint and
+   copy its `whsec_...` signing secret into `STRIPE_WEBHOOK_SECRET`.
+3. Subscribe it to `checkout.session.completed`,
+   `checkout.session.async_payment_succeeded`, `customer.subscription.created`,
+   `customer.subscription.updated`, `customer.subscription.deleted`,
+   `invoice.paid`, `invoice.payment_failed`, and `charge.refunded`, plus the
+   existing Stripe Identity verification events.
+4. Configure the Stripe customer portal to allow payment-method changes and
+   end-of-period subscription cancellation.
+5. Apply migration `0045` before enabling checkout.
 
-### Stripe webhook + reconciliation (live)
+### Entitlement behavior
 
-The Stripe webhook is wired through the **Replit Stripe integration** (no key needed from the user) plus the `stripe-replit-sync` package. There is nothing to paste manually:
-
-- **Connection + credentials** — `artifacts/api-server/src/lib/stripeClient.ts` reads the integration's secret key and webhook secret at runtime from the Replit connectors endpoint (never stored). `isStripeConnected()` is the guard; when no connection exists, every Stripe path is a no-op and the server boots normally.
-- **Startup init** — `artifacts/api-server/src/lib/initStripe.ts` runs `stripe-replit-sync` migrations (creates the `stripe` schema), registers a managed webhook at `/api/stripe/webhook`, then backfills and reconciles in the background. Guarded: it logs and returns if there is no connection or `DATABASE_URL`, so it never blocks or crashes startup. Called fire-and-forget from `index.ts`.
-- **Webhook route** — registered in `app.ts` **before** `express.json()` with `express.raw()` so the raw body Buffer reaches signature verification. The CSRF origin guard lets it through (Stripe is server-to-server, no Origin header); the Stripe signature is the real auth. Handler lives in `artifacts/api-server/src/lib/webhookHandlers.ts`, which delegates to `stripe-replit-sync`'s `processWebhook` to verify and sync the event into the `stripe` schema.
-- **Reconciliation** — `artifacts/api-server/src/lib/stripeReconcile.ts` runs read-only against `stripe.checkout_sessions` (managed by the sync package; we never write to the `stripe.*` schema), matches paid sessions to our `purchase_interest` rows by case-insensitive email, and stamps `status = "paid"` + `stripe_session_id` on our own table. Runs automatically on startup after backfill, and on demand via `POST /api/purchase-interest/reconcile` (founder-only).
-
-Refunds and disputes are still handled entirely in the Stripe Dashboard. To reconcile on demand after a payment, a founder can hit the reconcile endpoint (or just restart the API server, which reconciles on boot).
+- The webhook route is mounted before `express.json()` and verifies the raw body
+  with the official Stripe SDK and the endpoint secret.
+- `stripe_events` provides idempotency and a processed/failed operations trail
+  without retaining raw payment payloads.
+- `billing_entitlements` records the canonical one-time or subscription access
+  state. `users.tier` is a synchronized compatibility cache, not the authority.
+- Checkout and renewal events grant/extend access. End-of-period cancellation
+  remains active through the current period. Failed subscription payment
+  suspends access; a later paid invoice restores it. Deletion/cancellation
+  revokes it.
+- A fully refunded one-time charge changes that entitlement to `refunded` and
+  revokes its tier. Refunding a subscription charge does not silently cancel the
+  subscription; cancel it in Stripe/portal when future renewal must stop.
+- The Account page opens Stripe's short-lived customer portal. Account deletion
+  first schedules any still-renewing subscription to stop and aborts safely if
+  Stripe cannot confirm that action.
+- The founder manual tier override and reconcile endpoint are retired.

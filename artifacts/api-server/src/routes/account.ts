@@ -25,6 +25,7 @@ import {
   pushTokensTable,
   referralsTable,
   purchaseInterestTable,
+  billingEntitlementsTable,
   aiUsageCountersTable,
   matchPreferencesTable,
   matchPoolMembershipTable,
@@ -83,6 +84,7 @@ import { clearSession, getSessionId, SESSION_COOKIE } from "../lib/auth";
 import { describeUserAgent } from "../lib/userAgent";
 import { describeIpLocation } from "../lib/geoLocation";
 import { sendMail } from "../lib/mailer";
+import { getUncachableStripeClient } from "../lib/stripeClient";
 import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
 
 const router: IRouter = Router();
@@ -364,6 +366,7 @@ async function buildExportPayload(userId: string) {
     userReports,
     userBlocks,
     referrals,
+    billingEntitlements,
   ] = await Promise.all([
     db.select().from(lifePulsesTable).where(eq(lifePulsesTable.userId, userId)),
     db.select().from(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
@@ -427,6 +430,15 @@ async function buildExportPayload(userId: string) {
         or(
           eq(referralsTable.inviterUserId, userId),
           eq(referralsTable.inviteeUserId, userId),
+        ),
+      ),
+    db
+      .select()
+      .from(billingEntitlementsTable)
+      .where(
+        or(
+          eq(billingEntitlementsTable.userId, userId),
+          sql`lower(${billingEntitlementsTable.email}) = lower(${u.email ?? ""})`,
         ),
       ),
   ]);
@@ -527,6 +539,7 @@ async function buildExportPayload(userId: string) {
       userReports,
       userBlocks,
       referrals,
+      billingEntitlements,
     },
   });
 }
@@ -1095,6 +1108,49 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
     return;
   }
 
+  // Deleting an account must not leave a recurring charge alive. Schedule any
+  // still-live Stripe subscription to stop renewing before the local account
+  // and its billing linkage are removed. If Stripe cannot confirm that change,
+  // abort the deletion so the member is not left with an unmanaged renewal.
+  const recurring = await db
+    .select({
+      subscriptionId: billingEntitlementsTable.stripeSubscriptionId,
+      status: billingEntitlementsTable.status,
+      cancelAtPeriodEnd: billingEntitlementsTable.cancelAtPeriodEnd,
+    })
+    .from(billingEntitlementsTable)
+    .where(
+      and(
+        or(
+          eq(billingEntitlementsTable.userId, userId),
+          sql`lower(${billingEntitlementsTable.email}) = ${expected}`,
+        ),
+        eq(billingEntitlementsTable.kind, "subscription"),
+      ),
+    );
+  const stillRenewing = recurring.filter(
+    (row) =>
+      row.subscriptionId &&
+      !row.cancelAtPeriodEnd &&
+      !["canceled", "refunded", "incomplete_expired"].includes(row.status),
+  );
+  if (stillRenewing.length > 0) {
+    try {
+      const stripe = await getUncachableStripeClient();
+      for (const row of stillRenewing) {
+        await stripe.subscriptions.update(row.subscriptionId!, {
+          cancel_at_period_end: true,
+        });
+      }
+    } catch (error) {
+      req.log.error({ err: error, userId }, "Failed to stop subscription before account deletion");
+      res.status(503).json({
+        error: "We couldn't stop your subscription renewal, so your account was not deleted. Try again or contact support.",
+      });
+      return;
+    }
+  }
+
   const tables: Record<string, number> = {};
 
   try {
@@ -1283,6 +1339,17 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(sql`lower(${purchaseInterestTable.email}) = ${expected}`)
         .returning({ id: purchaseInterestTable.id });
       tables["purchase_interest"] = purchaseDel.length;
+
+      const entitlementDel = await tx
+        .delete(billingEntitlementsTable)
+        .where(
+          or(
+            eq(billingEntitlementsTable.userId, userId),
+            sql`lower(${billingEntitlementsTable.email}) = ${expected}`,
+          ),
+        )
+        .returning({ id: billingEntitlementsTable.id });
+      tables["billing_entitlements"] = entitlementDel.length;
 
       // Sessions: match both the user_id column and the session JSONB
       // payload (older sessions may only carry the JSONB form).

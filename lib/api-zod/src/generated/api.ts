@@ -208,6 +208,60 @@ export const GetAnonymousClaimHandoffStatusResponse = zod.object({
 
 
 /**
+ * Returns entitlements written from verified, idempotent Stripe webhook
+events. Browser redirects and query parameters never grant access.
+
+ * @summary Return server-authoritative paid access state
+ */
+export const GetMyBillingHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetMyBillingResponse = zod.object({
+  "tier": zod.union([zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
+  "canManageBilling": zod.boolean(),
+  "entitlements": zod.array(zod.object({
+  "product": zod.enum(['signal-audit', 'dating-reset', 'wingman']),
+  "kind": zod.enum(['one_time', 'subscription']),
+  "status": zod.string().describe('active, trialing, canceling, past_due, canceled, or refunded.'),
+  "currentPeriodEnd": zod.coerce.date().nullable(),
+  "cancelAtPeriodEnd": zod.boolean(),
+  "canceledAt": zod.coerce.date().nullable(),
+  "refundedAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * Uses server-owned price IDs and stamps the signed-in user and canonical
+product into Stripe metadata. Creating or returning from a session does
+not grant access; a verified payment webhook does.
+
+ * @summary Create an authenticated Stripe Checkout session
+ */
+export const CreateBillingCheckoutHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const CreateBillingCheckoutBody = zod.object({
+  "product": zod.enum(['signal-audit', 'dating-reset', 'wingman'])
+})
+
+
+/**
+ * Creates a short-lived portal URL for the signed-in account's Stripe
+customer. Subscription cancellation and payment-method changes happen
+there; signed webhooks update MatchLab access afterward.
+
+ * @summary Create a Stripe customer-portal session
+ */
+export const CreateBillingPortalHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+/**
  * Returns a single JSON document containing the authenticated user's
 account record plus the user-facing and derived data families tied to
 that user. Operational secrets such as session ids, OAuth tokens, push

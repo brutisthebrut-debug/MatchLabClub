@@ -37,7 +37,7 @@ not the approved final information architecture.
 | Consent separation | Implemented; DB-backed release verification required | Wellness answers default to coaching-only. Every `imported_sources` row now keeps storage, Echo use, confirmed learning, and matching use independent and default-closed. Matching counts exclude sources without explicit matching permission; Echo enrichment requires source-level Echo permission and cannot write after revocation. Apply migrations `0042` and `0043`. |
 | Quiz identity and scoring | Implemented | The web app and API share one canonical Quiz Lab catalog/scorer. The API accepts only a known slug plus valid answer indexes, derives archetype/name/dimensions server-side, ignores forged derived fields, and never stores raw answers. Authority regression coverage passes. |
 | Founder review vs. member introduction | Implemented; DB-backed release verification required | `founder_review_status`, private founder notes, review actor/time, and `introduced_at` are separate from the member proposal lifecycle. Internal/concierge candidates stay hidden and non-actionable until a founder sends them; member APIs never serialize founder review fields. Apply migration `0044` and run the database-backed transition regression before release. |
-| Payments and entitlement | Blocked for release | Tier assignment is still manual and public refund/renewal/cancellation language is inconsistent. Stripe webhook entitlement and access revocation must ship before a paid launch. |
+| Payments and entitlement | Implemented; migration and Stripe test-mode verification required | Authenticated server-owned Checkout, signed/idempotent direct Stripe webhooks, canonical `billing_entitlements`, renewal/cancellation/payment-failure/refund transitions, customer portal access, and account-deletion renewal stop are implemented. Manual tier mutation is retired. Apply migration `0045`, configure server-only keys/Price IDs, register events, and pass the database-backed Stripe test-mode suite before release. |
 | Legal and service language | Blocked for release | Terms, privacy, pricing, checkout, and product states must describe the same controlled-introduction service. |
 
 ## Verified baseline
@@ -70,11 +70,17 @@ not the approved final information architecture.
   concierge candidates remain private until `introduced_at` is set by the
   founder send transition; the database-backed regression test covers hidden,
   reviewed, sent, and private-note behavior.
+- Paid access is no longer granted by a browser redirect or founder tier flip.
+  Direct signed Stripe events write an idempotency ledger and canonical
+  entitlement records, then synchronize the legacy user-tier cache. Checkout,
+  renewal, end-of-period cancellation, payment failure, subscription deletion,
+  and fully refunded one-time purchase behavior are explicit. Account billing
+  opens Stripe's customer portal, and account deletion first stops renewal.
 
 ## Release gate
 
 Do not represent the current repository as production-ready. The next safe
 milestone is completion of Phase 0, with particular priority on the outstanding
-database-backed lifecycle/auth/introduction tests, payments/entitlements, and
-synchronized legal copy. Install the approved five-destination shell only after
+database-backed lifecycle/auth/introduction/billing tests, Stripe test-mode
+operations, and synchronized legal copy. Install the approved five-destination shell only after
 those trust promises are true in the real system.

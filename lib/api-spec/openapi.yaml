@@ -275,6 +275,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/billing:
+    get:
+      tags: [Billing]
+      operationId: getMyBilling
+      summary: Return server-authoritative paid access state
+      description: |
+        Returns entitlements written from verified, idempotent Stripe webhook
+        events. Browser redirects and query parameters never grant access.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current paid access and billing-management availability.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingState'
+        '401':
+          description: Sign-in required.
+
+  /me/billing/checkout:
+    post:
+      tags: [Billing]
+      operationId: createBillingCheckout
+      summary: Create an authenticated Stripe Checkout session
+      description: |
+        Uses server-owned price IDs and stamps the signed-in user and canonical
+        product into Stripe metadata. Creating or returning from a session does
+        not grant access; a verified payment webhook does.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingCheckoutInput'
+      responses:
+        '201':
+          description: Short-lived Stripe Checkout URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingRedirect'
+        '401':
+          description: Sign-in required.
+        '422':
+          description: The account has no usable email.
+        '503':
+          description: Stripe or the selected product price is not configured.
+
+  /me/billing/portal:
+    post:
+      tags: [Billing]
+      operationId: createBillingPortal
+      summary: Create a Stripe customer-portal session
+      description: |
+        Creates a short-lived portal URL for the signed-in account's Stripe
+        customer. Subscription cancellation and payment-method changes happen
+        there; signed webhooks update MatchLab access afterward.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '201':
+          description: Short-lived Stripe billing-portal URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingRedirect'
+        '401':
+          description: Sign-in required.
+        '404':
+          description: No Stripe customer is linked to this account.
+        '503':
+          description: Stripe or the public application origin is not configured.
+
   /account/export:
     get:
       tags: [Auth]
@@ -7958,6 +8037,64 @@ components:
           maxLength: 2000
         context:
           $ref: "#/components/schemas/AiContextInput"
+
+    BillingCheckoutInput:
+      type: object
+      required: [product]
+      properties:
+        product:
+          type: string
+          enum: [signal-audit, dating-reset, wingman]
+
+    BillingRedirect:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+
+    BillingEntitlement:
+      type: object
+      required: [product, kind, status, currentPeriodEnd, cancelAtPeriodEnd, canceledAt, refundedAt, updatedAt]
+      properties:
+        product:
+          type: string
+          enum: [signal-audit, dating-reset, wingman]
+        kind:
+          type: string
+          enum: [one_time, subscription]
+        status:
+          type: string
+          description: active, trialing, canceling, past_due, canceled, or refunded.
+        currentPeriodEnd:
+          type: [string, 'null']
+          format: date-time
+        cancelAtPeriodEnd:
+          type: boolean
+        canceledAt:
+          type: [string, 'null']
+          format: date-time
+        refundedAt:
+          type: [string, 'null']
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BillingState:
+      type: object
+      required: [tier, canManageBilling, entitlements]
+      properties:
+        tier:
+          type: [string, 'null']
+          enum: [reset, wingman, null]
+        canManageBilling:
+          type: boolean
+        entitlements:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingEntitlement'
 
     AccountSummary:
       type: object

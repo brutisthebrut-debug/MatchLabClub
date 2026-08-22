@@ -7,6 +7,7 @@ export * from "./insights";
 export * from "./waitlist";
 export * from "./leads";
 export * from "./purchase_interest";
+export * from "./billing";
 export * from "./ai_metrics";
 export * from "./ai_tool_alert_state";
 export * from "./ai_alert_thresholds";

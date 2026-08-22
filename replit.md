@@ -81,11 +81,16 @@ Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by de
 
 ## Stripe checkout operations
 
-Checkout (`/checkout/:product`) renders a Stripe Payment Link button when the matching `VITE_STRIPE_*_LINK` env var is set (`signal-audit` $29, `dating-reset` $97, `wingman` $197/mo), and falls back to a "save your spot" purchase-interest form when it isn't, so it is safe to ship partially configured. Wiring is in `artifacts/nldc/src/pages/Checkout.tsx` (`PaidForm` reads `import.meta.env[config.stripeEnvKey]`).
+Checkout (`/checkout/:product`) creates an authenticated Stripe Checkout session
+through `/api/me/billing/checkout` using server-only Price IDs. When Stripe is
+not configured it falls back to the existing purchase-interest capture.
 
-The webhook + reconciliation run through the **Replit Stripe integration** (no key to paste): `stripeClient.ts` reads credentials at runtime, `initStripe.ts` registers the managed webhook and backfills on boot, and `stripeReconcile.ts` matches paid `stripe.checkout_sessions` to our `purchase_interest` rows by email (read-only against the `stripe.*` schema). Refunds/disputes stay in the Stripe Dashboard.
+The direct Stripe SDK verifies raw signed webhooks and writes idempotent
+`stripe_events` plus canonical `billing_entitlements`. Those events grant,
+renew, suspend, cancel, and refund access; `users.tier` is only a synchronized
+cache. Members manage recurring billing through Stripe's customer portal.
 
-> Full env-var table, payment-link creation steps, and the webhook/reconciliation internals are in `OPERATIONS.md`.
+> Full env-var, webhook-event, portal, and access-transition instructions are in `OPERATIONS.md`.
 
 ## User preferences
 

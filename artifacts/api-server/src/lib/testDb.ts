@@ -297,6 +297,24 @@ stores.user_blocks = {
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
+ensureStore("billing_entitlements");
+Object.assign(stores.billing_entitlements.defaults, {
+  userId: null,
+  tier: null,
+  amountCents: null,
+  currency: null,
+  stripeCustomerId: null,
+  stripeCheckoutSessionId: null,
+  stripeSubscriptionId: null,
+  stripePaymentIntentId: null,
+  currentPeriodStart: null,
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  canceledAt: null,
+  refundedAt: null,
+  lastStripeEventId: null,
+});
+ensureStore("stripe_events");
 ensureStore("data_export_tokens");
 ensureStore("users");
 ensureStore("sessions");
@@ -306,6 +324,8 @@ export const coachFollowUpsTable = makeTable("coach_follow_ups");
 export const leadsTable = makeTable("leads");
 export const waitlistTable = makeTable("waitlist");
 export const purchaseInterestTable = makeTable("purchase_interest");
+export const billingEntitlementsTable = makeTable("billing_entitlements");
+export const stripeEventsTable = makeTable("stripe_events");
 export const dataExportTokensTable = makeTable("data_export_tokens");
 export const usersTable = makeTable("users");
 export const sessionsTable = makeTable("sessions");

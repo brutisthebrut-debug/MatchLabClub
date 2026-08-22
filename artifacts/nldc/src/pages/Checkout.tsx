@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMeta } from "@/hooks/useMeta";
 import { capturePurchaseInterest } from "@/lib/apiClient";
+import { startBillingCheckout } from "@/lib/apiClient";
 import { trackEvent } from "@/lib/analytics";
+import { useAuth } from "@workspace/replit-auth-web";
 import {
   CheckCircle2, Sparkles, Lock, ArrowRight, ExternalLink,
   Zap, Star, Crown, AlertTriangle, Tag
@@ -27,7 +29,6 @@ interface ProductConfig {
   icon: React.ElementType;
   gradient: string;
   amountCents: number;
-  stripeEnvKey: string | null;
   successCopy: string;
 }
 
@@ -53,7 +54,6 @@ const PRODUCTS: Record<Product, ProductConfig> = {
   icon: Zap,
   gradient: "from-[hsl(190_75%_50%)] to-[hsl(190_75%_38%)]",
   amountCents: 2900,
-  stripeEnvKey: "VITE_STRIPE_SIGNAL_AUDIT_LINK",
   successCopy: "Your Profile Signal Audit is confirmed.",
   },
   "dating-reset": {
@@ -77,7 +77,6 @@ const PRODUCTS: Record<Product, ProductConfig> = {
   icon: Star,
   gradient: "from-[hsl(348_55%_58%)] to-[hsl(248_62%_58%)]",
   amountCents: 9700,
-  stripeEnvKey: "VITE_STRIPE_DATING_RESET_LINK",
   successCopy: "The Dating Reset is confirmed.",
   },
   "wingman": {
@@ -101,37 +100,53 @@ const PRODUCTS: Record<Product, ProductConfig> = {
   icon: Crown,
   gradient: "from-[hsl(43_65%_52%)] to-[hsl(30_60%_48%)]",
   amountCents: 19700,
-  stripeEnvKey: "VITE_STRIPE_WINGMAN_LINK",
   successCopy: "Welcome to Monthly Wingman.",
   },
 };
 
 function PaidForm({ product }: { product: Product }) {
   const config = PRODUCTS[product];
-  const stripeLink = config.stripeEnvKey
-  ? (import.meta.env as Record<string, string>)[config.stripeEnvKey]
-  : null;
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
 
   const [form, setForm] = useState({ firstName: "", email: "", promoCode: "" });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [checkoutUnavailable, setCheckoutUnavailable] = useState(false);
 
-  if (stripeLink) {
+  if (!checkoutUnavailable) {
+  const beginCheckout = async () => {
+  if (!isAuthenticated) {
+  login(`/checkout/${product}`);
+  return;
+  }
+  setLoading(true);
+  setError("");
+  try {
+  const session = await startBillingCheckout(product);
+  trackEvent("checkout_clicked", { product, destination: "stripe" });
+  window.location.assign(session.url);
+  } catch (e) {
+  setError(e instanceof Error ? e.message : "Checkout is not available yet.");
+  setCheckoutUnavailable(true);
+  setLoading(false);
+  }
+  };
   return (
   <div className="space-y-4">
-  <a
-  href={stripeLink}
-  onClick={() => trackEvent("checkout_clicked", { product, destination: "stripe" })}
+  <button
+  type="button"
+  onClick={() => void beginCheckout()}
+  disabled={loading || authLoading}
   className={`flex items-center justify-center gap-2 w-full bg-gradient-to-r ${config.gradient} text-white font-semibold rounded-xl h-12 text-base hover:opacity-90 transition-opacity`}
   >
   <Lock className="w-4 h-4" />
-  {config.cta}
+  {loading ? "Opening secure checkout…" : isAuthenticated ? config.cta : "Sign in to continue"}
   <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-70" />
-  </a>
+  </button>
   <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50">
   <Lock className="w-3 h-3" />
-  Secured by Stripe. 14-day money-back guarantee.
+  Secured by Stripe. Access activates only after a signed payment webhook.
   </div>
   </div>
   );

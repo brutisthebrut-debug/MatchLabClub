@@ -1237,6 +1237,73 @@ export interface AiTestInput {
   context?: AiContextInput;
 }
 
+export type BillingCheckoutInputProduct = typeof BillingCheckoutInputProduct[keyof typeof BillingCheckoutInputProduct];
+
+
+export const BillingCheckoutInputProduct = {
+  'signal-audit': 'signal-audit',
+  'dating-reset': 'dating-reset',
+  wingman: 'wingman',
+} as const;
+
+export interface BillingCheckoutInput {
+  product: BillingCheckoutInputProduct;
+}
+
+export interface BillingRedirect {
+  url: string;
+}
+
+export type BillingEntitlementProduct = typeof BillingEntitlementProduct[keyof typeof BillingEntitlementProduct];
+
+
+export const BillingEntitlementProduct = {
+  'signal-audit': 'signal-audit',
+  'dating-reset': 'dating-reset',
+  wingman: 'wingman',
+} as const;
+
+export type BillingEntitlementKind = typeof BillingEntitlementKind[keyof typeof BillingEntitlementKind];
+
+
+export const BillingEntitlementKind = {
+  one_time: 'one_time',
+  subscription: 'subscription',
+} as const;
+
+export interface BillingEntitlement {
+  product: BillingEntitlementProduct;
+  kind: BillingEntitlementKind;
+  /** active, trialing, canceling, past_due, canceled, or refunded. */
+  status: string;
+  /** @nullable */
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  /** @nullable */
+  canceledAt: string | null;
+  /** @nullable */
+  refundedAt: string | null;
+  updatedAt: string;
+}
+
+/**
+ * @nullable
+ */
+export type BillingStateTier = typeof BillingStateTier[keyof typeof BillingStateTier] | null;
+
+
+export const BillingStateTier = {
+  reset: 'reset',
+  wingman: 'wingman',
+} as const;
+
+export interface BillingState {
+  /** @nullable */
+  tier: BillingStateTier;
+  canManageBilling: boolean;
+  entitlements: BillingEntitlement[];
+}
+
 export interface AccountSummary {
   audits: number;
   profiles: number;

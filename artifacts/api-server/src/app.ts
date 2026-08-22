@@ -114,9 +114,9 @@ app.post(
     }
     try {
       const sig = Array.isArray(signature) ? signature[0]! : signature;
-      // Stripe Identity events are not synced resources, so capture them here
-      // first; everything else flows to the managed sync handler. Both verify
-      // the signature against the same webhook secret.
+      // Identity events update the verification lane. Every other signed event
+      // flows to the direct billing entitlement dispatcher. Both verify against
+      // the same dedicated webhook endpoint secret.
       const handledIdentity = await handleIdentityWebhook(
         req.body as Buffer,
         sig,

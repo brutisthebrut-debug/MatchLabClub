@@ -1,4 +1,5 @@
 import { withAlpha } from "@/lib/brandColor";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -7,6 +8,8 @@ import {
   Clock, Mail, BookOpen, Heart,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { getMyBilling, type BillingState } from "@/lib/apiClient";
+import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -133,13 +136,55 @@ const EXPLORE_CARDS = [
 ];
 
 export default function CheckoutSuccess() {
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
+  const [billing, setBilling] = useState<BillingState | null>(null);
+  const [billingError, setBillingError] = useState(false);
   const params = new URLSearchParams(
   typeof window !== "undefined" ? window.location.search : ""
   );
   const product = params.get("product") || "signal-audit";
   const copy = PRODUCT_COPY[product] ?? PRODUCT_COPY["signal-audit"]!;
+  const confirmed = billing?.entitlements.some(
+  (item) =>
+  item.product === product &&
+  ["active", "trialing", "canceling"].includes(item.status),
+  ) ?? false;
 
-  useMeta("Order Confirmed", "Your order is confirmed. Welcome to MatchLab Club.");
+  useEffect(() => {
+  if (!isAuthenticated) return;
+  let cancelled = false;
+  let attempts = 0;
+  const load = async () => {
+  attempts += 1;
+  try {
+  const state = await getMyBilling();
+  if (!cancelled) {
+  setBilling(state);
+  setBillingError(false);
+  }
+  if (state.entitlements.some((item) => item.product === product && ["active", "trialing", "canceling"].includes(item.status))) {
+  return true;
+  }
+  } catch {
+  if (!cancelled) setBillingError(true);
+  }
+  return false;
+  };
+  void load();
+  const timer = window.setInterval(() => {
+  if (attempts >= 15) {
+  window.clearInterval(timer);
+  return;
+  }
+  void load().then((done) => { if (done) window.clearInterval(timer); });
+  }, 2000);
+  return () => {
+  cancelled = true;
+  window.clearInterval(timer);
+  };
+  }, [isAuthenticated, product]);
+
+  useMeta("Payment Status", "Secure payment and access status for MatchLab Club.");
 
   return (
   <AppLayout>
@@ -158,16 +203,27 @@ export default function CheckoutSuccess() {
 
   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(142_55%_65%)] border border-[hsl(142_55%_60%/0.3)] mb-6">
   <CheckCircle2 className="w-3.5 h-3.5" />
-  Order confirmed
+  {confirmed ? "Payment verified" : "Confirming payment"}
   </div>
 
   <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-  {copy.headline}
+  {confirmed ? copy.headline : "We're confirming your payment."}
   </h1>
   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto mb-8">
-  {copy.subhead}
+  {confirmed
+  ? copy.subhead
+  : "Stripe is sending the signed confirmation now. Access appears here only after MatchLab verifies that event."}
   </p>
 
+  {!authLoading && !isAuthenticated ? (
+  <button
+  type="button"
+  onClick={() => login(window.location.pathname + window.location.search)}
+  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-base"
+  >
+  Sign in to verify access
+  </button>
+  ) : confirmed ? (
   <Link
   href={copy.nextHref}
   className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-base"
@@ -175,9 +231,15 @@ export default function CheckoutSuccess() {
   {copy.nextLabel}
   <ArrowRight className="w-4 h-4" />
   </Link>
+  ) : (
+  <p className="text-xs text-muted-foreground/70">
+  {billingError ? "We couldn't refresh billing yet. Your card status is unchanged; try this page again shortly." : "This page refreshes automatically for about 30 seconds."}
+  </p>
+  )}
   </motion.div>
 
   {/* Step-by-step next actions */}
+  {confirmed && (
   <motion.div {...fadeUp(0.15)} className="mb-14">
   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-5">What to do next</p>
   <div className="space-y-3">
@@ -202,6 +264,7 @@ export default function CheckoutSuccess() {
   })}
   </div>
   </motion.div>
+  )}
 
   {/* Explore more */}
   <motion.div {...fadeUp(0.3)}>

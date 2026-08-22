@@ -1,130 +1,41 @@
 import Stripe from "stripe";
-import { StripeSync } from "stripe-replit-sync";
 
-interface StripeCredentials {
-  secretKey: string;
-  webhookSecret?: string;
+let cached: { key: string; client: Stripe } | null = null;
+
+function stripeSecretKey(): string | null {
+  return process.env["STRIPE_SECRET_KEY"]?.trim() || null;
 }
 
-/**
- * Resolve the Replit connector token from the environment. Returns null when
- * the process is not running inside a Repl with connector access, which lets
- * callers treat Stripe as an optional, opt-in integration instead of crashing.
- */
-function getReplitConnectorToken(): { hostname: string; token: string } | null {
-  const hostname = process.env["REPLIT_CONNECTORS_HOSTNAME"];
-  const replIdentity = process.env["REPL_IDENTITY"];
-  const webRenewal = process.env["WEB_REPL_RENEWAL"];
-
-  const token = replIdentity
-    ? "repl " + replIdentity
-    : webRenewal
-      ? "depl " + webRenewal
-      : null;
-
-  if (!hostname || !token) {
-    return null;
-  }
-  return { hostname, token };
+function stripeWebhookSecret(): string | null {
+  return process.env["STRIPE_WEBHOOK_SECRET"]?.trim() || null;
 }
 
-/**
- * Fetches Stripe credentials from the Replit connection API.
- * Not cached: tokens can rotate, so we fetch fresh each time.
- * Throws when the integration is not connected.
- */
-async function getStripeCredentials(): Promise<StripeCredentials> {
-  const connector = getReplitConnectorToken();
-  if (!connector) {
-    throw new Error(
-      "Missing Replit connector environment. Connect Stripe via the Integrations tab.",
-    );
-  }
-
-  const resp = await fetch(
-    `https://${connector.hostname}/api/v2/connection?include_secrets=true&connector_names=stripe`,
-    {
-      headers: { Accept: "application/json", X_REPLIT_TOKEN: connector.token },
-      signal: AbortSignal.timeout(10_000),
-    },
-  );
-
-  if (!resp.ok) {
-    throw new Error(
-      `Failed to fetch Stripe credentials: ${resp.status} ${resp.statusText}`,
-    );
-  }
-
-  const data = (await resp.json()) as {
-    items?: Array<{ settings?: { secret_key?: string; webhook_secret?: string } }>;
-  };
-  const settings = data.items?.[0]?.settings;
-
-  if (!settings?.secret_key) {
-    throw new Error(
-      "Stripe integration not connected or missing secret key. Connect Stripe via the Integrations tab first.",
-    );
-  }
-
-  return {
-    secretKey: settings.secret_key,
-    webhookSecret: settings.webhook_secret,
-  };
-}
-
-/**
- * Returns true when the Stripe integration appears to be connected. Used to
- * guard startup so the server boots cleanly when Stripe is not configured.
- */
+/** Direct Stripe configuration; no Replit connector or synced schema. */
 export async function isStripeConnected(): Promise<boolean> {
-  const connector = getReplitConnectorToken();
-  if (!connector) return false;
-  try {
-    await getStripeCredentials();
-    return true;
-  } catch {
-    return false;
-  }
+  return Boolean(stripeSecretKey());
 }
 
-/**
- * Returns a fresh authenticated Stripe client.
- * Not cached: fetches credentials on every call so rotated keys are picked up.
- */
 export async function getUncachableStripeClient(): Promise<Stripe> {
-  const { secretKey } = await getStripeCredentials();
-  return new Stripe(secretKey);
+  const key = stripeSecretKey();
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+  if (cached?.key === key) return cached.client;
+  const client = new Stripe(key);
+  cached = { key, client };
+  return client;
 }
 
 /**
- * Verify and construct a Stripe webhook event from the raw payload and
- * signature. Returns null when no webhook secret is configured (so callers can
- * fall back to other processing). Throws when the signature does not verify.
+ * Verify a webhook against the dedicated endpoint secret. The raw Buffer must
+ * reach this function unchanged; app.ts mounts the route before express.json.
  */
 export async function constructStripeEvent(
   payload: Buffer,
   signature: string,
 ): Promise<Stripe.Event | null> {
-  const { secretKey, webhookSecret } = await getStripeCredentials();
-  if (!webhookSecret) return null;
-  const stripe = new Stripe(secretKey);
-  return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-}
-
-/**
- * Returns a fresh StripeSync instance for webhook processing and data sync.
- * Not cached: fetches credentials on every call so rotated keys are picked up.
- */
-export async function getStripeSync(): Promise<StripeSync> {
-  const databaseUrl = process.env["DATABASE_URL"];
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is required");
-  }
-
-  const { secretKey, webhookSecret } = await getStripeCredentials();
-  return new StripeSync({
-    poolConfig: { connectionString: databaseUrl },
-    stripeSecretKey: secretKey,
-    stripeWebhookSecret: webhookSecret ?? "",
-  });
+  const secret = stripeWebhookSecret();
+  if (!secret) return null;
+  const stripe = await getUncachableStripeClient();
+  return stripe.webhooks.constructEvent(payload, signature, secret);
 }
