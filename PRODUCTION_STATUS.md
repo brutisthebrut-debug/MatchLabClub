@@ -36,7 +36,7 @@ not the approved final information architecture.
 | Founder authorization | Implemented; DB-backed release verification required | Founder routes now re-check the authenticated user's persisted `founder`/`admin` role. The shared browser key and `x-founder-key` authorization path are removed. Authorized requests append actor, route, response status, IP, and user-agent metadata to `founder_action_logs`. Apply migration `0041` and run the database-backed auth suite before release. |
 | Consent separation | Implemented; DB-backed release verification required | Wellness answers default to coaching-only. Every `imported_sources` row now keeps storage, Echo use, confirmed learning, and matching use independent and default-closed. Matching counts exclude sources without explicit matching permission; Echo enrichment requires source-level Echo permission and cannot write after revocation. Apply migrations `0042` and `0043`. |
 | Quiz identity and scoring | Implemented | The web app and API share one canonical Quiz Lab catalog/scorer. The API accepts only a known slug plus valid answer indexes, derives archetype/name/dimensions server-side, ignores forged derived fields, and never stores raw answers. Authority regression coverage passes. |
-| Founder review vs. member introduction | Not complete | Founder curation and member proposal state still need explicit separation and transition tests. |
+| Founder review vs. member introduction | Implemented; DB-backed release verification required | `founder_review_status`, private founder notes, review actor/time, and `introduced_at` are separate from the member proposal lifecycle. Internal/concierge candidates stay hidden and non-actionable until a founder sends them; member APIs never serialize founder review fields. Apply migration `0044` and run the database-backed transition regression before release. |
 | Payments and entitlement | Blocked for release | Tier assignment is still manual and public refund/renewal/cancellation language is inconsistent. Stripe webhook entitlement and access revocation must ship before a paid launch. |
 | Legal and service language | Blocked for release | Terms, privacy, pricing, checkout, and product states must describe the same controlled-introduction service. |
 
@@ -65,12 +65,16 @@ not the approved final information architecture.
   Imports screen exposes separate controls, the owner-scoped API preserves
   untouched states, matching filters unapproved sources, and enrichment writes
   are guarded by live Echo permission.
+- Founder review no longer writes internal statuses into the member proposal
+  lifecycle or appends private notes to member-facing summaries. Internal and
+  concierge candidates remain private until `introduced_at` is set by the
+  founder send transition; the database-backed regression test covers hidden,
+  reviewed, sent, and private-note behavior.
 
 ## Release gate
 
 Do not represent the current repository as production-ready. The next safe
-milestone is completion of Phase 0, with particular priority on separating
-founder review from member introduction, database-backed lifecycle/auth tests,
-payments/entitlements,
-and synchronized legal copy. Install the approved five-destination shell only after those trust promises
-are true in the real system.
+milestone is completion of Phase 0, with particular priority on the outstanding
+database-backed lifecycle/auth/introduction tests, payments/entitlements, and
+synchronized legal copy. Install the approved five-destination shell only after
+those trust promises are true in the real system.

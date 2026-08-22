@@ -6740,8 +6740,10 @@ export const AnswerWingmanInviteResponse = zod.object({
 
 
 /**
- * Returns the caller's proposals ordered by createdAt desc. Empty for
-most users today; founder seeds rows as the internal pool grows.
+ * Returns the caller's member-visible proposals ordered by createdAt desc.
+External-paste analyses remain visible to their creator. Internal and
+concierge proposals remain private founder-review records until a
+founder explicitly sends the introduction.
 
  * @summary List the signed-in user's current match proposals
  */
@@ -6777,10 +6779,11 @@ export const GetMatchingProposalsResponse = zod.array(GetMatchingProposalsRespon
  * Runs the deterministic internal matching engine for the caller. Pairs
 them with other eligible pool members, scores compatibility from
 aggregate signals and stated preferences (no raw content, no PII), and
-creates mutual internal proposals for the top candidates, skipping any
-pair that already has an internal proposal in either direction. Returns
-the caller's full proposal list (newest first), so the surface can
-refresh in one round-trip. Requires the caller to be in the pool.
+creates mutual internal review candidates for the top matches, skipping
+any pair that already has an internal proposal in either direction.
+Candidates are not member-visible until a founder explicitly sends the
+introduction. Returns only the caller's already-visible proposal list.
+Requires the caller to be in the pool.
 
  * @summary Find and create internal matches for the signed-in user
  */
@@ -6853,7 +6856,9 @@ export const CreateMatchingEchoReadResponse = zod.object({
  * Lets the user act on a proposal instead of hitting a dead-end preview.
 Recording interest moves it to user_yes (routing it into the founder
 intro queue); passing moves it to user_no. Only the proposal owner may
-respond, and only while it is still in the proposed state.
+respond, only after the founder has sent the introduction, and only
+while the member lifecycle is still in the proposed state. Founder
+review status and private notes are never returned here.
 
  * @summary Record the user's interest in a match proposal
  */

@@ -221,6 +221,8 @@ export interface MatchingQueueItem {
   compatibilityScore: number;
   summary: string | null;
   status: string;
+  memberStatus: string;
+  founderReviewNote: string | null;
   createdAt: string;
   updatedAt: string;
   user: { email: string | null; firstName: string | null };
@@ -434,7 +436,7 @@ export const addMatchingProposalNote = (
   id: string,
   note: string,
 ) =>
-  founderJson<{ id: string; summary: string | null }>(
+  founderJson<{ id: string; note: string | null }>(
     `/founder/matching/proposals/${encodeURIComponent(id)}/note`,
     founderKey,
     { method: "POST", body: { note } },

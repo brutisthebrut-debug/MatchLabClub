@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
@@ -72,6 +72,16 @@ async function loadUserTier(userId: string): Promise<string | null> {
 }
 
 const router: IRouter = Router();
+
+function memberVisibleProposal(userId: string) {
+  return and(
+    eq(matchProposalsTable.userId, userId),
+    or(
+      eq(matchProposalsTable.source, "external_paste"),
+      isNotNull(matchProposalsTable.introducedAt),
+    ),
+  );
+}
 
 type PreferencesRow = typeof matchPreferencesTable.$inferSelect;
 type PoolRow = typeof matchPoolMembershipTable.$inferSelect;
@@ -1203,7 +1213,7 @@ router.get("/me/matching/proposals", async (req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(matchProposalsTable)
-    .where(eq(matchProposalsTable.userId, req.user.id))
+    .where(memberVisibleProposal(req.user.id))
     .orderBy(desc(matchProposalsTable.createdAt))
     .limit(50);
   const resonance = await resonanceForProposals(req.user.id, rows);
@@ -1383,8 +1393,12 @@ router.put(
       res.status(404).json({ error: "Proposal not found" });
       return;
     }
-    // Only a still-open proposal can be responded to. Anything the founder has
-    // already advanced (or the user has already answered) is left untouched.
+    if (row.source !== "external_paste" && !row.introducedAt) {
+      res.status(404).json({ error: "Proposal not found" });
+      return;
+    }
+    // Only a still-open proposal can be responded to. If this member or another
+    // concurrent request already answered it, leave the proposal untouched.
     if (row.status !== "proposed") {
       res.json(serializeProposal(row));
       return;
@@ -1833,7 +1847,7 @@ router.post("/me/matching/discover", async (req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(matchProposalsTable)
-    .where(eq(matchProposalsTable.userId, userId))
+    .where(memberVisibleProposal(userId))
     .orderBy(desc(matchProposalsTable.createdAt))
     .limit(50);
   const resonance = await resonanceForProposals(userId, rows);

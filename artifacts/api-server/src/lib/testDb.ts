@@ -325,6 +325,16 @@ export const userReportsTable = makeTable("user_reports");
 export const careDialectProfilesTable = makeTable("care_dialect_profiles");
 export const userBlocksTable = makeTable("user_blocks");
 ensureStore("match_proposals");
+Object.assign(stores.match_proposals.defaults, {
+  proposedToUserId: null,
+  summary: null,
+  status: "proposed",
+  founderReviewStatus: "pending",
+  founderReviewNote: null,
+  founderReviewedBy: null,
+  founderReviewedAt: null,
+  introducedAt: null,
+});
 export const matchProposalsTable = makeTable("match_proposals");
 ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");

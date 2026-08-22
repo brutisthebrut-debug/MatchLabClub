@@ -1925,7 +1925,10 @@ router.get(
   async (req, res): Promise<void> => {
     const beforeRaw = typeof req.query.before === "string" ? req.query.before : "";
     const beforeDate = beforeRaw ? new Date(beforeRaw) : null;
-    const conditions = [eq(matchProposalsTable.status, "proposed")];
+    const conditions = [
+      eq(matchProposalsTable.status, "proposed"),
+      inArray(matchProposalsTable.founderReviewStatus, ["pending", "reviewed"]),
+    ];
     if (beforeDate && !Number.isNaN(beforeDate.getTime())) {
       conditions.push(lt(matchProposalsTable.createdAt, beforeDate));
     }
@@ -1938,7 +1941,9 @@ router.get(
         source: matchProposalsTable.source,
         compatibilityScore: matchProposalsTable.compatibilityScore,
         summary: matchProposalsTable.summary,
-        status: matchProposalsTable.status,
+        memberStatus: matchProposalsTable.status,
+        reviewStatus: matchProposalsTable.founderReviewStatus,
+        founderReviewNote: matchProposalsTable.founderReviewNote,
         createdAt: matchProposalsTable.createdAt,
         updatedAt: matchProposalsTable.updatedAt,
         userEmail: usersTable.email,
@@ -1985,7 +1990,9 @@ router.get(
           source: row.source,
           compatibilityScore: row.compatibilityScore,
           summary: row.summary,
-          status: row.status,
+          status: row.reviewStatus,
+          memberStatus: row.memberStatus,
+          founderReviewNote: row.founderReviewNote,
           createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
           updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
           user: {
@@ -2020,7 +2027,7 @@ router.post(
       return;
     }
     const existing = await db
-      .select({ summary: matchProposalsTable.summary })
+      .select({ note: matchProposalsTable.founderReviewNote })
       .from(matchProposalsTable)
       .where(eq(matchProposalsTable.id, id))
       .limit(1);
@@ -2028,19 +2035,23 @@ router.post(
       res.status(404).json({ error: "Proposal not found" });
       return;
     }
-    const prior = existing[0]?.summary ?? "";
+    const prior = existing[0]?.note ?? "";
     const stamp = new Date().toISOString();
     const appended = `${prior ? `${prior}\n\n` : ""}FOUNDER: ${parsed.data.note.trim()} (${stamp})`;
     const [updated] = await db
       .update(matchProposalsTable)
-      .set({ summary: appended })
+      .set({
+        founderReviewNote: appended,
+        founderReviewedBy: req.user!.id,
+        founderReviewedAt: new Date(),
+      })
       .where(eq(matchProposalsTable.id, id))
       .returning({
         id: matchProposalsTable.id,
-        summary: matchProposalsTable.summary,
+        note: matchProposalsTable.founderReviewNote,
       });
     req.log.info({ proposalId: id }, "founder.matching.note appended");
-    res.json({ id: updated!.id, summary: updated!.summary });
+    res.json({ id: updated!.id, note: updated!.note });
   },
 );
 
@@ -2058,16 +2069,36 @@ router.post(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
+    const now = new Date();
     const [updated] = await db
       .update(matchProposalsTable)
-      .set({ status: parsed.data.status })
-      .where(eq(matchProposalsTable.id, id))
+      .set({
+        founderReviewStatus: parsed.data.status,
+        founderReviewedBy: req.user!.id,
+        founderReviewedAt: now,
+        introducedAt: parsed.data.status === "sent" ? now : null,
+      })
+      .where(
+        and(
+          eq(matchProposalsTable.id, id),
+          inArray(matchProposalsTable.founderReviewStatus, ["pending", "reviewed"]),
+        ),
+      )
       .returning({
         id: matchProposalsTable.id,
-        status: matchProposalsTable.status,
+        status: matchProposalsTable.founderReviewStatus,
       });
     if (!updated) {
-      res.status(404).json({ error: "Proposal not found" });
+      const [existing] = await db
+        .select({ status: matchProposalsTable.founderReviewStatus })
+        .from(matchProposalsTable)
+        .where(eq(matchProposalsTable.id, id))
+        .limit(1);
+      if (!existing) {
+        res.status(404).json({ error: "Proposal not found" });
+        return;
+      }
+      res.status(409).json({ error: `Proposal review is already ${existing.status}.` });
       return;
     }
     req.log.info(

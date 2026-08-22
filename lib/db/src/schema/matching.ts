@@ -64,6 +64,16 @@ export const matchProposalsTable = pgTable(
     summary: text("summary"),
     // 'proposed' | 'user_yes' | 'user_no' | 'mutual_yes' | 'expired' | 'completed'
     status: varchar("status").notNull().default("proposed"),
+    // Internal founder workflow is intentionally separate from the member
+    // proposal lifecycle above. Only introduced_at makes a real proposal
+    // visible/actionable to the member.
+    founderReviewStatus: varchar("founder_review_status")
+      .notNull()
+      .default("pending"), // 'pending' | 'reviewed' | 'sent' | 'dismissed'
+    founderReviewNote: text("founder_review_note"),
+    founderReviewedBy: varchar("founder_reviewed_by"),
+    founderReviewedAt: timestamp("founder_reviewed_at", { withTimezone: true }),
+    introducedAt: timestamp("introduced_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -125,7 +135,16 @@ export const insertMatchProposalSchema = createInsertSchema(
     compatibilityScore: z.number().int().min(0).max(100),
     summary: z.string().trim().max(8000).nullish(),
   },
-).omit({ id: true, createdAt: true, updatedAt: true });
+).omit({
+  id: true,
+  founderReviewStatus: true,
+  founderReviewNote: true,
+  founderReviewedBy: true,
+  founderReviewedAt: true,
+  introducedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 export type MatchPreferences = typeof matchPreferencesTable.$inferSelect;
 export type InsertMatchPreferences = z.infer<typeof insertMatchPreferencesSchema>;

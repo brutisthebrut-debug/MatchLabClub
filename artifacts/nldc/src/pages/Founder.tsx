@@ -5516,7 +5516,7 @@ function ProposalsQueuePanel({ founderKey, refreshKey }: { founderKey: string; r
   await addMatchingProposalNote(founderKey, id, note);
   toast({
   title: "Note saved",
-  description: "Founder note appended to proposal.",
+  description: "Private founder note saved. Members cannot see it.",
   });
   setNotes((prev) => ({...prev, [id]: "" }));
   setReloadKey((k) => k + 1);
@@ -5539,10 +5539,10 @@ function ProposalsQueuePanel({ founderKey, refreshKey }: { founderKey: string; r
   Proposals Queue
   </p>
   <p className="text-base font-semibold text-foreground">
-  Pending external reads and concierge proposals
+  Internal and concierge candidates awaiting review
   </p>
   <p className="text-xs text-muted-foreground/80 mt-1">
-  New rows from /matching land here. Review, send an intro, or dismiss.
+  Candidates stay private until you send the introduction. Founder notes never appear to members.
   </p>
   </div>
   <button
@@ -5574,7 +5574,7 @@ function ProposalsQueuePanel({ founderKey, refreshKey }: { founderKey: string; r
 
   {!loading && !err && items.length === 0 && (
   <div className="rounded-xl p-6 border border-white/10 bg-white/[0.02] text-sm text-muted-foreground text-center" data-testid="proposals-queue-empty">
-  No proposed rows right now. New pastes and concierge opt-ins will show up here.
+  No candidates are awaiting review right now.
   </div>
   )}
 
@@ -5596,7 +5596,7 @@ function ProposalsQueuePanel({ founderKey, refreshKey }: { founderKey: string; r
   {item.user.email ?? "no email on file"} · score {item.compatibilityScore} · source {item.source}
   </p>
   <p className="text-xs text-muted-foreground/60">
-  Pool: {item.pool.status ?? "off"}{item.pool.tier ? ` · ${item.pool.tier}` : ""} · {created.toLocaleString()}
+  Pool: {item.pool.status ?? "off"}{item.pool.tier ? ` · ${item.pool.tier}` : ""} · member state: {item.memberStatus} · {created.toLocaleString()}
   </p>
   </div>
   <span className="text-xs px-2 py-1 rounded-md bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_72%)]" data-testid={`proposal-status-${item.id}`}>
@@ -5617,6 +5617,12 @@ function ProposalsQueuePanel({ founderKey, refreshKey }: { founderKey: string; r
   <p className="text-xs text-muted-foreground whitespace-pre-wrap" data-testid={`proposal-summary-${item.id}`}>
   {item.summary}
   </p>
+  )}
+
+  {item.founderReviewNote && (
+  <div className="rounded-lg border border-[hsl(248_62%_52%/0.35)] bg-[hsl(248_62%_52%/0.08)] px-3 py-2 text-xs text-muted-foreground whitespace-pre-wrap" data-testid={`proposal-founder-note-${item.id}`}>
+  <span className="font-medium text-foreground">Private founder note</span>{"\n"}{item.founderReviewNote}
+  </div>
   )}
 
   <div className="flex flex-wrap items-center gap-2">

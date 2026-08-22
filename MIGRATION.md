@@ -777,6 +777,7 @@ addressed.
 
 - [ ] **REQUIRED** Apply migration `0041`, then verify regular members receive 403 and persisted `founder`/`admin` roles can reach every `/founder/*` route *(Phase 0 check)*
 - [ ] **REQUIRED** Confirm `founder_action_logs` receives append-only actor/status metadata for authorized founder requests *(Phase 0 check)*
+- [ ] **REQUIRED** Apply migration `0044`, then verify founder review state/private notes remain separate from member proposal state and internal candidates stay hidden until the founder sends the introduction *(production trust Phase 0)*
 - [ ] **RECOMMENDED** Set `FOUNDER_EMAILS` only for initial server-side bootstrap, then manage founder/admin roles through a controlled operational process *(Phase 1)*
 
 ---

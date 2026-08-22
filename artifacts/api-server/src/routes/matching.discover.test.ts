@@ -192,7 +192,7 @@ describe("POST /me/matching/discover", () => {
       (p: { source: string; proposedToUserId: string }) =>
         p.source === "internal" && p.proposedToUserId === USER_B,
     );
-    expect(internalForA.length).toBe(1);
+    expect(internalForA.length).toBe(0);
 
     // The mirror row exists for B too.
     const bRows = await db
@@ -201,6 +201,8 @@ describe("POST /me/matching/discover", () => {
       .where(eq(matchProposalsTable.userId, USER_B));
     const bToA = bRows.filter((r) => r.proposedToUserId === USER_A);
     expect(bToA.length).toBe(1);
+    expect(bToA[0]?.founderReviewStatus).toBe("pending");
+    expect(bToA[0]?.introducedAt).toBeNull();
 
     // Running again must not duplicate the pair.
     const second = await request(testApp.app).post("/api/me/matching/discover");
@@ -209,7 +211,7 @@ describe("POST /me/matching/discover", () => {
       (p: { source: string; proposedToUserId: string }) =>
         p.source === "internal" && p.proposedToUserId === USER_B,
     );
-    expect(internalAfter.length).toBe(1);
+    expect(internalAfter.length).toBe(0);
   });
 
   it("flips both rows to mutual_yes when both members say yes", async () => {
@@ -242,6 +244,14 @@ describe("POST /me/matching/discover", () => {
     // Pick the A<->B pair explicitly; sibling files can add unrelated rows.
     const aProposal = aRows.find((r) => r.proposedToUserId === USER_B)!;
     const bProposal = bRows.find((r) => r.proposedToUserId === USER_A)!;
+
+    // Internal candidates are not actionable until the founder sends each
+    // introduction. This simulates that separate review transition.
+    const introducedAt = new Date();
+    await db
+      .update(matchProposalsTable)
+      .set({ founderReviewStatus: "sent", introducedAt })
+      .where(inArray(matchProposalsTable.id, [aProposal.id, bProposal.id]));
 
     // A says yes first: stays user_yes, no match yet.
     testApp.setUser({ id: USER_A });
