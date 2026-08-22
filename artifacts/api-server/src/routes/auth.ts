@@ -23,7 +23,20 @@ import { notifySignInIfNew, extractClientIp } from "../lib/loginNotifications";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
+// Server-side bootstrap only. Once a user is promoted, the database role is
+// authoritative and is not downgraded if this configuration later changes.
+const FOUNDER_EMAILS = new Set(
+  (process.env.FOUNDER_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);
+
 const router: IRouter = Router();
+
+function authRole(role: string): "member" | "founder" | "admin" {
+  return role === "founder" || role === "admin" ? role : "member";
+}
 
 function getOrigin(req: Request): string {
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -53,7 +66,11 @@ function setOidcCookie(res: Response, name: string, value: string) {
 }
 
 function getSafeReturnTo(value: unknown): string {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//")
+  ) {
     return "/";
   }
   return value;
@@ -72,6 +89,9 @@ async function upsertUser(
       | string
       | null,
   };
+  const isBootstrapFounder = Boolean(
+    userData.email && FOUNDER_EMAILS.has(userData.email.trim().toLowerCase()),
+  );
 
   // Parse Echo referral cookie (`mlc_ref=user-<inviterId>` or just `<inviterId>`).
   // First-touch attribution, only set on row INSERT, never overwritten.
@@ -86,8 +106,16 @@ async function upsertUser(
   }
 
   const insertValues = inviterId
-    ? { ...userData, invitedByUserId: inviterId, invitedAt: new Date() }
-    : userData;
+    ? {
+        ...userData,
+        role: isBootstrapFounder ? "founder" : "member",
+        invitedByUserId: inviterId,
+        invitedAt: new Date(),
+      }
+    : {
+        ...userData,
+        role: isBootstrapFounder ? "founder" : "member",
+      };
 
   const [user] = await db
     .insert(usersTable)
@@ -98,6 +126,7 @@ async function upsertUser(
       //, first-touch attribution wins, returning users keep their original.
       set: {
         ...userData,
+        ...(isBootstrapFounder ? { role: "founder" } : {}),
         updatedAt: new Date(),
       },
     })
@@ -130,10 +159,26 @@ async function upsertUser(
   return user;
 }
 
-router.get("/auth/user", (req: Request, res: Response) => {
+router.get("/auth/user", async (req: Request, res: Response) => {
+  if (!req.isAuthenticated() || !req.user) {
+    res.json(GetCurrentAuthUserResponse.parse({ user: null }));
+    return;
+  }
+
+  // The session carries a role for fast UI boot, but role changes must take
+  // effect without waiting for the session to expire. The database is the
+  // authority for both promotions and demotions.
+  const [currentUser] = await db
+    .select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.user.id))
+    .limit(1);
+
   res.json(
     GetCurrentAuthUserResponse.parse({
-      user: req.isAuthenticated() ? req.user : null,
+      user: currentUser
+        ? { ...req.user, role: authRole(currentUser.role) }
+        : null,
     }),
   );
 });
@@ -253,6 +298,7 @@ router.get("/callback", async (req: Request, res: Response) => {
       firstName: dbUser.firstName,
       lastName: dbUser.lastName,
       profileImageUrl: dbUser.profileImageUrl,
+      role: authRole(dbUser.role),
     },
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
@@ -345,6 +391,7 @@ router.post(
           firstName: dbUser.firstName,
           lastName: dbUser.lastName,
           profileImageUrl: dbUser.profileImageUrl,
+          role: authRole(dbUser.role),
         },
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
@@ -352,7 +399,10 @@ router.post(
       };
 
       const userAgent = (req.headers["user-agent"] as string) || "";
-      const ip = extractClientIp(req.headers as Record<string, unknown>, req.ip);
+      const ip = extractClientIp(
+        req.headers as Record<string, unknown>,
+        req.ip,
+      );
       const sid = await createSession(sessionData, {
         userAgent,
         ip,

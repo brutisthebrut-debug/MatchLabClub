@@ -1,10 +1,7 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import pg from "pg";
 
 const { Pool } = pg;
-
-const FOUNDER_KEY = process.env.VITE_FOUNDER_KEY ?? "nldc2024";
-
 // Primary tool: seeded 35 days ago — visible in 90d/180d windows but NOT in 30d.
 const TOOL_NAME = "E2E-ReliabilityDrillTest";
 // Secondary tool: seeded yesterday — always visible; ensures the 30d chart
@@ -13,6 +10,13 @@ const SECONDARY_TOOL_NAME = "E2E-ReliabilitySecondary";
 
 let pool: pg.Pool;
 let seededIds: number[] = [];
+
+async function signInFounder(page: Page): Promise<void> {
+  await page.goto("/api/dev/login?state=power&returnTo=/");
+  await pool.query("UPDATE users SET role = 'founder' WHERE id = 'dev-test-power'");
+  await page.goto("/api/dev/login?state=power&returnTo=/");
+  await page.goto("/founder");
+}
 
 test.beforeAll(async () => {
   pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -49,12 +53,7 @@ test.afterAll(async () => {
 
 test("AI Reliability drill-in: selector, summary tiles, focused chart, and back button", async ({ page }) => {
   // ── 1. Navigate and sign in ──────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  await signInFounder(page);
 
   // ── 2. Locate the AI Reliability Trends panel ────────────────────────────
   // It lives in the default "overview" tab — no tab click needed.
@@ -92,12 +91,7 @@ test("AI Reliability drill-in: selector, summary tiles, focused chart, and back 
 
 test("AI Reliability trends: metric toggle switches displayed metric label", async ({ page }) => {
   // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  await signInFounder(page);
 
   // ── 2. Wait for the panel to appear and data to load ─────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -127,12 +121,7 @@ test("AI Reliability trends: metric toggle switches displayed metric label", asy
 
 test("AI Reliability trends: Download CSV button is enabled once data loads and produces a correctly-named file", async ({ page }) => {
   // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  await signInFounder(page);
 
   // ── 2. Wait for panel and data ────────────────────────────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -156,12 +145,7 @@ test("AI Reliability trends: Download CSV button is enabled once data loads and 
 
 test("AI Reliability trends: metric toggle is hidden when a tool is focused and reappears after clearing focus", async ({ page }) => {
   // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  await signInFounder(page);
 
   // ── 2. Wait for the panel and seeded tool to be available ────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -189,12 +173,7 @@ test("AI Reliability trends: metric toggle is hidden when a tool is focused and 
 
 test("AI Reliability trends: Download CSV filename includes focused tool slug suffix", async ({ page }) => {
   // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  await signInFounder(page);
 
   // ── 2. Wait for panel and data ────────────────────────────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -227,12 +206,7 @@ test("AI Reliability trends: Download CSV filename includes focused tool slug su
 
 test("AI Reliability drill-in: focus clears automatically when tool has no data in the active window", async ({ page }) => {
   // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  await signInFounder(page);
 
   // ── 2. Confirm the panel is in the 90d window (default) ─────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');

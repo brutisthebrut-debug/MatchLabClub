@@ -9,11 +9,21 @@ import {
   within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+vi.mock("@workspace/replit-auth-web", () => ({
+  useAuth: () => ({
+    user: { id: "founder-test", email: "founder@example.com", role: "founder" },
+    isAuthenticated: true,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+}));
+
 
 // ---------------------------------------------------------------------------
 // End-to-end coverage for the founder OCR Mismatches tab.
-// We mount the real Founder page, unlock the dashboard with the default key,
-// switch to the OCR Mismatches tab, and exercise the field filter chips.
+// We mount the real Founder page as an authenticated founder, switch to the OCR
+// Mismatches tab, and exercise the field filter chips.
 // All network calls are mocked so the test is hermetic.
 // ---------------------------------------------------------------------------
 
@@ -198,11 +208,6 @@ function renderFounder() {
 }
 
 async function unlockDashboard() {
-  const input = await screen.findByPlaceholderText(/Founder key/i);
-  fireEvent.change(input, { target: { value: "nldc2024" } });
-  const unlock = screen.getByRole("button", { name: /Open Dashboard/i });
-  fireEvent.click(unlock);
-  // Tab nav appears after unlock.
   await screen.findByRole("button", { name: /OCR Mismatches/i });
 }
 

@@ -49,7 +49,7 @@ const EnhanceBody = z.object({
  */
 const CONTENT_SENSITIVE_TOOLS = new Set(["Compatibility Compass"]);
 
-router.get("/ai/status", (_req, res) => {
+router.get("/ai/status", requireFounder, (_req, res) => {
   res.json(getAiStatus());
 });
 

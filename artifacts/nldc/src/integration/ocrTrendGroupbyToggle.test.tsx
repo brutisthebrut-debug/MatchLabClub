@@ -2,6 +2,16 @@ import React from "react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+vi.mock("@workspace/replit-auth-web", () => ({
+  useAuth: () => ({
+    user: { id: "founder-test", email: "founder@example.com", role: "founder" },
+    isAuthenticated: true,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+}));
+
 
 // ---------------------------------------------------------------------------
 // End-to-end coverage for the OCR mismatch trend Day/Week grouping toggle.

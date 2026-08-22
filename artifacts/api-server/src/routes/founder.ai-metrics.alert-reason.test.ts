@@ -49,7 +49,7 @@ interface AlertRow {
 }
 
 async function fetchAlertFor(app: Express, toolName: string): Promise<AlertRow> {
-  const res = await request(app).get("/api/founder/ai-metrics").set("x-founder-key", "nldc2024");
+  const res = await request(app).get("/api/founder/ai-metrics").set("x-test-founder-role", "founder");
   expect(res.status).toBe(200);
   const alerts = res.body.alerts as AlertRow[];
   const row = alerts.find((a) => a.toolName === toolName);
@@ -62,7 +62,6 @@ let app: Express;
 beforeAll(() => {
   app = makeTestApp();
 });
-
 afterEach(async () => {
   if (usedToolNames.length === 0) return;
   await db

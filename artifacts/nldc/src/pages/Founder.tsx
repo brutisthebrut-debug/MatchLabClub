@@ -47,6 +47,7 @@ import {
   type EchoUserSignals,
 } from "@workspace/echo";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@workspace/replit-auth-web";
 
 type AiMode = "live" | "fallback" | "setup-needed";
 interface AiStatusData {
@@ -65,7 +66,6 @@ interface AiTestData {
   error?: string;
   model?: string;
 }
-
 const STATUS_STYLES: Record<AiMode, { label: string; color: string; bg: string; border: string; Icon: React.ElementType }> = {
   live: { label: "Live AI connected", color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.12)", border: "hsl(var(--brand-green) / 0.35)", Icon: CheckCircle2 },
   fallback: { label: "Fallback mode", color: "hsl(var(--brand-gold))", bg: "hsl(var(--brand-gold) / 0.12)", border: "hsl(var(--brand-gold) / 0.35)", Icon: Sparkles },
@@ -117,7 +117,6 @@ function AiStatusPanel() {
   method: "POST",
   headers: {
   "Content-Type": "application/json",
-  "x-founder-key": FOUNDER_KEY,
   },
   body: JSON.stringify({ sample: sample.slice(0, 2000), context }),
   });
@@ -255,8 +254,8 @@ function AlertThresholdEditor({
   setErr(null);
   try {
   const [t, s] = await Promise.all([
-  getAiThresholds(FOUNDER_KEY),
-  getAlertSettings(FOUNDER_KEY),
+  getAiThresholds(LEGACY_FOUNDER_ARG),
+  getAlertSettings(LEGACY_FOUNDER_ARG),
   ]);
   setThresholds(t);
   setGlobalWindow(t.global.windowSize);
@@ -322,7 +321,7 @@ function AlertThresholdEditor({
   const originalNames = new Set(thresholds?.perTool.map((t) => t.toolName) ?? []);
   const currentNames = new Set(overrides.map((o) => o.toolName));
   const removeToolNames = Array.from(originalNames).filter((n) => !currentNames.has(n));
-  await updateAiThresholds(FOUNDER_KEY, {
+  await updateAiThresholds(LEGACY_FOUNDER_ARG, {
   global: {
   windowSize: globalWindow,
   minSample: globalMin,
@@ -345,7 +344,7 @@ function AlertThresholdEditor({
   setErr(null);
   try {
   const removeToolNames = (thresholds?.perTool ?? []).map((t) => t.toolName);
-  await updateAiThresholds(FOUNDER_KEY, {
+  await updateAiThresholds(LEGACY_FOUNDER_ARG, {
   resetGlobal: true,
   removeToolNames,
   });
@@ -363,7 +362,7 @@ function AlertThresholdEditor({
   setSavingCooldown(true);
   setErr(null);
   try {
-  const updated = await updateAlertSettings(FOUNDER_KEY, clamped);
+  const updated = await updateAlertSettings(LEGACY_FOUNDER_ARG, clamped);
   setAlertSettings(updated);
   setCooldownMinutes(updated.rebreachCooldownMinutes);
   setCooldownSaved(true);
@@ -379,7 +378,7 @@ function AlertThresholdEditor({
   setSavingCooldown(true);
   setErr(null);
   try {
-  const updated = await resetAlertSettings(FOUNDER_KEY);
+  const updated = await resetAlertSettings(LEGACY_FOUNDER_ARG);
   setAlertSettings(updated);
   setCooldownMinutes(updated.rebreachCooldownMinutes);
   } catch (e) {
@@ -666,7 +665,7 @@ function ThresholdChangeLog({
   useEffect(() => {
   setLoading(true);
   setErr(null);
-  getAiThresholdChanges(FOUNDER_KEY, 10)
+  getAiThresholdChanges(LEGACY_FOUNDER_ARG, 10)
 .then((r) => setChanges(r.changes))
 .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
 .finally(() => setLoading(false));
@@ -676,7 +675,7 @@ function ThresholdChangeLog({
   setUndoingId(id);
   setErr(null);
   try {
-  await undoAiThresholdChange(FOUNDER_KEY, id);
+  await undoAiThresholdChange(LEGACY_FOUNDER_ARG, id);
   setUndoneIds((prev) => {
   const next = new Set(prev);
   next.add(id);
@@ -2244,10 +2243,9 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
   );
 }
 
-const FOUNDER_KEY =
-  (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
-
-const FOUNDER_KEY_STORAGE_KEY = "founder_key";
+// Transitional argument for legacy API helper signatures. Authorization is
+// now the authenticated server session + persisted role; this carries no key.
+const LEGACY_FOUNDER_ARG = "";
 
 function StatCard({ label, value, icon: Icon, color, "data-testid": testId }: { label: string; value: number | string; icon: React.ElementType; color: string; "data-testid"?: string }) {
   return (
@@ -2823,7 +2821,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   let cancelled = false;
   setLoading(true);
   setError(null);
-  getOcrMismatches(FOUNDER_KEY, { window: windowDays ?? undefined, sort })
+  getOcrMismatches(LEGACY_FOUNDER_ARG, { window: windowDays ?? undefined, sort })
 .then((res) => { if (!cancelled) setData(res); })
 .catch((err: unknown) => {
   if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
@@ -2836,7 +2834,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   let cancelled = false;
   setTrendLoading(true);
   setTrendError(null);
-  getOcrMismatchesTrends(FOUNDER_KEY, { days: trendDays })
+  getOcrMismatchesTrends(LEGACY_FOUNDER_ARG, { days: trendDays })
 .then((res) => { if (!cancelled) setTrendData(res); })
 .catch((err: unknown) => {
   if (!cancelled) setTrendError(err instanceof Error ? err.message : "Failed to load trends");
@@ -3239,7 +3237,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   let cancelled = false;
   setLoading(true);
   setError(null);
-  getOcrLearnedRules(FOUNDER_KEY)
+  getOcrLearnedRules(LEGACY_FOUNDER_ARG)
 .then((res) => { if (!cancelled) setRules(res.rules); })
 .catch((err: unknown) => {
   if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
@@ -3269,7 +3267,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   setRunning(true);
   setActionError(null);
   try {
-  const result = await runOcrLearn(FOUNDER_KEY, since);
+  const result = await runOcrLearn(LEGACY_FOUNDER_ARG, since);
   setLastRun(result);
   setReloadTick((t) => t + 1);
   } catch (err: unknown) {
@@ -3289,7 +3287,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   setActionError(null);
   setClearResult(null);
   try {
-  const result = await clearOcrLearnedRules(FOUNDER_KEY);
+  const result = await clearOcrLearnedRules(LEGACY_FOUNDER_ARG);
   setClearResult(result);
   setLastRun(null);
   setReloadTick((t) => t + 1);
@@ -3304,7 +3302,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   setTogglingIds((prev) => new Set(prev).add(id));
   setActionError(null);
   try {
-  const res = await patchOcrRule(FOUNDER_KEY, id);
+  const res = await patchOcrRule(LEGACY_FOUNDER_ARG, id);
   setRules((prev) =>
   prev ? prev.map((r) => (r.id === id ? res.rule : r)) : prev,
   );
@@ -3319,7 +3317,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   setDeletingIds((prev) => new Set(prev).add(id));
   setActionError(null);
   try {
-  await deleteOcrRule(FOUNDER_KEY, id);
+  await deleteOcrRule(LEGACY_FOUNDER_ARG, id);
   setRules((prev) => prev ? prev.filter((r) => r.id !== id) : prev);
   } catch (err: unknown) {
   setActionError(err instanceof Error ? err.message : "Failed to delete rule");
@@ -3533,8 +3531,8 @@ function OcrPendingRulesPanel({ refreshKey, onApproved }: { refreshKey: number; 
   setLoading(true);
   setError(null);
   Promise.all([
-  getOcrPendingRules(FOUNDER_KEY),
-  getOcrRuleReviewLog(FOUNDER_KEY, 30),
+  getOcrPendingRules(LEGACY_FOUNDER_ARG),
+  getOcrRuleReviewLog(LEGACY_FOUNDER_ARG, 30),
   ])
 .then(([pendingRes, logRes]) => {
   if (!cancelled) {
@@ -3553,7 +3551,7 @@ function OcrPendingRulesPanel({ refreshKey, onApproved }: { refreshKey: number; 
   setActing(id);
   setActionError(null);
   try {
-  await approveOcrRule(FOUNDER_KEY, id);
+  await approveOcrRule(LEGACY_FOUNDER_ARG, id);
   setReloadTick((t) => t + 1);
   onApproved?.();
   } catch (err: unknown) {
@@ -3567,7 +3565,7 @@ function OcrPendingRulesPanel({ refreshKey, onApproved }: { refreshKey: number; 
   setActing(id);
   setActionError(null);
   try {
-  await rejectOcrRule(FOUNDER_KEY, id);
+  await rejectOcrRule(LEGACY_FOUNDER_ARG, id);
   setReloadTick((t) => t + 1);
   } catch (err: unknown) {
   setActionError(err instanceof Error ? err.message : "Failed to reject");
@@ -3770,7 +3768,7 @@ function useLeadStatuses(leads: Lead[]) {
   const setStatus = (id: string | number, s: LeadStatus) => {
     const key = String(id);
     setOverrides((prev) => ({ ...prev, [key]: s }));
-    void setLeadStatus(FOUNDER_KEY, Number(id), s).catch(() => {
+    void setLeadStatus(LEGACY_FOUNDER_ARG, Number(id), s).catch(() => {
       // Revert the optimistic value so the row reflects the persisted truth.
       setOverrides((prev) => {
         const next = { ...prev };
@@ -3960,53 +3958,6 @@ function FollowUpTrendsPanel() {
   </LineChart>
   </ResponsiveContainer>
   )}
-  </div>
-  );
-}
-
-function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
-  const [value, setValue] = useState("");
-  const [error, setError] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (value === FOUNDER_KEY) {
-  onSubmit(value);
-  } else {
-  setError(true);
-  }
-  };
-
-  return (
-  <div className="min-h-[60vh] flex items-center justify-center">
-  <div className="glass rounded-2xl p-10 max-w-sm w-full text-center space-y-6">
-  <div className="w-14 h-14 rounded-full bg-[hsl(248_62%_52%/0.15)] flex items-center justify-center mx-auto">
-  <Lock className="w-7 h-7 text-[hsl(248_62%_52%)]" />
-  </div>
-  <div>
-  <h1 className="font-serif text-xl font-bold text-foreground">Founder Dashboard</h1>
-  <p className="text-sm text-muted-foreground mt-2">Enter your founder key to continue.</p>
-  </div>
-  <form onSubmit={handleSubmit} className="space-y-3">
-  <input
-  type="password"
-  value={value}
-  onChange={(e) => { setValue(e.target.value); setError(false); }}
-  placeholder="Founder key"
-  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm outline-none focus:border-[hsl(248_62%_52%/0.5)] transition-colors"
-  />
-  {error && <p className="text-xs text-red-400">Incorrect key.</p>}
-  <button
-  type="submit"
-  className="w-full py-3 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl text-sm hover:opacity-90 transition-opacity"
-  >
-  Open Dashboard
-  </button>
-  </form>
-  <p className="text-xs text-muted-foreground/40">
-  Set <code className="font-mono">VITE_FOUNDER_KEY</code> to configure a custom key.
-  </p>
-  </div>
   </div>
   );
 }
@@ -4341,9 +4292,9 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   useEffect(() => {
   setLoading(true);
   Promise.all([
-  getFounderStats(FOUNDER_KEY).then(setStats).catch(() => {}),
+  getFounderStats(LEGACY_FOUNDER_ARG).then(setStats).catch(() => {}),
   getLeads().then(setLeads).catch(() => {}),
-  getPurchaseInterestList(FOUNDER_KEY).then(setPurchases).catch(() => {}),
+  getPurchaseInterestList(LEGACY_FOUNDER_ARG).then(setPurchases).catch(() => {}),
   ]).finally(() => setLoading(false));
   }, [refreshKey]);
 
@@ -4410,18 +4361,18 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   {tab === "overview" && (
   <div className="space-y-8">
   <AiStatusPanel />
-  <WellnessCompletionPanel founderKey={FOUNDER_KEY} />
-  <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
-  <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
-  <TierFlipPanel founderKey={FOUNDER_KEY} />
-  <FunnelPanel founderKey={FOUNDER_KEY} />
-  <ActivityPanel founderKey={FOUNDER_KEY} />
-  <ReferralAttributionPanel founderKey={FOUNDER_KEY} />
-  <EchoCopilotPanel founderKey={FOUNDER_KEY} />
-  <GeoipRefreshPanel founderKey={FOUNDER_KEY} />
+  <WellnessCompletionPanel founderKey={LEGACY_FOUNDER_ARG} />
+  <BackgroundJobsPanel refreshKey={refreshKey} founderKey={LEGACY_FOUNDER_ARG} />
+  <TrashPurgePanel founderKey={LEGACY_FOUNDER_ARG} onPurged={() => setRefreshKey((k) => k + 1)} />
+  <TierFlipPanel founderKey={LEGACY_FOUNDER_ARG} />
+  <FunnelPanel founderKey={LEGACY_FOUNDER_ARG} />
+  <ActivityPanel founderKey={LEGACY_FOUNDER_ARG} />
+  <ReferralAttributionPanel founderKey={LEGACY_FOUNDER_ARG} />
+  <EchoCopilotPanel founderKey={LEGACY_FOUNDER_ARG} />
+  <GeoipRefreshPanel founderKey={LEGACY_FOUNDER_ARG} />
   <OcrMismatchesPanel refreshKey={refreshKey} />
-  <AiMetricsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
-  <AiReliabilityTrendsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
+  <AiMetricsPanel refreshKey={refreshKey} founderKey={LEGACY_FOUNDER_ARG} />
+  <AiReliabilityTrendsPanel refreshKey={refreshKey} founderKey={LEGACY_FOUNDER_ARG} />
   <EchoPlaybookPanel />
   <OcrPendingRulesPanel refreshKey={refreshKey} onApproved={() => setRefreshKey((k) => k + 1)} />
   <OcrRulesPanel refreshKey={refreshKey} />
@@ -4561,20 +4512,20 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   {tab === "testing" && <TestingChecklistPanel />}
 
   {/* Referrals */}
-  {tab === "referrals" && <ReferralsPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
+  {tab === "referrals" && <ReferralsPanel founderKey={LEGACY_FOUNDER_ARG} refreshKey={refreshKey} />}
 
   {/* Matching Review Queue */}
   {tab === "matching" && (
   <div className="space-y-6" data-testid="matching-tab">
-  <ConnectorHealthPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
-  <ProposalsQueuePanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
-  <PoolReadyPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
+  <ConnectorHealthPanel founderKey={LEGACY_FOUNDER_ARG} refreshKey={refreshKey} />
+  <ProposalsQueuePanel founderKey={LEGACY_FOUNDER_ARG} refreshKey={refreshKey} />
+  <PoolReadyPanel founderKey={LEGACY_FOUNDER_ARG} refreshKey={refreshKey} />
   </div>
   )}
 
-  {tab === "safety" && <SafetyReportsPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
+  {tab === "safety" && <SafetyReportsPanel founderKey={LEGACY_FOUNDER_ARG} refreshKey={refreshKey} />}
 
-  {tab === "brain" && <BrainTab founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
+  {tab === "brain" && <BrainTab founderKey={LEGACY_FOUNDER_ARG} refreshKey={refreshKey} />}
 
   <p className="text-xs text-muted-foreground/30 mt-12 text-center">
   Founder demo mode · Full auth + multi-user coming in V3
@@ -5857,9 +5808,8 @@ function PoolReadyPanel({ founderKey, refreshKey }: { founderKey: string; refres
 /* ─── Referrals Panel ───────────────────────────────────────────────── */
 
 function ReferralsPanel({ founderKey, refreshKey }: { founderKey: string; refreshKey: number }) {
-  const { data, isLoading, isError, refetch } = useGetFounderReferrals(
-  { key: founderKey },
-  );
+  void founderKey;
+  const { data, isLoading, isError, refetch } = useGetFounderReferrals();
 
   useEffect(() => {
   void refetch();
@@ -6462,9 +6412,8 @@ interface WellnessStats {
 }
 
 async function getWellnessStats(key: string): Promise<WellnessStats> {
-  const res = await fetch("/api/founder/wellness-stats", {
-  headers: { "x-founder-key": key },
-  });
+  void key;
+  const res = await fetch("/api/founder/wellness-stats");
   if (!res.ok) throw new Error("Failed to load wellness stats");
   return res.json() as Promise<WellnessStats>;
 }
@@ -6621,48 +6570,53 @@ function TestingChecklistPanel() {
 
 export default function Founder() {
   useMeta("Founder Dashboard", "MatchLab Club Founder Dashboard, live app data.");
+  const { user, isAuthenticated, isLoading, login, logout } = useAuth();
 
-  const params = new URLSearchParams(
-  typeof window !== "undefined" ? window.location.search : ""
-  );
-  const keyParam = params.get("key");
-
-  const [authenticated, setAuthenticated] = useState(() => {
-  if (keyParam === FOUNDER_KEY) return true;
-  try {
-  return localStorage.getItem(FOUNDER_KEY_STORAGE_KEY) === FOUNDER_KEY;
-  } catch {
-  return false;
+  if (isLoading) {
+  return <AppLayout><div className="min-h-[60vh] grid place-items-center"><Loader2 className="w-6 h-6 animate-spin" /></div></AppLayout>;
   }
-  });
 
-  const handleAuth = (key: string) => {
-  try {
-  localStorage.setItem(FOUNDER_KEY_STORAGE_KEY, key);
-  } catch {
-  }
-  setAuthenticated(true);
-  };
-
-  const handleSignOut = () => {
-  try {
-  localStorage.removeItem(FOUNDER_KEY_STORAGE_KEY);
-  } catch {
-  }
-  setAuthenticated(false);
-  };
-
-  if (!authenticated) {
+  if (!isAuthenticated) {
   return (
   <AppLayout>
-  <LockedView onSubmit={handleAuth} />
+  <div className="min-h-[60vh] flex items-center justify-center">
+  <div className="glass rounded-2xl p-10 max-w-sm w-full text-center space-y-6">
+  <ShieldAlert className="w-10 h-10 mx-auto text-[hsl(248_62%_52%)]" />
+  <div>
+  <h1 className="font-serif text-xl font-bold text-foreground">Founder Dashboard</h1>
+  <p className="text-sm text-muted-foreground mt-2">Sign in with an authorized founder account to continue.</p>
+  </div>
+  <button type="button" onClick={() => login("/founder")} className="w-full py-3 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl text-sm hover:opacity-90 transition-opacity">
+  Sign in
+  </button>
+  </div>
+  </div>
+  </AppLayout>
+  );
+  }
+
+  if (user?.role !== "founder" && user?.role !== "admin") {
+  return (
+  <AppLayout>
+  <div className="min-h-[60vh] flex items-center justify-center">
+  <div className="glass rounded-2xl p-10 max-w-sm w-full text-center space-y-6">
+  <ShieldAlert className="w-10 h-10 mx-auto text-[hsl(248_62%_52%)]" />
+  <div>
+  <h1 className="font-serif text-xl font-bold text-foreground">Founder access required</h1>
+  <p className="text-sm text-muted-foreground mt-2">This signed-in account does not have permission to open the founder dashboard.</p>
+  </div>
+  <button type="button" onClick={logout} className="w-full py-3 border border-border text-foreground font-semibold rounded-xl text-sm hover:bg-muted/40 transition-colors">
+  Sign out
+  </button>
+  </div>
+  </div>
   </AppLayout>
   );
   }
 
   return (
   <AppLayout>
-  <Dashboard onSignOut={handleSignOut} />
+  <Dashboard onSignOut={logout} />
   </AppLayout>
   );
 }

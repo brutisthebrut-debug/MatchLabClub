@@ -14,13 +14,11 @@ function makeTestApp(): Express {
 }
 
 let app: Express;
-const VALID_KEY = "nldc2024";
 const createdIds: number[] = [];
 
 beforeAll(() => {
   app = makeTestApp();
 });
-
 afterAll(async () => {
   for (const id of createdIds) {
     await db.delete(userReportsTable).where(eq(userReportsTable.id, id));
@@ -48,7 +46,7 @@ describe("PATCH /founder/reports/:id/status", () => {
 
     const res = await request(app)
       .patch(`/api/founder/reports/${row!.id}/status`)
-      .set("x-founder-key", VALID_KEY)
+      .set("x-test-founder-role", "founder")
       .send({ status: "reviewed" });
 
     expect(res.status).toBe(200);
@@ -83,7 +81,7 @@ describe("PATCH /founder/reports/:id/status", () => {
 
     const res = await request(app)
       .patch(`/api/founder/reports/${row!.id}/status`)
-      .set("x-founder-key", VALID_KEY)
+      .set("x-test-founder-role", "founder")
       .send({ status: "dismissed" });
 
     expect(res.status).toBe(200);

@@ -77,9 +77,17 @@ describe("GET /api/ai/status", () => {
     clearAiKeys();
   });
 
-  it("reports fallback mode when no API key is configured", async () => {
+  it("requires founder authorization", async () => {
     const app = await makeApp();
     const res = await request(app).get("/api/ai/status");
+    expect(res.status).toBe(401);
+  });
+
+  it("reports fallback mode when no API key is configured", async () => {
+    const app = await makeApp();
+    const res = await request(app)
+      .get("/api/ai/status")
+      .set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.mode).toBe("fallback");
     expect(res.body.keyDetected).toBe(false);
@@ -91,7 +99,9 @@ describe("GET /api/ai/status", () => {
   it("reports live mode when an API key is present", async () => {
     process.env.OPENAI_API_KEY = "test-key-abc";
     const app = await makeApp();
-    const res = await request(app).get("/api/ai/status");
+    const res = await request(app)
+      .get("/api/ai/status")
+      .set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.mode).toBe("live");
     expect(res.body.keyDetected).toBe(true);

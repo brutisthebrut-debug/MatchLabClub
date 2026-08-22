@@ -5,6 +5,18 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+/**
+ * UI hint for role-gated navigation. The server re-checks the persisted role on every privileged request.
+ */
+export type AuthUserRole = typeof AuthUserRole[keyof typeof AuthUserRole];
+
+
+export const AuthUserRole = {
+  member: 'member',
+  founder: 'founder',
+  admin: 'admin',
+} as const;
+
 export interface AuthUser {
   id: string;
   /** @nullable */
@@ -15,6 +27,8 @@ export interface AuthUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  /** UI hint for role-gated navigation. The server re-checks the persisted role on every privileged request. */
+  role?: AuthUserRole;
 }
 
 export interface AuthUserEnvelope {
@@ -5498,25 +5512,5 @@ toolName: string;
  * @maximum 200
  */
 windowSize?: number;
-};
-
-export type TestAiParams = {
-key?: string;
-};
-
-export type RefreshGeoipParams = {
-key?: string;
-};
-
-export type GetFounderReferralsParams = {
-key?: string;
-};
-
-export type GetFounderFunnelParams = {
-key?: string;
-};
-
-export type AskFounderCopilotParams = {
-key?: string;
 };
 

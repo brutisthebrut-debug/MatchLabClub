@@ -35,7 +35,6 @@ import type {
   AnonymousClaimHandoffStatus,
   AnonymousClaimHandoffStatusInput,
   AskFounderCopilotInput,
-  AskFounderCopilotParams,
   AskFounderCopilotResult,
   AskMirror400,
   AskMirror401,
@@ -148,8 +147,6 @@ import type {
   GetAiFallbackRateParams,
   GetAuditReportVersion404,
   GetCompanion401,
-  GetFounderFunnelParams,
-  GetFounderReferralsParams,
   GetFounderReportsParams,
   GetMirrorPortrait401,
   GrowthEvent,
@@ -221,7 +218,6 @@ import type {
   PurgeTrustSourceResult,
   ReceiptsInbox,
   RedeemAnonymousClaimHandoffInput,
-  RefreshGeoipParams,
   RegisterPushTokenInput,
   RegisterPushTokenResult,
   RehearsalTurn400,
@@ -256,7 +252,6 @@ import type {
   SetAiContentConsentInput,
   SetDigestPreferencesInput,
   SignalMap,
-  TestAiParams,
   TimeCapsule,
   TimeCapsuleInput,
   TrashPurgeHeartbeat,
@@ -8213,7 +8208,7 @@ export const getGetFounderReportsUrl = (params?: GetFounderReportsParams,) => {
 
 /**
  * Returns Trust & Safety reports for the founder review queue, newest
-first. Requires founder key.
+first. Requires an authenticated founder role.
 
  * @summary List member reports for founder review
  */
@@ -8292,7 +8287,7 @@ export const getUpdateFounderReportStatusUrl = (id: number,) => {
 }
 
 /**
- * Requires founder key.
+ * Requires an authenticated founder role.
  * @summary Update the review status of a member report
  */
 export const updateFounderReportStatus = async (id: number,
@@ -10112,7 +10107,7 @@ export const getGetAiStatusUrl = () => {
 }
 
 /**
- * Returns whether OpenAI is connected, in fallback mode, or needs setup.
+ * Returns whether OpenAI is connected, in fallback mode, or needs setup. Requires an authenticated founder role.
  * @summary Get current AI integration status
  */
 export const getAiStatus = async ( options?: RequestInit): Promise<AiStatus> => {
@@ -10137,7 +10132,7 @@ export const getGetAiStatusQueryKey = () => {
     }
 
 
-export const getGetAiStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAiStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetAiStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAiStatus>>, TError = ErrorType<AiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -10156,14 +10151,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetAiStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAiStatus>>>
-export type GetAiStatusQueryError = ErrorType<unknown>
+export type GetAiStatusQueryError = ErrorType<AiError>
 
 
 /**
  * @summary Get current AI integration status
  */
 
-export function useGetAiStatus<TData = Awaited<ReturnType<typeof getAiStatus>>, TError = ErrorType<unknown>>(
+export function useGetAiStatus<TData = Awaited<ReturnType<typeof getAiStatus>>, TError = ErrorType<AiError>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -10343,29 +10338,21 @@ export function useGetAiFallbackRate<TData = Awaited<ReturnType<typeof getAiFall
 
 
 
-export const getTestAiUrl = (params?: TestAiParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getTestAiUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/ai/test?${stringifiedParams}` : `/api/ai/test`
+  return `/api/ai/test`
 }
 
 /**
- * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder role. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */
-export const testAi = async (aiTestInput: AiTestInput,
-    params?: TestAiParams, options?: RequestInit): Promise<AiTestResult> => {
+export const testAi = async (aiTestInput: AiTestInput, options?: RequestInit): Promise<AiTestResult> => {
 
-  return customFetch<AiTestResult>(getTestAiUrl(params),
+  return customFetch<AiTestResult>(getTestAiUrl(),
   {
     ...options,
     method: 'POST',
@@ -10379,8 +10366,8 @@ export const testAi = async (aiTestInput: AiTestInput,
 
 
 export const getTestAiMutationOptions = <TError = ErrorType<AiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>;params?: TestAiParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>;params?: TestAiParams}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>}, TContext> => {
 
 const mutationKey = ['testAi'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -10392,10 +10379,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testAi>>, {data: BodyType<AiTestInput>;params?: TestAiParams}> = (props) => {
-          const {data,params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testAi>>, {data: BodyType<AiTestInput>}> = (props) => {
+          const {data} = props ?? {};
 
-          return  testAi(data,params,requestOptions)
+          return  testAi(data,requestOptions)
         }
 
 
@@ -10413,11 +10400,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Send a sample prompt through the server-side AI helper
  */
 export const useTestAi = <TError = ErrorType<AiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>;params?: TestAiParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof testAi>>,
         TError,
-        {data: BodyType<AiTestInput>;params?: TestAiParams},
+        {data: BodyType<AiTestInput>},
         TContext
       > => {
       return useMutation(getTestAiMutationOptions(options));
@@ -10435,7 +10422,7 @@ export const getPurgeTrashNowUrl = () => {
  * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
 of records deleted. Useful after adjusting the retention window or to
 confirm the purge job is working without waiting for the timer.
-Requires founder key.
+Requires an authenticated founder role.
 
  * @summary Manually trigger an immediate audit trash purge
  */
@@ -10498,31 +10485,24 @@ export const usePurgeTrashNow = <TError = ErrorType<AiError>,
       return useMutation(getPurgeTrashNowMutationOptions(options));
     }
 
-export const getRefreshGeoipUrl = (params?: RefreshGeoipParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getRefreshGeoipUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/founder/geoip/refresh?${stringifiedParams}` : `/api/founder/geoip/refresh`
+  return `/api/founder/geoip/refresh`
 }
 
 /**
  * Runs the GeoIP updater immediately (the same routine the monthly job calls).
 Useful after rotating the MaxMind license key or when the dataset is suspected
-to be stale. Requires founder key.
+to be stale. Requires an authenticated founder role.
 
  * @summary Trigger a manual GeoIP database refresh
  */
-export const refreshGeoip = async (params?: RefreshGeoipParams, options?: RequestInit): Promise<GeoipRefreshResult> => {
+export const refreshGeoip = async ( options?: RequestInit): Promise<GeoipRefreshResult> => {
 
-  return customFetch<GeoipRefreshResult>(getRefreshGeoipUrl(params),
+  return customFetch<GeoipRefreshResult>(getRefreshGeoipUrl(),
   {
     ...options,
     method: 'POST'
@@ -10535,8 +10515,8 @@ export const refreshGeoip = async (params?: RefreshGeoipParams, options?: Reques
 
 
 export const getRefreshGeoipMutationOptions = <TError = ErrorType<AiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,{params?: RefreshGeoipParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,{params?: RefreshGeoipParams}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,void, TContext> => {
 
 const mutationKey = ['refreshGeoip'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -10548,10 +10528,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshGeoip>>, {params?: RefreshGeoipParams}> = (props) => {
-          const {params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshGeoip>>, void> = () => {
 
-          return  refreshGeoip(params,requestOptions)
+
+          return  refreshGeoip(requestOptions)
         }
 
 
@@ -10569,11 +10549,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Trigger a manual GeoIP database refresh
  */
 export const useRefreshGeoip = <TError = ErrorType<AiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,{params?: RefreshGeoipParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof refreshGeoip>>,
         TError,
-        {params?: RefreshGeoipParams},
+        void,
         TContext
       > => {
       return useMutation(getRefreshGeoipMutationOptions(options));
@@ -10589,7 +10569,7 @@ export const getGetTrashPurgeHeartbeatUrl = () => {
 
 /**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
-together with the elapsed time and a staleness flag. Requires founder key.
+together with the elapsed time and a staleness flag. Requires an authenticated founder role.
 
  * @summary When did the audit trash purge job last succeed?
  */
@@ -10659,19 +10639,12 @@ export function useGetTrashPurgeHeartbeat<TData = Awaited<ReturnType<typeof getT
 
 
 
-export const getGetFounderReferralsUrl = (params?: GetFounderReferralsParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getGetFounderReferralsUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/founder/referrals?${stringifiedParams}` : `/api/founder/referrals`
+  return `/api/founder/referrals`
 }
 
 /**
@@ -10683,13 +10656,13 @@ A referred user is counted as "paid" if they have any matching
 of the founder dashboard's purchase view, which treats `status = 'paid'`
 as the canonical signal that money actually moved.
 
-Requires founder key.
+Requires an authenticated founder role.
 
  * @summary Referral attribution summary for the founder dashboard
  */
-export const getFounderReferrals = async (params?: GetFounderReferralsParams, options?: RequestInit): Promise<FounderReferralsSummary> => {
+export const getFounderReferrals = async ( options?: RequestInit): Promise<FounderReferralsSummary> => {
 
-  return customFetch<FounderReferralsSummary>(getGetFounderReferralsUrl(params),
+  return customFetch<FounderReferralsSummary>(getGetFounderReferralsUrl(),
   {
     ...options,
     method: 'GET'
@@ -10702,23 +10675,23 @@ export const getFounderReferrals = async (params?: GetFounderReferralsParams, op
 
 
 
-export const getGetFounderReferralsQueryKey = (params?: GetFounderReferralsParams,) => {
+export const getGetFounderReferralsQueryKey = () => {
     return [
-    `/api/founder/referrals`, ...(params ? [params] : [])
+    `/api/founder/referrals`
     ] as const;
     }
 
 
-export const getGetFounderReferralsQueryOptions = <TData = Awaited<ReturnType<typeof getFounderReferrals>>, TError = ErrorType<AiError>>(params?: GetFounderReferralsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetFounderReferralsQueryOptions = <TData = Awaited<ReturnType<typeof getFounderReferrals>>, TError = ErrorType<AiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetFounderReferralsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetFounderReferralsQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFounderReferrals>>> = ({ signal }) => getFounderReferrals(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFounderReferrals>>> = ({ signal }) => getFounderReferrals({ signal, ...requestOptions });
 
 
 
@@ -10736,11 +10709,11 @@ export type GetFounderReferralsQueryError = ErrorType<AiError>
  */
 
 export function useGetFounderReferrals<TData = Awaited<ReturnType<typeof getFounderReferrals>>, TError = ErrorType<AiError>>(
- params?: GetFounderReferralsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetFounderReferralsQueryOptions(params,options)
+  const queryOptions = getGetFounderReferralsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -10753,19 +10726,12 @@ export function useGetFounderReferrals<TData = Awaited<ReturnType<typeof getFoun
 
 
 
-export const getGetFounderFunnelUrl = (params?: GetFounderFunnelParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getGetFounderFunnelUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/founder/funnel?${stringifiedParams}` : `/api/founder/funnel`
+  return `/api/founder/funnel`
 }
 
 /**
@@ -10782,13 +10748,13 @@ directional drop-off read, not a strict nested cohort. Anonymous visits
 are tracked client-side via analytics, so the first server-visible stage
 is accounts.
 
-Requires founder key.
+Requires an authenticated founder role.
 
  * @summary Readiness-to-revenue funnel for the founder dashboard
  */
-export const getFounderFunnel = async (params?: GetFounderFunnelParams, options?: RequestInit): Promise<FounderFunnelSummary> => {
+export const getFounderFunnel = async ( options?: RequestInit): Promise<FounderFunnelSummary> => {
 
-  return customFetch<FounderFunnelSummary>(getGetFounderFunnelUrl(params),
+  return customFetch<FounderFunnelSummary>(getGetFounderFunnelUrl(),
   {
     ...options,
     method: 'GET'
@@ -10801,23 +10767,23 @@ export const getFounderFunnel = async (params?: GetFounderFunnelParams, options?
 
 
 
-export const getGetFounderFunnelQueryKey = (params?: GetFounderFunnelParams,) => {
+export const getGetFounderFunnelQueryKey = () => {
     return [
-    `/api/founder/funnel`, ...(params ? [params] : [])
+    `/api/founder/funnel`
     ] as const;
     }
 
 
-export const getGetFounderFunnelQueryOptions = <TData = Awaited<ReturnType<typeof getFounderFunnel>>, TError = ErrorType<AiError>>(params?: GetFounderFunnelParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetFounderFunnelQueryOptions = <TData = Awaited<ReturnType<typeof getFounderFunnel>>, TError = ErrorType<AiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetFounderFunnelQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetFounderFunnelQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFounderFunnel>>> = ({ signal }) => getFounderFunnel(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFounderFunnel>>> = ({ signal }) => getFounderFunnel({ signal, ...requestOptions });
 
 
 
@@ -10835,11 +10801,11 @@ export type GetFounderFunnelQueryError = ErrorType<AiError>
  */
 
 export function useGetFounderFunnel<TData = Awaited<ReturnType<typeof getFounderFunnel>>, TError = ErrorType<AiError>>(
- params?: GetFounderFunnelParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetFounderFunnelQueryOptions(params,options)
+  const queryOptions = getGetFounderFunnelQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -10852,19 +10818,12 @@ export function useGetFounderFunnel<TData = Awaited<ReturnType<typeof getFounder
 
 
 
-export const getAskFounderCopilotUrl = (params?: AskFounderCopilotParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getAskFounderCopilotUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/founder/copilot/ask?${stringifiedParams}` : `/api/founder/copilot/ask`
+  return `/api/founder/copilot/ask`
 }
 
 /**
@@ -10872,14 +10831,13 @@ export const getAskFounderCopilotUrl = (params?: AskFounderCopilotParams,) => {
 The full strategic playbook is embedded in the system prompt so the
 reply can reference prior decisions. On model failure or unavailable
 provider, returns a fallback answer pointing at the closest playbook
-entry. Requires founder key.
+entry. Requires an authenticated founder role.
 
  * @summary Ask Echo a free-form strategic question
  */
-export const askFounderCopilot = async (askFounderCopilotInput: AskFounderCopilotInput,
-    params?: AskFounderCopilotParams, options?: RequestInit): Promise<AskFounderCopilotResult> => {
+export const askFounderCopilot = async (askFounderCopilotInput: AskFounderCopilotInput, options?: RequestInit): Promise<AskFounderCopilotResult> => {
 
-  return customFetch<AskFounderCopilotResult>(getAskFounderCopilotUrl(params),
+  return customFetch<AskFounderCopilotResult>(getAskFounderCopilotUrl(),
   {
     ...options,
     method: 'POST',
@@ -10893,8 +10851,8 @@ export const askFounderCopilot = async (askFounderCopilotInput: AskFounderCopilo
 
 
 export const getAskFounderCopilotMutationOptions = <TError = ErrorType<AiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>}, TContext> => {
 
 const mutationKey = ['askFounderCopilot'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -10906,10 +10864,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof askFounderCopilot>>, {data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}> = (props) => {
-          const {data,params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof askFounderCopilot>>, {data: BodyType<AskFounderCopilotInput>}> = (props) => {
+          const {data} = props ?? {};
 
-          return  askFounderCopilot(data,params,requestOptions)
+          return  askFounderCopilot(data,requestOptions)
         }
 
 
@@ -10927,11 +10885,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Ask Echo a free-form strategic question
  */
 export const useAskFounderCopilot = <TError = ErrorType<AiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof askFounderCopilot>>,
         TError,
-        {data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams},
+        {data: BodyType<AskFounderCopilotInput>},
         TContext
       > => {
       return useMutation(getAskFounderCopilotMutationOptions(options));

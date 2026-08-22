@@ -21,7 +21,8 @@ export const GetCurrentAuthUserResponse = zod.object({
   "email": zod.string().email().nullable(),
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
-  "profileImageUrl": zod.string().nullable()
+  "profileImageUrl": zod.string().nullable(),
+  "role": zod.enum(['member', 'founder', 'admin']).optional().describe('UI hint for role-gated navigation. The server re-checks the persisted role on every privileged request.')
 }),zod.null()])
 })
 
@@ -3768,16 +3769,12 @@ export const CheckOutgoingMessageResponse = zod.object({
 
 /**
  * Returns Trust & Safety reports for the founder review queue, newest
-first. Requires founder key.
+first. Requires an authenticated founder role.
 
  * @summary List member reports for founder review
  */
 export const GetFounderReportsQueryParams = zod.object({
   "status": zod.enum(['open', 'reviewed', 'dismissed']).optional()
-})
-
-export const GetFounderReportsHeader = zod.object({
-  "x-founder-key": zod.string()
 })
 
 export const GetFounderReportsResponse = zod.object({
@@ -3799,15 +3796,11 @@ export const GetFounderReportsResponse = zod.object({
 
 
 /**
- * Requires founder key.
+ * Requires an authenticated founder role.
  * @summary Update the review status of a member report
  */
 export const UpdateFounderReportStatusParams = zod.object({
   "id": zod.coerce.number()
-})
-
-export const UpdateFounderReportStatusHeader = zod.object({
-  "x-founder-key": zod.string()
 })
 
 export const UpdateFounderReportStatusBody = zod.object({
@@ -4484,7 +4477,7 @@ export const GetWaitlistStatsResponse = zod.object({
 
 
 /**
- * Returns whether OpenAI is connected, in fallback mode, or needs setup.
+ * Returns whether OpenAI is connected, in fallback mode, or needs setup. Requires an authenticated founder role.
  * @summary Get current AI integration status
  */
 export const GetAiStatusResponse = zod.object({
@@ -4567,17 +4560,9 @@ export const GetAiFallbackRateResponse = zod.object({
 
 
 /**
- * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder role. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */
-export const TestAiQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
-
-export const TestAiHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
-
 export const testAiBodySampleMax = 2000;
 
 
@@ -4614,14 +4599,10 @@ export const TestAiResponse = zod.object({
  * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
 of records deleted. Useful after adjusting the retention window or to
 confirm the purge job is working without waiting for the timer.
-Requires founder key.
+Requires an authenticated founder role.
 
  * @summary Manually trigger an immediate audit trash purge
  */
-export const PurgeTrashNowHeader = zod.object({
-  "x-founder-key": zod.string()
-})
-
 export const PurgeTrashNowResponse = zod.object({
   "deleted": zod.number().describe('Number of soft-deleted audit rows permanently removed by this purge run.')
 })
@@ -4630,18 +4611,10 @@ export const PurgeTrashNowResponse = zod.object({
 /**
  * Runs the GeoIP updater immediately (the same routine the monthly job calls).
 Useful after rotating the MaxMind license key or when the dataset is suspected
-to be stale. Requires founder key.
+to be stale. Requires an authenticated founder role.
 
  * @summary Trigger a manual GeoIP database refresh
  */
-export const RefreshGeoipQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
-
-export const RefreshGeoipHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
-
 export const RefreshGeoipResponse = zod.object({
   "success": zod.boolean().describe('True when the GeoIP database was refreshed; false when the updater could not run (e.g. MAXMIND_LICENSE_KEY missing or download failed).'),
   "message": zod.string().describe('Human-readable summary of the refresh result.')
@@ -4650,14 +4623,10 @@ export const RefreshGeoipResponse = zod.object({
 
 /**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
-together with the elapsed time and a staleness flag. Requires founder key.
+together with the elapsed time and a staleness flag. Requires an authenticated founder role.
 
  * @summary When did the audit trash purge job last succeed?
  */
-export const GetTrashPurgeHeartbeatHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
-
 export const GetTrashPurgeHeartbeatResponse = zod.object({
   "lastSuccessAt": zod.coerce.date().nullable().describe('ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.'),
   "ageMs": zod.number().nullable().describe('Milliseconds since the last successful run, or null if it has never run.'),
@@ -4675,18 +4644,10 @@ A referred user is counted as "paid" if they have any matching
 of the founder dashboard's purchase view, which treats `status = 'paid'`
 as the canonical signal that money actually moved.
 
-Requires founder key.
+Requires an authenticated founder role.
 
  * @summary Referral attribution summary for the founder dashboard
  */
-export const GetFounderReferralsQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
-
-export const GetFounderReferralsHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
-
 export const GetFounderReferralsResponse = zod.object({
   "totalReferrals": zod.number().describe('Total number of rows in the referrals table.'),
   "uniqueInviters": zod.number().describe('Count of distinct inviter user ids across all referrals.'),
@@ -4730,18 +4691,10 @@ directional drop-off read, not a strict nested cohort. Anonymous visits
 are tracked client-side via analytics, so the first server-visible stage
 is accounts.
 
-Requires founder key.
+Requires an authenticated founder role.
 
  * @summary Readiness-to-revenue funnel for the founder dashboard
  */
-export const GetFounderFunnelQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
-
-export const GetFounderFunnelHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
-
 export const GetFounderFunnelResponse = zod.object({
   "readinessThreshold": zod.number().describe('Effective matching pool readiness threshold at request time.'),
   "paidViaPurchaseInterest": zod.number().describe('Distinct paid purchase_interest emails. Supplemental to the tier-based purchased stage, since it also captures anonymous one-off buys.'),
@@ -4760,18 +4713,10 @@ export const GetFounderFunnelResponse = zod.object({
 The full strategic playbook is embedded in the system prompt so the
 reply can reference prior decisions. On model failure or unavailable
 provider, returns a fallback answer pointing at the closest playbook
-entry. Requires founder key.
+entry. Requires an authenticated founder role.
 
  * @summary Ask Echo a free-form strategic question
  */
-export const AskFounderCopilotQueryParams = zod.object({
-  "key": zod.coerce.string().optional()
-})
-
-export const AskFounderCopilotHeader = zod.object({
-  "x-founder-key": zod.string().optional()
-})
-
 export const askFounderCopilotBodyQuestionMin = 4;
 export const askFounderCopilotBodyQuestionMax = 2000;
 

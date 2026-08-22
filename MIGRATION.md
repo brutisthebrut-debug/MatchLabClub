@@ -652,7 +652,7 @@ required for the application to boot (`BOOT`), required for a feature to work
 
 | Variable | Status | Notes |
 |---|---|---|
-| `FOUNDER_KEY` | FEATURE | Static bearer token gating the `/founder/*` routes |
+| `FOUNDER_EMAILS` | FEATURE | Optional server-only comma-separated bootstrap allowlist; persisted `users.role` remains authoritative |
 | `BENCHMARK_MIN_COHORT` | FEATURE | Min cohort size before benchmarks become available |
 | `MATCHING_REWEIGHT_MIN_OUTCOMES` | FEATURE | Minimum outcome count for re-weighting confidence |
 
@@ -772,8 +772,9 @@ addressed.
 
 ### 4.14 Founder / admin access
 
-- [ ] **REQUIRED** `FOUNDER_KEY` set to a strong random value in production *(Phase 0 check)*
-- [ ] **RECOMMENDED** Move from a static shared key to a proper admin role on the new IdP *(Phase 1)*
+- [ ] **REQUIRED** Apply migration `0041`, then verify regular members receive 403 and persisted `founder`/`admin` roles can reach every `/founder/*` route *(Phase 0 check)*
+- [ ] **REQUIRED** Confirm `founder_action_logs` receives append-only actor/status metadata for authorized founder requests *(Phase 0 check)*
+- [ ] **RECOMMENDED** Set `FOUNDER_EMAILS` only for initial server-side bootstrap, then manage founder/admin roles through a controlled operational process *(Phase 1)*
 
 ---
 
@@ -884,7 +885,8 @@ unbounded JSONB columns storing regulated data unintentionally.
 **Reviewer goal:** Confirm founder-only routes cannot be reached by regular users;
 founder actions cannot corrupt production data.
 
-- [ ] `FOUNDER_KEY` gate — is it checked on every `/founder/*` route, including sub-routes?
+- [ ] Persisted role gate — is `requireFounder` checked on every `/founder/*` route, including sub-routes, with no client header/query authorization fallback?
+- [ ] Founder actor log — does every authorized request append actor ID, method, path, response status, and request metadata without storing query-string secrets?
 - [ ] Reweighting (`proposeWeightAdjustments`) — is it confirmed NOT wired into live scoring? Can a founder accidentally apply weight changes that affect all users immediately?
 - [ ] OCR correction acceptance — does accepting a correction update `ocr_learned_rules` in an append-only way, or can it overwrite existing rules?
 - [ ] Brain config mutations — are they validated (Zod schema) before persisting?
@@ -953,8 +955,8 @@ NODE_ENV=development
 ISSUER_URL=https://replit.com/oidc         # replace in Phase 1
 REPL_ID=local-dev-placeholder              # replace in Phase 1
 
-# Admin
-FOUNDER_KEY=local-dev-only-not-secret
+# Founder bootstrap (optional; server-only comma-separated email addresses)
+FOUNDER_EMAILS=founder@example.com
 SESSION_SECRET=change-me-to-a-random-string
 
 # AI — optional in dev; deterministic fallback fires when keys are absent

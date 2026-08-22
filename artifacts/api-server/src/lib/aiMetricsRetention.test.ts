@@ -329,7 +329,7 @@ describe("rollupThenPruneAiMetrics", () => {
     await rollupThenPruneAiMetrics({ toolNames, jobName });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/ai-metrics/trends?days=30").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/ai-metrics/trends?days=30").set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.days).toBe(30);
     expect(Array.isArray(res.body.series)).toBe(true);
@@ -398,7 +398,7 @@ describe("rollupThenPruneAiMetrics", () => {
     await rollupThenPruneAiMetrics({ toolNames });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.lastSuccessAt).toEqual(expect.any(String));
     expect(typeof res.body.ageMs).toBe("number");
@@ -410,7 +410,7 @@ describe("rollupThenPruneAiMetrics", () => {
 
   it("GET /api/founder/rollup-heartbeat reports stale=true when no heartbeat exists", async () => {
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.lastSuccessAt).toBeNull();
     expect(res.body.ageMs).toBeNull();
@@ -429,7 +429,7 @@ describe("rollupThenPruneAiMetrics", () => {
       });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.stale).toBe(true);
     expect(res.body.ageMs).toBeGreaterThan(36 * 60 * 60 * 1000);
@@ -446,7 +446,7 @@ describe("rollupThenPruneAiMetrics", () => {
     await rollupOldAiMetrics({ toolNames });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/ai-metrics/trends?days=7").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/ai-metrics/trends?days=7").set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.days).toBe(7);
     // Only the recent day should appear for our tool within a 7-day window

@@ -1,4 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import {
   clearSession,
   createSession,
@@ -139,6 +141,12 @@ router.get("/dev/login", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  const [persistedUser] = await db
+    .select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, profile.id))
+    .limit(1);
+
   // Replace any existing session so switching states is clean.
   const existing = getSessionId(req);
   if (existing) await clearSession(res, existing);
@@ -150,6 +158,10 @@ router.get("/dev/login", async (req: Request, res: Response): Promise<void> => {
       firstName: profile.firstName,
       lastName: profile.lastName,
       profileImageUrl: null,
+      role:
+        persistedUser?.role === "founder" || persistedUser?.role === "admin"
+          ? persistedUser.role
+          : "member",
     },
     // Dev sessions carry no real OIDC tokens. No expires_at means the auth
     // middleware never tries to refresh them; the session simply lives for the

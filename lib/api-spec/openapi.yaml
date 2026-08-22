@@ -2876,13 +2876,8 @@ paths:
       summary: List member reports for founder review
       description: |
         Returns Trust & Safety reports for the founder review queue, newest
-        first. Requires founder key.
+        first. Requires an authenticated founder role.
       parameters:
-        - name: x-founder-key
-          in: header
-          required: true
-          schema:
-            type: string
         - name: status
           in: query
           required: false
@@ -2897,25 +2892,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/ListFounderReportsResponse"
         "401":
-          description: Missing or invalid founder key.
+          description: Missing authentication or founder role.
 
   /founder/reports/{id}/status:
     patch:
       operationId: updateFounderReportStatus
       tags: [founder]
       summary: Update the review status of a member report
-      description: Requires founder key.
+      description: Requires an authenticated founder role.
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
-        - name: x-founder-key
-          in: header
-          required: true
-          schema:
-            type: string
       requestBody:
         required: true
         content:
@@ -2930,7 +2920,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FounderReport"
         "401":
-          description: Missing or invalid founder key.
+          description: Missing authentication or founder role.
         "404":
           description: Report not found.
 
@@ -3549,7 +3539,7 @@ paths:
       operationId: getAiStatus
       tags: [ai]
       summary: Get current AI integration status
-      description: Returns whether OpenAI is connected, in fallback mode, or needs setup.
+      description: Returns whether OpenAI is connected, in fallback mode, or needs setup. Requires an authenticated founder role.
       responses:
         "200":
           description: AI status
@@ -3557,6 +3547,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AiStatus"
+        "401":
+          description: Missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+        "403":
+          description: Authenticated account lacks founder access
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
 
   /ai/enhance:
     post:
@@ -3637,18 +3639,7 @@ paths:
       operationId: testAi
       tags: [ai]
       summary: Send a sample prompt through the server-side AI helper
-      description: Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
-      parameters:
-        - name: x-founder-key
-          in: header
-          required: false
-          schema:
-            type: string
-        - name: key
-          in: query
-          required: false
-          schema:
-            type: string
+      description: Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder role. Falls back gracefully if AI is unavailable.
       requestBody:
         required: true
         content:
@@ -3690,13 +3681,7 @@ paths:
         Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
         of records deleted. Useful after adjusting the retention window or to
         confirm the purge job is working without waiting for the timer.
-        Requires founder key.
-      parameters:
-        - name: x-founder-key
-          in: header
-          required: true
-          schema:
-            type: string
+        Requires an authenticated founder role.
       responses:
         "200":
           description: Purge result
@@ -3719,18 +3704,7 @@ paths:
       description: |
         Runs the GeoIP updater immediately (the same routine the monthly job calls).
         Useful after rotating the MaxMind license key or when the dataset is suspected
-        to be stale. Requires founder key.
-      parameters:
-        - name: x-founder-key
-          in: header
-          required: false
-          schema:
-            type: string
-        - name: key
-          in: query
-          required: false
-          schema:
-            type: string
+        to be stale. Requires an authenticated founder role.
       responses:
         "200":
           description: GeoIP refresh result
@@ -3752,13 +3726,7 @@ paths:
       summary: When did the audit trash purge job last succeed?
       description: |
         Returns the timestamp of the last successful `audit_trash_purge` job run,
-        together with the elapsed time and a staleness flag. Requires founder key.
-      parameters:
-        - name: x-founder-key
-          in: header
-          required: false
-          schema:
-            type: string
+        together with the elapsed time and a staleness flag. Requires an authenticated founder role.
       responses:
         "200":
           description: Trash purge heartbeat status
@@ -3787,18 +3755,7 @@ paths:
         of the founder dashboard's purchase view, which treats `status = 'paid'`
         as the canonical signal that money actually moved.
 
-        Requires founder key.
-      parameters:
-        - name: x-founder-key
-          in: header
-          required: false
-          schema:
-            type: string
-        - name: key
-          in: query
-          required: false
-          schema:
-            type: string
+        Requires an authenticated founder role.
       responses:
         "200":
           description: Referral attribution summary
@@ -3832,18 +3789,7 @@ paths:
         are tracked client-side via analytics, so the first server-visible stage
         is accounts.
 
-        Requires founder key.
-      parameters:
-        - name: x-founder-key
-          in: header
-          required: false
-          schema:
-            type: string
-        - name: key
-          in: query
-          required: false
-          schema:
-            type: string
+        Requires an authenticated founder role.
       responses:
         "200":
           description: Funnel summary
@@ -3868,18 +3814,7 @@ paths:
         The full strategic playbook is embedded in the system prompt so the
         reply can reference prior decisions. On model failure or unavailable
         provider, returns a fallback answer pointing at the closest playbook
-        entry. Requires founder key.
-      parameters:
-        - name: x-founder-key
-          in: header
-          required: false
-          schema:
-            type: string
-        - name: key
-          in: query
-          required: false
-          schema:
-            type: string
+        entry. Requires an authenticated founder role.
       requestBody:
         required: true
         content:
@@ -6524,6 +6459,10 @@ components:
           type: [string, 'null']
         profileImageUrl:
           type: [string, 'null']
+        role:
+          type: string
+          enum: [member, founder, admin]
+          description: UI hint for role-gated navigation. The server re-checks the persisted role on every privileged request.
     AuthUserEnvelope:
       type: object
       required: [user]

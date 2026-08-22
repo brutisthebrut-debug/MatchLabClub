@@ -5,9 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
 
-const FOUNDER_KEY =
-  (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
-
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -21,7 +18,9 @@ function formatDate(iso: string): string {
 function titleFromId(id: string): string {
   return id
     .split("-")
-    .map((part) => (part.length === 0 ? part : part[0].toUpperCase() + part.slice(1)))
+    .map((part) =>
+      part.length === 0 ? part : part[0].toUpperCase() + part.slice(1),
+    )
     .join(" ");
 }
 
@@ -39,7 +38,9 @@ function PlaybookCard({ entry }: { entry: PlaybookEntry }) {
           {formatDate(entry.date)}
         </span>
       </div>
-      <p className="text-sm text-foreground/85 leading-relaxed">{entry.decision}</p>
+      <p className="text-sm text-foreground/85 leading-relaxed">
+        {entry.decision}
+      </p>
       <div className="pt-1">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] italic bg-white/5 border border-white/10 text-muted-foreground/80">
           <span className="font-semibold not-italic text-muted-foreground/60">
@@ -71,7 +72,6 @@ function AskEchoSection() {
         question: question.trim(),
         ...(trimmedHint.length > 0 ? { contextHint: trimmedHint } : {}),
       },
-      params: { key: FOUNDER_KEY },
     });
   };
 
@@ -89,7 +89,8 @@ function AskEchoSection() {
           Ask Echo
         </h3>
         <p className="text-xs text-muted-foreground/70">
-          Free-form strategic question. Echo answers in voice, using the playbook below as reference.
+          Free-form strategic question. Echo answers in voice, using the
+          playbook below as reference.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-2.5">
@@ -175,7 +176,9 @@ export function EchoPlaybookPanel() {
   return (
     <section className="space-y-6" data-testid="echo-playbook-panel">
       <div className="space-y-1">
-        <h2 className="font-serif font-bold text-xl text-foreground">Echo's playbook</h2>
+        <h2 className="font-serif font-bold text-xl text-foreground">
+          Echo's playbook
+        </h2>
         <p className="text-sm text-muted-foreground/70">
           The strategic decisions on the table right now.
         </p>

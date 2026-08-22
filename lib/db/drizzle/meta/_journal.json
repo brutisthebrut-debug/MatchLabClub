@@ -288,6 +288,13 @@
       "when": 1783366711529,
       "tag": "0040_skinny_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1787370110217,
+      "tag": "0041_tidy_metal_master",
+      "breakpoints": true
     }
   ]
 }

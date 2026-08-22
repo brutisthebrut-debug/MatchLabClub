@@ -94,11 +94,11 @@ export const capturePurchaseInterest = (data: PurchaseInterestInput) =>
   post<PurchaseInterest>("/purchase-interest", data);
 
 export const getFounderStats = (founderKey: string) =>
-  get<FounderStats>("/founder/stats", { headers: { "x-founder-key": founderKey } });
+  get<FounderStats>("/founder/stats", { headers: {  } });
 
 export const setLeadStatus = (founderKey: string, id: number, status: string) =>
   patch<Lead>(`/founder/leads/${id}/status`, { status }, {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
 
 export interface AiToolMetric {
@@ -197,7 +197,7 @@ export interface AiMetricsResponse {
 }
 
 export const getAiMetrics = (founderKey: string) =>
-  get<AiMetricsResponse>("/founder/ai-metrics", { headers: { "x-founder-key": founderKey } });
+  get<AiMetricsResponse>("/founder/ai-metrics", { headers: {  } });
 
 export interface RollupHeartbeatResponse {
   lastSuccessAt: string | null;
@@ -207,7 +207,7 @@ export interface RollupHeartbeatResponse {
 }
 
 export const getRollupHeartbeat = (founderKey: string) =>
-  get<RollupHeartbeatResponse>("/founder/rollup-heartbeat", { headers: { "x-founder-key": founderKey } });
+  get<RollupHeartbeatResponse>("/founder/rollup-heartbeat", { headers: {  } });
 
 export interface PurgeTrashResponse {
   deleted: number;
@@ -257,7 +257,7 @@ async function founderJson<T>(
   founderKey: string,
   init?: { method?: string; body?: unknown },
 ): Promise<T> {
-  const headers: Record<string, string> = { "x-founder-key": founderKey };
+  const headers: Record<string, string> = {  };
   if (init?.body !== undefined) headers["content-type"] = "application/json";
   const res = await fetch(`${BASE}${path}`, {
     method: init?.method ?? "GET",
@@ -381,7 +381,6 @@ export const getEchoUserSignals = (founderKey: string, email: string) =>
     `/founder/users/by-email/${encodeURIComponent(email)}/echo-signals`,
     founderKey,
   );
-
 export interface FounderReport {
   id: number;
   reporterUserId: string;
@@ -444,7 +443,7 @@ export const addMatchingProposalNote = (
 export const purgeTrashNow = (founderKey: string) =>
   fetch(`${BASE}/founder/purge-trash`, {
     method: "POST",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   }).then(async (res) => {
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -470,7 +469,6 @@ export const setUserTier = async (
   const res = await fetch(`${BASE}/founder/users/set-tier`, {
     method: "POST",
     headers: {
-      "x-founder-key": founderKey,
       "content-type": "application/json",
     },
     body: JSON.stringify({ email, tier }),
@@ -500,7 +498,7 @@ export interface BackgroundJobsResponse {
 }
 
 export const getBackgroundJobs = (founderKey: string) =>
-  get<BackgroundJobsResponse>("/founder/background-jobs", { headers: { "x-founder-key": founderKey } });
+  get<BackgroundJobsResponse>("/founder/background-jobs", { headers: {  } });
 
 export interface GeoipRefreshResult {
   success: boolean;
@@ -510,7 +508,7 @@ export interface GeoipRefreshResult {
 export const refreshGeoip = async (founderKey: string): Promise<GeoipRefreshResult> => {
   const res = await fetch("/api/founder/geoip/refresh", {
     method: "POST",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -540,11 +538,11 @@ export interface AiMetricsTrendsResponse {
 }
 
 export const getAiMetricsTrends = (founderKey: string, days: number) =>
-  get<AiMetricsTrendsResponse>(`/founder/ai-metrics/trends?days=${encodeURIComponent(String(days))}`, { headers: { "x-founder-key": founderKey } });
+  get<AiMetricsTrendsResponse>(`/founder/ai-metrics/trends?days=${encodeURIComponent(String(days))}`, { headers: {  } });
 
 export const getAiThresholds = (founderKey: string) =>
   fetch(`${BASE}/founder/ai-thresholds`, {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   }).then(async (res) => {
     if (!res.ok) throw new Error(`GET /founder/ai-thresholds failed (${res.status})`);
     return res.json() as Promise<AiThresholdsResponse>;
@@ -562,8 +560,7 @@ export const updateAiThresholds = (founderKey: string, body: AiThresholdsUpdate)
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "x-founder-key": founderKey,
-    },
+      },
     body: JSON.stringify(body),
   }).then(async (res) => {
     if (!res.ok) {
@@ -591,7 +588,7 @@ export interface AiThresholdChangesResponse {
 
 export const getAiThresholdChanges = (founderKey: string, limit = 10) =>
   fetch(`${BASE}/founder/ai-threshold-changes?limit=${encodeURIComponent(String(limit))}`, {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   }).then(async (res) => {
     if (!res.ok) throw new Error(`GET /founder/ai-threshold-changes failed (${res.status})`);
     return res.json() as Promise<AiThresholdChangesResponse>;
@@ -607,7 +604,7 @@ export interface UndoAiThresholdChangeResponse {
 export const undoAiThresholdChange = (founderKey: string, id: number) =>
   fetch(`${BASE}/founder/ai-threshold-changes/${encodeURIComponent(String(id))}/undo`, {
     method: "POST",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   }).then(async (res) => {
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -657,7 +654,7 @@ export const getOcrMismatches = (
   const qs = search.toString();
   return get<OcrMismatchesResponse>(
     `/founder/ocr-mismatches${qs ? `?${qs}` : ""}`,
-    { headers: { "x-founder-key": founderKey } },
+    { headers: {  } },
   );
 };
 
@@ -702,18 +699,18 @@ export interface OcrRuleReviewLogResponse {
 
 export const getOcrLearnedRules = (founderKey: string) =>
   get<OcrLearnedRulesResponse>("/founder/ocr-rules", {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
 
 export const getOcrPendingRules = (founderKey: string) =>
   get<OcrLearnedRulesResponse>("/founder/ocr-pending-rules", {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
 
 export const approveOcrRule = async (founderKey: string, id: string): Promise<{ rule: OcrLearnedRule }> => {
   const res = await fetch(`${BASE}/founder/ocr-pending-rules/${encodeURIComponent(id)}/approve`, {
     method: "POST",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -725,7 +722,7 @@ export const approveOcrRule = async (founderKey: string, id: string): Promise<{ 
 export const rejectOcrRule = async (founderKey: string, id: string): Promise<{ rule: OcrLearnedRule }> => {
   const res = await fetch(`${BASE}/founder/ocr-pending-rules/${encodeURIComponent(id)}/reject`, {
     method: "POST",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -737,7 +734,7 @@ export const rejectOcrRule = async (founderKey: string, id: string): Promise<{ r
 export const getOcrRuleReviewLog = (founderKey: string, limit = 50) =>
   get<OcrRuleReviewLogResponse>(
     `/founder/ocr-rule-review-log?limit=${encodeURIComponent(String(limit))}`,
-    { headers: { "x-founder-key": founderKey } },
+    { headers: {  } },
   );
 
 export const runOcrLearn = async (
@@ -747,7 +744,6 @@ export const runOcrLearn = async (
   const res = await fetch(`${BASE}/founder/ocr-learn`, {
     method: "POST",
     headers: {
-      "x-founder-key": founderKey,
       ...(since ? { "content-type": "application/json" } : {}),
     },
     ...(since ? { body: JSON.stringify({ since }) } : {}),
@@ -782,13 +778,13 @@ export interface OcrAuditDetail {
 
 export const getOcrAuditDetail = (founderKey: string, auditId: number) =>
   get<OcrAuditDetail>(`/founder/ocr-mismatches/${auditId}`, {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
 
 export const deleteOcrRule = async (founderKey: string, id: string): Promise<void> => {
   const res = await fetch(`${BASE}/founder/ocr-rules/${encodeURIComponent(id)}`, {
     method: "DELETE",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -802,7 +798,7 @@ export const patchOcrRule = async (
 ): Promise<{ rule: OcrLearnedRule }> => {
   const res = await fetch(`${BASE}/founder/ocr-rules/${encodeURIComponent(id)}`, {
     method: "PATCH",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -816,7 +812,7 @@ export const clearOcrLearnedRules = async (
 ): Promise<{ deleted: number; preserved: number }> => {
   const res = await fetch(`${BASE}/founder/ocr-rules`, {
     method: "DELETE",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -850,7 +846,7 @@ export const getOcrMismatchesTrends = (
   const qs = search.toString();
   return get<OcrMismatchesTrendsResponse>(
     `/founder/ocr-mismatches/trends${qs ? `?${qs}` : ""}`,
-    { headers: { "x-founder-key": founderKey } },
+    { headers: {  } },
   );
 };
 
@@ -858,7 +854,7 @@ export const getLeads = () =>
   get<Lead[]>("/leads");
 
 export const getPurchaseInterestList = (founderKey: string) =>
-  get<PurchaseInterest[]>("/purchase-interest", { headers: { "x-founder-key": founderKey } });
+  get<PurchaseInterest[]>("/purchase-interest", { headers: {  } });
 
 export type OcrCorrectionField = OcrCorrectionFieldName;
 
@@ -872,7 +868,7 @@ export interface AlertSettingsResponse {
 
 export const getAlertSettings = (founderKey: string) =>
   fetch(`${BASE}/founder/alert-settings`, {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   }).then(async (res) => {
     if (!res.ok) throw new Error(`GET /founder/alert-settings failed (${res.status})`);
     return res.json() as Promise<AlertSettingsResponse>;
@@ -883,8 +879,7 @@ export const updateAlertSettings = (founderKey: string, rebreachCooldownMinutes:
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "x-founder-key": founderKey,
-    },
+      },
     body: JSON.stringify({ rebreachCooldownMinutes }),
   }).then(async (res) => {
     if (!res.ok) {
@@ -897,7 +892,7 @@ export const updateAlertSettings = (founderKey: string, rebreachCooldownMinutes:
 export const resetAlertSettings = (founderKey: string) =>
   fetch(`${BASE}/founder/alert-settings/rebreach-cooldown`, {
     method: "DELETE",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   }).then(async (res) => {
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -1049,7 +1044,7 @@ export interface ReweightingImpactResponse {
 
 export const getBrainControls = (founderKey: string) =>
   get<BrainControlsResponse>("/founder/brain/controls", {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
 
 export const updateBrainControls = async (
@@ -1058,7 +1053,7 @@ export const updateBrainControls = async (
 ): Promise<BrainControlsResponse> => {
   const res = await fetch(`${BASE}/founder/brain/controls`, {
     method: "PUT",
-    headers: { "x-founder-key": founderKey, "content-type": "application/json" },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(patch),
   });
   if (!res.ok) {
@@ -1073,7 +1068,7 @@ export const resetBrainControls = async (
 ): Promise<BrainControlsResponse> => {
   const res = await fetch(`${BASE}/founder/brain/controls/reset`, {
     method: "POST",
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -1084,24 +1079,24 @@ export const resetBrainControls = async (
 
 export const getBrainMap = (founderKey: string) =>
   get<BrainMapResponse>("/founder/brain/map", {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
 
 export const getReweighting = (founderKey: string, email: string) =>
   get<ReweightingResponse>(
     `/founder/brain/reweighting/${encodeURIComponent(email)}`,
-    { headers: { "x-founder-key": founderKey } },
+    { headers: {  } },
   );
 
 export const getReweightingImpact = (founderKey: string) =>
   get<ReweightingImpactResponse>("/founder/brain/reweighting-impact", {
-    headers: { "x-founder-key": founderKey },
+    headers: {  },
   });
 
 export const getCuration = (founderKey: string, entityType?: string) =>
   get<{ curation: CurationEntry[] }>(
     `/founder/curation${entityType ? `?entityType=${encodeURIComponent(entityType)}` : ""}`,
-    { headers: { "x-founder-key": founderKey } },
+    { headers: {  } },
   );
 
 export const saveCuration = async (
@@ -1115,7 +1110,7 @@ export const saveCuration = async (
 ): Promise<{ curation: CurationEntry }> => {
   const res = await fetch(`${BASE}/founder/curation`, {
     method: "POST",
-    headers: { "x-founder-key": founderKey, "content-type": "application/json" },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!res.ok) {

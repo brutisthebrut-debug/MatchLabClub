@@ -281,7 +281,7 @@ describe("purgeExpiredTrashedAudits", () => {
     const app = await makePurgeApp();
     const res = await request(app)
       .get("/api/founder/trash-purge-heartbeat")
-      .set("x-founder-key", "nldc2024");
+      .set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.lastSuccessAt).toEqual(expect.any(String));
     expect(typeof res.body.ageMs).toBe("number");
@@ -297,7 +297,7 @@ describe("purgeExpiredTrashedAudits", () => {
     const app = await makePurgeApp();
     const res = await request(app)
       .get("/api/founder/trash-purge-heartbeat")
-      .set("x-founder-key", "nldc2024");
+      .set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.lastSuccessAt).toBeNull();
     expect(res.body.ageMs).toBeNull();
@@ -319,7 +319,7 @@ describe("purgeExpiredTrashedAudits", () => {
     const app = await makePurgeApp();
     const res = await request(app)
       .get("/api/founder/trash-purge-heartbeat")
-      .set("x-founder-key", "nldc2024");
+      .set("x-test-founder-role", "founder");
     expect(res.status).toBe(200);
     expect(res.body.stale).toBe(true);
     expect(res.body.ageMs).toBeGreaterThan(36 * 60 * 60 * 1000);

@@ -62,17 +62,6 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useToast } from "@/hooks/use-toast";
 import { syncGoogleCalendar, disconnectGoogleCalendar } from "@/lib/apiClient";
 
-const FOUNDER_KEY_CLIENT =
-  (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
-
-function isFounderBrowser(): boolean {
-  try {
-    return localStorage.getItem("founder_key") === FOUNDER_KEY_CLIENT;
-  } catch {
-    return false;
-  }
-}
-
 const fadeUpVariants: Variants = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
@@ -836,7 +825,6 @@ function StatusBadge({ status }: { status: Status }) {
     </span>
   );
 }
-
 const LIVE_STATUS_META: Record<
   string,
   { label: string; color: string }
@@ -867,11 +855,12 @@ function formatSyncedAt(iso: string | null): string | null {
  * the copy is explicit that raw events are never stored.
  */
 function GoogleCalendarLivePanel() {
+  const { user } = useAuth();
   const { data, isLoading, isError, refetch } = useGetConnectors();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<null | "sync" | "disconnect">(null);
   const [error, setError] = useState<string | null>(null);
-  const founder = isFounderBrowser();
+  const founder = user?.role === "founder" || user?.role === "admin";
 
   const connector = data?.connectors.find(
     (c) => c.provider === "google-calendar",
@@ -887,9 +876,9 @@ function GoogleCalendarLivePanel() {
     setError(null);
     try {
       if (action === "sync") {
-        await syncGoogleCalendar(FOUNDER_KEY_CLIENT);
+        await syncGoogleCalendar("");
       } else {
-        await disconnectGoogleCalendar(FOUNDER_KEY_CLIENT);
+        await disconnectGoogleCalendar("");
       }
       await refetch();
       void queryClient.invalidateQueries({

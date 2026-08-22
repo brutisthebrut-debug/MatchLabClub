@@ -1,12 +1,17 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import pg from "pg";
 
 const { Pool } = pg;
 
-const FOUNDER_KEY = process.env.VITE_FOUNDER_KEY ?? "nldc2024";
-
 let pool: pg.Pool;
 let seededAuditIds: number[] = [];
+
+async function signInFounder(page: Page): Promise<void> {
+  await page.goto("/api/dev/login?state=power&returnTo=/");
+  await pool.query("UPDATE users SET role = 'founder' WHERE id = 'dev-test-power'");
+  await page.goto("/api/dev/login?state=power&returnTo=/");
+  await page.goto("/founder");
+}
 
 test.beforeAll(async () => {
   pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -45,12 +50,7 @@ test.afterAll(async () => {
 });
 
 test("OCR trend chart shows Total legend label", async ({ page }) => {
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  await signInFounder(page);
 
   await page.locator('button:has-text("OCR Mismatches")').click();
 

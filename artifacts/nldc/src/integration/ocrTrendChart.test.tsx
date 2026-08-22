@@ -3,11 +3,21 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+vi.mock("@workspace/replit-auth-web", () => ({
+  useAuth: () => ({
+    user: { id: "founder-test", email: "founder@example.com", role: "founder" },
+    isAuthenticated: true,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+}));
+
 
 // ---------------------------------------------------------------------------
 // End-to-end coverage for the OCR Mismatch trend chart on the Founder page.
-// We mount the real Founder page, unlock the dashboard with the default key,
-// switch to the OCR Mismatches tab, and assert the trend chart section renders
+// We mount the real Founder page as an authenticated founder, switch to the OCR
+// Mismatches tab, and assert the trend chart section renders
 // in both the no-data empty state and the seeded-data (chart) state.
 // All network calls are mocked so the test is hermetic.
 // ---------------------------------------------------------------------------
@@ -198,9 +208,6 @@ function renderFounder() {
 }
 
 async function unlockAndOpenOcrTab() {
-  const input = await screen.findByPlaceholderText(/Founder key/i);
-  fireEvent.change(input, { target: { value: "nldc2024" } });
-  fireEvent.click(screen.getByRole("button", { name: /Open Dashboard/i }));
   await screen.findByRole("button", { name: /OCR Mismatches/i });
   fireEvent.click(screen.getByRole("button", { name: /OCR Mismatches/i }));
   await screen.findByTestId("ocr-mismatches-panel");

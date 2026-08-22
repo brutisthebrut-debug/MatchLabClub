@@ -20,6 +20,7 @@ export * from "./ocr_rule_review_log";
 export * from "./job_heartbeats";
 export * from "./geoip_alert_state";
 export * from "./founder_settings";
+export * from "./founder_action_logs";
 export * from "./push_tokens";
 export * from "./life_pulses";
 export * from "./journal_entries";
