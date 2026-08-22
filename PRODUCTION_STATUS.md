@@ -34,7 +34,7 @@ not the approved final information architecture.
 | --- | --- | --- |
 | Complete export and deletion | In progress, materially hardened | The live Account page now uses the email-confirmed transactional delete. Export includes all current user-facing product families while excluding reusable auth/OAuth/push/export secrets. Transactional deletion now covers Journey, Play, Wingman, Cosmic, verification, and Mirror preferences. Requires a Postgres-backed CI run before release. |
 | Founder authorization | Implemented; DB-backed release verification required | Founder routes now re-check the authenticated user's persisted `founder`/`admin` role. The shared browser key and `x-founder-key` authorization path are removed. Authorized requests append actor, route, response status, IP, and user-agent metadata to `founder_action_logs`. Apply migration `0041` and run the database-backed auth suite before release. |
-| Consent separation | Partial | Account-level hosted-AI consent and some matching consent exist. Source storage, Echo use, confirmed learning, and matching-use permissions are not yet a complete canonical state machine. |
+| Consent separation | Partial; wellness auto-authorization removed | New wellness answers and member-confirmed wellness learnings default to coaching-only. Matching/research/all use requires an explicit valid scope, and members can change that scope independently of answer text. Apply migration `0042`. Imported-source storage/Echo use and the broader canonical permission state machine remain. |
 | Quiz identity and scoring | Not complete | Canonical quiz identity and server-authoritative scoring require an audit and regression coverage. |
 | Founder review vs. member introduction | Not complete | Founder curation and member proposal state still need explicit separation and transition tests. |
 | Payments and entitlement | Blocked for release | Tier assignment is still manual and public refund/renewal/cancellation language is inconsistent. Stripe webhook entitlement and access revocation must ship before a paid launch. |
@@ -55,6 +55,9 @@ not the approved final information architecture.
   server-only comma-separated bootstrap allowlist; persisted database roles are
   authoritative. Browser-provided headers and query parameters cannot grant
   founder access.
+- Wellness capture no longer grants every downstream use automatically. The
+  permission regression suite verifies coaching-only capture, explicit matching
+  opt-in, scope changes, and coaching-only confirmation of proposed learning.
 
 ## Release gate
 

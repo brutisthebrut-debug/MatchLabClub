@@ -1928,7 +1928,7 @@ export const ListWellnessAnswersResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Coaching is the default for newly saved or confirmed wellness learning. Matching, research, and all are explicit member-selected scopes.'),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -1938,6 +1938,7 @@ export const ListWellnessAnswersResponse = zod.object({
 
 
 /**
+ * Saves the answer for coaching use by default. Matching, research, or all-use scope is applied only when the member explicitly submits that consent level.
  * @summary Save a wellness answer
  */
 export const CreateWellnessAnswerHeader = zod.object({
@@ -1954,7 +1955,7 @@ export const createWellnessAnswerBodyQuestionTextMax = 1000;
 
 export const createWellnessAnswerBodyAnswerMax = 5000;
 
-
+export const createWellnessAnswerBodyConsentLevelDefault = `coaching`;
 
 export const CreateWellnessAnswerBody = zod.object({
   "questionId": zod.string().min(1).max(createWellnessAnswerBodyQuestionIdMax),
@@ -1962,11 +1963,12 @@ export const CreateWellnessAnswerBody = zod.object({
   "category": zod.string().max(createWellnessAnswerBodyCategoryMax).nullish(),
   "questionText": zod.string().min(1).max(createWellnessAnswerBodyQuestionTextMax),
   "answer": zod.string().min(1).max(createWellnessAnswerBodyAnswerMax),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).default(createWellnessAnswerBodyConsentLevelDefault).describe('Coaching is the default for newly saved or confirmed wellness learning. Matching, research, and all are explicit member-selected scopes.')
 })
 
 
 /**
+ * Updates the answer text and/or the member-selected downstream use scope. Saving and matching use are separate decisions.
  * @summary Update a wellness answer or consent level
  */
 export const UpdateWellnessAnswerParams = zod.object({
@@ -1983,7 +1985,7 @@ export const updateWellnessAnswerBodyAnswerMax = 5000;
 
 export const UpdateWellnessAnswerBody = zod.object({
   "answer": zod.string().min(1).max(updateWellnessAnswerBodyAnswerMax).optional(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional().describe('Coaching is the default for newly saved or confirmed wellness learning. Matching, research, and all are explicit member-selected scopes.')
 })
 
 export const UpdateWellnessAnswerResponse = zod.object({
@@ -1993,7 +1995,7 @@ export const UpdateWellnessAnswerResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Coaching is the default for newly saved or confirmed wellness learning. Matching, research, and all are explicit member-selected scopes.'),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -2123,7 +2125,7 @@ export const ConfirmWellnessInferenceResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Coaching is the default for newly saved or confirmed wellness learning. Matching, research, and all are explicit member-selected scopes.'),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()

@@ -16,10 +16,9 @@ import { z } from "zod/v4";
  *   - the question id (stable key from the question bank)
  *   - the category / dimension it belongs to
  *   - the user's free-text (or selected) answer
- *   - consent: "all" by default. Everything shared in the wellness center is
- *     captured comprehensively and used across coaching, matching, and research
- *     (assumed by use, stated in the Terms). The narrower legacy values
- *     ("coaching" | "matching" | "research") remain valid for older rows.
+ *   - consent: "coaching" by default. Saving an answer makes it available to
+ *     the member's Echo/coaching experience, but matching or research use must
+ *     be selected explicitly. Legacy values remain valid for older rows.
  *
  * Soft-delete follows the same pattern as audits / journal entries so the
  * user can delete individual answers from the Data Vault.
@@ -43,11 +42,11 @@ export const wellnessAnswersTable = pgTable(
     questionText: text("question_text").notNull(),
     /** Free-text answer */
     answer: text("answer").notNull(),
-    /** Capture scope for this answer. Defaults to "all" (coaching + matching +
-     *  research); narrower legacy values are retained on older rows. */
+    /** Use scope for this answer. New rows default to coaching-only; matching,
+     *  research, or all require an explicit request from the member. */
     consentLevel: varchar("consent_level", { length: 20 })
       .notNull()
-      .default("all"),
+      .default("coaching"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
     deletedAt: timestamp("deleted_at"),
@@ -64,7 +63,9 @@ export const insertWellnessAnswerSchema = createInsertSchema(wellnessAnswersTabl
   category: z.string().trim().max(80).nullish(),
   questionText: z.string().trim().min(1).max(1000),
   answer: z.string().trim().min(1).max(5000),
-  consentLevel: z.enum(["coaching", "matching", "research", "all"]).default("all"),
+  consentLevel: z
+    .enum(["coaching", "matching", "research", "all"])
+    .default("coaching"),
 }).omit({
   id: true,
   createdAt: true,

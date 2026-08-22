@@ -1722,6 +1722,7 @@ paths:
       operationId: createWellnessAnswer
       tags: [wellness]
       summary: Save a wellness answer
+      description: Saves the answer for coaching use by default. Matching, research, or all-use scope is applied only when the member explicitly submits that consent level.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -1744,6 +1745,7 @@ paths:
       operationId: updateWellnessAnswer
       tags: [wellness]
       summary: Update a wellness answer or consent level
+      description: Updates the answer text and/or the member-selected downstream use scope. Saving and matching use are separate decisions.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -9613,6 +9615,7 @@ components:
     WellnessConsentLevel:
       type: string
       enum: [coaching, matching, research, all]
+      description: Coaching is the default for newly saved or confirmed wellness learning. Matching, research, and all are explicit member-selected scopes.
 
     WellnessAnswerInput:
       type: object
@@ -9639,6 +9642,7 @@ components:
           maxLength: 5000
         consentLevel:
           $ref: "#/components/schemas/WellnessConsentLevel"
+          default: coaching
 
     WellnessAnswerPatch:
       type: object

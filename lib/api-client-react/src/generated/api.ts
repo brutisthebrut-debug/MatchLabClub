@@ -4579,6 +4579,7 @@ export const getCreateWellnessAnswerUrl = () => {
 }
 
 /**
+ * Saves the answer for coaching use by default. Matching, research, or all-use scope is applied only when the member explicitly submits that consent level.
  * @summary Save a wellness answer
  */
 export const createWellnessAnswer = async (wellnessAnswerInput: WellnessAnswerInput, options?: RequestInit): Promise<WellnessAnswer> => {
@@ -4650,6 +4651,7 @@ export const getUpdateWellnessAnswerUrl = (id: number,) => {
 }
 
 /**
+ * Updates the answer text and/or the member-selected downstream use scope. Saving and matching use are separate decisions.
  * @summary Update a wellness answer or consent level
  */
 export const updateWellnessAnswer = async (id: number,

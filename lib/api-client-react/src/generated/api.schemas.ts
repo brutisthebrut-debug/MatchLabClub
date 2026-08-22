@@ -2403,6 +2403,9 @@ export interface DeletePostDateNoteResult {
   deletedId: number;
 }
 
+/**
+ * Coaching is the default for newly saved or confirmed wellness learning. Matching, research, and all are explicit member-selected scopes.
+ */
 export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
 
 

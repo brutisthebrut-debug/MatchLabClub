@@ -768,6 +768,7 @@ addressed.
 - [ ] **REQUIRED** Both GDPR delete paths (user-initiated + admin) confirmed purging all first-party lanes *(Phase 0 check — review only)*
 - [ ] **REQUIRED** `ai_content_consent` consent gate confirmed firing before any user content reaches Claude *(Phase 0 check — review only)*
 - [ ] **REQUIRED** Data export (`/api/account/export`) confirmed complete and downloading *(Phase 0 check — review only)*
+- [ ] **REQUIRED** Apply migration `0042` and confirm new/confirmed wellness learning is coaching-only unless the member explicitly selects matching, research, or all use *(Phase 0 check)*
 - [ ] **RECOMMENDED** Cookie banner / privacy notice reviewed for accuracy post-migration (Replit references may need removing) *(Phase 5)*
 
 ### 4.14 Founder / admin access

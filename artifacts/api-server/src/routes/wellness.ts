@@ -114,10 +114,9 @@ router.post("/wellness/answers", async (req, res): Promise<void> => {
     return;
   }
   const { questionId, dimension, category, questionText, answer } = parsed.data;
-  // Capture policy is fixed: every wellness answer is stored at "all" for all uses.
-  // We ignore any caller-supplied consentLevel so the policy is enforced server-side,
-  // not just in the UI. Users still control deletion/export from the Data Vault.
-  const consentLevel = "all" as const;
+  // Storage and downstream use are separate decisions. A saved answer is
+  // coaching-only unless the member explicitly chooses another valid scope.
+  const consentLevel = parsed.data.consentLevel ?? "coaching";
 
   // Upsert: one answer per questionId per user (overwrite if they answer again)
   const existing = await db
@@ -179,7 +178,9 @@ router.patch("/wellness/answers/:id", async (req, res): Promise<void> => {
 
   const patch: Partial<typeof wellnessAnswersTable.$inferInsert> = { updatedAt: new Date() };
   if (parsed.data.answer !== undefined) patch.answer = parsed.data.answer;
-  // consentLevel is fixed at "all" by capture policy; we never let a caller change it here.
+  if (parsed.data.consentLevel !== undefined) {
+    patch.consentLevel = parsed.data.consentLevel;
+  }
 
   const [updated] = await db
     .update(wellnessAnswersTable)
@@ -773,7 +774,8 @@ router.post("/me/wellness/inferences/:id/confirm", async (req, res): Promise<voi
     return;
   }
 
-  // Write through the normal wellness-answer upsert (one row per questionId).
+  // Confirmation accepts the proposed learning into the member's coaching
+  // model. It does not silently authorize matching or research use.
   const existing = await db
     .select({ id: wellnessAnswersTable.id })
     .from(wellnessAnswersTable)
@@ -790,7 +792,7 @@ router.post("/me/wellness/inferences/:id/confirm", async (req, res): Promise<voi
   if (existing.length > 0) {
     const [updated] = await db
       .update(wellnessAnswersTable)
-      .set({ answer: answerText, consentLevel: "all", updatedAt: new Date() })
+      .set({ answer: answerText, consentLevel: "coaching", updatedAt: new Date() })
       .where(eq(wellnessAnswersTable.id, existing[0]!.id))
       .returning();
     answerRow = updated!;
@@ -804,7 +806,7 @@ router.post("/me/wellness/inferences/:id/confirm", async (req, res): Promise<voi
         category:     null,
         questionText: inference.questionText,
         answer:       answerText,
-        consentLevel: "all",
+        consentLevel: "coaching",
       })
       .returning();
     answerRow = inserted!;

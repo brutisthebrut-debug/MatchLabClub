@@ -1,0 +1,1 @@
+ALTER TABLE "wellness_answers" ALTER COLUMN "consent_level" SET DEFAULT 'coaching';
