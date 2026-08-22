@@ -10,11 +10,6 @@ import {
 } from "@workspace/api-zod";
 import { pasteCaptureSources } from "../lib/signalRegistry";
 import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
-import {
-  deterministicVoiceRead,
-  runInstagramToneRead,
-  runVoiceIntroRead,
-} from "../lib/importEnrichment";
 import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
@@ -24,14 +19,8 @@ const router: IRouter = Router();
  *
  * Anon-first capture surface. Persists a copy-paste of the user's
  * Instagram bio + a handful of recent captions to `imported_sources` with
- * `source='instagram-paste'` and `status='pending'`. For authenticated
- * users, kicks off a fire-and-forget tone-read enrichment that upgrades the
- * row to `status='complete'` once done. Anthropic writes the read when content
- * consent is granted and the call succeeds; otherwise the always-on
- * deterministic engine produces the read (`toneEngine='deterministic'`), so the
- * source never stalls in a fallback state.
- * Anonymous users never have their content shipped to Anthropic, they
- * must claim/sign in first so the consent gate can apply.
+ * `source='instagram-paste'`. Saving is storage-only: Echo processing begins
+ * only after the member separately enables Echo use for this source.
  */
 router.post("/me/instagram-paste", async (req, res): Promise<void> => {
   const parsed = CreateInstagramPasteBody.safeParse(req.body);
@@ -53,7 +42,7 @@ router.post("/me/instagram-paste", async (req, res): Promise<void> => {
       userId: userId ?? null,
       anonymousClaimToken: anonToken,
       source: "instagram-paste",
-      status: "pending",
+      status: "complete",
       parsedSummary: originalPayload,
     })
     .returning({
@@ -89,20 +78,6 @@ router.post("/me/instagram-paste", async (req, res): Promise<void> => {
         : String(inserted!.uploadedAt),
   });
 
-  // Fire-and-forget Anthropic enrichment. Only for signed-in users —
-  // anon users would short-circuit through the consent gate anyway, no
-  // sense paying the round-trip. Errors are logged inside the helper.
-  if (userId && inserted?.id) {
-    setImmediate(() => {
-      void runInstagramToneRead({
-        importId: inserted.id,
-        userId,
-        bio: parsed.data.bio,
-        captions: parsed.data.recentCaptions,
-        originalPayload,
-      });
-    });
-  }
 });
 
 /**
@@ -114,8 +89,9 @@ router.post("/me/instagram-paste", async (req, res): Promise<void> => {
  * paste-capturable entries, so adding a connector is a registry edit plus a
  * capture UI, with no allowlist to maintain here. We store the raw items
  * against the row so the user can review or purge them, but only the derived
- * item count (`parsedSummary.counts.items`) ever feeds scoring, the Mirror, or
- * matching reasoning, and the raw items are never sent to any prompt. Status is
+ * item count (`parsedSummary.counts.items`) can feed matching only after the
+ * member separately enables matching use. The raw items are never sent to any
+ * prompt unless Echo use is separately enabled. Status is
  * stamped `complete` immediately: this is a deterministic count, there is no
  * enrichment pass and no Claude tool involved. Anon-safe via the standard
  * claim-token cookie.
@@ -210,14 +186,8 @@ router.post("/me/source-paste", async (req, res): Promise<void> => {
  * energy, dynamics, pace, speech ratio) in the moment and only those numbers
  * arrive here. We store them into `imported_sources` tagged
  * `source = "voice-intro"` with a derived `counts.items` of 1, so the signal
- * feeds the `voice` lane of Match Readiness, the Mirror, and matching reasoning.
- * Unlike a plain paste, this source carries a narrative read: status lands
- * `pending`, then a fire-and-forget pass writes the read. The read follows the
- * hybrid contract: Claude is layered on opt-in behind content consent and the
- * daily cap, with the always-on deterministic engine as the fallback, so the
- * source never stalls. Only the derived numbers are ever sent to any prompt,
- * never audio. Anon-safe via the standard claim-token cookie; the Claude pass
- * only fires for signed-in users since consent is per-account.
+ * is stored but does not feed Echo or matching until those permissions are
+ * separately enabled. Only derived metrics arrive here; audio never does.
  */
 router.post("/me/voice-intro", async (req, res): Promise<void> => {
   const parsed = CreateVoiceIntroBody.safeParse(req.body);
@@ -237,11 +207,6 @@ router.post("/me/voice-intro", async (req, res): Promise<void> => {
   const userId = req.user?.id;
   const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
 
-  // Write the always-on deterministic read synchronously so the row lands
-  // `complete` the moment it is created. There is no `pending` window to strand
-  // a row in, and the signal feeds readiness immediately. For signed-in users
-  // we then layer the Claude read on top (consent + daily cap), overwriting the
-  // deterministic read if it succeeds and falling back to it if it does not.
   const [inserted] = await db
     .insert(importedSourcesTable)
     .values({
@@ -252,8 +217,6 @@ router.post("/me/voice-intro", async (req, res): Promise<void> => {
       parsedSummary: {
         metrics,
         counts: { items: 1 },
-        aiVoiceRead: deterministicVoiceRead(metrics),
-        voiceEngine: "deterministic",
       },
       processedAt: new Date(),
     })
@@ -279,17 +242,6 @@ router.post("/me/voice-intro", async (req, res): Promise<void> => {
     anonId: anonToken,
     props: { source: "voice-intro" },
   });
-
-  // The Claude read is per-account (consent + daily cap), so it only fires for
-  // signed-in users. If it never runs or fails, the deterministic read written
-  // above stands, so the source is never left without a read.
-  if (userId) {
-    void runVoiceIntroRead({
-      importId: inserted!.id,
-      userId,
-      metrics,
-    });
-  }
 
   res.status(201).json({
     id: inserted!.id,

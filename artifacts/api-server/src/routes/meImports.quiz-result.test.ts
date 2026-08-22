@@ -137,6 +137,9 @@ describe("POST /api/me/quiz-result", () => {
     });
     expect(rows[0].userId).toBeNull();
     expect(rows[0].anonymousClaimToken).not.toBeNull();
+    expect(rows[0].echoUseAllowed).toBe(false);
+    expect(rows[0].learningConfirmed).toBe(false);
+    expect(rows[0].matchingUseAllowed).toBe(false);
   });
 
   it("keys signed-in rows off the user id, not the anon cookie", async () => {

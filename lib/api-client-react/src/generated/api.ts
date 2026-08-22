@@ -155,6 +155,7 @@ import type {
   HealthStatus,
   IdentityVerificationResult,
   IdentityVerificationStartResult,
+  ImportPermissionPatch,
   ImportSource,
   ImportSourceList,
   InsightsRollup,
@@ -1340,11 +1341,11 @@ export const getCreateInstagramPasteUrl = () => {
 /**
  * Persists a paste of the caller's Instagram bio plus a handful of
 recent captions into `imported_sources` with `source='instagram-paste'`
-and `status='pending'`. Anon-safe: if the request has no signed-in
+and `status='complete'`. Saving is storage-only; Echo processing starts
+only after the member separately enables Echo use for this source.
+Anon-safe: if the request has no signed-in
 user, the row is stamped with the anonymous claim token cookie so
 it can be merged into the account later via the standard claim flow.
-A follow-up task wires the actual tone-extract call against the
-persisted row; this endpoint only handles capture.
 
  * @summary Capture a copy-paste of the user's Instagram bio and captions
  */
@@ -1421,10 +1422,10 @@ export const getCreateSourcePasteUrl = () => {
 (taste, lifestyle, and any future paste source). Persists the pasted
 items into `imported_sources` tagged with the connector's `source`
 string and a derived item count in `parsedSummary.counts.items`, so the
-signal feeds Match Readiness, the Mirror, and matching reasoning through
-the living signal registry. Only the derived count is ever used in
-scoring; the raw items are stored against the row but never sent to any
-prompt. The accepted `source` values are derived from the registry's
+signal becomes eligible for matching only after the member separately
+enables matching use. The raw items are stored against the row but never
+sent to any prompt unless Echo use is separately enabled. The accepted
+`source` values are derived from the registry's
 paste-capturable entries, so adding a connector needs no edit here.
 Anon-safe: with no signed-in user, the row is stamped with the anonymous
 claim token cookie so it can be merged into the account later.
@@ -1505,13 +1506,12 @@ derived acoustic metrics (length, energy, dynamics, pace, speech ratio)
 computed in the browser in the moment. The recording itself is never
 uploaded, stored, or transcribed. Persists the metrics into
 `imported_sources` with `source='voice-intro'` and a derived
-`parsedSummary.counts.items` of 1, so the signal feeds Match Readiness,
-the Mirror, and matching reasoning through the living signal registry's
-`voice` lane. For authenticated users with content consent on, a
-fire-and-forget Claude pass turns the derived metrics into a narrative
-read; otherwise the always-on deterministic engine produces the read, so
-the source never stalls. Only the derived numbers are ever sent to any
-prompt, never raw audio. Anon-safe: with no signed-in user, the row is
+`parsedSummary.counts.items` of 1. Saving alone does not authorize Echo
+or matching. Echo may create a narrative read only after source-level
+Echo use is enabled, in addition to account-level content consent; the
+matching lane counts it only after matching use is enabled. Only the
+derived numbers can be sent to a prompt, never raw audio. Anon-safe: with
+no signed-in user, the row is
 stamped with the anonymous claim token cookie so it can be merged into
 the account later.
 
@@ -11383,10 +11383,9 @@ export const getUploadHingeImportUrl = () => {
 /**
  * Accepts a Hinge GDPR data-export ZIP (max 50MB), parses it in
 memory, and persists a structured summary to `imported_sources`.
-The raw ZIP is never persisted. For signed-in users a
-fire-and-forget Anthropic call enriches the row with a narrative
-read. Anonymous users get the parsed counts only; they must claim
-and sign in to receive the AI read.
+The raw ZIP is never persisted. Storage does not authorize Echo or
+matching use. A signed-in member can separately enable Echo processing,
+confirmed learning, and matching use after the source is saved.
 
  * @summary Upload a Hinge GDPR data export ZIP
  */
@@ -11750,6 +11749,82 @@ export const useDeleteImport = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteImportMutationOptions(options));
+    }
+
+export const getUpdateImportPermissionsUrl = (id: number,) => {
+
+
+
+
+  return `/api/imports/${id}/permissions`
+}
+
+/**
+ * A stored source remains saved until it is deleted. Echo processing,
+accepting its proposed learning into My MatchLab, and matching use are
+separate opt-ins; changing one never changes either of the others.
+
+ * @summary Update independent downstream permissions for a stored source
+ */
+export const updateImportPermissions = async (id: number,
+    importPermissionPatch: ImportPermissionPatch, options?: RequestInit): Promise<ImportSource> => {
+
+  return customFetch<ImportSource>(getUpdateImportPermissionsUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      importPermissionPatch,)
+  }
+);}
+
+
+
+
+export const getUpdateImportPermissionsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImportPermissions>>, TError,{id: number;data: BodyType<ImportPermissionPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateImportPermissions>>, TError,{id: number;data: BodyType<ImportPermissionPatch>}, TContext> => {
+
+const mutationKey = ['updateImportPermissions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateImportPermissions>>, {id: number;data: BodyType<ImportPermissionPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateImportPermissions(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateImportPermissionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateImportPermissions>>>
+    export type UpdateImportPermissionsMutationBody = BodyType<ImportPermissionPatch>
+    export type UpdateImportPermissionsMutationError = ErrorType<void>
+
+    /**
+ * @summary Update independent downstream permissions for a stored source
+ */
+export const useUpdateImportPermissions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImportPermissions>>, TError,{id: number;data: BodyType<ImportPermissionPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateImportPermissions>>,
+        TError,
+        {id: number;data: BodyType<ImportPermissionPatch>},
+        TContext
+      > => {
+      return useMutation(getUpdateImportPermissionsMutationOptions(options));
     }
 
 export const getGetMatchingStateUrl = () => {

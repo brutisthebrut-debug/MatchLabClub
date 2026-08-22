@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import {
   Accordion,
   AccordionContent,
@@ -17,8 +18,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useMeta } from "@/hooks/useMeta";
 import { ShareButton } from "@/components/echo/ShareButton";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetMatchingStateQueryKey } from "@workspace/api-client-react";
 
@@ -75,6 +74,12 @@ interface ImportRow {
   parsedSummary: ParsedSummary | null;
   uploadedAt: string;
   processedAt: string | null;
+  permissions: {
+    storage: "saved";
+    echoUse: boolean;
+    learningConfirmed: boolean;
+    matchingUse: boolean;
+  };
 }
 
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -198,7 +203,7 @@ function SummaryView({ row }: { row: ImportRow }) {
   const s = row.parsedSummary ?? {};
   const counts = s.counts;
   const stats = s.derivedStats;
-  const aiRead = s.aiRead;
+  const aiRead = row.permissions.echoUse ? s.aiRead : undefined;
 
   return (
     <div className="space-y-4">
@@ -292,12 +297,11 @@ function SummaryView({ row }: { row: ImportRow }) {
 
 export default function Imports() {
   useMeta(
-    "Import your dating data",
-    "Bring in your Hinge, Tinder, or Bumble export and other history so I understand your patterns and match you better.",
+    "Save your dating data",
+    "Bring in a Hinge, Tinder, Bumble, or calendar source, then choose separately what Echo and matching may use.",
   );
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const climb = useReadinessClimb();
   const [imports, setImports] = useState<ImportRow[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -306,6 +310,7 @@ export default function Imports() {
   const [pollExhausted, setPollExhausted] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [selectedApp, setSelectedApp] = useState<DatingAppKey>("hinge");
+  const [updatingPermission, setUpdatingPermission] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollTimerRef = useRef<number | null>(null);
   const pollStartRef = useRef<number>(0);
@@ -414,8 +419,8 @@ export default function Imports() {
           setExpandedId(row.id);
           if (row.status === "pending") startPolling(row.id);
           toast({
-            title: "Upload received",
-            description: "Reading your patterns now. This usually takes under a minute.",
+            title: "Upload saved",
+            description: "It stays storage-only until you choose Echo, learning, or matching permissions below.",
           });
         } catch {
           toast({ title: "Upload accepted", description: "Could not read server response." });
@@ -468,6 +473,57 @@ export default function Imports() {
     }
   }
 
+  async function updatePermission(
+    row: ImportRow,
+    key: "echoUse" | "learningConfirmed" | "matchingUse",
+    value: boolean,
+  ) {
+    const pendingKey = `${row.id}:${key}`;
+    setUpdatingPermission(pendingKey);
+    try {
+      const res = await fetch(`/api/imports/${row.id}/permissions`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: value }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body) {
+        throw new Error(body?.error ?? "Permission update failed.");
+      }
+      const updated = body as ImportRow;
+      setImports((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+      if (activeId === updated.id) setActiveId(updated.id);
+      if (key === "matchingUse") {
+        void queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
+      }
+      if (updated.status === "pending") startPolling(updated.id);
+      toast({
+        title: "Permission updated",
+        description:
+          key === "echoUse"
+            ? value
+              ? "Echo can now process this source."
+              : "Echo use is off; the source remains saved."
+            : key === "learningConfirmed"
+              ? value
+                ? "Learning from this source is confirmed."
+                : "Learning confirmation was removed."
+              : value
+                ? "Matching can now use this source's derived signal."
+                : "Matching use is off; other permissions are unchanged.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not update permission",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingPermission(null);
+    }
+  }
+
   const [icsText, setIcsText] = useState("");
   const [calSubmitting, setCalSubmitting] = useState(false);
 
@@ -482,9 +538,6 @@ export default function Imports() {
       return;
     }
     setCalSubmitting(true);
-    // Snapshot readiness before the calendar lands so the success state can
-    // animate the real climb this paste produced.
-    climb.snapshot();
     try {
       const res = await fetch("/api/imports/calendar", {
         method: "POST",
@@ -499,12 +552,9 @@ export default function Imports() {
         setActiveId(row.id);
         setExpandedId(row.id);
         setIcsText("");
-        void queryClient.invalidateQueries({
-          queryKey: getGetMatchingStateQueryKey(),
-        });
         toast({
-          title: "Calendar read",
-          description: "I mapped your weekly rhythm. See it below.",
+          title: "Calendar saved",
+          description: "Its derived rhythm stays storage-only until you choose how it may be used.",
         });
       } else {
         toast({
@@ -532,8 +582,8 @@ export default function Imports() {
           </h1>
           <p className="text-muted-foreground max-w-2xl">
             Drop your Hinge, Tinder, or Bumble data export or paste your calendar.
-            I'll show you what your patterns and your weekly rhythm actually say
-            about you.
+            Saving it does not authorize Echo, My MatchLab learning, or matching;
+            you control each use separately below.
           </p>
         </section>
 
@@ -645,13 +695,6 @@ export default function Imports() {
               >
                 {calSubmitting ? "Reading..." : "Read my rhythm"}
               </Button>
-              {climb.before !== null && (
-                <ReadinessClimbReveal
-                  from={climb.before}
-                  to={climb.current}
-                  className="rounded-2xl border border-white/10 p-5"
-                />
-              )}
             </CardContent>
           </Card>
         </section>
@@ -742,8 +785,42 @@ export default function Imports() {
                         </Button>
                       </div>
                       {expanded && (
-                        <div className="mt-4 pt-4 border-t border-white/10">
+                        <div className="mt-4 pt-4 border-t border-white/10 space-y-5">
                           <SummaryView row={row} />
+                          <div className="rounded-xl border border-white/10 p-4 space-y-3">
+                            <div>
+                              <p className="text-sm font-medium">How this source may be used</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Saved, Echo use, confirmed learning, and matching are independent.
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between gap-4 text-sm">
+                              <div>
+                                <p>Store this source</p>
+                                <p className="text-xs text-muted-foreground">On until you delete it.</p>
+                              </div>
+                              <span className="text-xs font-medium text-emerald-400">Saved</span>
+                            </div>
+                            {([
+                              ["echoUse", "Let Echo process it", "Creates coaching reads from this source."],
+                              ["learningConfirmed", "Confirm its learning", "Accepts proposed learning into My MatchLab."],
+                              ["matchingUse", "Allow matching use", "Lets matching use only its derived signal."],
+                            ] as const).map(([key, label, detail]) => (
+                              <div key={key} className="flex items-center justify-between gap-4 text-sm">
+                                <div>
+                                  <p>{label}</p>
+                                  <p className="text-xs text-muted-foreground">{detail}</p>
+                                </div>
+                                <Switch
+                                  checked={row.permissions[key]}
+                                  disabled={updatingPermission === `${row.id}:${key}`}
+                                  onCheckedChange={(checked) => void updatePermission(row, key, checked)}
+                                  aria-label={`${label} for ${appLabel(row.source)}`}
+                                  data-testid={`permission-${key}-${row.id}`}
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </CardContent>
@@ -757,7 +834,7 @@ export default function Imports() {
         {imports.length > 0 && (
           <ToolHandoff
             testId="imports-handoff"
-            fedLine="Your imported history and rhythm feed how I read you, which sharpens who I match you with. Keep layering in signal."
+            fedLine="Your sources stay saved until you remove them. You choose separately what Echo may process, what becomes confirmed learning, and what matching may use."
             steps={[
               { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your history." },
               { label: "Map your wellness", href: "/wellness", desc: "Cover more dimensions to raise your readiness." },

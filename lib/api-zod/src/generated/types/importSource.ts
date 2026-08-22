@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { ImportPermissions } from './importPermissions';
 import type { ImportSourceParsedSummary } from './importSourceParsedSummary';
 
 export interface ImportSource {
@@ -28,4 +29,5 @@ export interface ImportSource {
   uploadedAt: Date;
   /** @nullable */
   processedAt?: Date | null;
+  permissions: ImportPermissions;
 }

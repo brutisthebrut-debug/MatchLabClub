@@ -10,8 +10,8 @@ import {
 } from "../lib/anonClaimToken";
 import { parseCalendarIcs } from "../lib/calendarParser";
 import {
-  runImportAiRead,
   importAppLabel,
+  reenrichImportRow,
   type HingeParsedSummary,
   type DerivedStats,
 } from "../lib/importEnrichment";
@@ -263,6 +263,12 @@ function serialize(row: Row): {
   parsedSummary: Record<string, unknown> | null;
   uploadedAt: string;
   processedAt: string | null;
+  permissions: {
+    storage: "saved";
+    echoUse: boolean;
+    learningConfirmed: boolean;
+    matchingUse: boolean;
+  };
 } {
   return {
     id: row.id,
@@ -279,6 +285,12 @@ function serialize(row: Row): {
         ? row.processedAt.toISOString()
         : String(row.processedAt)
       : null,
+    permissions: {
+      storage: "saved",
+      echoUse: Boolean(row.echoUseAllowed),
+      learningConfirmed: Boolean(row.learningConfirmed),
+      matchingUse: Boolean(row.matchingUseAllowed),
+    },
   };
 }
 
@@ -295,6 +307,21 @@ function parseIdParam(raw: string | string[] | undefined): number | null {
 const CalendarImportInput = z.object({
   icsContent: z.string().min(1).max(2_000_000),
 });
+
+const ImportPermissionPatch = z
+  .object({
+    echoUse: z.boolean().optional(),
+    learningConfirmed: z.boolean().optional(),
+    matchingUse: z.boolean().optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.echoUse !== undefined ||
+      value.learningConfirmed !== undefined ||
+      value.matchingUse !== undefined,
+    { message: "Supply at least one permission change." },
+  );
 
 router.post(
   "/imports/calendar",
@@ -432,7 +459,7 @@ router.post(
         userId: userId ?? null,
         anonymousClaimToken: anonToken,
         source: app,
-        status: "pending",
+        status: "complete",
         originalFilename: file.originalname ?? null,
         parsedSummary: summary as unknown as Record<string, unknown>,
       })
@@ -451,16 +478,6 @@ router.post(
 
     res.status(201).json(serialize(inserted!));
 
-    if (userId && inserted?.id) {
-      setImmediate(() => {
-        void runImportAiRead({
-          app,
-          importId: inserted.id,
-          userId,
-          summary,
-        });
-      });
-    }
   },
 );
 
@@ -496,6 +513,104 @@ router.get("/imports/:id", async (req: Request, res: Response): Promise<void> =>
   }
   res.json(serialize(row));
 });
+
+router.patch(
+  "/imports/:id/permissions",
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parseIdParam(req.params.id);
+    if (id === null) {
+      res.status(404).json({ error: "Import not found" });
+      return;
+    }
+    const parsed = ImportPermissionPatch.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const [existing] = await db
+      .select()
+      .from(importedSourcesTable)
+      .where(
+        and(
+          eq(importedSourcesTable.id, id),
+          ownerScope(req),
+          isNull(importedSourcesTable.deletedAt),
+        ) as SQL,
+      );
+    if (!existing) {
+      res.status(404).json({ error: "Import not found" });
+      return;
+    }
+
+    const now = new Date();
+    const patch: Partial<typeof importedSourcesTable.$inferInsert> = {};
+    if (parsed.data.echoUse !== undefined) {
+      patch.echoUseAllowed = parsed.data.echoUse;
+      patch.echoUseUpdatedAt = now;
+    }
+    if (parsed.data.learningConfirmed !== undefined) {
+      patch.learningConfirmed = parsed.data.learningConfirmed;
+      patch.learningConfirmedAt = parsed.data.learningConfirmed ? now : null;
+    }
+    if (parsed.data.matchingUse !== undefined) {
+      patch.matchingUseAllowed = parsed.data.matchingUse;
+      patch.matchingUseUpdatedAt = now;
+    }
+
+    const shouldEnrich =
+      parsed.data.echoUse === true &&
+      !existing.echoUseAllowed &&
+      Boolean(req.user?.id) &&
+      (Boolean(IMPORT_PARSERS[existing.source]) ||
+        existing.source === "instagram-paste" ||
+        existing.source === "voice-intro") &&
+      Boolean(existing.parsedSummary);
+    if (shouldEnrich) patch.status = "pending";
+    if (parsed.data.echoUse === false && existing.status === "pending") {
+      patch.status = "complete";
+    }
+
+    const [updated] = await db
+      .update(importedSourcesTable)
+      .set(patch)
+      .where(
+        and(
+          eq(importedSourcesTable.id, id),
+          ownerScope(req),
+          isNull(importedSourcesTable.deletedAt),
+        ) as SQL,
+      )
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Import not found" });
+      return;
+    }
+
+    req.log.info(
+      {
+        userId: req.user?.id ?? null,
+        importId: id,
+        changes: parsed.data,
+      },
+      "Updated imported-source permissions",
+    );
+
+    res.json(serialize(updated));
+
+    if (shouldEnrich) {
+      setImmediate(() => {
+        void reenrichImportRow({
+          id: existing.id,
+          source: existing.source,
+          userId: req.user!.id,
+          status: "pending",
+          parsedSummary: existing.parsedSummary,
+        });
+      });
+    }
+  },
+);
 
 router.delete(
   "/imports/:id",

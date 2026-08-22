@@ -335,6 +335,20 @@ export const wellnessAnswersTable = makeTable("wellness_answers");
 ensureStore("wellness_inferences");
 export const wellnessInferencesTable = makeTable("wellness_inferences");
 ensureStore("imported_sources");
+Object.assign(stores.imported_sources.defaults, {
+  userId: null,
+  anonymousClaimToken: null,
+  originalFilename: null,
+  parsedSummary: null,
+  echoUseAllowed: false,
+  echoUseUpdatedAt: null,
+  learningConfirmed: false,
+  learningConfirmedAt: null,
+  matchingUseAllowed: false,
+  matchingUseUpdatedAt: null,
+  processedAt: null,
+  deletedAt: null,
+});
 export const importedSourcesTable = makeTable("imported_sources");
 ensureStore("connector_connections");
 export const connectorConnectionsTable = makeTable("connector_connections");

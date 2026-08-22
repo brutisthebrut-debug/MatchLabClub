@@ -6,6 +6,7 @@ import {
   timestamp,
   jsonb,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -32,6 +33,16 @@ export const importedSourcesTable = pgTable(
     originalFilename: varchar("original_filename", { length: 255 }),
     /** Structured summary after parsing. Shape varies per source. */
     parsedSummary: jsonb("parsed_summary").$type<Record<string, unknown>>(),
+    /**
+     * Storage never implies downstream use. These independent source-level
+     * permissions default closed for new and migrated rows.
+     */
+    echoUseAllowed: boolean("echo_use_allowed").notNull().default(false),
+    echoUseUpdatedAt: timestamp("echo_use_updated_at"),
+    learningConfirmed: boolean("learning_confirmed").notNull().default(false),
+    learningConfirmedAt: timestamp("learning_confirmed_at"),
+    matchingUseAllowed: boolean("matching_use_allowed").notNull().default(false),
+    matchingUseUpdatedAt: timestamp("matching_use_updated_at"),
     /** Error message when status='failed'. */
     error: text("error"),
     uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
@@ -59,6 +70,12 @@ export const insertImportedSourceSchema = createInsertSchema(
   deletedAt: true,
   userId: true,
   anonymousClaimToken: true,
+  echoUseAllowed: true,
+  echoUseUpdatedAt: true,
+  learningConfirmed: true,
+  learningConfirmedAt: true,
+  matchingUseAllowed: true,
+  matchingUseUpdatedAt: true,
 });
 
 export type InsertImportedSource = z.infer<typeof insertImportedSourceSchema>;

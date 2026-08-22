@@ -3484,6 +3484,17 @@ not.
  */
 export type ImportSourceParsedSummary = { [key: string]: unknown } | null;
 
+export interface ImportPermissions {
+  /** The source row is stored. Delete the import to revoke storage. */
+  storage: 'saved';
+  /** Echo may process and use this source for coaching. */
+  echoUse: boolean;
+  /** The member accepted proposed learning from this source into My MatchLab. */
+  learningConfirmed: boolean;
+  /** Derived signal from this source may be used for matching. */
+  matchingUse: boolean;
+}
+
 export interface ImportSource {
   id: number;
   /** Which source app the export came from. */
@@ -3505,6 +3516,16 @@ export interface ImportSource {
   uploadedAt: string;
   /** @nullable */
   processedAt?: string | null;
+  permissions: ImportPermissions;
+}
+
+/**
+ * Supply at least one field. Omitted fields remain unchanged.
+ */
+export interface ImportPermissionPatch {
+  echoUse?: boolean;
+  learningConfirmed?: boolean;
+  matchingUse?: boolean;
 }
 
 export interface ImportSourceList {

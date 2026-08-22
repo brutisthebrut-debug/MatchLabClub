@@ -345,6 +345,7 @@ export async function collectSignalCounts(
     .where(
       and(
         eq(importedSourcesTable.userId, userId),
+        eq(importedSourcesTable.matchingUseAllowed, true),
         isNull(importedSourcesTable.deletedAt),
       ),
     )
@@ -366,6 +367,7 @@ export async function collectSignalCounts(
         and(
           eq(importedSourcesTable.userId, userId),
           eq(importedSourcesTable.source, source),
+          eq(importedSourcesTable.matchingUseAllowed, true),
           isNull(importedSourcesTable.deletedAt),
         ),
       )
@@ -445,6 +447,7 @@ export async function collectSignalRecency(
       .where(
         and(
           eq(importedSourcesTable.userId, userId),
+          eq(importedSourcesTable.matchingUseAllowed, true),
           isNull(importedSourcesTable.deletedAt),
         ),
       )

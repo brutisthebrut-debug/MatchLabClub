@@ -34,6 +34,14 @@ import {
   checkHandoffRateLimit,
   handoffRateLimitKey,
 } from "../lib/handoffRateLimit";
+import { reenrichImportRow } from "../lib/importEnrichment";
+import { DATING_APP_IMPORT_SOURCES } from "../lib/signalRegistry";
+
+const ECHO_ENRICHABLE_IMPORT_SOURCES = [
+  ...DATING_APP_IMPORT_SOURCES,
+  "instagram-paste",
+  "voice-intro",
+];
 
 function sendExpiredHandoff(
   req: Request,
@@ -244,6 +252,37 @@ async function claimByAnonToken(
         ),
       ),
   ]);
+
+  // An anonymous member may grant source-level Echo permission before signup.
+  // Once the rows are claimed, queue only those explicitly permitted sources;
+  // storage or matching permission alone never starts enrichment.
+  const echoRows = await db
+    .select({
+      id: importedSourcesTable.id,
+      userId: importedSourcesTable.userId,
+      source: importedSourcesTable.source,
+      status: importedSourcesTable.status,
+      parsedSummary: importedSourcesTable.parsedSummary,
+    })
+    .from(importedSourcesTable)
+    .where(
+      and(
+        eq(importedSourcesTable.userId, userId),
+        eq(importedSourcesTable.echoUseAllowed, true),
+        inArray(importedSourcesTable.source, ECHO_ENRICHABLE_IMPORT_SOURCES),
+        isNull(importedSourcesTable.deletedAt),
+      ),
+    );
+  for (const row of echoRows) {
+    if (!row.parsedSummary) continue;
+    await db
+      .update(importedSourcesTable)
+      .set({ status: "pending" })
+      .where(eq(importedSourcesTable.id, row.id));
+    setImmediate(() => {
+      void reenrichImportRow({ ...row, status: "pending" });
+    });
+  }
 
   return {
     audits: audits.length,

@@ -770,6 +770,7 @@ addressed.
 - [ ] **REQUIRED** Data export (`/api/account/export`) confirmed complete and downloading *(Phase 0 check — review only)*
 - [ ] **REQUIRED** Apply migration `0042` and confirm new/confirmed wellness learning is coaching-only unless the member explicitly selects matching, research, or all use *(Phase 0 check)*
 - [x] **REQUIRED** Quiz Lab identity and scoring are server-authoritative; unknown identities/options and client-forged derived results are rejected or ignored *(production trust Phase 0)*
+- [ ] **REQUIRED** Apply migration `0043` and verify stored imported sources default to no Echo, learning, or matching permission; each permission must change independently and matching must exclude unapproved rows *(production trust Phase 0)*
 - [ ] **RECOMMENDED** Cookie banner / privacy notice reviewed for accuracy post-migration (Replit references may need removing) *(Phase 5)*
 
 ### 4.14 Founder / admin access

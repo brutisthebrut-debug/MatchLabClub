@@ -243,6 +243,8 @@ export * from './handleBrowserLoginCallbackParams';
 export * from './healthStatus';
 export * from './identityVerificationResult';
 export * from './identityVerificationStartResult';
+export * from './importPermissionPatch';
+export * from './importPermissions';
 export * from './importSource';
 export * from './importSourceList';
 export * from './importSourceParsedSummary';

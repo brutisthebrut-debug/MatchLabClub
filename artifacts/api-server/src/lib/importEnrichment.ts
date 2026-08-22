@@ -15,7 +15,7 @@
  * never retried. Only derived numbers (Hinge) or the pasted text the user
  * explicitly handed us (Instagram) are sent, never third-party message bodies.
  */
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db, importedSourcesTable } from "@workspace/db";
 import { buildEchoSystemPrompt } from "@workspace/echo";
@@ -29,6 +29,14 @@ import { DATING_APP_IMPORT_SOURCES } from "./signalRegistry";
 const ENRICH_ATTEMPTS = 3;
 /** How many recovery passes a transient `fallback` row may receive. */
 export const MAX_ENRICH_RETRIES = 3;
+
+function activeEchoPermission(importId: number) {
+  return and(
+    eq(importedSourcesTable.id, importId),
+    eq(importedSourcesTable.echoUseAllowed, true),
+    isNull(importedSourcesTable.deletedAt),
+  );
+}
 
 /**
  * Fallback reasons that should NOT consume the per-row retry budget. A daily
@@ -212,7 +220,7 @@ export async function runImportAiRead(args: {
         },
         processedAt: new Date(),
       })
-      .where(eq(importedSourcesTable.id, importId));
+      .where(activeEchoPermission(importId));
   };
 
   try {
@@ -258,7 +266,7 @@ export async function runImportAiRead(args: {
         parsedSummary: { ...summary, aiRead },
         processedAt: new Date(),
       })
-      .where(eq(importedSourcesTable.id, importId));
+      .where(activeEchoPermission(importId));
   } catch (err) {
     logger.warn(
       {
@@ -442,7 +450,7 @@ export async function runInstagramToneRead(args: {
         },
         processedAt: new Date(),
       })
-      .where(eq(importedSourcesTable.id, importId));
+      .where(activeEchoPermission(importId));
   };
 
   try {
@@ -487,7 +495,7 @@ export async function runInstagramToneRead(args: {
         },
         processedAt: new Date(),
       })
-      .where(eq(importedSourcesTable.id, importId));
+      .where(activeEchoPermission(importId));
   } catch (err) {
     logger.warn(
       {
@@ -665,7 +673,7 @@ export async function runVoiceIntroRead(args: {
         },
         processedAt: new Date(),
       })
-      .where(eq(importedSourcesTable.id, importId));
+      .where(activeEchoPermission(importId));
   };
 
   try {
@@ -710,7 +718,7 @@ export async function runVoiceIntroRead(args: {
         },
         processedAt: new Date(),
       })
-      .where(eq(importedSourcesTable.id, importId));
+      .where(activeEchoPermission(importId));
   } catch (err) {
     logger.warn(
       {
@@ -779,6 +787,34 @@ export async function reenrichImportRow(
       bio,
       captions,
       originalPayload: { bio, recentCaptions: captions },
+    });
+    return "reenriched";
+  }
+
+  if (row.source === "voice-intro") {
+    const raw = row.parsedSummary.metrics;
+    if (!raw || typeof raw !== "object") return "skipped";
+    const candidate = raw as Record<string, unknown>;
+    const keys = [
+      "durationSec",
+      "energy",
+      "dynamics",
+      "pace",
+      "speechRatio",
+    ] as const;
+    if (!keys.every((key) => typeof candidate[key] === "number")) {
+      return "skipped";
+    }
+    await runVoiceIntroRead({
+      importId: row.id,
+      userId: row.userId,
+      metrics: {
+        durationSec: candidate.durationSec as number,
+        energy: candidate.energy as number,
+        dynamics: candidate.dynamics as number,
+        pace: candidate.pace as number,
+        speechRatio: candidate.speechRatio as number,
+      },
     });
     return "reenriched";
   }

@@ -40,7 +40,11 @@ import { reenrichImportRow, MAX_ENRICH_RETRIES } from "./importEnrichment";
 import { DATING_APP_IMPORT_SOURCES } from "./signalRegistry";
 
 const IMPORT_RECOVERY_JOB = "import_recovery";
-const ENRICHABLE_SOURCES = [...DATING_APP_IMPORT_SOURCES, "instagram-paste"];
+const ENRICHABLE_SOURCES = [
+  ...DATING_APP_IMPORT_SOURCES,
+  "instagram-paste",
+  "voice-intro",
+];
 /** Import sources whose AI read can land in a recoverable `fallback` state. */
 const FALLBACK_RECOVERABLE_SOURCES = new Set<string>(DATING_APP_IMPORT_SOURCES);
 
@@ -157,6 +161,7 @@ export async function recoverStuckImports(options?: {
         and(
           isNull(importedSourcesTable.deletedAt),
           isNotNull(importedSourcesTable.userId),
+          eq(importedSourcesTable.echoUseAllowed, true),
           inArray(importedSourcesTable.source, ENRICHABLE_SOURCES),
           or(
             and(
