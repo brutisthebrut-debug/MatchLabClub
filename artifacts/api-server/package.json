@@ -24,6 +24,7 @@
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
     "@workspace/echo": "workspace:*",
+    "@workspace/quiz-engine": "workspace:*",
     "@workspace/integrations-anthropic-ai": "workspace:*",
     "circular-natal-horoscope-js": "^1.1.0",
     "cookie-parser": "^1.4.7",

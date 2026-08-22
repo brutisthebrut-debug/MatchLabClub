@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db, importedSourcesTable } from "@workspace/db";
+import { getQuizBySlug, scoreQuiz } from "@workspace/quiz-engine";
 import {
   CreateInstagramPasteBody,
   CreateQuizResultBody,
@@ -304,12 +305,10 @@ router.post("/me/voice-intro", async (req, res): Promise<void> => {
 /**
  * POST /api/me/quiz-result
  *
- * Records a completed quiz as derived signal feeding the `quizzes` lane of the
- * living signal registry, so finishing a quiz nudges Match Readiness, the
- * Mirror, and matching reasoning. We store only the derived result (which quiz,
- * which archetype, the dimensions it informs) into `imported_sources` tagged
- * `source = "quiz"`; the user's raw answer choices are never stored here and
- * never sent to any prompt. The lane counts distinct rows per source, so we
+ * Scores a completed canonical quiz server-side and records only the derived
+ * signal feeding the `quizzes` lane. Answer indexes exist only in request
+ * memory and are never persisted or sent to a prompt. The lane counts distinct
+ * rows per source, so we
  * dedupe retakes: any prior non-deleted `quiz` row for the same slug is
  * soft-deleted before the new one lands, which keeps the count at distinct
  * quizzes completed rather than raw submissions. Status is stamped `complete`
@@ -324,15 +323,36 @@ router.post("/me/quiz-result", async (req, res): Promise<void> => {
   }
 
   const slug = parsed.data.slug.trim();
-  const archetypeKey = parsed.data.archetypeKey.trim();
-  const archetypeName = parsed.data.archetypeName.trim();
-  const dimensions = (parsed.data.dimensions ?? [])
-    .map((d) => d.trim())
-    .filter((d) => d.length > 0);
-  if (!slug || !archetypeKey || !archetypeName) {
-    res.status(400).json({ error: "slug, archetypeKey, and archetypeName are required." });
+  const quiz = getQuizBySlug(slug);
+  if (!quiz) {
+    res.status(400).json({ error: "Unknown quiz slug." });
     return;
   }
+
+  const answers = parsed.data.answers;
+  const validAnswers =
+    answers.length === quiz.questions.length &&
+    answers.every(
+      (optionIndex, questionIndex) =>
+        Number.isInteger(optionIndex) &&
+        optionIndex >= 0 &&
+        optionIndex < quiz.questions[questionIndex]!.options.length,
+    );
+  if (!validAnswers) {
+    res.status(400).json({
+      error: "Answers must contain one valid option index per quiz question.",
+    });
+    return;
+  }
+
+  const archetypeKey = scoreQuiz(quiz, answers);
+  const archetype = quiz.archetypes[archetypeKey];
+  if (!archetype) {
+    res.status(400).json({ error: "Quiz could not be scored." });
+    return;
+  }
+  const archetypeName = archetype.name;
+  const dimensions = quiz.feeds;
 
   const userId = req.user?.id;
   const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
@@ -422,7 +442,9 @@ router.post("/me/quiz-result", async (req, res): Promise<void> => {
   res.status(201).json({
     id: inserted!.id,
     slug,
+    archetypeKey,
     archetypeName,
+    dimensions,
     distinctQuizzes: Number(distinctQuizzes ?? 0),
     status: "complete",
     uploadedAt:

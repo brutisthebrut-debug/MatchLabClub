@@ -96,9 +96,7 @@ function anonCookie(res: request.Response): string {
 
 const VALID = {
   slug: "love-pace",
-  archetypeKey: "steady",
-  archetypeName: "The Steady Build",
-  dimensions: ["intimacy.pace", "communication.tempo"],
+  answers: [1, 1, 1, 1, 1],
 };
 
 describe("POST /api/me/quiz-result", () => {
@@ -107,7 +105,13 @@ describe("POST /api/me/quiz-result", () => {
 
     expect(res.status).toBe(201);
     expect(res.body.slug).toBe("love-pace");
-    expect(res.body.archetypeName).toBe("The Steady Build");
+    expect(res.body.archetypeKey).toBe("steady");
+    expect(res.body.archetypeName).toBe("The Steady");
+    expect(res.body.dimensions).toEqual([
+      "intimacy.pace",
+      "communication.tempo",
+      "affection.style",
+    ]);
     expect(res.body.distinctQuizzes).toBe(1);
     expect(res.body.status).toBe("complete");
 
@@ -123,8 +127,12 @@ describe("POST /api/me/quiz-result", () => {
     expect(summary).toEqual({
       slug: "love-pace",
       archetypeKey: "steady",
-      archetype: "The Steady Build",
-      dimensions: ["intimacy.pace", "communication.tempo"],
+      archetype: "The Steady",
+      dimensions: [
+        "intimacy.pace",
+        "communication.tempo",
+        "affection.style",
+      ],
       counts: { quizzes: 1 },
     });
     expect(rows[0].userId).toBeNull();
@@ -148,12 +156,12 @@ describe("POST /api/me/quiz-result", () => {
     expect(first.body.distinctQuizzes).toBe(1);
     const cookie = anonCookie(first);
 
-    // Retake the same slug with a different archetype: the prior row is soft-
+    // Retake the same slug with answers that score a different archetype: the prior row is soft-
     // deleted and the count stays at one distinct quiz.
     const retake = await request(testApp.app)
       .post("/api/me/quiz-result")
       .set("Cookie", cookie)
-      .send({ ...VALID, archetypeKey: "freefaller", archetypeName: "The Freefaller" });
+      .send({ slug: "love-pace", answers: [0, 0, 0, 0, 0] });
     expect(retake.body.distinctQuizzes).toBe(1);
 
     const { dumpTable } = await import("../lib/testDb");
@@ -173,15 +181,49 @@ describe("POST /api/me/quiz-result", () => {
     const second = await request(testApp.app)
       .post("/api/me/quiz-result")
       .set("Cookie", cookie)
-      .send({ slug: "conflict-style", archetypeKey: "diplomat", archetypeName: "The Diplomat" });
+      .send({ slug: "conflict-instinct", answers: [0, 0, 0, 0, 0, 0] });
 
+    expect(second.status).toBe(201);
     expect(second.body.distinctQuizzes).toBe(2);
+  });
+
+  it("derives identity on the server and ignores forged result fields", async () => {
+    const res = await request(testApp.app)
+      .post("/api/me/quiz-result")
+      .send({
+        ...VALID,
+        archetypeKey: "freefaller",
+        archetypeName: "A forged result",
+        dimensions: ["forged.dimension"],
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.archetypeKey).toBe("steady");
+    expect(res.body.archetypeName).toBe("The Steady");
+    expect(res.body.dimensions).not.toContain("forged.dimension");
+  });
+
+  it("rejects unknown quizzes and incomplete or out-of-range answers", async () => {
+    const unknown = await request(testApp.app)
+      .post("/api/me/quiz-result")
+      .send({ slug: "made-up-quiz", answers: [0] });
+    expect(unknown.status).toBe(400);
+
+    const incomplete = await request(testApp.app)
+      .post("/api/me/quiz-result")
+      .send({ slug: "love-pace", answers: [1, 1] });
+    expect(incomplete.status).toBe(400);
+
+    const outOfRange = await request(testApp.app)
+      .post("/api/me/quiz-result")
+      .send({ slug: "love-pace", answers: [1, 1, 99, 1, 1] });
+    expect(outOfRange.status).toBe(400);
   });
 
   it("rejects an empty slug with a 400", async () => {
     const res = await request(testApp.app)
       .post("/api/me/quiz-result")
-      .send({ slug: "", archetypeKey: "steady", archetypeName: "The Steady Build" });
+      .send({ slug: "", answers: [1, 1, 1, 1, 1] });
     expect(res.status).toBe(400);
   });
 });

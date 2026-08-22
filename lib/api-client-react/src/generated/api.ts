@@ -1829,16 +1829,13 @@ export const getCreateQuizResultUrl = () => {
 }
 
 /**
- * Captures a completed quiz as derived signal feeding Match Readiness, the
-Mirror, and matching reasoning through the living signal registry's
-`quizzes` lane. Persists only the derived result (which quiz, which
-archetype, the dimensions it informs) into `imported_sources` tagged
-`source = "quiz"`; the user's raw answer choices are never stored or sent
-to any prompt. Retakes of the same quiz are deduped, so the lane counts
-distinct quizzes completed, not raw submissions. Anon-safe: with no
-signed-in user, the row is stamped with the anonymous claim token cookie
-so it can be merged into the account later. Always succeeds with a
-deterministic write; there is no AI call here.
+ * Accepts a canonical quiz slug plus answer-option indexes. The server
+validates the quiz identity and every option against the shared Quiz Lab
+catalog, scores the result deterministically, and derives the canonical
+archetype name and dimensions. It persists only that derived result into
+`imported_sources` tagged `source = "quiz"`; answer indexes are used only
+for the in-memory score and are never stored or sent to a prompt. Retakes
+are deduped. Anon-safe via the anonymous claim token cookie.
 
  * @summary Record a completed quiz as a derived Mirror signal
  */

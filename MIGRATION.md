@@ -1,11 +1,11 @@
 # MatchLab Club — Production Migration Plan
 
-> **Phase 0 scope contract.** This document is documentation only.
-> Phase 0 must not change product behavior, database schema, auth behavior,
-> payment behavior, deployment behavior, application logic, routes, environment
-> usage, package versions, build scripts, or deployment configuration.
-> Every change in Phase 0 is a `.md` file write or a `docs/` file write.
-> Nothing else.
+> **Roadmap terminology note (August 22, 2026).** This document's original
+> infrastructure-migration “Phase 0” was a documentation/audit band. Active
+> product execution now uses `PRODUCTION_STATUS.md` and the persistent MatchLab
+> v1 finish roadmap, where Phase 0 means trust and state repair and does include
+> bounded code/schema changes. The older numbering remains below for historical
+> infrastructure sequencing; it does not override the active source of truth.
 
 ---
 
@@ -769,6 +769,7 @@ addressed.
 - [ ] **REQUIRED** `ai_content_consent` consent gate confirmed firing before any user content reaches Claude *(Phase 0 check — review only)*
 - [ ] **REQUIRED** Data export (`/api/account/export`) confirmed complete and downloading *(Phase 0 check — review only)*
 - [ ] **REQUIRED** Apply migration `0042` and confirm new/confirmed wellness learning is coaching-only unless the member explicitly selects matching, research, or all use *(Phase 0 check)*
+- [x] **REQUIRED** Quiz Lab identity and scoring are server-authoritative; unknown identities/options and client-forged derived results are rejected or ignored *(production trust Phase 0)*
 - [ ] **RECOMMENDED** Cookie banner / privacy notice reviewed for accuracy post-migration (Replit references may need removing) *(Phase 5)*
 
 ### 4.14 Founder / admin access

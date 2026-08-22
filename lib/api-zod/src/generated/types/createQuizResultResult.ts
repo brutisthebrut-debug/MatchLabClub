@@ -10,8 +10,12 @@ export interface CreateQuizResultResult {
   id: number;
   /** The quiz slug this result was stored for. */
   slug: string;
-  /** The archetype name recorded for this completion. */
+  /** The server-scored canonical archetype key. */
+  archetypeKey: string;
+  /** The server-derived canonical archetype name. */
   archetypeName: string;
+  /** Canonical dimensions informed by this quiz. */
+  dimensions: string[];
   /** How many distinct quizzes the owner has now completed, after deduping retakes of the same quiz. This is the count that fills the quiz lane. */
   distinctQuizzes: number;
   status: 'complete';

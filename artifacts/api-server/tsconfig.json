@@ -18,6 +18,9 @@
       "path": "../../lib/ai-schemas"
     },
     {
+      "path": "../../lib/quiz-engine"
+    },
+    {
       "path": "../../lib/integrations-anthropic-ai"
     }
   ]

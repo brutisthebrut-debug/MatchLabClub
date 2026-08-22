@@ -223,6 +223,9 @@ importers:
       '@workspace/echo':
         specifier: workspace:*
         version: link:../../lib/echo
+      '@workspace/quiz-engine':
+        specifier: workspace:*
+        version: link:../../lib/quiz-engine
       '@workspace/integrations-anthropic-ai':
         specifier: workspace:*
         version: link:../../lib/integrations-anthropic-ai
@@ -657,6 +660,9 @@ importers:
       '@workspace/echo':
         specifier: workspace:*
         version: link:../../lib/echo
+      '@workspace/quiz-engine':
+        specifier: workspace:*
+        version: link:../../lib/quiz-engine
       '@workspace/replit-auth-web':
         specifier: workspace:*
         version: link:../../lib/replit-auth-web
@@ -1006,6 +1012,8 @@ importers:
         version: 4.21.0
 
   lib/echo: {}
+
+  lib/quiz-engine: {}
 
   lib/integrations-anthropic-ai:
     dependencies:

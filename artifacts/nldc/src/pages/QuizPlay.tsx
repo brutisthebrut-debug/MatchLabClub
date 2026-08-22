@@ -201,9 +201,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
       {
         data: {
           slug: quiz!.slug,
-          archetypeKey,
-          archetypeName: base.name,
-          dimensions: quiz!.feeds,
+          answers,
         },
       },
       {

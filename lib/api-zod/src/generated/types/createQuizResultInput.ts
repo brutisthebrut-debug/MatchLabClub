@@ -8,29 +8,15 @@
 
 export interface CreateQuizResultInput {
   /**
-     * The quiz's stable slug, e.g. `attachment-style`.
+     * A stable slug from the server's canonical Quiz Lab catalog.
      * @minLength 1
      * @maxLength 64
      */
   slug: string;
   /**
-     * The scored archetype key for this completion.
-     * @minLength 1
-     * @maxLength 64
+     * One zero-based option index per canonical quiz question. Used for server scoring and never stored.
+     * @minItems 1
+     * @maxItems 20
      */
-  archetypeKey: string;
-  /**
-     * Human-readable archetype name, stored for the user's own review.
-     * @minLength 1
-     * @maxLength 120
-     */
-  archetypeName: string;
-  /**
-     * The wellness or matching dimensions this quiz informs, taught to the
-  Mirror. Derived signal only; the user's raw answer choices are never
-  stored or sent here.
-
-     * @maxItems 12
-     */
-  dimensions?: string[];
+  answers: number[];
 }

@@ -654,16 +654,13 @@ export const ActivateReceiptsInboxResponse = zod.object({
 
 
 /**
- * Captures a completed quiz as derived signal feeding Match Readiness, the
-Mirror, and matching reasoning through the living signal registry's
-`quizzes` lane. Persists only the derived result (which quiz, which
-archetype, the dimensions it informs) into `imported_sources` tagged
-`source = "quiz"`; the user's raw answer choices are never stored or sent
-to any prompt. Retakes of the same quiz are deduped, so the lane counts
-distinct quizzes completed, not raw submissions. Anon-safe: with no
-signed-in user, the row is stamped with the anonymous claim token cookie
-so it can be merged into the account later. Always succeeds with a
-deterministic write; there is no AI call here.
+ * Accepts a canonical quiz slug plus answer-option indexes. The server
+validates the quiz identity and every option against the shared Quiz Lab
+catalog, scores the result deterministically, and derives the canonical
+archetype name and dimensions. It persists only that derived result into
+`imported_sources` tagged `source = "quiz"`; answer indexes are used only
+for the in-memory score and are never stored or sent to a prompt. Retakes
+are deduped. Anon-safe via the anonymous claim token cookie.
 
  * @summary Record a completed quiz as a derived Mirror signal
  */
@@ -673,21 +670,16 @@ export const CreateQuizResultHeader = zod.object({
 
 export const createQuizResultBodySlugMax = 64;
 
-export const createQuizResultBodyArchetypeKeyMax = 64;
+export const createQuizResultBodyAnswersItemMin = 0;
+export const createQuizResultBodyAnswersItemMax = 20;
 
-export const createQuizResultBodyArchetypeNameMax = 120;
-
-export const createQuizResultBodyDimensionsItemMax = 80;
-
-export const createQuizResultBodyDimensionsMax = 12;
+export const createQuizResultBodyAnswersMax = 20;
 
 
 
 export const CreateQuizResultBody = zod.object({
-  "slug": zod.string().min(1).max(createQuizResultBodySlugMax).describe('The quiz\'s stable slug, e.g. `attachment-style`.'),
-  "archetypeKey": zod.string().min(1).max(createQuizResultBodyArchetypeKeyMax).describe('The scored archetype key for this completion.'),
-  "archetypeName": zod.string().min(1).max(createQuizResultBodyArchetypeNameMax).describe('Human-readable archetype name, stored for the user\'s own review.'),
-  "dimensions": zod.array(zod.string().min(1).max(createQuizResultBodyDimensionsItemMax)).max(createQuizResultBodyDimensionsMax).optional().describe('The wellness or matching dimensions this quiz informs, taught to the\nMirror. Derived signal only; the user\'s raw answer choices are never\nstored or sent here.\n')
+  "slug": zod.string().min(1).max(createQuizResultBodySlugMax).describe('A stable slug from the server\'s canonical Quiz Lab catalog.'),
+  "answers": zod.array(zod.number().min(createQuizResultBodyAnswersItemMin).max(createQuizResultBodyAnswersItemMax)).min(1).max(createQuizResultBodyAnswersMax).describe('One zero-based option index per canonical quiz question. Used for server scoring and never stored.')
 })
 
 

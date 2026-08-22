@@ -1,6 +1,6 @@
 # MatchLab production status
 
-Last verified: 2026-08-21
+Last verified: 2026-08-22
 
 This is the source of truth for what is in the repository versus what has only
 been approved in the v1 prototype. It prevents prototype decisions from being
@@ -35,7 +35,7 @@ not the approved final information architecture.
 | Complete export and deletion | In progress, materially hardened | The live Account page now uses the email-confirmed transactional delete. Export includes all current user-facing product families while excluding reusable auth/OAuth/push/export secrets. Transactional deletion now covers Journey, Play, Wingman, Cosmic, verification, and Mirror preferences. Requires a Postgres-backed CI run before release. |
 | Founder authorization | Implemented; DB-backed release verification required | Founder routes now re-check the authenticated user's persisted `founder`/`admin` role. The shared browser key and `x-founder-key` authorization path are removed. Authorized requests append actor, route, response status, IP, and user-agent metadata to `founder_action_logs`. Apply migration `0041` and run the database-backed auth suite before release. |
 | Consent separation | Partial; wellness auto-authorization removed | New wellness answers and member-confirmed wellness learnings default to coaching-only. Matching/research/all use requires an explicit valid scope, and members can change that scope independently of answer text. Apply migration `0042`. Imported-source storage/Echo use and the broader canonical permission state machine remain. |
-| Quiz identity and scoring | Not complete | Canonical quiz identity and server-authoritative scoring require an audit and regression coverage. |
+| Quiz identity and scoring | Implemented | The web app and API share one canonical Quiz Lab catalog/scorer. The API accepts only a known slug plus valid answer indexes, derives archetype/name/dimensions server-side, ignores forged derived fields, and never stores raw answers. Authority regression coverage passes. |
 | Founder review vs. member introduction | Not complete | Founder curation and member proposal state still need explicit separation and transition tests. |
 | Payments and entitlement | Blocked for release | Tier assignment is still manual and public refund/renewal/cancellation language is inconsistent. Stripe webhook entitlement and access revocation must ship before a paid launch. |
 | Legal and service language | Blocked for release | Terms, privacy, pricing, checkout, and product states must describe the same controlled-introduction service. |
@@ -58,11 +58,14 @@ not the approved final information architecture.
 - Wellness capture no longer grants every downstream use automatically. The
   permission regression suite verifies coaching-only capture, explicit matching
   opt-in, scope changes, and coaching-only confirmation of proposed learning.
+- Quiz Lab identity and scoring are server-authoritative. The API regression
+  suite covers canonical scoring, retakes, forged result fields, unknown slugs,
+  incomplete submissions, and out-of-range option indexes.
 
 ## Release gate
 
 Do not represent the current repository as production-ready. The next safe
-milestone is completion of Phase 0, with particular priority on permissions and
-quiz authority, database-backed lifecycle/auth tests, payments/entitlements,
+milestone is completion of Phase 0, with particular priority on imported-source
+permissions, database-backed lifecycle/auth tests, payments/entitlements,
 and synchronized legal copy. Install the approved five-destination shell only after those trust promises
 are true in the real system.

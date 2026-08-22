@@ -26,6 +26,9 @@
     },
     {
       "path": "../../lib/echo"
+    },
+    {
+      "path": "../../lib/quiz-engine"
     }
   ]
 }

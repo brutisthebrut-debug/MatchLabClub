@@ -2853,39 +2853,29 @@ export interface ReceiptsInbox {
 
 export interface CreateQuizResultInput {
   /**
-     * The quiz's stable slug, e.g. `attachment-style`.
+     * A stable slug from the server's canonical Quiz Lab catalog.
      * @minLength 1
      * @maxLength 64
      */
   slug: string;
   /**
-     * The scored archetype key for this completion.
-     * @minLength 1
-     * @maxLength 64
+     * One zero-based option index per canonical quiz question. Used for server scoring and never stored.
+     * @minItems 1
+     * @maxItems 20
      */
-  archetypeKey: string;
-  /**
-     * Human-readable archetype name, stored for the user's own review.
-     * @minLength 1
-     * @maxLength 120
-     */
-  archetypeName: string;
-  /**
-     * The wellness or matching dimensions this quiz informs, taught to the
-  Mirror. Derived signal only; the user's raw answer choices are never
-  stored or sent here.
-
-     * @maxItems 12
-     */
-  dimensions?: string[];
+  answers: number[];
 }
 
 export interface CreateQuizResultResult {
   id: number;
   /** The quiz slug this result was stored for. */
   slug: string;
-  /** The archetype name recorded for this completion. */
+  /** The server-scored canonical archetype key. */
+  archetypeKey: string;
+  /** The server-derived canonical archetype name. */
   archetypeName: string;
+  /** Canonical dimensions informed by this quiz. */
+  dimensions: string[];
   /** How many distinct quizzes the owner has now completed, after deduping retakes of the same quiz. This is the count that fills the quiz lane. */
   distinctQuizzes: number;
   status: 'complete';
