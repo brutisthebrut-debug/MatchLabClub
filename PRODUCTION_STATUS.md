@@ -22,14 +22,17 @@ mistaken for production behavior.
 
 ## Repository reality
 
-Production shell migration is underway. Segment 1 installs the five canonical
-destinations, keeps Trust & Data directly accessible, and preserves Echo across
-the authenticated shell. Segment 2 makes onboarding consent-first: starter
-answers are explicitly coaching-only, downstream uses remain separate, and
-readiness scores, points, climb language, and percent-mapped language are
-removed. Existing legacy routes and records remain reachable while later
-segments consolidate the underlying workflows. See `SHELL_MIGRATION.md` for
-the route matrix and segment plan.
+Production shell migration is underway under a capability-consolidation
+standard: a destination is not complete merely because it links to an older
+page. Segment 1 installs the five canonical destinations, keeps Trust & Data
+directly accessible, and preserves Echo across the authenticated shell. Segment
+2 makes onboarding consent-first. Segment 3A makes My MatchLab a live member
+record and Profile Project the durable, versioned owner of profile editing and
+Echo rewrite acceptance. Duplicate rewrite routes now redirect only after that
+behavior was absorbed. Full audit reports and Photo Lab remain explicitly
+transitional until their saved results and history are owned by Profile Project.
+See `SHELL_MIGRATION.md` for the completion standard, route matrix, and
+segment plan.
 
 ## Phase 0: trust and state repair
 
@@ -47,9 +50,17 @@ the route matrix and segment plan.
 
 - Production shell migration Segment 1 adds Today, My MatchLab, Journey, Play,
   and Trust & Data routes; the existing Matches lifecycle remains canonical.
-  Legacy URLs continue to resolve and map to the owning destination.
+- Consent-first onboarding keeps capture, Echo use, confirmed learning, and
+  matching use distinct and removes readiness scoring from the member path.
+- Segment 3A makes My MatchLab use live member data without a demo fallback.
+  Profile Project owns durable, reopenable profile versions and server-backed
+  rewrites; accepting a rewrite creates a traceable new version without
+  changing the source. `/glow-up` and `/copilot/profile` now redirect to the
+  canonical workflow.
+- Audit reports and Photo Lab are not yet consolidated; their legacy routes
+  remain reachable until Profile Project owns their saved results and history.
 - TypeScript project references and the API and web app typechecks pass.
-- Web suite: 30 files, 231 tests passed.
+- Web suite: 31 files, 238 tests passed.
 - Full API suite on a clean Postgres 16 service: 99 files and 911 tests passed;
   2 files and 8 optional OCR tests skipped.
 - GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
@@ -63,6 +74,10 @@ the route matrix and segment plan.
 - GitHub Actions run 32772997609 passed both required jobs on PR #7 for
   consent-first onboarding: 30 web files and 231 tests, the ordered migration
   chain through `0045`, and 99 API files with 911 tests on clean Postgres 16.
+- GitHub Actions run 32775412763 passed both required jobs on PR #9 for the
+  My MatchLab record and Profile Project core: 31 web files and 238 tests, the
+  ordered migration chain through `0045`, and 99 API files with 911 tests on
+  clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
