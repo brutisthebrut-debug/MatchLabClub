@@ -48,13 +48,17 @@ and segment plan.
   and Trust & Data routes; the existing Matches lifecycle remains canonical.
   Legacy URLs continue to resolve and map to the owning destination.
 - TypeScript project references and the API and web app typechecks pass.
-- Web suite: 28 files, 211 tests passed.
+- Web suite: 29 files, 228 tests passed.
 - Full API suite on a clean Postgres 16 service: 99 files and 911 tests passed;
   2 files and 8 optional OCR tests skipped.
 - GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
   install, typecheck, lint, schema drift, voice lint, web tests, the complete
   ordered migration chain (`0000` through `0045`) on clean Postgres 16, and the
   complete Postgres-backed API suite.
+- GitHub Actions run 32771160856 passed both required jobs on PR #5 for
+  production shell migration Segment 1: 29 web files and 228 tests, the ordered
+  migration chain through `0045`, and 99 API files with 911 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
