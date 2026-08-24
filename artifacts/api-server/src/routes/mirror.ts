@@ -207,7 +207,7 @@ router.get("/mirror/trends", async (req, res): Promise<void> => {
 
 // Gather the user's real signal coverage and synthesize the deterministic
 // self-portrait. Shared by both Mirror endpoints so they read the same brain.
-async function loadMirrorPortrait(userId: string) {
+export async function loadMirrorPortrait(userId: string) {
   const readiness = await computeReadiness(userId);
   const outcome = await computeOutcomeInsightForUser(userId);
   const threshold = await readinessThreshold();

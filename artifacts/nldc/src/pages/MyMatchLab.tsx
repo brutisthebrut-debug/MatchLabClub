@@ -25,6 +25,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { Link } from "wouter";
+import { MirrorLearningReview } from "@/components/mirror/MirrorLearningReview";
 
 export default function MyMatchLab() {
   useMeta(
@@ -204,6 +205,8 @@ export default function MyMatchLab() {
                   </div>
                 )}
               </section>
+
+              <MirrorLearningReview canSync={Boolean(portrait)} />
 
               <section className="rounded-[2rem] border border-foreground/10 bg-background/72 p-5 shadow-sm sm:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-4">

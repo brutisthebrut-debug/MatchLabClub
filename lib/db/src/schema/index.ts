@@ -55,6 +55,7 @@ export * from "./safety";
 export * from "./matching_readiness_snapshots";
 export * from "./matching_nudge_state";
 export * from "./mirror_digest_prefs";
+export * from "./mirror_learnings";
 
 export * from "./founder_brain";
 
