@@ -28,7 +28,6 @@ const Integrations = lazy(() => import("@/pages/Integrations"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const Waitlist = lazy(() => import("@/pages/Waitlist"));
 const Lab = lazy(() => import("@/pages/Lab"));
-const PhotoLab = lazy(() => import("@/pages/PhotoLab"));
 const SignalCheck = lazy(() => import("@/pages/SignalCheck"));
 const Roadmap = lazy(() => import("@/pages/Roadmap"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
@@ -223,7 +222,11 @@ function Router() {
           <Redirect to="/signal-check" />
         </Route>
         <Route path="/lab" component={Lab} />
-        <Route path="/photo-lab" component={PhotoLab} />
+        {/* Photo Lab is fully absorbed into the durable Profile Project.
+            Keep the old URL as a compatibility redirect for saved links. */}
+        <Route path="/photo-lab">
+          <Redirect to="/my-matchlab/profile" />
+        </Route>
         <Route path="/signal-check" component={SignalCheck} />
         <Route path="/roadmap" component={Roadmap} />
         <Route path="/privacy" component={Privacy} />
