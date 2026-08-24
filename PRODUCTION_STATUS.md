@@ -35,7 +35,11 @@ report versions, the persistent private photo collection, and immutable Photo
 Lab analyses that can be reopened or deleted. The standalone Photo Lab and
 own-profile audit routes now redirect only after their signed-in workflows were
 absorbed; durable report ids survive the compatibility redirect. Profile Reader
-remains separate because it interprets another person's profile.
+remains separate because it interprets another person's profile. The canonical
+My MatchLab record now also owns durable proposed, confirmed, corrected, and
+dismissed Mirror learning. Matching use remains a separate, reversible member
+grant; changing a matching-approved learning pauses candidacy until the member
+reviews it again.
 See `SHELL_MIGRATION.md` for the completion standard, route matrix, and
 segment plan.
 
@@ -75,11 +79,15 @@ segment plan.
   Weak, placeholder, wrong-format, implausible-age, or directly contradictory
   sources return an explicit insufficient-evidence response and cannot
   manufacture a report. Generated reads remain proposed coaching observations.
+- My MatchLab now owns the durable confirm-before-learning lifecycle. Echo's
+  grounded themes enter as proposals; the member can confirm, correct, dismiss,
+  unconfirm, or separately allow matching use. Corrections and revocations never
+  preserve stale matching approval, and active candidacy pauses for review.
 - `/start`, `/signal-check`, and `/diagnosis` redirect to canonical capture;
   `/report/:id` preserves the durable audit id in canonical history.
 - TypeScript project references and the API and web app typechecks pass.
-- Web suite: 35 files, 247 tests passed.
-- Full API suite on a clean Postgres 16 service: 100 files and 925 tests passed;
+- Web suite: 36 files, 250 tests passed.
+- Full API suite on a clean Postgres 16 service: 101 files and 930 tests passed;
   2 files and 8 optional OCR tests skipped.
 - GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
   install, typecheck, lint, schema drift, voice lint, web tests, the complete
@@ -108,6 +116,10 @@ segment plan.
   evidence-validated Profile Project reads: 35 web files with 247 tests, the
   ordered migration chain through `0046`, and 100 API files with 925 tests on
   clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32786262672 passed both required jobs on PR #17 for the
+  confirmed Mirror-learning lifecycle: 36 web files with 250 tests, the ordered
+  migration chain through `0047`, and 101 API files with 930 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
@@ -144,7 +156,7 @@ Do not represent the current repository as production-ready. Automated Phase 0
 verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
-gates include applying migrations `0041` through `0045` in the release
+gates include applying migrations `0041` through `0047` in the release
 environment, completing the shell migration and authenticated walkthroughs,
 then exercising Checkout/webhooks, renewal, cancellation, failure, and refund
 behavior in Stripe test mode and obtaining founder/legal approval before any
