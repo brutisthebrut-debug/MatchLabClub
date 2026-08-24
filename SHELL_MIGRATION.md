@@ -138,11 +138,35 @@ State: merged to `main` and verified.
   ordered migrations through `0045`, and 99 API files with 911 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3B2: durable Photo Lab service
+
+State: merged to `main` and verified.
+
+- Profile Project now owns lineup configuration, analysis, saved run history,
+  reopening, and member-directed deletion for the member's persistent photos.
+- Every run is immutable and owner-scoped. It preserves source photo ids,
+  member-declared composition inputs, the written result, provenance, and its
+  timestamp so earlier analyses are not silently rewritten.
+- Optional raw image bytes are used only during the request and discarded. They
+  are never copied into the durable analysis record.
+- Photo storage, analysis, and mutual-match reveal remain separate permissions;
+  saving an analysis does not grant matching use.
+- The canonical member view presents ordered roles, rationale, notes, and
+  checklist guidance without the engine's numeric score or appearance grading.
+- Photo Lab history is included in member data export and both account-deletion
+  paths.
+- The standalone `/photo-lab` page now redirects to Profile Project because
+  its signed-in workflow and durable results have been absorbed. The anonymous
+  ranking API remains as a compatibility capability rather than a second saved
+  member surface.
+- PR #13 merged as `adbbe4b3`; GitHub Actions run `32781612723` passed
+  typecheck, lint, schema drift, voice lint, 33 web files with 242 tests,
+  ordered migrations through `0046`, and 99 API files with 914 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Persist Photo Lab lineup analyses and absorb ranking into Profile Project;
-   then retire the duplicate Photo Lab surface with route and record evidence.
-2. Absorb audit capture/generation into Profile Project, then redirect the
+1. Absorb audit capture/generation into Profile Project, then redirect the
    remaining audit-first entry points after deep-link compatibility is proven.
 2. Consolidate Mirror trends, relationship-language tools, and confirmed
    learning into the My MatchLab record.
