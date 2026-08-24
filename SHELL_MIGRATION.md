@@ -190,10 +190,33 @@ State: merged to `main` and verified.
   ordered migrations through `0046`, and 100 API files with 925 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3C1: confirmed Mirror-learning lifecycle
+
+State: merged to `main` and verified.
+
+- Echo's grounded Mirror themes enter one durable, owner-scoped review record as
+  proposals rather than automatic member truth.
+- Members can confirm, correct, dismiss, or return a learning to review. A
+  correction creates a new proposal without silently confirming the edited text.
+- Matching use is a separate, reversible decision available only after member
+  confirmation.
+- Correcting, unconfirming, dismissing, or revoking a matching-approved learning
+  removes stale matching permission and pauses active candidacy until review.
+- My MatchLab owns the signed-in review workflow and never substitutes sample
+  data when the record is empty or unavailable.
+- Confirmed learning is included in export and both account-deletion paths.
+- Relationship-language tools remain available until their saved behavior is
+  absorbed; no route was retired in this sub-segment.
+- PR #17 merged as `ac48203c`; GitHub Actions run `32786262672` passed
+  typecheck, lint, schema drift, voice lint, 36 web files with 250 tests,
+  ordered migrations through `0047`, and 101 API files with 930 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Consolidate Mirror trends, relationship-language tools, and confirmed
-   learning into the My MatchLab record.
+1. Absorb selected Mirror trends and relationship-language tools into the same
+   canonical My MatchLab record, preserving durable answers and provenance
+   before redirecting any duplicate route.
 2. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
 3. Consolidate games and quizzes into Play with confirmed-learning handoff.
