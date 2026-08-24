@@ -19,6 +19,7 @@ import {
 } from "@/lib/profileProjectRecords";
 import {
   getGetMyPhotosQueryKey,
+  getListAuditReportVersionsQueryKey,
   getListProfilesQueryKey,
   useAddMyPhoto,
   useCreateProfile,
@@ -163,6 +164,9 @@ export default function ProfileProject() {
     selectedAudit?.id ?? 0,
     {
       query: {
+        queryKey: getListAuditReportVersionsQueryKey(
+          selectedAudit?.id ?? 0,
+        ),
         enabled: selectedAudit !== null,
         retry: false,
       },
