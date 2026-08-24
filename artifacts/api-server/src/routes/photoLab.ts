@@ -1,5 +1,15 @@
-import { Router, type IRouter } from "express";
-import { RankPhotoLabBody, RankPhotoLabResponse } from "@workspace/api-zod";
+import { Router, type IRouter, type Request } from "express";
+import { and, desc, eq, inArray } from "drizzle-orm";
+import {
+  db,
+  photoLabRunsTable,
+  profilePhotosTable,
+} from "@workspace/db";
+import {
+  RankPhotoLabBody,
+  RankPhotoLabResponse,
+} from "@workspace/api-zod";
+import { z } from "zod/v4";
 import {
   rankPhotosDeterministic,
   type PhotoLabPhotoInput,
@@ -10,50 +20,99 @@ import { computeNextActions } from "../lib/readiness";
 
 const router: IRouter = Router();
 
-// Photo Lab: rank several photos and recommend a single lead shot. The
-// deterministic ranking is always on and is built only from the composition
-// attributes the member declares per photo, never from the pixels. When the
-// deep AI lane is on and images are supplied, an opt-in Claude vision pass adds
-// depth. Photos are never stored. Anon-safe: callers without a session still get
-// the deterministic ranking, just without the Mirror tie-in and next signal.
-router.post("/photo-lab/rank", async (req, res) => {
-  const parsed = RankPhotoLabBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "invalid_payload", detail: parsed.error.message });
-    return;
-  }
-  const body = parsed.data;
-  const userId = req.user?.id;
+type PhotoLabBody = z.infer<typeof RankPhotoLabBody>;
+type PhotoLabResult = z.infer<typeof RankPhotoLabResponse>;
 
+function sourcePhotoId(inputId: string): number | null {
+  const match = /^profile-photo-(\d+)$/.exec(inputId);
+  if (!match) return null;
+  const id = Number(match[1]);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+function serializeRun(row: typeof photoLabRunsTable.$inferSelect) {
+  return {
+    id: row.id,
+    sourcePhotoIds: row.sourcePhotoIds,
+    inputSnapshot: row.inputSnapshot,
+    result: row.result,
+    createdAt:
+      row.createdAt instanceof Date
+        ? row.createdAt.toISOString()
+        : String(row.createdAt),
+  };
+}
+
+async function ownedSourcePhotoIds(
+  userId: string,
+  body: PhotoLabBody,
+): Promise<number[] | null> {
+  const parsed = body.photos.map((photo) => sourcePhotoId(photo.id));
+  if (parsed.some((id) => id === null)) return null;
+  const ids = Array.from(new Set(parsed as number[]));
+  if (ids.length !== body.photos.length) return null;
+
+  const owned = await db
+    .select({ id: profilePhotosTable.id })
+    .from(profilePhotosTable)
+    .where(
+      and(
+        eq(profilePhotosTable.userId, userId),
+        inArray(profilePhotosTable.id, ids),
+      ),
+    );
+  return owned.length === ids.length ? ids : null;
+}
+
+function durableInputSnapshot(body: PhotoLabBody): Record<string, unknown> {
+  return {
+    photos: body.photos.map((photo) => ({
+      id: photo.id,
+      shotType: photo.shotType,
+      wellLit: photo.wellLit ?? null,
+      genuineExpression: photo.genuineExpression ?? null,
+    })),
+    datingGoal: body.datingGoal ?? null,
+    sourceApp: body.sourceApp ?? null,
+  };
+}
+
+async function buildRanking(
+  req: Request,
+  body: PhotoLabBody,
+): Promise<PhotoLabResult> {
+  const userId = req.user?.id;
   const ranking = rankPhotosDeterministic({
     photos: body.photos.map(
-      (p): PhotoLabPhotoInput => ({
-        id: p.id,
-        shotType: p.shotType,
-        wellLit: p.wellLit ?? undefined,
-        genuineExpression: p.genuineExpression ?? undefined,
+      (photo): PhotoLabPhotoInput => ({
+        id: photo.id,
+        shotType: photo.shotType,
+        wellLit: photo.wellLit ?? undefined,
+        genuineExpression: photo.genuineExpression ?? undefined,
       }),
     ),
     datingGoal: body.datingGoal ?? null,
     sourceApp: body.sourceApp ?? null,
   });
 
-  // Opt-in vision layer. comparePhotosVision enforces consent + daily cap and
-  // never throws, returning a fallback reason instead.
+  // Images are used only for this optional in-memory vision pass. Neither the
+  // request bytes nor image metadata are copied into the durable run record.
   let visionMode: "live" | "fallback" = "fallback";
   let visionFallbackReason: string | null = null;
   let visionAnalysis: Awaited<
     ReturnType<typeof comparePhotosVision>
   >["analysis"] = null;
   const withImages = body.photos.filter(
-    (p) => typeof p.imageBase64 === "string" && p.imageBase64.trim().length > 0,
+    (photo) =>
+      typeof photo.imageBase64 === "string" &&
+      photo.imageBase64.trim().length > 0,
   );
   if (userId && withImages.length > 0) {
     const vision = await comparePhotosVision({
-      photos: withImages.map((p) => ({
-        id: p.id,
-        imageBase64: p.imageBase64 as string,
-        imageMediaType: p.imageMediaType ?? null,
+      photos: withImages.map((photo) => ({
+        id: photo.id,
+        imageBase64: photo.imageBase64 as string,
+        imageMediaType: photo.imageMediaType ?? null,
       })),
       userId,
       sourceApp: body.sourceApp ?? null,
@@ -63,12 +122,10 @@ router.post("/photo-lab/rank", async (req, res) => {
       visionMode = "live";
       visionAnalysis = vision.analysis;
     } else {
-      visionMode = "fallback";
       visionFallbackReason = vision.fallbackReason ?? null;
     }
   }
 
-  // Handoff back to Your Mirror and the next best signal for signed-in members.
   let mirror: { href: string; line: string } | null = null;
   let nextSignal: {
     label: string;
@@ -77,12 +134,9 @@ router.post("/photo-lab/rank", async (req, res) => {
     points: number;
   } | null = null;
   if (userId) {
-    // The Mirror tie-in is always offered to signed-in members. The next-best
-    // signal is best-effort: a transient readiness failure must not suppress the
-    // /your-mirror handoff.
     mirror = {
       href: "/your-mirror",
-      line: "This ranking feeds Your Mirror, the full picture the machine keeps of you.",
+      line: "This photo read is part of your Profile Project record.",
     };
     try {
       const readiness = await computeReadiness(userId);
@@ -109,7 +163,7 @@ router.post("/photo-lab/rank", async (req, res) => {
     }
   }
 
-  const payload = RankPhotoLabResponse.parse({
+  return RankPhotoLabResponse.parse({
     leadShotId: ranking.leadShotId,
     leadShotRationale: ranking.leadShotRationale,
     summary: ranking.summary,
@@ -121,7 +175,123 @@ router.post("/photo-lab/rank", async (req, res) => {
     nextSignal,
     mirror,
   });
-  res.json(payload);
+}
+
+// Compatibility endpoint for anonymous and temporary Photo Lab sessions.
+// Signed-in durable runs use /me/photo-lab-runs.
+router.post("/photo-lab/rank", async (req, res) => {
+  const parsed = RankPhotoLabBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "invalid_payload",
+      detail: parsed.error.message,
+    });
+    return;
+  }
+  res.json(await buildRanking(req, parsed.data));
+});
+
+// Create an immutable, reopenable Photo Lab run from member-owned photos.
+router.post("/me/photo-lab-runs", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const parsed = RankPhotoLabBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "invalid_payload",
+      detail: parsed.error.message,
+    });
+    return;
+  }
+
+  const sourcePhotoIds = await ownedSourcePhotoIds(req.user.id, parsed.data);
+  if (!sourcePhotoIds) {
+    res.status(400).json({
+      error: "Every analysis input must reference a distinct profile photo you own.",
+    });
+    return;
+  }
+
+  const result = await buildRanking(req, parsed.data);
+  const [run] = await db
+    .insert(photoLabRunsTable)
+    .values({
+      userId: req.user.id,
+      sourcePhotoIds,
+      inputSnapshot: durableInputSnapshot(parsed.data),
+      result: result as unknown as Record<string, unknown>,
+    })
+    .returning();
+
+  res.status(201).json(serializeRun(run!));
+});
+
+router.get("/me/photo-lab-runs", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(photoLabRunsTable)
+    .where(eq(photoLabRunsTable.userId, req.user.id))
+    .orderBy(desc(photoLabRunsTable.createdAt), desc(photoLabRunsTable.id))
+    .limit(50);
+  res.json({ runs: rows.map(serializeRun) });
+});
+
+router.get("/me/photo-lab-runs/:id", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id)) {
+    res.status(404).json({ error: "Photo analysis not found" });
+    return;
+  }
+  const [row] = await db
+    .select()
+    .from(photoLabRunsTable)
+    .where(
+      and(
+        eq(photoLabRunsTable.id, id),
+        eq(photoLabRunsTable.userId, req.user.id),
+      ),
+    );
+  if (!row) {
+    res.status(404).json({ error: "Photo analysis not found" });
+    return;
+  }
+  res.json(serializeRun(row));
+});
+
+router.delete("/me/photo-lab-runs/:id", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id)) {
+    res.status(404).json({ error: "Photo analysis not found" });
+    return;
+  }
+  const [deleted] = await db
+    .delete(photoLabRunsTable)
+    .where(
+      and(
+        eq(photoLabRunsTable.id, id),
+        eq(photoLabRunsTable.userId, req.user.id),
+      ),
+    )
+    .returning({ id: photoLabRunsTable.id });
+  if (!deleted) {
+    res.status(404).json({ error: "Photo analysis not found" });
+    return;
+  }
+  res.json({ deleted: true, id: deleted.id });
 });
 
 export default router;
