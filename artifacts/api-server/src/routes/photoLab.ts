@@ -9,7 +9,6 @@ import {
   RankPhotoLabBody,
   RankPhotoLabResponse,
 } from "@workspace/api-zod";
-import { z } from "zod/v4";
 import {
   rankPhotosDeterministic,
   type PhotoLabPhotoInput,
@@ -20,8 +19,17 @@ import { computeNextActions } from "../lib/readiness";
 
 const router: IRouter = Router();
 
-type PhotoLabBody = z.infer<typeof RankPhotoLabBody>;
-type PhotoLabResult = z.infer<typeof RankPhotoLabResponse>;
+type PhotoLabBody = {
+  photos: Array<
+    PhotoLabPhotoInput & {
+      imageBase64?: string | null;
+      imageMediaType?: string | null;
+    }
+  >;
+  datingGoal?: string | null;
+  sourceApp?: string | null;
+};
+type PhotoLabResult = ReturnType<typeof RankPhotoLabResponse.parse>;
 
 function sourcePhotoId(inputId: string): number | null {
   const match = /^profile-photo-(\d+)$/.exec(inputId);
@@ -188,7 +196,7 @@ router.post("/photo-lab/rank", async (req, res) => {
     });
     return;
   }
-  res.json(await buildRanking(req, parsed.data));
+  res.json(await buildRanking(req, parsed.data as PhotoLabBody));
 });
 
 // Create an immutable, reopenable Photo Lab run from member-owned photos.
@@ -206,7 +214,8 @@ router.post("/me/photo-lab-runs", async (req, res): Promise<void> => {
     return;
   }
 
-  const sourcePhotoIds = await ownedSourcePhotoIds(req.user.id, parsed.data);
+  const body = parsed.data as PhotoLabBody;
+  const sourcePhotoIds = await ownedSourcePhotoIds(req.user.id, body);
   if (!sourcePhotoIds) {
     res.status(400).json({
       error: "Every analysis input must reference a distinct profile photo you own.",
@@ -214,13 +223,13 @@ router.post("/me/photo-lab-runs", async (req, res): Promise<void> => {
     return;
   }
 
-  const result = await buildRanking(req, parsed.data);
+  const result = await buildRanking(req, body);
   const [run] = await db
     .insert(photoLabRunsTable)
     .values({
       userId: req.user.id,
       sourcePhotoIds,
-      inputSnapshot: durableInputSnapshot(parsed.data),
+      inputSnapshot: durableInputSnapshot(body),
       result: result as unknown as Record<string, unknown>,
     })
     .returning();
