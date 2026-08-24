@@ -46,6 +46,7 @@ import {
   matchConnectionsTable,
   connectionMessagesTable,
   profilePhotosTable,
+  photoLabRunsTable,
   careDialectProfilesTable,
   connectorConnectionsTable,
   oauthTokensTable,
@@ -355,6 +356,7 @@ async function buildExportPayload(userId: string) {
     matchProposals,
     matchConnections,
     profilePhotos,
+    photoLabRuns,
     aiUsageCounters,
     companionState,
     companionMessages,
@@ -413,6 +415,7 @@ async function buildExportPayload(userId: string) {
         ),
       ),
     db.select().from(profilePhotosTable).where(eq(profilePhotosTable.userId, userId)),
+    db.select().from(photoLabRunsTable).where(eq(photoLabRunsTable.userId, userId)),
     db.select().from(aiUsageCountersTable).where(eq(aiUsageCountersTable.userId, userId)),
     db.select().from(companionStateTable).where(eq(companionStateTable.userId, userId)),
     db.select().from(companionMessagesTable).where(eq(companionMessagesTable.userId, userId)),
@@ -528,6 +531,7 @@ async function buildExportPayload(userId: string) {
       matchConnections,
       connectionMessages,
       profilePhotos,
+      photoLabRuns,
       aiUsageCounters,
       companionState,
       companionMessages,
@@ -956,6 +960,12 @@ router.delete("/account", async (req, res): Promise<void> => {
       .delete(matchConnectionsTable)
       .where(inArray(matchConnectionsTable.id, connectionIds));
   }
+
+  // Durable Photo Lab results are member-owned data. They contain only photo
+  // row references plus the declared inputs and textual result, never image bytes.
+  await db
+    .delete(photoLabRunsTable)
+    .where(eq(photoLabRunsTable.userId, userId));
 
   // Profile photo rows. We store only the object path, never the bytes; the
   // stored objects are best-effort purged separately, the rows go here.
@@ -1443,6 +1453,13 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         tables["connection_messages"] = 0;
         tables["match_connections"] = 0;
       }
+
+      // Photo Lab history must be removed before the referenced photo rows.
+      const photoLabRunsDel = await tx
+        .delete(photoLabRunsTable)
+        .where(eq(photoLabRunsTable.userId, userId))
+        .returning({ id: photoLabRunsTable.id });
+      tables["photo_lab_runs"] = photoLabRunsDel.length;
 
       // Profile photo rows (object bytes are purged best-effort elsewhere).
       const photosDel = await tx

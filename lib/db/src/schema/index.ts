@@ -39,6 +39,7 @@ export * from "./ai_usage_counters";
 export * from "./matching";
 export * from "./match_connections";
 export * from "./profile_photos";
+export * from "./photo_lab_runs";
 export * from "./dating_wins";
 export * from "./behavioral_growth_events";
 export * from "./wyr_answers";

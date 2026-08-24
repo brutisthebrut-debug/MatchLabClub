@@ -8,7 +8,13 @@ import express, {
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import crypto from "crypto";
-import { pool } from "@workspace/db";
+import {
+  db,
+  pool,
+  photoLabRunsTable,
+  profilePhotosTable,
+} from "@workspace/db";
+import { eq } from "drizzle-orm";
 import type { AuthUser } from "@workspace/api-zod";
 import { RankPhotoLabResponse } from "@workspace/api-zod";
 import photoLabRouter from "./photoLab";
@@ -50,12 +56,36 @@ function makeTestApp(): TestApp {
 
 let testApp: TestApp;
 const TEST_USER_ID = `test-photolab-${crypto.randomBytes(6).toString("hex")}`;
+const OTHER_USER_ID = `${TEST_USER_ID}-other`;
+let sourcePhotoIds: number[] = [];
 
-beforeAll(() => {
+beforeAll(async () => {
   testApp = makeTestApp();
+  const rows = await db
+    .insert(profilePhotosTable)
+    .values([
+      {
+        userId: TEST_USER_ID,
+        objectPath: "/objects/uploads/photo-lab-test-one",
+        ordinal: 0,
+      },
+      {
+        userId: TEST_USER_ID,
+        objectPath: "/objects/uploads/photo-lab-test-two",
+        ordinal: 1,
+      },
+    ])
+    .returning({ id: profilePhotosTable.id });
+  sourcePhotoIds = rows.map((row) => row.id);
 });
 
 afterAll(async () => {
+  await db
+    .delete(photoLabRunsTable)
+    .where(eq(photoLabRunsTable.userId, TEST_USER_ID));
+  await db
+    .delete(profilePhotosTable)
+    .where(eq(profilePhotosTable.userId, TEST_USER_ID));
   await pool.end();
 });
 
@@ -157,5 +187,106 @@ describe("POST /api/photo-lab/rank", () => {
     expect(res.body.visionAnalysis).toBeNull();
     // Deterministic ranking still present.
     expect(res.body.leadShotId).toBe("withimg");
+  });
+});
+
+
+describe("durable /api/me/photo-lab-runs", () => {
+  it("requires authentication", async () => {
+    testApp.setUser(null);
+    const res = await request(testApp.app).get("/api/me/photo-lab-runs");
+    expect(res.status).toBe(401);
+  });
+
+  it("creates an immutable owner-scoped run without persisting image bytes", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    const res = await request(testApp.app)
+      .post("/api/me/photo-lab-runs")
+      .send({
+        photos: [
+          {
+            id: `profile-photo-${sourcePhotoIds[0]}`,
+            shotType: "solo_face",
+            wellLit: true,
+            genuineExpression: true,
+            imageBase64:
+              "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+            imageMediaType: "image/png",
+          },
+          {
+            id: `profile-photo-${sourcePhotoIds[1]}`,
+            shotType: "activity",
+            wellLit: true,
+          },
+        ],
+        sourceApp: "Hinge",
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.sourcePhotoIds).toEqual(sourcePhotoIds);
+    expect(res.body.inputSnapshot.photos).toHaveLength(2);
+    expect(JSON.stringify(res.body.inputSnapshot)).not.toContain("imageBase64");
+    expect(JSON.stringify(res.body.inputSnapshot)).not.toContain("image/png");
+    expect(res.body.result.leadShotId).toBe(
+      `profile-photo-${sourcePhotoIds[0]}`,
+    );
+    expect(res.body.createdAt).toEqual(expect.any(String));
+
+    const list = await request(testApp.app).get("/api/me/photo-lab-runs");
+    expect(list.status).toBe(200);
+    expect(list.body.runs.map((run: { id: number }) => run.id)).toContain(
+      res.body.id,
+    );
+
+    testApp.setUser({ id: OTHER_USER_ID });
+    const hidden = await request(testApp.app).get(
+      `/api/me/photo-lab-runs/${res.body.id}`,
+    );
+    expect(hidden.status).toBe(404);
+    const cannotDelete = await request(testApp.app).delete(
+      `/api/me/photo-lab-runs/${res.body.id}`,
+    );
+    expect(cannotDelete.status).toBe(404);
+
+    testApp.setUser({ id: TEST_USER_ID });
+    const reopened = await request(testApp.app).get(
+      `/api/me/photo-lab-runs/${res.body.id}`,
+    );
+    expect(reopened.status).toBe(200);
+    expect(reopened.body.result).toEqual(res.body.result);
+
+    const deleted = await request(testApp.app).delete(
+      `/api/me/photo-lab-runs/${res.body.id}`,
+    );
+    expect(deleted.status).toBe(200);
+    expect(deleted.body).toEqual({ deleted: true, id: res.body.id });
+  });
+
+  it("rejects arbitrary, duplicated, and unowned source ids", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    const arbitrary = await request(testApp.app)
+      .post("/api/me/photo-lab-runs")
+      .send({ photos: [{ id: "temporary", shotType: "solo_face" }] });
+    expect(arbitrary.status).toBe(400);
+
+    const duplicated = await request(testApp.app)
+      .post("/api/me/photo-lab-runs")
+      .send({
+        photos: [
+          { id: `profile-photo-${sourcePhotoIds[0]}`, shotType: "solo_face" },
+          { id: `profile-photo-${sourcePhotoIds[0]}`, shotType: "activity" },
+        ],
+      });
+    expect(duplicated.status).toBe(400);
+
+    testApp.setUser({ id: OTHER_USER_ID });
+    const unowned = await request(testApp.app)
+      .post("/api/me/photo-lab-runs")
+      .send({
+        photos: [
+          { id: `profile-photo-${sourcePhotoIds[0]}`, shotType: "solo_face" },
+        ],
+      });
+    expect(unowned.status).toBe(400);
   });
 });
