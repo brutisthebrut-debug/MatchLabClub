@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   decideMirrorLearning,
   listMirrorLearnings,
+  proposeCommunicationLearning,
   syncMirrorLearnings,
 } from "./mirrorLearnings";
 
@@ -33,6 +34,15 @@ describe("mirror learning client", () => {
       expect.objectContaining({ method: "POST" }),
     );
 
+    await proposeCommunicationLearning("care_dialect");
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/me/mirror-learnings/communication",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ source: "care_dialect" }),
+      }),
+    );
+
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: 7, status: "confirmed" }),
@@ -57,4 +67,3 @@ describe("mirror learning client", () => {
     ).rejects.toThrow("Confirm this learning first.");
   });
 });
-

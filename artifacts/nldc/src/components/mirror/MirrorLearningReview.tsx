@@ -31,6 +31,16 @@ export function MirrorLearningReview({
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    const refresh = () => {
+      listMirrorLearnings()
+        .then((result) => setLearnings(result.learnings))
+        .catch((err: Error) => setError(err.message));
+    };
+    window.addEventListener("mirror-learning-updated", refresh);
+    return () => window.removeEventListener("mirror-learning-updated", refresh);
+  }, []);
+
   const counts = useMemo(
     () => ({
       proposed: learnings.filter((item) => item.status === "proposed").length,
@@ -168,4 +178,3 @@ export function MirrorLearningReview({
     </section>
   );
 }
-
