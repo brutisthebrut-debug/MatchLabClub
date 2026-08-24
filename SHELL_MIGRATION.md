@@ -116,11 +116,30 @@ State: merged to `main` and verified.
   ordered migrations through `0045`, and 99 API files with 911 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3B1: durable Profile Project records
+
+State: implemented in code, pending CI and merge.
+
+- Profile Project now lists the member's live audit records and reopens both the
+  current report and every saved report version.
+- The canonical view preserves audit source/app provenance while presenting
+  strengths, cautions, the written read, suggested bio, and action plan without
+  displaying the legacy readiness score or grade.
+- Profile Project now owns the persistent private photo collection: members can
+  add and remove the actual account-backed photos from the canonical workflow.
+- Storage remains separate from mutual-match reveal consent.
+- Audit capture/generation, compatibility report routes, and Photo Lab ranking
+  remain transitional. No route is retired in this slice because Photo Lab
+  ranking results are still session-only and cannot yet be reopened.
+- Regression helpers prove historical report versions reopen exactly and the
+  member projection does not expose numeric grading.
+
 ## Next segments
 
-1. Absorb full audit reports and Photo Lab results into Profile Project,
-   preserving history and source records before retiring their duplicate
-   surfaces.
+1. Persist Photo Lab lineup analyses and absorb ranking into Profile Project;
+   then retire the duplicate Photo Lab surface with route and record evidence.
+2. Absorb audit capture/generation into Profile Project, then redirect the
+   remaining audit-first entry points after deep-link compatibility is proven.
 2. Consolidate Mirror trends, relationship-language tools, and confirmed
    learning into the My MatchLab record.
 3. Consolidate dates, journal, debrief, experiments, and reflections into a
