@@ -302,14 +302,15 @@ describe("GET /api/founder/ocr-mismatches", () => {
     }
   });
 
-  it("rejects requests without the founder key", async () => {
+  it("requires a signed-in founder and ignores the retired browser key", async () => {
     const resNoKey = await request(app).get("/api/founder/ocr-mismatches");
     expect(resNoKey.status).toBe(401);
-    expect(resNoKey.body).toEqual({ error: "Founder key required." });
+    expect(resNoKey.body).toEqual({ error: "Sign in with a founder account." });
 
     const resWrongKey = await request(app)
       .get("/api/founder/ocr-mismatches")
       .set("x-founder-key", "not-the-right-key");
     expect(resWrongKey.status).toBe(401);
+    expect(resWrongKey.body).toEqual({ error: "Sign in with a founder account." });
   });
 });
