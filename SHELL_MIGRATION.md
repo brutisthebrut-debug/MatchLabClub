@@ -15,7 +15,12 @@ gates.
 
 ## Segment 1: navigation spine and destination hubs
 
-State: implemented in code, pending CI and merge.
+State: merged to `main` and verified.
+
+Verification: PR #5 merged as `4c579649`; GitHub Actions run `32771160856`
+passed typecheck, lint, schema drift, voice lint, 29 web test files with 228
+tests, ordered migrations through `0045`, and 99 API test files with 911 tests
+on clean Postgres 16. The 8 skipped API tests are the optional OCR suites.
 
 The authenticated shell now has five member destinations:
 
