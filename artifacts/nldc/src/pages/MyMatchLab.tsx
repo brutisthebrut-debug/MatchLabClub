@@ -4,6 +4,8 @@ import { useMeta } from "@/hooks/useMeta";
 import {
   getGetMirrorPortraitQueryKey,
   getListWellnessAnswersQueryKey,
+  getListProfilesQueryKey,
+  getListImportsQueryKey,
   useGetMirrorPortrait,
   useListImports,
   useListProfiles,
@@ -45,10 +47,16 @@ export default function MyMatchLab() {
     },
   });
   const profilesQuery = useListProfiles({
-    query: { enabled: isAuthenticated },
+    query: {
+      queryKey: getListProfilesQueryKey(),
+      enabled: isAuthenticated,
+    },
   });
   const importsQuery = useListImports({
-    query: { enabled: isAuthenticated },
+    query: {
+      queryKey: getListImportsQueryKey(),
+      enabled: isAuthenticated,
+    },
   });
 
   const portrait = portraitQuery.data;
