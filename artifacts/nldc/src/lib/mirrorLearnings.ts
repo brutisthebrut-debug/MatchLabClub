@@ -45,6 +45,15 @@ export function syncMirrorLearnings(): Promise<LearningEnvelope> {
   return json("/me/mirror-learnings/sync", { method: "POST" });
 }
 
+export function proposeCommunicationLearning(
+  source: "care_dialect" | "standards",
+): Promise<MirrorLearning> {
+  return json("/me/mirror-learnings/communication", {
+    method: "POST",
+    body: JSON.stringify({ source }),
+  });
+}
+
 export type MirrorLearningDecision =
   | { action: "confirm" }
   | { action: "revise"; learning: string }
@@ -61,4 +70,3 @@ export function decideMirrorLearning(
     body: JSON.stringify(decision),
   });
 }
-

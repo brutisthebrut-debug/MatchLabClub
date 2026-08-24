@@ -5518,6 +5518,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/mirror-learnings/communication:
+    post:
+      tags: [Matching]
+      operationId: proposeCommunicationLearning
+      summary: Create a proposed learning from saved relationship-language evidence
+      description: |
+        Derives a reviewable proposal from the member's saved Care Dialect or
+        relationship standards. The operation never confirms the learning or
+        approves matching use, and it never overwrites an existing member decision.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source]
+              properties:
+                source:
+                  type: string
+                  enum: [care_dialect, standards]
+      responses:
+        '200':
+          description: The proposed or previously decided learning.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MirrorLearning'
+        '400':
+          description: Invalid source.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '422':
+          description: The selected source has insufficient saved evidence.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/flags:
     get:
       tags: [Matching]

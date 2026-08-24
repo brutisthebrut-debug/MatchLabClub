@@ -21,11 +21,11 @@ import {
   HelpCircle,
   Loader2,
   ShieldCheck,
-  Sparkles,
   Wand2,
 } from "lucide-react";
 import { Link } from "wouter";
 import { MirrorLearningReview } from "@/components/mirror/MirrorLearningReview";
+import { CommunicationRecord } from "@/components/mirror/CommunicationRecord";
 
 export default function MyMatchLab() {
   useMeta(
@@ -208,6 +208,8 @@ export default function MyMatchLab() {
 
               <MirrorLearningReview canSync={Boolean(portrait)} />
 
+              <CommunicationRecord />
+
               <section className="rounded-[2rem] border border-foreground/10 bg-background/72 p-5 shadow-sm sm:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
@@ -312,35 +314,6 @@ export default function MyMatchLab() {
                 </Link>
               </section>
 
-              <section className="rounded-[2rem] border border-foreground/10 bg-background/75 p-5 shadow-sm">
-                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_52%)]">
-                  <Sparkles className="h-4 w-4" />
-                  Relationship language
-                </p>
-                <div className="mt-4 space-y-2">
-                  <Link
-                    href="/connection-style"
-                    className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold hover:bg-foreground/5"
-                  >
-                    Connection Style
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href="/care-dialect"
-                    className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold hover:bg-foreground/5"
-                  >
-                    Care Dialect
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href="/blueprint"
-                    className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold hover:bg-foreground/5"
-                  >
-                    Personal Blueprint
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </section>
             </aside>
           </div>
         </div>

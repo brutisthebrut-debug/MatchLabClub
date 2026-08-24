@@ -164,5 +164,55 @@ describe("Mirror learning lifecycle", () => {
       matchingUseApproved: false,
     });
   });
-});
 
+  it("derives a Care Dialect proposal from the saved server record", async () => {
+    const { db, careDialectProfilesTable } = await import("../lib/testDb");
+    testApp.setUser({ id: "learning-care" });
+    await db.insert(careDialectProfilesTable).values({
+      userId: "learning-care",
+      testedGiveTop: "helpingHands",
+      testedGiveDist: { helpingHands: 0.6 },
+      testedReceiveTop: "undividedTime",
+      testedReceiveDist: { undividedTime: 0.8 },
+    });
+    const response = await request(testApp.app)
+      .post("/api/me/mirror-learnings/communication")
+      .send({ source: "care_dialect" });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      status: "proposed",
+      matchingUseApproved: false,
+      confidence: 70,
+      source: {
+        type: "relationship_language",
+        ref: "care-dialect",
+      },
+    });
+    expect(response.body.proposedLearning).toMatch(/helping hands/i);
+    expect(response.body.proposedLearning).toMatch(/undivided time/i);
+  });
+
+  it("derives standards only from the member's saved flag selection", async () => {
+    const { db, flagSelectionsTable } = await import("../lib/testDb");
+    testApp.setUser({ id: "learning-standards" });
+    const empty = await request(testApp.app)
+      .post("/api/me/mirror-learnings/communication")
+      .send({ source: "standards" });
+    expect(empty.status).toBe(422);
+
+    await db.insert(flagSelectionsTable).values({
+      userId: "learning-standards",
+      bringFlags: ["communicates-openly"],
+      seekFlags: ["respects-boundaries"],
+    });
+    const response = await request(testApp.app)
+      .post("/api/me/mirror-learnings/communication")
+      .send({ source: "standards" });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      confidence: 100,
+      source: { ref: "relationship-standards" },
+    });
+    expect(response.body.observation).toMatch(/communicates openly/i);
+  });
+});
