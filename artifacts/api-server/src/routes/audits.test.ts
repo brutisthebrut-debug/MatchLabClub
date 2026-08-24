@@ -199,7 +199,7 @@ describe("POST /api/me/profile-project/audits", () => {
 
     const { dumpTable } = await import("../lib/testDb");
     const audits = dumpTable("audits");
-    const versions = dumpTable("auditReportVersions");
+    const versions = dumpTable("audit_report_versions");
     expect(audits).toHaveLength(1);
     expect(audits[0].userId).toBe(USER_ID);
     expect(versions).toHaveLength(1);
@@ -219,7 +219,7 @@ describe("POST /api/me/profile-project/audits", () => {
 
     const { dumpTable } = await import("../lib/testDb");
     expect(dumpTable("audits")).toHaveLength(0);
-    expect(dumpTable("auditReportVersions")).toHaveLength(0);
+    expect(dumpTable("audit_report_versions")).toHaveLength(0);
   });
 });
 
@@ -235,7 +235,7 @@ describe("audit generation evidence gate", () => {
     const row = dumpTable("audits").find((audit) => audit.id === id);
     expect(row?.report).toBeNull();
     expect(row?.readinessScore).toBeNull();
-    expect(dumpTable("auditReportVersions")).toHaveLength(0);
+    expect(dumpTable("audit_report_versions")).toHaveLength(0);
   });
 });
 
