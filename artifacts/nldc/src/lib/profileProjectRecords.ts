@@ -56,6 +56,8 @@ export function reportSections(report: AuditReport | null) {
     cautions: report.risks,
     bioRead: report.bioAudit,
     suggestedBio: report.rewrittenBio,
-    actions: report.actionPlan.map(\n      (item) => item.title + ": " + item.description,\n    ),
+    actions: report.actionPlan.map(
+      (item) => item.title + ": " + item.description,
+    ),
   };
 }
