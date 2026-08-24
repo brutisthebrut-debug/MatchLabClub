@@ -60,14 +60,27 @@ destinations.
 - Quiz Lab and Gallery can use the authenticated shell for signed-in members
   while remaining publicly reachable for guests.
 
+## Segment 2: consent-first onboarding
+
+State: implemented in code, pending CI and merge.
+
+- Starter answers are explicitly submitted as coaching-only.
+- Onboarding no longer displays a readiness score, points, a readiness climb, or
+  a percentage of the member "mapped."
+- The source step explains storage, Echo use, confirmed learning, and matching
+  use as four separate choices.
+- Echo's initial portrait is framed as a draft reflection, not confirmed
+  learning.
+- Skipping and completing onboarding both return to Today.
+- Regression coverage proves onboarding capture cannot infer matching, research,
+  or all-use consent.
+
 ## Next segments
 
-1. Replace the legacy onboarding readiness score with consent-first getting
-   known and source-permission choices.
-2. Consolidate Mirror and profile tools into the My MatchLab record and Profile
+1. Consolidate Mirror and profile tools into the My MatchLab record and Profile
    Project without losing saved results.
-3. Consolidate dates, journal, debrief, experiments, and reflections into a
+2. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
-4. Consolidate games and quizzes into Play with confirmed-learning handoff.
-5. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+3. Consolidate games and quizzes into Play with confirmed-learning handoff.
+4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
