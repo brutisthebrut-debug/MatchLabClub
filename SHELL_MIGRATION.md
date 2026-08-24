@@ -96,7 +96,7 @@ State: merged to `main` and verified.
 
 ## Segment 3A: My MatchLab record and Profile Project core
 
-State: implemented in code, pending CI and merge.
+State: merged to `main` and verified.
 
 - My MatchLab now reads the live member portrait, member-authored wellness
   answers, saved profiles, and imported-source records. It does not substitute
@@ -111,6 +111,10 @@ State: implemented in code, pending CI and merge.
   Profile Project after their shared rewrite capability was absorbed.
 - Full audit reports and Photo Lab remain transitional links. They are not
   marked consolidated until their saved results are owned by Profile Project.
+- PR #9 merged as `d6e1d6e9`; GitHub Actions run `32775412763`
+  passed typecheck, lint, schema drift, voice lint, 31 web files with 238 tests,
+  ordered migrations through `0045`, and 99 API files with 911 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
 ## Next segments
 
