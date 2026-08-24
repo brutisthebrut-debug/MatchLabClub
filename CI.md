@@ -6,11 +6,11 @@ GitHub Actions is the repository CI gate. The workflow at
 | Job | Commands | Database | Blocking release evidence |
 |---|---|---|---|
 | `static-verification` | typecheck, lint, schema drift, voice lint, web tests | no | yes |
-| `database-verification` | schema push plus the full API test suite | ephemeral Postgres 16 | yes |
+| `database-verification` | ordered migrations plus the full API test suite | ephemeral Postgres 16 | yes |
 
 Both jobs install with the pinned `pnpm@10.26.1` and
 `pnpm install --frozen-lockfile`. The database job creates a clean
-`matchlab_test` database, applies the current schema with `push-force`, and
+`matchlab_test` database, applies the committed Drizzle migrations in order with `migrate`, and
 then runs the API suite with `DATABASE_URL` set.
 
 Do not describe Phase 0 as release-verified until both jobs pass for the exact
@@ -35,7 +35,7 @@ For database-backed verification:
 
 ```sh
 export DATABASE_URL="postgres://postgres:postgres@localhost:5432/matchlab_test"
-pnpm --filter @workspace/db run push-force
+pnpm --filter @workspace/db run migrate
 pnpm --filter @workspace/api-server run test
 ```
 

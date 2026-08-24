@@ -46,9 +46,10 @@ not the approved final information architecture.
 - Web suite: 28 files, 211 tests passed.
 - Full API suite on a clean Postgres 16 service: 99 files and 911 tests passed;
   2 files and 8 optional OCR tests skipped.
-- GitHub Actions run 32746308944 passed both required jobs on PR #3: frozen
-  install, typecheck, lint, schema drift, voice lint, web tests, clean schema
-  push, and the complete Postgres-backed API suite.
+- GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
+  install, typecheck, lint, schema drift, voice lint, web tests, the complete
+  ordered migration chain (`0000` through `0045`) on clean Postgres 16, and the
+  complete Postgres-backed API suite.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
