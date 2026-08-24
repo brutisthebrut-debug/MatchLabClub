@@ -13,9 +13,21 @@ import {
   type ProfileProjectDraft,
 } from "@/lib/profileProject";
 import {
+  currentAuditRecord,
+  reportSections,
+  versionedAuditRecord,
+} from "@/lib/profileProjectRecords";
+import {
+  getGetMyPhotosQueryKey,
   getListProfilesQueryKey,
+  useAddMyPhoto,
   useCreateProfile,
+  useDeleteMyPhoto,
+  useGetMyPhotos,
+  useListAuditReportVersions,
+  useListAudits,
   useListProfiles,
+  useRequestUploadUrl,
   useRewriteProfileBio,
   type DatingProfile,
   type ProfileRewrite,
@@ -31,11 +43,21 @@ import {
   Plus,
   Save,
   ScanSearch,
+  ShieldCheck,
   Sparkles,
+  Trash2,
   Wand2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
+
+const MAX_PHOTOS = 6;
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+
+function photoSrc(url: string): string {
+  if (url.startsWith("http") || url.startsWith("/")) return url;
+  return `/api/${url}`;
+}
 
 const PLATFORMS = [
   "Hinge",
@@ -90,14 +112,30 @@ export default function ProfileProject() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const profilesQuery = useListProfiles();
+  const auditsQuery = useListAudits();
+  const photosQuery = useGetMyPhotos({
+    query: {
+      queryKey: getGetMyPhotosQueryKey(),
+      retry: false,
+    },
+  });
   const createProfile = useCreateProfile();
   const rewriteProfile = useRewriteProfileBio();
+  const requestUploadUrl = useRequestUploadUrl();
+  const addPhoto = useAddMyPhoto();
+  const deletePhoto = useDeleteMyPhoto();
 
   const [draft, setDraft] = useState<ProfileProjectDraft>(
     emptyProfileProjectDraft,
   );
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [rewrite, setRewrite] = useState<ProfileRewrite | null>(null);
+  const [selectedAuditId, setSelectedAuditId] = useState<number | null>(null);
+  const [selectedAuditVersionId, setSelectedAuditVersionId] = useState<
+    number | null
+  >(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const profiles = useMemo(
     () =>
@@ -110,6 +148,38 @@ export default function ProfileProject() {
 
   const selectedProfile =
     profiles.find((profile) => profile.id === selectedId) ?? null;
+
+  const audits = useMemo(
+    () =>
+      [...(auditsQuery.data ?? [])].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+    [auditsQuery.data],
+  );
+  const selectedAudit =
+    audits.find((audit) => audit.id === selectedAuditId) ?? audits[0] ?? null;
+  const auditVersionsQuery = useListAuditReportVersions(
+    selectedAudit?.id ?? 0,
+    {
+      query: {
+        enabled: selectedAudit !== null,
+        retry: false,
+      },
+    },
+  );
+  const auditVersions = auditVersionsQuery.data?.versions ?? [];
+  const selectedAuditVersion =
+    auditVersions.find(
+      (version) => version.id === selectedAuditVersionId,
+    ) ?? null;
+  const activeAuditRecord = selectedAudit
+    ? selectedAuditVersion
+      ? versionedAuditRecord(selectedAudit, selectedAuditVersion)
+      : currentAuditRecord(selectedAudit)
+    : null;
+  const activeAuditSections = reportSections(activeAuditRecord?.report ?? null);
+  const photos = photosQuery.data ?? [];
 
   function patchDraft(patch: Partial<ProfileProjectDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
@@ -207,6 +277,74 @@ export default function ProfileProject() {
       toast({
         title: "Could not save the rewrite",
         description: "The source version was not changed.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function uploadPhoto(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Choose an image file.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      toast({
+        title: "That image is too large",
+        description: "Keep profile photos under 8 MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (photos.length >= MAX_PHOTOS) {
+      toast({ title: `You can keep up to ${MAX_PHOTOS} profile photos.` });
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const presigned = await requestUploadUrl.mutateAsync({
+        data: {
+          name: file.name,
+          size: file.size,
+          contentType: file.type,
+        },
+      });
+      const uploaded = await fetch(presigned.uploadURL, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploaded.ok) throw new Error("upload failed");
+      await addPhoto.mutateAsync({ data: { uploadURL: presigned.uploadURL } });
+      await queryClient.invalidateQueries({
+        queryKey: getGetMyPhotosQueryKey(),
+      });
+      toast({
+        title: "Photo added to Profile Project",
+        description: "It remains private unless you separately enable reveal.",
+      });
+    } catch {
+      toast({
+        title: "Could not add that photo",
+        description: "Nothing was changed. Try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  }
+
+  async function removePhoto(photoId: number) {
+    try {
+      await deletePhoto.mutateAsync({ id: photoId });
+      await queryClient.invalidateQueries({
+        queryKey: getGetMyPhotosQueryKey(),
+      });
+      toast({ title: "Photo removed" });
+    } catch {
+      toast({
+        title: "Could not remove that photo",
         variant: "destructive",
       });
     }
@@ -431,6 +569,291 @@ export default function ProfileProject() {
                 </section>
               )}
 
+              <section className="rounded-[2rem] border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-7">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Saved profile reads
+                    </p>
+                    <h2 className="mt-2 font-serif text-2xl font-bold">
+                      Audit history
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                      Reopen the substance of every saved read here. Numeric
+                      grades remain in the legacy record for compatibility, but
+                      Profile Project does not use them to grade you.
+                    </p>
+                  </div>
+                  <Link href="/start">
+                    <Button type="button" variant="outline">
+                      <ScanSearch className="mr-2 h-4 w-4" />
+                      Start a new read
+                    </Button>
+                  </Link>
+                </div>
+
+                {auditsQuery.isLoading ? (
+                  <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading saved reads
+                  </div>
+                ) : audits.length === 0 ? (
+                  <div className="mt-6 rounded-2xl border border-dashed border-foreground/15 p-5 text-sm leading-6 text-muted-foreground">
+                    No saved profile reads yet. Starting one still uses the
+                    existing capture flow until that final step is absorbed.
+                  </div>
+                ) : (
+                  <div className="mt-6 grid gap-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
+                    <div className="space-y-2">
+                      {audits.map((audit) => (
+                        <button
+                          key={audit.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAuditId(audit.id);
+                            setSelectedAuditVersionId(null);
+                          }}
+                          className={
+                            "w-full rounded-2xl border p-4 text-left transition-colors " +
+                            (selectedAudit?.id === audit.id
+                              ? "border-[hsl(248_62%_52%/0.45)] bg-[hsl(248_62%_52%/0.08)]"
+                              : "border-foreground/10 bg-background/55 hover:border-foreground/20")
+                          }
+                        >
+                          <span className="block font-bold">
+                            {audit.sourceApp || audit.currentApps[0] || "Profile"}
+                          </span>
+                          <span className="mt-1 block text-xs text-muted-foreground">
+                            {formatSavedAt(audit.createdAt)} · Read #{audit.id}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {selectedAudit && activeAuditRecord ? (
+                      <div className="min-w-0 rounded-2xl border border-foreground/10 bg-background/55 p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                              {activeAuditRecord.provenance}
+                            </p>
+                            <h3 className="mt-2 font-serif text-xl font-bold">
+                              {selectedAudit.sourceApp ||
+                                selectedAudit.currentApps[0] ||
+                                "Profile"}{" "}
+                              read
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {activeAuditRecord.generatedAt
+                                ? `Generated ${formatSavedAt(
+                                    activeAuditRecord.generatedAt,
+                                  )}`
+                                : "Report not generated yet"}
+                            </p>
+                          </div>
+                          <Link href={`/report/${selectedAudit.id}`}>
+                            <Button type="button" variant="outline" size="sm">
+                              Compatibility view
+                            </Button>
+                          </Link>
+                        </div>
+
+                        {auditVersions.length > 0 && (
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={
+                                selectedAuditVersionId === null
+                                  ? "default"
+                                  : "outline"
+                              }
+                              onClick={() => setSelectedAuditVersionId(null)}
+                            >
+                              Current
+                            </Button>
+                            {auditVersions.map((version) => (
+                              <Button
+                                key={version.id}
+                                type="button"
+                                size="sm"
+                                variant={
+                                  selectedAuditVersionId === version.id
+                                    ? "default"
+                                    : "outline"
+                                }
+                                onClick={() =>
+                                  setSelectedAuditVersionId(version.id)
+                                }
+                              >
+                                {formatSavedAt(version.generatedAt)}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+
+                        {!activeAuditRecord.report ? (
+                          <p className="mt-5 text-sm leading-6 text-muted-foreground">
+                            This older record has no stored report yet. Open the
+                            compatibility view to generate it without replacing
+                            the source.
+                          </p>
+                        ) : (
+                          <div className="mt-5 space-y-5">
+                            {activeAuditSections.bioRead && (
+                              <div>
+                                <h4 className="font-bold">How it reads</h4>
+                                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                  {activeAuditSections.bioRead}
+                                </p>
+                              </div>
+                            )}
+                            {activeAuditSections.strengths.length > 0 && (
+                              <div>
+                                <h4 className="font-bold">What is working</h4>
+                                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+                                  {activeAuditSections.strengths.map((item) => (
+                                    <li key={item} className="flex gap-2">
+                                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {activeAuditSections.cautions.length > 0 && (
+                              <div>
+                                <h4 className="font-bold">What to reconsider</h4>
+                                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+                                  {activeAuditSections.cautions.map((item) => (
+                                    <li key={item}>{item}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {activeAuditSections.suggestedBio && (
+                              <div className="rounded-2xl border border-foreground/10 bg-background/70 p-4">
+                                <div className="flex items-center justify-between gap-3">
+                                  <h4 className="font-bold">Suggested bio</h4>
+                                  <CopyButton
+                                    text={activeAuditSections.suggestedBio}
+                                  />
+                                </div>
+                                <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
+                                  {activeAuditSections.suggestedBio}
+                                </p>
+                              </div>
+                            )}
+                            {activeAuditSections.actions.length > 0 && (
+                              <div>
+                                <h4 className="font-bold">Practical next moves</h4>
+                                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+                                  {activeAuditSections.actions.map((item) => (
+                                    <li key={item}>{item}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-[2rem] border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-7">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Persistent photo collection
+                    </p>
+                    <h2 className="mt-2 font-serif text-2xl font-bold">
+                      Your profile photos
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                      These are the actual private photos attached to your
+                      account. Adding or removing one updates the durable member
+                      record, not a temporary Photo Lab session.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={
+                      uploadingPhoto || photos.length >= MAX_PHOTOS
+                    }
+                  >
+                    {uploadingPhoto ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImageUp className="mr-2 h-4 w-4" />
+                    )}
+                    Add photo
+                  </Button>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void uploadPhoto(file);
+                    }}
+                  />
+                </div>
+
+                {photosQuery.isLoading ? (
+                  <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading photos
+                  </div>
+                ) : photos.length === 0 ? (
+                  <div className="mt-6 rounded-2xl border border-dashed border-foreground/15 p-5 text-sm text-muted-foreground">
+                    No persistent profile photos yet. Add up to {MAX_PHOTOS}.
+                  </div>
+                ) : (
+                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {photos.map((photo, index) => (
+                      <div
+                        key={photo.id}
+                        className="group relative aspect-square overflow-hidden rounded-2xl border border-foreground/10 bg-muted"
+                      >
+                        <img
+                          src={photoSrc(photo.url)}
+                          alt={index === 0 ? "Current lead profile photo" : "Profile photo"}
+                          className="h-full w-full object-cover"
+                        />
+                        {index === 0 && (
+                          <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-1 text-xs font-bold">
+                            Lead
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => void removePhoto(photo.id)}
+                          className="absolute right-2 top-2 rounded-full bg-black/65 p-2 text-white opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                          aria-label="Remove photo"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-5 flex items-start gap-3 rounded-2xl border border-foreground/10 bg-background/55 p-4">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[hsl(248_62%_52%)]" />
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Storage and reveal are separate. These photos remain private
+                    unless you separately enable mutual-match reveal. Photo Lab
+                    analysis still runs in memory and is not yet durable, so its
+                    route remains available until analysis history is built.
+                  </p>
+                </div>
+              </section>
+
               <section className="grid gap-4 sm:grid-cols-2">
                 <Link
                   href="/start"
@@ -438,11 +861,11 @@ export default function ProfileProject() {
                 >
                   <ScanSearch className="h-5 w-5 text-[hsl(248_62%_52%)]" />
                   <h2 className="mt-4 font-serif text-xl font-bold">
-                    Full profile read
+                    Capture a new profile read
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Run the existing profile audit. Its saved reports remain
-                    available while this stage is absorbed into Profile Project.
+                    Saved reports now reopen here. The legacy route remains only
+                    for capture and generation until those steps move in too.
                   </p>
                 </Link>
                 <Link
@@ -451,11 +874,12 @@ export default function ProfileProject() {
                 >
                   <ImageUp className="h-5 w-5 text-[hsl(326_100%_50%)]" />
                   <h2 className="mt-4 font-serif text-xl font-bold">
-                    Photo selection
+                    Analyze a temporary lineup
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Compare profile photos. Photo history is the next data path
-                    to move into this project.
+                    Ranking still runs in a non-persistent session. This route
+                    will not retire until its results can be saved and reopened
+                    inside Profile Project.
                   </p>
                 </Link>
               </section>
