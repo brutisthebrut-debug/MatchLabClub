@@ -176,6 +176,69 @@ describe("POST /api/audits", () => {
   });
 });
 
+describe("POST /api/me/profile-project/audits", () => {
+  it("requires an authenticated member", async () => {
+    testApp.setUser(null);
+    const res = await request(testApp.app)
+      .post("/api/me/profile-project/audits")
+      .send(VALID_BODY);
+    expect(res.status).toBe(401);
+  });
+
+  it("validates, saves, generates, and versions one durable record", async () => {
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app)
+      .post("/api/me/profile-project/audits")
+      .send(VALID_BODY);
+
+    expect(res.status).toBe(201);
+    expect(res.body.audit.status).toBe("complete");
+    expect(res.body.audit.userId).toBeUndefined();
+    expect(res.body.audit.report.auditId).toBe(res.body.audit.id);
+    expect(res.body.report.auditId).toBe(res.body.audit.id);
+
+    const { dumpTable } = await import("../lib/testDb");
+    const audits = dumpTable("audits");
+    const versions = dumpTable("audit_report_versions");
+    expect(audits).toHaveLength(1);
+    expect(audits[0].userId).toBe(USER_ID);
+    expect(versions).toHaveLength(1);
+    expect(versions[0].auditId).toBe(res.body.audit.id);
+  });
+
+  it("returns explicit insufficient evidence without saving or inventing a result", async () => {
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app)
+      .post("/api/me/profile-project/audits")
+      .send({ ...VALID_BODY, bio: "test" });
+
+    expect(res.status).toBe(422);
+    expect(res.body.error).toBe("insufficient_evidence");
+    expect(res.body.fields).toContain("bio");
+    expect(res.body.reasons.length).toBeGreaterThan(0);
+
+    const { dumpTable } = await import("../lib/testDb");
+    expect(dumpTable("audits")).toHaveLength(0);
+    expect(dumpTable("audit_report_versions")).toHaveLength(0);
+  });
+});
+
+describe("audit generation evidence gate", () => {
+  it("blocks legacy weak sources from manufacturing a report", async () => {
+    const id = await createAudit({ id: USER_ID }, { bio: "test" });
+    const res = await request(testApp.app).post(`/api/audits/${id}/generate`);
+
+    expect(res.status).toBe(422);
+    expect(res.body.error).toBe("insufficient_evidence");
+
+    const { dumpTable } = await import("../lib/testDb");
+    const row = dumpTable("audits").find((audit) => audit.id === id);
+    expect(row?.report).toBeNull();
+    expect(row?.readinessScore).toBeNull();
+    expect(dumpTable("audit_report_versions")).toHaveLength(0);
+  });
+});
+
 describe("GET /api/audits", () => {
   it("lists audits scoped to the caller", async () => {
     const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;

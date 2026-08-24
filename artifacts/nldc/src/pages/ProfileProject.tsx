@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ProfileAuditCapture } from "@/components/profile/ProfileAuditCapture";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,11 +27,13 @@ import {
 import {
   getGetMyPhotosQueryKey,
   getListAuditReportVersionsQueryKey,
+  getListAuditsQueryKey,
   getListProfilesQueryKey,
   useAddMyPhoto,
   useCreateProfile,
   useDeleteMyPhoto,
   useGetMyPhotos,
+  useGenerateAuditReport,
   useListAuditReportVersions,
   useListAudits,
   useListProfiles,
@@ -55,7 +58,7 @@ import {
   Trash2,
   Wand2,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 
 const MAX_PHOTOS = 6;
@@ -169,6 +172,7 @@ export default function ProfileProject() {
   });
   const createProfile = useCreateProfile();
   const rewriteProfile = useRewriteProfileBio();
+  const generateAuditReport = useGenerateAuditReport();
   const requestUploadUrl = useRequestUploadUrl();
   const addPhoto = useAddMyPhoto();
   const deletePhoto = useDeleteMyPhoto();
@@ -252,6 +256,51 @@ export default function ProfileProject() {
   const presentedPhotoLabRun = selectedPhotoLabRun
     ? presentPhotoLabRun(selectedPhotoLabRun)
     : null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const rawAuditId = new URLSearchParams(window.location.search).get("audit");
+    const auditId = rawAuditId ? Number(rawAuditId) : null;
+    if (auditId && Number.isSafeInteger(auditId)) {
+      setSelectedAuditId(auditId);
+      setSelectedAuditVersionId(null);
+    }
+  }, []);
+
+  async function openCreatedAudit(auditId: number) {
+    await queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
+    setSelectedAuditId(auditId);
+    setSelectedAuditVersionId(null);
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById("audit-history")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  async function regenerateAudit(auditId: number) {
+    try {
+      await generateAuditReport.mutateAsync({ id: auditId });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() }),
+        queryClient.invalidateQueries({
+          queryKey: getListAuditReportVersionsQueryKey(auditId),
+        }),
+      ]);
+      setSelectedAuditVersionId(null);
+      toast({
+        title: "New read version saved",
+        description: "The earlier report versions remain available.",
+      });
+    } catch {
+      toast({
+        title: "No new read was generated",
+        description:
+          "The source needs more reliable evidence. The earlier saved versions were not changed.",
+        variant: "destructive",
+      });
+    }
+  }
 
   function patchDraft(patch: Partial<ProfileProjectDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
@@ -709,7 +758,15 @@ export default function ProfileProject() {
                 </section>
               )}
 
-              <section className="rounded-[2rem] border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-7">
+              <ProfileAuditCapture
+                photoCount={photos.length}
+                onComplete={openCreatedAudit}
+              />
+
+              <section
+                id="audit-history"
+                className="scroll-mt-6 rounded-[2rem] border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-7"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -724,12 +781,9 @@ export default function ProfileProject() {
                       Profile Project does not use them to grade you.
                     </p>
                   </div>
-                  <Link href="/start">
-                    <Button type="button" variant="outline">
-                      <ScanSearch className="mr-2 h-4 w-4" />
-                      Start a new read
-                    </Button>
-                  </Link>
+                  <span className="rounded-full border border-foreground/10 bg-background/70 px-3 py-1.5 text-xs font-bold text-muted-foreground">
+                    Durable project history
+                  </span>
                 </div>
 
                 {auditsQuery.isLoading ? (
@@ -739,8 +793,8 @@ export default function ProfileProject() {
                   </div>
                 ) : audits.length === 0 ? (
                   <div className="mt-6 rounded-2xl border border-dashed border-foreground/15 p-5 text-sm leading-6 text-muted-foreground">
-                    No saved profile reads yet. Starting one still uses the
-                    existing capture flow until that final step is absorbed.
+                    No saved profile reads yet. Use the capture section above;
+                    a result appears here only after the evidence gate passes.
                   </div>
                 ) : (
                   <div className="mt-6 grid gap-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
@@ -791,11 +845,22 @@ export default function ProfileProject() {
                                 : "Report not generated yet"}
                             </p>
                           </div>
-                          <Link href={`/report/${selectedAudit.id}`}>
-                            <Button type="button" variant="outline" size="sm">
-                              Compatibility view
-                            </Button>
-                          </Link>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void regenerateAudit(selectedAudit.id)}
+                            disabled={generateAuditReport.isPending}
+                          >
+                            {generateAuditReport.isPending ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <ScanSearch className="mr-2 h-4 w-4" />
+                            )}
+                            {activeAuditRecord.report
+                              ? "Generate a new version"
+                              : "Generate this read"}
+                          </Button>
                         </div>
 
                         {auditVersions.length > 0 && (
@@ -834,9 +899,9 @@ export default function ProfileProject() {
 
                         {!activeAuditRecord.report ? (
                           <p className="mt-5 text-sm leading-6 text-muted-foreground">
-                            This older record has no stored report yet. Open the
-                            compatibility view to generate it without replacing
-                            the source.
+                            This source has no stored report yet. Generate it here;
+                            insufficient evidence will return an explicit error
+                            instead of a sample or guessed result.
                           </p>
                         ) : (
                           <div className="mt-5 space-y-5">
@@ -1183,19 +1248,16 @@ export default function ProfileProject() {
               </section>
 
               <section className="grid gap-4 sm:grid-cols-2">
-                <Link
-                  href="/start"
-                  className="rounded-3xl border border-foreground/10 bg-background/65 p-5 transition-colors hover:border-[hsl(248_62%_52%/0.3)]"
-                >
+                <div className="rounded-3xl border border-foreground/10 bg-background/65 p-5">
                   <ScanSearch className="h-5 w-5 text-[hsl(248_62%_52%)]" />
                   <h2 className="mt-4 font-serif text-xl font-bold">
-                    Capture a new profile read
+                    Audit capture is now part of this project
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Saved reports now reopen here. The legacy route remains only
-                    for capture and generation until those steps move in too.
+                    Evidence validation, source capture, generation, and report
+                    history now share one durable workflow above.
                   </p>
-                </Link>
+                </div>
                 <div className="rounded-3xl border border-foreground/10 bg-background/65 p-5">
                   <FileClock className="h-5 w-5 text-[hsl(326_100%_50%)]" />
                   <h2 className="mt-4 font-serif text-xl font-bold">
