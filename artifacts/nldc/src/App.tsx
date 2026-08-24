@@ -48,7 +48,6 @@ const Reflection = lazy(() => import("@/pages/Reflection"));
 const ProfileReader = lazy(() => import("@/pages/ProfileReader"));
 const StyleMap = lazy(() => import("@/pages/StyleMap"));
 const NextMessage = lazy(() => import("@/pages/NextMessage"));
-const GlowUp = lazy(() => import("@/pages/GlowUp"));
 const ConnectionStyle = lazy(() => import("@/pages/ConnectionStyle"));
 const CareDialect = lazy(() => import("@/pages/CareDialect"));
 const CompatibilityCompass = lazy(() => import("@/pages/CompatibilityCompass"));
@@ -69,7 +68,6 @@ const FutureConnections = lazy(() => import("@/pages/FutureConnections"));
 const Copilot = lazy(() => import("@/pages/Copilot"));
 const StartMyReset = lazy(() => import("@/pages/copilot/StartMyReset"));
 const HelpMeReply = lazy(() => import("@/pages/copilot/HelpMeReply"));
-const ImproveMyProfile = lazy(() => import("@/pages/copilot/ImproveMyProfile"));
 const DebriefWhatHappened = lazy(() => import("@/pages/copilot/DebriefWhatHappened"));
 const WeeklyGrowthPlan = lazy(() => import("@/pages/copilot/WeeklyGrowthPlan"));
 const PrepareForDate = lazy(() => import("@/pages/copilot/PrepareForDate"));
@@ -119,6 +117,8 @@ const ShareCard = lazy(() => import("@/pages/ShareCard"));
 const Milestones = lazy(() => import("@/pages/Milestones"));
 const Onboarding = lazy(() => import("@/pages/Onboarding"));
 const MemberDestination = lazy(() => import("@/pages/MemberDestination"));
+const MyMatchLab = lazy(() => import("@/pages/MyMatchLab"));
+const ProfileProject = lazy(() => import("@/pages/ProfileProject"));
 
 const queryClient = new QueryClient();
 
@@ -197,7 +197,8 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/today" component={MemberDestination} />
-        <Route path="/my-matchlab" component={MemberDestination} />
+        <Route path="/my-matchlab/profile" component={ProfileProject} />
+        <Route path="/my-matchlab" component={MyMatchLab} />
         <Route path="/journey" component={MemberDestination} />
         <Route path="/play" component={MemberDestination} />
         <Route path="/trust-data" component={MemberDestination} />
@@ -247,7 +248,9 @@ function Router() {
         <Route path="/profile-reader" component={ProfileReader} />
         <Route path="/style-map" component={StyleMap} />
         <Route path="/next-message" component={NextMessage} />
-        <Route path="/glow-up" component={GlowUp} />
+        <Route path="/glow-up">
+          <Redirect to="/my-matchlab/profile" />
+        </Route>
         <Route path="/connection-style" component={ConnectionStyle} />
         <Route path="/care-dialect" component={CareDialect} />
         <Route path="/compatibility-compass" component={CompatibilityCompass} />
@@ -271,7 +274,9 @@ function Router() {
         <Route path="/copilot" component={Copilot} />
         <Route path="/copilot/reset" component={StartMyReset} />
         <Route path="/copilot/reply" component={HelpMeReply} />
-        <Route path="/copilot/profile" component={ImproveMyProfile} />
+        <Route path="/copilot/profile">
+          <Redirect to="/my-matchlab/profile" />
+        </Route>
         <Route path="/copilot/debrief" component={DebriefWhatHappened} />
         <Route path="/copilot/weekly-plan" component={WeeklyGrowthPlan} />
         <Route path="/copilot/prep" component={PrepareForDate} />
