@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   ArrowLeft,
   Check,
-  Compass,
   Eye,
   Plug,
   ImageUp,
@@ -17,9 +16,9 @@ import {
   Award,
   Target,
   ShieldCheck,
-  LockKeyhole,
   Database,
   Brain,
+  HeartHandshake,
 } from "lucide-react";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
