@@ -2087,6 +2087,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /me/profile-project/audits:
+    post:
+      operationId: createProfileProjectAudit
+      tags: [audits, profiles]
+      summary: Validate, save, and generate a durable Profile Project read
+      description: |
+        Canonical signed-in audit workflow. The server first checks that the
+        member supplied enough coherent profile evidence. Missing, placeholder,
+        contradictory, or wrong-format input returns an explicit 422 and cannot
+        manufacture a report. A successful request saves the source and its
+        first immutable report version together. The generated report is a
+        proposed coaching observation; it does not confirm a Mirror learning or
+        grant matching use.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditInput"
+      responses:
+        "201":
+          description: Durable audit source and generated report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileProjectAuditResult"
+        "400":
+          description: Invalid request shape
+        "401":
+          description: Not authenticated
+        "422":
+          description: Insufficient or contradictory evidence
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsufficientAuditEvidence"
+        "500":
+          description: Source saved but generation failed without a report
+
   /audits:
     get:
       operationId: listAudits
@@ -6896,6 +6938,33 @@ components:
           type: ["string", "null"]
         biggestChallenge:
           type: ["string", "null"]
+
+    InsufficientAuditEvidence:
+      type: object
+      required: [error, message, fields, reasons]
+      properties:
+        error:
+          type: string
+          const: insufficient_evidence
+        message:
+          type: string
+        fields:
+          type: array
+          items:
+            type: string
+        reasons:
+          type: array
+          items:
+            type: string
+
+    ProfileProjectAuditResult:
+      type: object
+      required: [audit, report]
+      properties:
+        audit:
+          $ref: "#/components/schemas/Audit"
+        report:
+          $ref: "#/components/schemas/AuditReport"
 
     Audit:
       type: object
