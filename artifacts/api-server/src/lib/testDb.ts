@@ -336,7 +336,23 @@ export const wingmanSelfRatingsTable = makeTable("wingman_self_ratings");
 export const wyrAnswersTable = makeTable("wyr_answers");
 export const dailySparkAnswersTable = makeTable("daily_spark_answers");
 export const flagSelectionsTable = makeTable("flag_selections");
+ensureStore("mirror_learnings");
+Object.assign(stores.mirror_learnings.defaults, {
+  memberLearning: null,
+  status: "proposed",
+  matchingUseApproved: false,
+  confirmedAt: null,
+  dismissedAt: null,
+});
 export const mirrorLearningsTable = makeTable("mirror_learnings");
+ensureStore("match_pool_membership");
+Object.assign(stores.match_pool_membership.defaults, {
+  status: "off",
+  readyAt: null,
+  pausedReason: null,
+  tier: null,
+  revealConsent: false,
+});
 export const matchPoolMembershipTable = makeTable("match_pool_membership");
 export const scenarioResponsesTable = makeTable("scenario_responses");
 export const predictionResponsesTable = makeTable("prediction_responses");
