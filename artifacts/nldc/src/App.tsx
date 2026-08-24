@@ -17,9 +17,7 @@ import { hasCompletedOnboarding } from "@/lib/onboardingState";
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Landing = lazy(() => import("@/pages/Landing"));
-const Wizard = lazy(() => import("@/pages/Wizard"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const Report = lazy(() => import("@/pages/Report"));
 const Coach = lazy(() => import("@/pages/Coach"));
 const DateSafety = lazy(() => import("@/pages/DateSafety"));
 const RehearsalRoom = lazy(() => import("@/pages/RehearsalRoom"));
@@ -28,7 +26,6 @@ const Integrations = lazy(() => import("@/pages/Integrations"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const Waitlist = lazy(() => import("@/pages/Waitlist"));
 const Lab = lazy(() => import("@/pages/Lab"));
-const SignalCheck = lazy(() => import("@/pages/SignalCheck"));
 const Roadmap = lazy(() => import("@/pages/Roadmap"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
 const Terms = lazy(() => import("@/pages/Terms"));
@@ -201,9 +198,20 @@ function Router() {
         <Route path="/journey" component={MemberDestination} />
         <Route path="/play" component={MemberDestination} />
         <Route path="/trust-data" component={MemberDestination} />
-        <Route path="/start" component={Wizard} />
+        {/* Audit capture/generation is owned by Profile Project. */}
+        <Route path="/start">
+          <Redirect to="/my-matchlab/profile#audit-capture" />
+        </Route>
         <Route path="/dashboard" component={Dashboard} />
-        <Route path="/report/:id" component={Report} />
+        {/* Preserve durable report deep links while reopening the same audit in
+            the canonical history surface. */}
+        <Route path="/report/:id">
+          {(params: { id?: string } | null) => (
+            <Redirect
+              to={`/my-matchlab/profile?audit=${params?.id ?? ""}#audit-history`}
+            />
+          )}
+        </Route>
         <Route path="/coach" component={Coach} />
         <Route path="/date-safety" component={DateSafety} />
         <Route path="/rehearsal" component={RehearsalRoom} />
@@ -215,11 +223,10 @@ function Router() {
         <Route path="/receipts" component={Receipts} />
         <Route path="/pricing" component={Pricing} />
         <Route path="/waitlist" component={Waitlist} />
-        {/* Diagnosis is consolidated into the single Signal Check front door.
-            The /diagnosis route stays reachable and redirects so every existing
-            link keeps working. */}
+        {/* Signal Check's own-profile read is absorbed into the evidence-gated
+            Profile Project capture. Both old entry URLs remain redirects. */}
         <Route path="/diagnosis">
-          <Redirect to="/signal-check" />
+          <Redirect to="/my-matchlab/profile#audit-capture" />
         </Route>
         <Route path="/lab" component={Lab} />
         {/* Photo Lab is fully absorbed into the durable Profile Project.
@@ -227,7 +234,9 @@ function Router() {
         <Route path="/photo-lab">
           <Redirect to="/my-matchlab/profile" />
         </Route>
-        <Route path="/signal-check" component={SignalCheck} />
+        <Route path="/signal-check">
+          <Redirect to="/my-matchlab/profile#audit-capture" />
+        </Route>
         <Route path="/roadmap" component={Roadmap} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
