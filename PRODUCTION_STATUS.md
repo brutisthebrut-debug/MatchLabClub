@@ -22,13 +22,14 @@ mistaken for production behavior.
 
 ## Repository reality
 
-Production shell migration has begun. Segment 1 installs the five canonical
+Production shell migration is underway. Segment 1 installs the five canonical
 destinations, keeps Trust & Data directly accessible, and preserves Echo across
-the authenticated shell. Existing legacy routes and records remain reachable
-behind the new destination hubs while later segments consolidate the underlying
-workflows. The global numeric match-path bar and sidebar readiness level are no
-longer part of the member shell. See `SHELL_MIGRATION.md` for the route matrix
-and segment plan.
+the authenticated shell. Segment 2 makes onboarding consent-first: starter
+answers are explicitly coaching-only, downstream uses remain separate, and
+readiness scores, points, climb language, and percent-mapped language are
+removed. Existing legacy routes and records remain reachable while later
+segments consolidate the underlying workflows. See `SHELL_MIGRATION.md` for
+the route matrix and segment plan.
 
 ## Phase 0: trust and state repair
 
@@ -48,7 +49,7 @@ and segment plan.
   and Trust & Data routes; the existing Matches lifecycle remains canonical.
   Legacy URLs continue to resolve and map to the owning destination.
 - TypeScript project references and the API and web app typechecks pass.
-- Web suite: 29 files, 228 tests passed.
+- Web suite: 30 files, 231 tests passed.
 - Full API suite on a clean Postgres 16 service: 99 files and 911 tests passed;
   2 files and 8 optional OCR tests skipped.
 - GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
@@ -59,6 +60,9 @@ and segment plan.
   production shell migration Segment 1: 29 web files and 228 tests, the ordered
   migration chain through `0045`, and 99 API files with 911 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32772997609 passed both required jobs on PR #7 for
+  consent-first onboarding: 30 web files and 231 tests, the ordered migration
+  chain through `0045`, and 99 API files with 911 tests on clean Postgres 16.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
