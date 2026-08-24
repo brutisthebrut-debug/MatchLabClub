@@ -4081,6 +4081,109 @@ paths:
         "400":
           description: Invalid payload
 
+  /me/photo-lab-runs:
+    get:
+      tags: [profiles]
+      operationId: listMyPhotoLabRuns
+      summary: List the member's saved Photo Lab runs
+      description: |
+        Returns up to 50 immutable Photo Lab runs owned by the signed-in member,
+        newest first. Records contain the source profile-photo ids, declared
+        composition inputs, textual analysis, provenance, and timestamp. Raw
+        image bytes and image metadata are never stored in a run. Saving or
+        viewing a run does not grant permission to use a photo for matching.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Saved Photo Lab history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoLabRunList"
+        "401":
+          description: Not authenticated
+    post:
+      tags: [profiles]
+      operationId: createMyPhotoLabRun
+      summary: Analyze member-owned profile photos and save an immutable run
+      description: |
+        Every input id must use `profile-photo-{id}` and reference a distinct
+        persistent photo owned by the signed-in member. Optional image bytes are
+        used only for an in-memory vision pass and are discarded after the
+        request; the durable record stores only declared composition inputs and
+        the textual result. Each call creates a new versioned run.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoLabRankInput"
+      responses:
+        "201":
+          description: Saved Photo Lab run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoLabRun"
+        "400":
+          description: Invalid payload or a source photo is not owned by the member
+        "401":
+          description: Not authenticated
+
+  /me/photo-lab-runs/{id}:
+    get:
+      tags: [profiles]
+      operationId: getMyPhotoLabRun
+      summary: Reopen one saved Photo Lab run
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Saved Photo Lab run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoLabRun"
+        "401":
+          description: Not authenticated
+        "404":
+          description: Run not found for this member
+    delete:
+      tags: [profiles]
+      operationId: deleteMyPhotoLabRun
+      summary: Delete one saved Photo Lab run
+      description: Deletes the member-owned analysis record, not its source photos.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted run id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletePhotoLabRunResult"
+        "401":
+          description: Not authenticated
+        "404":
+          description: Run not found for this member
+
   /imports/hinge:
     post:
       tags: [insights]
@@ -10976,6 +11079,70 @@ components:
           oneOf:
             - $ref: "#/components/schemas/PhotoLabMirrorTieIn"
             - type: "null"
+
+    PhotoLabRunInputSnapshot:
+      type: object
+      required: [photos]
+      description: |
+        Sanitized input provenance. It never includes raw image bytes, data URLs,
+        image MIME metadata, or a grant for matching use.
+      properties:
+        photos:
+          type: array
+          items:
+            type: object
+            required: [id, shotType]
+            properties:
+              id:
+                type: string
+              shotType:
+                type: string
+                enum: [solo_face, full_body, activity, group, candid, other]
+              wellLit:
+                type: [boolean, "null"]
+              genuineExpression:
+                type: [boolean, "null"]
+        datingGoal:
+          type: [string, "null"]
+        sourceApp:
+          type: [string, "null"]
+
+    PhotoLabRun:
+      type: object
+      required: [id, sourcePhotoIds, inputSnapshot, result, createdAt]
+      properties:
+        id:
+          type: integer
+        sourcePhotoIds:
+          type: array
+          items:
+            type: integer
+        inputSnapshot:
+          $ref: "#/components/schemas/PhotoLabRunInputSnapshot"
+        result:
+          $ref: "#/components/schemas/PhotoLabRankResult"
+        createdAt:
+          type: string
+          format: date-time
+
+    PhotoLabRunList:
+      type: object
+      required: [runs]
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhotoLabRun"
+
+    DeletePhotoLabRunResult:
+      type: object
+      required: [deleted, id]
+      properties:
+        deleted:
+          type: boolean
+          const: true
+        id:
+          type: integer
 
     CompassScreenshotExtractResult:
       type: object
