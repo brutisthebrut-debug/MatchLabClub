@@ -118,7 +118,7 @@ State: merged to `main` and verified.
 
 ## Segment 3B1: durable Profile Project records
 
-State: implemented in code, pending CI and merge.
+State: merged to `main` and verified.
 
 - Profile Project now lists the member's live audit records and reopens both the
   current report and every saved report version.
@@ -133,6 +133,10 @@ State: implemented in code, pending CI and merge.
   ranking results are still session-only and cannot yet be reopened.
 - Regression helpers prove historical report versions reopen exactly and the
   member projection does not expose numeric grading.
+- PR #11 merged as `c918569c`; GitHub Actions run `32778893927` passed
+  typecheck, lint, schema drift, voice lint, 32 web files with 241 tests,
+  ordered migrations through `0045`, and 99 API files with 911 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
 ## Next segments
 
