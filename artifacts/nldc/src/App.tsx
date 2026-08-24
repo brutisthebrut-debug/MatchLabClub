@@ -3,8 +3,6 @@ import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ReadinessRewardWatcher } from "@/components/climb/ReadinessRewardWatcher";
-
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -120,6 +118,7 @@ const Verification = lazy(() => import("@/pages/Verification"));
 const ShareCard = lazy(() => import("@/pages/ShareCard"));
 const Milestones = lazy(() => import("@/pages/Milestones"));
 const Onboarding = lazy(() => import("@/pages/Onboarding"));
+const MemberDestination = lazy(() => import("@/pages/MemberDestination"));
 
 const queryClient = new QueryClient();
 
@@ -133,7 +132,12 @@ function ClaimAnonymousGate() {
 // /dashboard) and the account has no real signal yet. A returning user with any
 // data, or anyone who has finished or skipped onboarding in this browser, is never
 // redirected.
-const ONBOARDING_ENTRY_ROUTES = new Set(["/dashboard", "/me", "/your-mirror"]);
+const ONBOARDING_ENTRY_ROUTES = new Set([
+  "/today",
+  "/dashboard",
+  "/me",
+  "/your-mirror",
+]);
 
 function OnboardingGate() {
   const [location, setLocation] = useLocation();
@@ -192,6 +196,11 @@ function Router() {
     <Suspense fallback={null}>
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/today" component={MemberDestination} />
+        <Route path="/my-matchlab" component={MemberDestination} />
+        <Route path="/journey" component={MemberDestination} />
+        <Route path="/play" component={MemberDestination} />
+        <Route path="/trust-data" component={MemberDestination} />
         <Route path="/start" component={Wizard} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/report/:id" component={Report} />
@@ -325,7 +334,6 @@ function App() {
           <OnboardingGate />
           <Router />
         </WouterRouter>
-        <ReadinessRewardWatcher />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

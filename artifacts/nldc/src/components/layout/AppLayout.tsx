@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { MatchPathBar } from "@/components/layout/MatchPathBar";
 import { EchoPresence } from "@/components/layout/EchoPresence";
 import { GuestWorkBanner } from "@/components/auth/GuestWorkBanner";
 import { ReactNode, useState } from "react";
@@ -18,8 +17,6 @@ const MARKETING_PREFIXES = [
   "/waitlist",
   "/roadmap",
   "/blog",
-  "/quizzes",
-  "/gallery",
   "/sample-report",
   "/privacy",
   "/terms",
@@ -70,12 +67,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link href="/your-mirror" className="flex items-center gap-2">
+          <Link href="/today" className="flex items-center gap-2">
             <img src="/matchlab-logo.png" alt="MatchLab Club" className="h-8 w-auto" />
           </Link>
           <ThemeToggle />
         </header>
-        <MatchPathBar />
         <main className="flex-1 flex flex-col">{children}</main>
       </div>
       <EchoPresence />
