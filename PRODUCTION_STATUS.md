@@ -1,6 +1,6 @@
 # MatchLab production status
 
-Last verified: 2026-08-22
+Last verified: 2026-08-24
 
 This is the source of truth for what is in the repository versus what has only
 been approved in the v1 prototype. It prevents prototype decisions from being
@@ -32,21 +32,23 @@ not the approved final information architecture.
 
 | Workstream | State | Evidence / next condition |
 | --- | --- | --- |
-| Complete export and deletion | In progress, materially hardened | The live Account page now uses the email-confirmed transactional delete. Export includes all current user-facing product families while excluding reusable auth/OAuth/push/export secrets. Transactional deletion now covers Journey, Play, Wingman, Cosmic, verification, and Mirror preferences. Requires a Postgres-backed CI run before release. |
-| Founder authorization | Implemented; DB-backed release verification required | Founder routes now re-check the authenticated user's persisted `founder`/`admin` role. The shared browser key and `x-founder-key` authorization path are removed. Authorized requests append actor, route, response status, IP, and user-agent metadata to `founder_action_logs`. Apply migration `0041` and run the database-backed auth suite before release. |
-| Consent separation | Implemented; DB-backed release verification required | Wellness answers default to coaching-only. Every `imported_sources` row now keeps storage, Echo use, confirmed learning, and matching use independent and default-closed. Matching counts exclude sources without explicit matching permission; Echo enrichment requires source-level Echo permission and cannot write after revocation. Apply migrations `0042` and `0043`. |
+| Complete export and deletion | Implemented; DB regression verified | The live Account page uses email-confirmed transactional delete. Export includes all current user-facing product families while excluding reusable auth/OAuth/push/export secrets. Transactional deletion covers Journey, Play, Wingman, Cosmic, verification, and Mirror preferences. The clean-Postgres lifecycle suite passes; verify the production migration and release environment before launch. |
+| Founder authorization | Implemented; DB regression verified | Founder routes re-check the authenticated user's persisted `founder`/`admin` role. The shared browser key and `x-founder-key` authorization path are removed. Authorized requests append actor, route, response status, IP, and user-agent metadata to `founder_action_logs`. The Postgres-backed auth and audit suite passes; apply migration `0041` in the release environment before launch. |
+| Consent separation | Implemented; DB regression verified | Wellness answers default to coaching-only. Every `imported_sources` row keeps storage, Echo use, confirmed learning, and matching use independent and default-closed. Matching counts exclude sources without explicit matching permission; Echo enrichment requires source-level Echo permission and cannot write after revocation. The Postgres-backed permission suite passes; apply migrations `0042` and `0043` in the release environment. |
 | Quiz identity and scoring | Implemented | The web app and API share one canonical Quiz Lab catalog/scorer. The API accepts only a known slug plus valid answer indexes, derives archetype/name/dimensions server-side, ignores forged derived fields, and never stores raw answers. Authority regression coverage passes. |
-| Founder review vs. member introduction | Implemented; DB-backed release verification required | `founder_review_status`, private founder notes, review actor/time, and `introduced_at` are separate from the member proposal lifecycle. Internal/concierge candidates stay hidden and non-actionable until a founder sends them; member APIs never serialize founder review fields. Apply migration `0044` and run the database-backed transition regression before release. |
-| Payments and entitlement | Implemented; migration and Stripe test-mode verification required | Authenticated server-owned Checkout, signed/idempotent direct Stripe webhooks, canonical `billing_entitlements`, renewal/cancellation/payment-failure/refund transitions, customer portal access, and account-deletion renewal stop are implemented. Manual tier mutation is retired. Checkout also stays closed unless a canonical product is explicitly founder-approved in `BILLING_LIVE_PRODUCTS`; Price IDs alone cannot open sales. Apply migration `0045`, configure server-only keys/Price IDs, register events, and pass the database-backed Stripe test-mode suite before release. |
+| Founder review vs. member introduction | Implemented; DB regression verified | `founder_review_status`, private founder notes, review actor/time, and `introduced_at` are separate from the member proposal lifecycle. Internal/concierge candidates stay hidden and non-actionable until a founder sends them; member APIs never serialize founder review fields. The Postgres-backed transition suite passes; apply migration `0044` in the release environment. |
+| Payments and entitlement | Implemented; DB regression verified; Stripe gate remains | Authenticated server-owned Checkout, signed/idempotent direct Stripe webhooks, canonical `billing_entitlements`, renewal/cancellation/payment-failure/refund transitions, customer portal access, and account-deletion renewal stop are implemented. Manual tier mutation is retired. Checkout also stays closed unless a canonical product is explicitly founder-approved in `BILLING_LIVE_PRODUCTS`; Price IDs alone cannot open sales. Apply migration `0045`, configure server-only keys/Price IDs, register events, and pass the database-backed Stripe test-mode suite before release. |
 | Legal and service language | Implemented; founder/legal approval required before activating an offer | Terms, privacy, pricing, checkout/success/cancel, Account billing, partner/waitlist pages, and introduction states now describe the same limited controlled-introduction service, source permissions, processor retention boundary, and non-guaranteed outcomes. The server allowlist prevents copy or Stripe configuration from opening an unapproved product. |
 
 ## Verified baseline
 
 - TypeScript project references and the API and web app typechecks pass.
 - Web suite: 28 files, 211 tests passed.
-- API suite without Postgres: 61 files and 634 tests passed; 40 database-backed
-  suites could not start because no `DATABASE_URL`/Postgres service was
-  available in the verification environment.
+- Full API suite on a clean Postgres 16 service: 99 files and 911 tests passed;
+  2 files and 8 optional OCR tests skipped.
+- GitHub Actions run 32746308944 passed both required jobs on PR #3: frozen
+  install, typecheck, lint, schema drift, voice lint, web tests, clean schema
+  push, and the complete Postgres-backed API suite.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
@@ -79,8 +81,10 @@ not the approved final information architecture.
 
 ## Release gate
 
-Do not represent the current repository as production-ready. The next safe
-milestone is completion of Phase 0, with particular priority on the outstanding
-database-backed lifecycle/auth/introduction/billing tests, Stripe test-mode
-operations, and synchronized legal copy. Install the approved five-destination shell only after
-those trust promises are true in the real system.
+Do not represent the current repository as production-ready. Automated Phase 0
+verification is now green. The remaining release gates are applying migrations
+`0041` through `0045` in the release environment, exercising Checkout/webhooks,
+renewal, cancellation, failure, and refund behavior in Stripe test mode,
+registering the webhook, and obtaining founder/legal approval for any live
+offer. Install the approved five-destination shell only after those trust
+promises are true in the real system.
