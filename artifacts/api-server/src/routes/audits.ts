@@ -880,7 +880,7 @@ router.post("/me/profile-project/audits", async (req, res): Promise<void> => {
   } catch (err) {
     await db
       .update(auditsTable)
-      .set({ status: "failed", report: null, readinessScore: null })
+      .set({ status: "error", report: null, readinessScore: null })
       .where(eq(auditsTable.id, audit!.id));
     req.log.error({ err, auditId: audit!.id }, "Profile Project audit failed");
     res.status(500).json({
