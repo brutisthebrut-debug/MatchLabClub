@@ -461,7 +461,7 @@ export default function ProfileProject() {
       );
       const run = await createPhotoLabRun.mutateAsync({
         photos: inputs,
-        datingGoal: draft.lookingFor.trim() || null,
+        datingGoal: null,
         sourceApp: draft.platform.trim() || null,
       });
       await queryClient.invalidateQueries({ queryKey: PHOTO_LAB_QUERY_KEY });
