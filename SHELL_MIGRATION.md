@@ -62,7 +62,7 @@ destinations.
 
 ## Segment 2: consent-first onboarding
 
-State: implemented in code, pending CI and merge.
+State: merged to `main` and verified.
 
 - Starter answers are explicitly submitted as coaching-only.
 - Onboarding no longer displays a readiness score, points, a readiness climb, or
@@ -74,6 +74,10 @@ State: implemented in code, pending CI and merge.
 - Skipping and completing onboarding both return to Today.
 - Regression coverage proves onboarding capture cannot infer matching, research,
   or all-use consent.
+- PR #7 merged as `54c6491c`; GitHub Actions run `32772997609` passed
+  typecheck, lint, schema drift, voice lint, 30 web files with 231 tests,
+  ordered migrations through `0045`, and 99 API files with 911 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
 ## Next segments
 
