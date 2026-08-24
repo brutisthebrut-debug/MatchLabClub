@@ -164,14 +164,38 @@ State: merged to `main` and verified.
   ordered migrations through `0046`, and 99 API files with 914 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3B3: evidence-validated Profile Project reads
+
+State: merged to `main` and verified.
+
+- Profile Project now owns the member's own-profile source capture, evidence
+  validation, report generation, regeneration, saved record, and immutable
+  report-version history.
+- The canonical server operation validates the source before saving or
+  generating. Missing, placeholder, wrong-format, implausible-age, and directly
+  contradictory evidence returns an explicit `insufficient_evidence` response
+  and cannot manufacture a score or conclusion.
+- Failure states do not substitute a sample or leave a newly claimed result on
+  screen. Earlier durable records remain unchanged and clearly historical.
+- Generated reads remain proposed coaching observations. Saving or generating
+  one does not confirm Mirror learning or grant matching use.
+- `/start`, `/signal-check`, and `/diagnosis` redirect to the canonical
+  capture. `/report/:id` preserves the audit id while reopening the same
+  durable record in Profile Project history.
+- Legacy source files remain for one redirect-monitoring cycle. Profile Reader
+  is intentionally retained because it interprets another person's profile,
+  rather than duplicating the member's own-profile audit.
+- PR #15 merged as `9023e565`; GitHub Actions run `32783616570` passed
+  typecheck, lint, schema drift, voice lint, 35 web files with 247 tests,
+  ordered migrations through `0046`, and 100 API files with 925 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Absorb audit capture/generation into Profile Project, then redirect the
-   remaining audit-first entry points after deep-link compatibility is proven.
-2. Consolidate Mirror trends, relationship-language tools, and confirmed
+1. Consolidate Mirror trends, relationship-language tools, and confirmed
    learning into the My MatchLab record.
-3. Consolidate dates, journal, debrief, experiments, and reflections into a
+2. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
-4. Consolidate games and quizzes into Play with confirmed-learning handoff.
-5. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+3. Consolidate games and quizzes into Play with confirmed-learning handoff.
+4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
