@@ -216,13 +216,37 @@ State: merged to `main` and verified.
   ordered migrations through `0047`, and 101 API files with 930 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3C2A: saved Communication context
+
+State: merged to `main` and verified.
+
+- My MatchLab replaces its relationship-language link list with one contextual
+  Communication record backed by the member's real saved Care Dialect and
+  relationship standards.
+- Signed-in reads do not substitute demo profiles. Missing source records are
+  shown honestly and keep their existing capture route available.
+- Either saved source can create a proposed learning through the same durable
+  confirmed-learning service. Derivation is server-side and owner-scoped;
+  neither confirmation nor matching use is granted automatically.
+- Existing confirmed or dismissed decisions are not overwritten by a later
+  send from Communication.
+- Care Dialect and Flags routes remain available for source capture. Connection
+  Style and Personal Blueprint remain explicitly transitional until their
+  result storage, capture, and deep links are absorbed.
+- PR #20 merged as `a392bcb8`; GitHub Actions run `32787235430` passed
+  typecheck, lint, schema drift, voice lint, 36 web files with 250 tests,
+  ordered migrations through `0047`, and 101 API files with 932 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Consolidate Mirror trends and relationship-language tools into contextual
-   My MatchLab capabilities that write through the confirmed-learning record;
-   retire old routes only after saved behavior and deep links are absorbed.
-2. Consolidate dates, journal, debrief, experiments, and reflections into a
+1. Absorb Connection Style and Personal Blueprint capture/results into the
+   Communication record, then retire only the duplicated routes whose saved
+   behavior and deep links are covered.
+2. Consolidate Mirror trends into My MatchLab with provenance, changes over
+   time, uncertainty, and contradictions.
+3. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
-3. Consolidate games and quizzes into Play with confirmed-learning handoff.
-4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+4. Consolidate games and quizzes into Play with confirmed-learning handoff.
+5. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.

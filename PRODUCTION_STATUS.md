@@ -39,6 +39,9 @@ remains separate because it interprets another person's profile. My MatchLab
 now also owns the durable boundary between Echo's grounded working themes,
 proposed learning, member confirmation/correction/dismissal, and a separate
 reversible matching-use grant.
+The first Communication consolidation slice replaces the relationship-language
+link list with live saved Care Dialect and relationship-standard context. Either
+source can enter the same confirmed-learning review without automatic consent.
 See `SHELL_MIGRATION.md` for the completion standard, route matrix, and
 segment plan.
 
@@ -82,7 +85,7 @@ segment plan.
   `/report/:id` preserves the durable audit id in canonical history.
 - TypeScript project references and the API and web app typechecks pass.
 - Web suite: 36 files, 250 tests passed.
-- Full API suite on a clean Postgres 16 service: 101 files and 930 tests passed;
+- Full API suite on a clean Postgres 16 service: 101 files and 932 tests passed;
   2 files and 8 optional OCR tests skipped.
 - GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
   install, typecheck, lint, schema drift, voice lint, web tests, the complete
@@ -114,6 +117,10 @@ segment plan.
 - GitHub Actions run 32786262672 passed both required jobs on PR #17 for the
   confirmed Mirror learning lifecycle: 36 web files with 250 tests, the ordered
   migration chain through `0047`, and 101 API files with 930 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32787235430 passed both required jobs on PR #20 for the
+  saved Communication record: 36 web files with 250 tests, the ordered
+  migration chain through `0047`, and 101 API files with 932 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
