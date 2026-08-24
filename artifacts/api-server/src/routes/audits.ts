@@ -868,13 +868,15 @@ router.post("/me/profile-project/audits", async (req, res): Promise<void> => {
       props: { source: "profile_project_audit" },
     });
     res.status(201).json({
-      audit: serializeAudit({
-        ...audit!,
-        status: "complete",
-        readinessScore: generated.report.readinessScore,
-        report: generated.fullReport,
-        reportGeneratedAt: generated.newGeneratedAt,
-      }),
+      audit: GetAuditResponse.parse(
+        serializeAudit({
+          ...audit!,
+          status: "complete",
+          readinessScore: generated.report.readinessScore,
+          report: generated.fullReport,
+          reportGeneratedAt: generated.newGeneratedAt,
+        }),
+      ),
       report: generated.fullReport,
     });
   } catch (err) {
