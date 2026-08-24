@@ -5424,6 +5424,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/mirror-learnings:
+    get:
+      tags: [Matching]
+      operationId: listMirrorLearnings
+      summary: List the member's proposed and confirmed Mirror learnings
+      description: |
+        Returns the durable review record that separates Echo observations,
+        proposed learning, member-confirmed learning, and matching-use approval.
+      responses:
+        '200':
+          description: The member's learning record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MirrorLearningList'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/mirror-learnings/sync:
+    post:
+      tags: [Matching]
+      operationId: syncMirrorLearningProposals
+      summary: Refresh proposed learnings from the current grounded Mirror portrait
+      description: |
+        Creates proposals from current deterministic Mirror themes and refreshes
+        proposals still under review. Confirmed and dismissed member decisions
+        are never overwritten.
+      responses:
+        '200':
+          description: The refreshed learning record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MirrorLearningList'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/mirror-learnings/{id}:
+    patch:
+      tags: [Matching]
+      operationId: decideMirrorLearning
+      summary: Confirm, correct, dismiss, or set matching use for one learning
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MirrorLearningDecision'
+      responses:
+        '200':
+          description: The updated learning.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MirrorLearning'
+        '400':
+          description: Invalid decision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Learning not found for this member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '409':
+          description: Matching use was requested before member confirmation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/flags:
     get:
       tags: [Matching]
@@ -12995,6 +13089,103 @@ components:
           type: string
           minLength: 1
           maxLength: 64
+
+    MirrorLearningSource:
+      type: object
+      required: [type, ref, label]
+      properties:
+        type:
+          type: string
+        ref:
+          type: string
+        label:
+          type: string
+
+    MirrorLearning:
+      type: object
+      required:
+        - id
+        - source
+        - observation
+        - proposedLearning
+        - status
+        - confidence
+        - matchingUseApproved
+      properties:
+        id:
+          type: integer
+        source:
+          $ref: '#/components/schemas/MirrorLearningSource'
+        observation:
+          type: string
+        proposedLearning:
+          type: string
+        memberLearning:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [proposed, confirmed, dismissed]
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        matchingUseApproved:
+          type: boolean
+        confirmedAt:
+          type: string
+          nullable: true
+        dismissedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          nullable: true
+
+    MirrorLearningList:
+      type: object
+      required: [learnings]
+      properties:
+        learnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/MirrorLearning'
+
+    MirrorLearningDecision:
+      oneOf:
+        - type: object
+          required: [action]
+          properties:
+            action:
+              type: string
+              const: confirm
+        - type: object
+          required: [action, learning]
+          properties:
+            action:
+              type: string
+              const: revise
+            learning:
+              type: string
+              minLength: 3
+              maxLength: 1200
+        - type: object
+          required: [action]
+          properties:
+            action:
+              type: string
+              enum: [dismiss, unconfirm]
+        - type: object
+          required: [action, approved]
+          properties:
+            action:
+              type: string
+              const: set_matching
+            approved:
+              type: boolean
 
     FlagsState:
       type: object

@@ -35,6 +35,7 @@ import {
   matchingReadinessSnapshotsTable,
   matchingNudgeStateTable,
   mirrorDigestPrefsTable,
+  mirrorLearningsTable,
   companionStateTable,
   companionMessagesTable,
   companionObservationsTable,
@@ -339,6 +340,7 @@ async function buildExportPayload(userId: string) {
     matchingReadinessSnapshots,
     matchingNudgeState,
     mirrorDigestPrefs,
+    mirrorLearnings,
     journeyEvents,
     wyrAnswers,
     dailySparkAnswers,
@@ -382,6 +384,7 @@ async function buildExportPayload(userId: string) {
     db.select().from(matchingReadinessSnapshotsTable).where(eq(matchingReadinessSnapshotsTable.userId, userId)),
     db.select().from(matchingNudgeStateTable).where(eq(matchingNudgeStateTable.userId, userId)),
     db.select().from(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
+    db.select().from(mirrorLearningsTable).where(eq(mirrorLearningsTable.userId, userId)),
     db.select().from(journeyEventsTable).where(eq(journeyEventsTable.userId, userId)),
     db.select().from(wyrAnswersTable).where(eq(wyrAnswersTable.userId, userId)),
     db.select().from(dailySparkAnswersTable).where(eq(dailySparkAnswersTable.userId, userId)),
@@ -513,6 +516,7 @@ async function buildExportPayload(userId: string) {
       matchingReadinessSnapshots,
       matchingNudgeState,
       mirrorDigestPrefs,
+      mirrorLearnings,
       journeyEvents,
       wyrAnswers,
       dailySparkAnswers,
@@ -893,6 +897,7 @@ router.delete("/account", async (req, res): Promise<void> => {
     db.delete(cosmicChartsTable).where(eq(cosmicChartsTable.userId, userId)),
     db.delete(userVerificationsTable).where(eq(userVerificationsTable.userId, userId)),
     db.delete(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
+    db.delete(mirrorLearningsTable).where(eq(mirrorLearningsTable.userId, userId)),
   ]);
 
   // Echo companion surfaces: the evolving model of the user, the conversation
@@ -1605,6 +1610,12 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(mirrorDigestPrefsTable.userId, userId))
         .returning({ userId: mirrorDigestPrefsTable.userId });
       tables["mirror_digest_prefs"] = digestPrefsDel.length;
+
+      const mirrorLearningsDel = await tx
+        .delete(mirrorLearningsTable)
+        .where(eq(mirrorLearningsTable.userId, userId))
+        .returning({ id: mirrorLearningsTable.id });
+      tables["mirror_learnings"] = mirrorLearningsDel.length;
 
       // ── Finally the user row itself ───────────────────────────────────
       const userDel = await tx
