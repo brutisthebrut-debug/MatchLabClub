@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, HeartHandshake, Loader2, MessagesSquare, ShieldCheck } from "lucide-react";
+import { ArrowRight, HeartHandshake, Loader2, MessagesSquare, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { flagLabel } from "@/lib/flags";
 import { proposeCommunicationLearning } from "@/lib/mirrorLearnings";
+import { listCommunicationRecords, type CommunicationRecord as SavedCommunicationRecord } from "@/lib/communicationRecords";
 
 interface CareDialectState {
   hasProfile: boolean;
@@ -35,24 +36,27 @@ async function loadJson<T>(path: string): Promise<T> {
 export function CommunicationRecord() {
   const [care, setCare] = useState<CareDialectState | null>(null);
   const [flags, setFlags] = useState<FlagState | null>(null);
+  const [records, setRecords] = useState<SavedCommunicationRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<"care_dialect" | "standards" | null>(null);
+  const [busy, setBusy] = useState<"care_dialect" | "standards" | "connection_style" | "personal_blueprint" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
       loadJson<CareDialectState>("/me/care-dialect"),
       loadJson<FlagState>("/me/flags"),
+      listCommunicationRecords(),
     ])
-      .then(([careResult, flagResult]) => {
+      .then(([careResult, flagResult, communicationResult]) => {
         setCare(careResult.isDemo ? null : careResult);
         setFlags(flagResult);
+        setRecords(communicationResult.records);
       })
       .catch((err: Error) => setMessage(err.message))
       .finally(() => setLoading(false));
   }, []);
 
-  async function propose(source: "care_dialect" | "standards") {
+  async function propose(source: "care_dialect" | "standards" | "connection_style" | "personal_blueprint") {
     setBusy(source);
     setMessage(null);
     try {
@@ -67,6 +71,8 @@ export function CommunicationRecord() {
   }
 
   const hasFlags = Boolean((flags?.bringFlags.length ?? 0) + (flags?.seekFlags.length ?? 0));
+  const connectionStyle = records.find((record) => record.lens === "connection_style");
+  const blueprint = records.find((record) => record.lens === "personal_blueprint");
 
   return (
     <section className="rounded-[2rem] border border-foreground/10 bg-background/72 p-5 shadow-sm sm:p-7">
@@ -120,18 +126,41 @@ export function CommunicationRecord() {
             )}
             <Link href="/flags" className="mt-4 flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_52%)]">Review standards <ArrowRight className="h-4 w-4" /></Link>
           </article>
+
+          <article className="rounded-2xl border border-foreground/10 bg-background/58 p-5">
+            <Sparkles className="h-5 w-5 text-[hsl(248_62%_52%)]" />
+            <h3 className="mt-3 font-bold">Connection pattern</h3>
+            {connectionStyle ? (
+              <>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Your saved lens currently names <strong className="text-foreground">{String(connectionStyle.result.name ?? "a connection pattern")}</strong>.
+                </p>
+                <Button className="mt-4" size="sm" variant="outline" disabled={busy !== null} onClick={() => propose("connection_style")}>
+                  {busy === "connection_style" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send to learning review
+                </Button>
+              </>
+            ) : <p className="mt-2 text-sm leading-6 text-muted-foreground">No Connection Style result has been saved yet.</p>}
+            <Link href="/connection-style" className="mt-4 flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_52%)]">Review connection pattern <ArrowRight className="h-4 w-4" /></Link>
+          </article>
+
+          <article className="rounded-2xl border border-foreground/10 bg-background/58 p-5">
+            <MessagesSquare className="h-5 w-5 text-[hsl(326_100%_50%)]" />
+            <h3 className="mt-3 font-bold">Personal blueprint</h3>
+            {blueprint ? (
+              <>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{String(blueprint.result.communicationStyle ?? "Your saved blueprint is ready to review.")}</p>
+                <Button className="mt-4" size="sm" variant="outline" disabled={busy !== null} onClick={() => propose("personal_blueprint")}>
+                  {busy === "personal_blueprint" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send to learning review
+                </Button>
+              </>
+            ) : <p className="mt-2 text-sm leading-6 text-muted-foreground">No Personal Blueprint has been saved yet.</p>}
+            <Link href="/blueprint" className="mt-4 flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_52%)]">Review personal blueprint <ArrowRight className="h-4 w-4" /></Link>
+          </article>
         </div>
       )}
 
       {message && <div className="mt-4 rounded-2xl border border-foreground/10 bg-foreground/[0.035] p-4 text-sm leading-6">{message}</div>}
 
-      <div className="mt-5 flex flex-wrap gap-3 text-sm">
-        <Link href="/connection-style" className="font-semibold text-[hsl(248_62%_52%)]">Connection pattern lens</Link>
-        <span className="text-muted-foreground">·</span>
-        <Link href="/blueprint" className="font-semibold text-[hsl(248_62%_52%)]">Personal blueprint</Link>
-        <span className="text-xs text-muted-foreground">These two lenses remain transitional until their saved behavior is absorbed.</span>
-      </div>
     </section>
   );
 }
-
