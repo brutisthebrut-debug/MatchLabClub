@@ -105,7 +105,7 @@ describe("founder role authorization", () => {
       expect.arrayContaining([
         expect.objectContaining({
           method: "POST",
-          path: "/founder-test",
+          path: "/api/founder-test",
           statusCode: 204,
           userAgent: "founder-auth-test",
         }),
