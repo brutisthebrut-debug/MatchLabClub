@@ -22,11 +22,13 @@ mistaken for production behavior.
 
 ## Repository reality
 
-The approved v1 shell has been completed as a prototype, but it has not yet
-replaced the route-heavy production web shell. The current app still exposes
-legacy readiness, coaching, progress, and matching routes. Existing data models
-and workflows are valuable inputs to the migration; their present navigation is
-not the approved final information architecture.
+Production shell migration has begun. Segment 1 installs the five canonical
+destinations, keeps Trust & Data directly accessible, and preserves Echo across
+the authenticated shell. Existing legacy routes and records remain reachable
+behind the new destination hubs while later segments consolidate the underlying
+workflows. The global numeric match-path bar and sidebar readiness level are no
+longer part of the member shell. See `SHELL_MIGRATION.md` for the route matrix
+and segment plan.
 
 ## Phase 0: trust and state repair
 
@@ -42,6 +44,9 @@ not the approved final information architecture.
 
 ## Verified baseline
 
+- Production shell migration Segment 1 adds Today, My MatchLab, Journey, Play,
+  and Trust & Data routes; the existing Matches lifecycle remains canonical.
+  Legacy URLs continue to resolve and map to the owning destination.
 - TypeScript project references and the API and web app typechecks pass.
 - Web suite: 28 files, 211 tests passed.
 - Full API suite on a clean Postgres 16 service: 99 files and 911 tests passed;
@@ -83,9 +88,11 @@ not the approved final information architecture.
 ## Release gate
 
 Do not represent the current repository as production-ready. Automated Phase 0
-verification is now green. The remaining release gates are applying migrations
-`0041` through `0045` in the release environment, exercising Checkout/webhooks,
-renewal, cancellation, failure, and refund behavior in Stripe test mode,
-registering the webhook, and obtaining founder/legal approval for any live
-offer. Install the approved five-destination shell only after those trust
-promises are true in the real system.
+verification is green, and the founder has authorized shell migration to
+continue while Stripe remains deferred. Checkout stays fail-closed and no paid
+product or real-member paid cutover may be activated. The remaining release
+gates include applying migrations `0041` through `0045` in the release
+environment, completing the shell migration and authenticated walkthroughs,
+then exercising Checkout/webhooks, renewal, cancellation, failure, and refund
+behavior in Stripe test mode and obtaining founder/legal approval before any
+live offer.
