@@ -29,8 +29,10 @@ directly accessible, and preserves Echo across the authenticated shell. Segment
 2 makes onboarding consent-first. Segment 3A makes My MatchLab a live member
 record and Profile Project the durable, versioned owner of profile editing and
 Echo rewrite acceptance. Duplicate rewrite routes now redirect only after that
-behavior was absorbed. Full audit reports and Photo Lab remain explicitly
-transitional until their saved results and history are owned by Profile Project.
+behavior was absorbed. Profile Project now owns the member-facing view of durable audit reports,
+historical report versions, and the persistent private photo collection. Audit
+capture/generation and Photo Lab ranking remain explicitly transitional because
+ranking results are still session-only and cannot yet be reopened.
 See `SHELL_MIGRATION.md` for the completion standard, route matrix, and
 segment plan.
 
@@ -57,8 +59,11 @@ segment plan.
   rewrites; accepting a rewrite creates a traceable new version without
   changing the source. `/glow-up` and `/copilot/profile` now redirect to the
   canonical workflow.
-- Audit reports and Photo Lab are not yet consolidated; their legacy routes
-  remain reachable until Profile Project owns their saved results and history.
+- Profile Project now reopens current and historical audit reports with source
+  provenance and no numeric member grading. It also manages the durable private
+  photo collection.
+- Audit capture/generation and Photo Lab ranking remain transitional. No route
+  was retired because ranking results are not yet durable.
 - TypeScript project references and the API and web app typechecks pass.
 - Web suite: 31 files, 238 tests passed.
 - Full API suite on a clean Postgres 16 service: 99 files and 911 tests passed;
@@ -78,6 +83,10 @@ segment plan.
   My MatchLab record and Profile Project core: 31 web files and 238 tests, the
   ordered migration chain through `0045`, and 99 API files with 911 tests on
   clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32778893927 passed both required jobs on PR #11 for
+  durable Profile Project records: 32 web files and 241 tests, the ordered
+  migration chain through `0045`, and 99 API files with 911 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
