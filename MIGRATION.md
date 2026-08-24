@@ -88,24 +88,21 @@ cloud service, so the server boots and runs without any Replit infrastructure.
 **Sub-tasks in recommended order:**
 
 #### 2a. Stripe (`stripe-replit-sync` → direct SDK)
-- Remove `stripe-replit-sync` from `package.json`.
-- Write a plain webhook handler using the official `stripe` SDK
+- [x] Remove `stripe-replit-sync` from `package.json` and `pnpm-lock.yaml`.
+- [x] Write a plain webhook handler using the official `stripe` SDK
   (`stripe.webhooks.constructEvent`).
-- Create a `stripe_webhook_secret` env var and store the signing secret from
+- [x] Use `STRIPE_WEBHOOK_SECRET` for the signing secret from
   the Stripe dashboard.
-- Decide whether to keep the `stripe.*` Postgres schema (populated by
-  `stripe-replit-sync`) or normalize relevant fields into `purchase_interest`.
-  Recommendation: keep a `stripe_events` table seeded by the webhook and
-  query it for reconciliation; retire the managed schema.
-- Update `stripeReconcile.ts` to read from the new table.
-- Update `initStripe.ts` to remove the managed webhook registration; instead
-  register the webhook manually in the Stripe dashboard pointing to your
-  production domain.
+- [x] Retire the managed `stripe.*` runtime path and use local `stripe_events`
+  plus canonical `billing_entitlements`.
+- [x] Remove `stripeReconcile.ts` and the managed registration path.
+- [ ] Register the documented webhook manually in Stripe test mode and then at
+  the production domain.
 
 **Key files:** `artifacts/api-server/src/lib/stripeClient.ts`,
-`artifacts/api-server/src/lib/initStripe.ts`,
-`artifacts/api-server/src/lib/stripeReconcile.ts`,
-`artifacts/api-server/src/lib/webhookHandlers.ts`
+`artifacts/api-server/src/routes/stripeWebhook.ts`,
+`artifacts/api-server/src/lib/billingEntitlements.ts`,
+`artifacts/api-server/src/routes/billing.ts`
 
 #### 2b. Object storage (sidecar → direct GCS or S3-compatible)
 - The sidecar at `http://127.0.0.1:1106` handles GCS token exchange and signed
@@ -343,13 +340,13 @@ during the transition.
 ### 2.3 Stripe — direct SDK replacement (`stripe-replit-sync` runtime retired)
 
 **Current state:** Direct Stripe SDK, signed manual webhook, and canonical local
-entitlements are implemented. Runtime imports and managed webhook registration
-are removed. The unused package/lockfile entry remains a package-maintenance
-cleanup until a permitted pnpm lock refresh can run.
+entitlements are implemented. Runtime imports, managed webhook registration,
+and the unused manifest/lockfile entry are removed. The regenerated lockfile
+passes pnpm's frozen offline verification across all workspace projects.
 
 | Historical item (removed from runtime) | Former detail |
 |---|---|
-| Package | `stripe-replit-sync` managed the Replit-specific flow; only its unused dependency/lock entry remains pending cleanup |
+| Package | `stripe-replit-sync` managed the Replit-specific flow; manifest and lockfile entries are now removed |
 | Webhook registration | `initStripe.ts` called `StripeSync.registerWebhook()` for a Replit-hosted endpoint |
 | DB schema | Reconciliation read the managed `stripe.*` schema instead of canonical entitlements |
 | Credentials | `REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL` were Replit-injected |
@@ -746,7 +743,7 @@ addressed.
 
 ### 4.10 Stripe webhooks
 
-- [ ] **REQUIRED** `stripe-replit-sync` removed *(Phase 2a)*
+- [x] **REQUIRED** `stripe-replit-sync` removed *(Phase 2a)*
 - [x] **REQUIRED** Direct webhook handler implemented and signed with `STRIPE_WEBHOOK_SECRET` *(Phase 2a)*
 - [ ] **REQUIRED** Webhook endpoint registered in Stripe dashboard at production domain *(Phase 2a)*
 - [ ] **REQUIRED** End-to-end checkout flow tested in Stripe test mode against the new handler *(Phase 2a)*
