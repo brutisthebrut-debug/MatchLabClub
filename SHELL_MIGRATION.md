@@ -13,6 +13,21 @@ Checkout remains fail-closed behind the existing server allowlist. Stripe test
 mode, release configuration, and founder/legal approval remain separate release
 gates.
 
+## Migration completion standard
+
+A destination is not complete merely because it links to an older page. Each
+capability is complete only when:
+
+- the canonical destination owns the live data path and member-facing workflow;
+- saved work is reopenable, and version/provenance history is preserved;
+- source storage, Echo use, confirmed learning, and matching use remain
+  distinguishable;
+- duplicate entry points redirect only after their behavior is absorbed;
+- regression evidence proves records and deep links were not orphaned.
+
+Legacy links inside a canonical destination are explicitly transitional until
+those conditions are met.
+
 ## Segment 1: navigation spine and destination hubs
 
 State: merged to `main` and verified.
@@ -79,12 +94,33 @@ State: merged to `main` and verified.
   ordered migrations through `0045`, and 99 API files with 911 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3A: My MatchLab record and Profile Project core
+
+State: implemented in code, pending CI and merge.
+
+- My MatchLab now reads the live member portrait, member-authored wellness
+  answers, saved profiles, and imported-source records. It does not substitute
+  demo-member data when a signed-in query fails or has no result.
+- Working Echo themes, direct member statements, profile versions, and source
+  permissions are presented as different record types.
+- Profile Project now uses the canonical saved-profile API for durable,
+  reopenable versions and the server profile-rewrite API for Echo rewrites.
+- An accepted rewrite saves as a new traceable version and leaves the source
+  version unchanged.
+- The duplicate Profile Glow-Up and Improve My Profile routes redirect into
+  Profile Project after their shared rewrite capability was absorbed.
+- Full audit reports and Photo Lab remain transitional links. They are not
+  marked consolidated until their saved results are owned by Profile Project.
+
 ## Next segments
 
-1. Consolidate Mirror and profile tools into the My MatchLab record and Profile
-   Project without losing saved results.
-2. Consolidate dates, journal, debrief, experiments, and reflections into a
+1. Absorb full audit reports and Photo Lab results into Profile Project,
+   preserving history and source records before retiring their duplicate
+   surfaces.
+2. Consolidate Mirror trends, relationship-language tools, and confirmed
+   learning into the My MatchLab record.
+3. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
-3. Consolidate games and quizzes into Play with confirmed-learning handoff.
-4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+4. Consolidate games and quizzes into Play with confirmed-learning handoff.
+5. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
