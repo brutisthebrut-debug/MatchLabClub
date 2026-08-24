@@ -29,11 +29,13 @@ directly accessible, and preserves Echo across the authenticated shell. Segment
 2 makes onboarding consent-first. Segment 3A makes My MatchLab a live member
 record and Profile Project the durable, versioned owner of profile editing and
 Echo rewrite acceptance. Duplicate rewrite routes now redirect only after that
-behavior was absorbed. Profile Project owns durable audit-report viewing,
-historical report versions, the persistent private photo collection, and
-immutable Photo Lab analyses that can be reopened or deleted. The standalone
-Photo Lab route now redirects only after that signed-in workflow was absorbed.
-Audit capture/generation remains the next transitional Profile Project slice.
+behavior was absorbed. Profile Project owns evidence-validated own-profile source capture,
+report generation and regeneration, durable audit-report viewing, historical
+report versions, the persistent private photo collection, and immutable Photo
+Lab analyses that can be reopened or deleted. The standalone Photo Lab and
+own-profile audit routes now redirect only after their signed-in workflows were
+absorbed; durable report ids survive the compatibility redirect. Profile Reader
+remains separate because it interprets another person's profile.
 See `SHELL_MIGRATION.md` for the completion standard, route matrix, and
 segment plan.
 
@@ -69,10 +71,15 @@ segment plan.
   only during the request and are not stored with the run.
 - The standalone `/photo-lab` member page redirects to Profile Project after
   workflow absorption. The anonymous ranking API remains compatibility-only.
-- Audit capture/generation remains transitional.
+- Profile Project now owns evidence-validated audit capture and generation.
+  Weak, placeholder, wrong-format, implausible-age, or directly contradictory
+  sources return an explicit insufficient-evidence response and cannot
+  manufacture a report. Generated reads remain proposed coaching observations.
+- `/start`, `/signal-check`, and `/diagnosis` redirect to canonical capture;
+  `/report/:id` preserves the durable audit id in canonical history.
 - TypeScript project references and the API and web app typechecks pass.
-- Web suite: 33 files, 242 tests passed.
-- Full API suite on a clean Postgres 16 service: 99 files and 914 tests passed;
+- Web suite: 35 files, 247 tests passed.
+- Full API suite on a clean Postgres 16 service: 100 files and 925 tests passed;
   2 files and 8 optional OCR tests skipped.
 - GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
   install, typecheck, lint, schema drift, voice lint, web tests, the complete
@@ -97,6 +104,10 @@ segment plan.
   durable Photo Lab service: 33 web files with 242 tests, the ordered migration
   chain through `0046`, and 99 API files with 914 tests on clean Postgres 16.
   The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32783616570 passed both required jobs on PR #15 for
+  evidence-validated Profile Project reads: 35 web files with 247 tests, the
+  ordered migration chain through `0046`, and 100 API files with 925 tests on
+  clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
