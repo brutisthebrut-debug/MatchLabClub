@@ -32,6 +32,7 @@ import {
   getOrCreateAnonClaimToken,
 } from "../lib/anonClaimToken";
 import { extractProfileFromScreenshot, detectLowConfidenceFields } from "../lib/ocr";
+import { assessAuditEvidence } from "../lib/auditEvidence";
 import type { OcrCorrectionsRecord, OcrCorrectionEntry } from "@workspace/db";
 import type { Request } from "express";
 
@@ -718,28 +719,20 @@ async function enhanceBioRewriteWithAi(
   }
 }
 
-router.post("/audits/:id/generate", async (req, res): Promise<void> => {
-  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const id = parseInt(raw, 10);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
-  }
-
-  const [audit] = await db
-    .select()
-    .from(auditsTable)
-    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
-  if (!audit) {
-    res.status(404).json({ error: "Audit not found" });
-    return;
-  }
-
+async function generateAndPersistAuditReport(
+  audit: typeof auditsTable.$inferSelect,
+  userId: string | null,
+  log: Request["log"],
+) {
+  const id = audit.id;
   const priorReport = audit.report ?? null;
   const priorScore = audit.readinessScore ?? null;
   const priorGeneratedAt = audit.reportGeneratedAt ?? null;
 
-  await db.update(auditsTable).set({ status: "generating" }).where(eq(auditsTable.id, id));
+  await db
+    .update(auditsTable)
+    .set({ status: "generating" })
+    .where(eq(auditsTable.id, id));
 
   const baseReport = generateAuditReport({
     firstName: audit.firstName,
@@ -761,8 +754,8 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
       currentApps: audit.currentApps,
       sourceApp: audit.sourceApp,
     },
-    req.user?.id ?? null,
-    req.log,
+    userId,
+    log,
   );
 
   const changeSummary = buildChangeSummary(priorReport, priorScore, report);
@@ -773,7 +766,8 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
   };
 
   const newGeneratedAt = new Date();
-  await db.update(auditsTable)
+  await db
+    .update(auditsTable)
     .set({
       status: "complete",
       readinessScore: report.readinessScore,
@@ -789,10 +783,6 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     })
     .where(eq(auditsTable.id, id));
 
-  // Append the new report to the versions log. If this is the first time we
-  // see this audit but a prior report exists (legacy audits created before the
-  // versions table), backfill the prior snapshot first so the timeline shows
-  // both runs.
   const existingVersions = await db
     .select({ id: auditReportVersionsTable.id })
     .from(auditReportVersionsTable)
@@ -818,11 +808,117 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     engineVersion: report.engineVersion ?? null,
     generatedAt: newGeneratedAt,
   });
-
-  // Trim versions beyond the retention cap immediately after insert so the
-  // table never accumulates unbounded rows for a single audit.
   await pruneVersionsForAudit(id);
 
+  return { fullReport, report, newGeneratedAt };
+}
+
+function sendInsufficientEvidence(
+  res: import("express").Response,
+  evidence: Exclude<ReturnType<typeof assessAuditEvidence>, { sufficient: true }>,
+): void {
+  res.status(422).json({
+    error: "insufficient_evidence",
+    message:
+      "This source does not contain enough reliable profile evidence to generate a read.",
+    fields: evidence.fields,
+    reasons: evidence.reasons,
+  });
+}
+
+// Canonical Profile Project service: validates the source, saves it, generates
+// the first immutable report version, and returns the durable record in one
+// member-owned workflow.
+router.post("/me/profile-project/audits", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const parsed = CreateAuditBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const evidence = assessAuditEvidence(parsed.data);
+  if (!evidence.sufficient) {
+    sendInsufficientEvidence(res, evidence);
+    return;
+  }
+
+  const [audit] = await db
+    .insert(auditsTable)
+    .values({
+      ...parsed.data,
+      status: "generating",
+      userId: req.user.id,
+      anonymousClaimToken: null,
+    })
+    .returning();
+
+  try {
+    const generated = await generateAndPersistAuditReport(
+      audit!,
+      req.user.id,
+      req.log,
+    );
+    void recordJourneyEvent({
+      eventType: "signal_fed",
+      userId: req.user.id,
+      anonId: null,
+      props: { source: "profile_project_audit" },
+    });
+    res.status(201).json({
+      audit: serializeAudit({
+        ...audit!,
+        status: "complete",
+        readinessScore: generated.report.readinessScore,
+        report: generated.fullReport,
+        reportGeneratedAt: generated.newGeneratedAt,
+      }),
+      report: generated.fullReport,
+    });
+  } catch (err) {
+    await db
+      .update(auditsTable)
+      .set({ status: "failed", report: null, readinessScore: null })
+      .where(eq(auditsTable.id, audit!.id));
+    req.log.error({ err, auditId: audit!.id }, "Profile Project audit failed");
+    res.status(500).json({
+      error: "audit_generation_failed",
+      message: "The source was saved, but no read was generated. Try again.",
+      auditId: audit!.id,
+    });
+  }
+});
+
+router.post("/audits/:id/generate", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
+  if (!audit) {
+    res.status(404).json({ error: "Audit not found" });
+    return;
+  }
+
+  const evidence = assessAuditEvidence(audit);
+  if (!evidence.sufficient) {
+    sendInsufficientEvidence(res, evidence);
+    return;
+  }
+
+  const { fullReport } = await generateAndPersistAuditReport(
+    audit,
+    req.user?.id ?? null,
+    req.log,
+  );
   res.json(GenerateAuditReportResponse.parse(fullReport));
 });
 
