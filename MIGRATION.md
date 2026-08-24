@@ -340,27 +340,29 @@ during the transition.
 
 ---
 
-### 2.3 Stripe — `stripe-replit-sync`
+### 2.3 Stripe — direct SDK replacement (`stripe-replit-sync` runtime retired)
 
-**Coupling type:** Proprietary package + managed webhook registration  
-**Risk:** High — payments, tier upgrades, and reconciliation break without it
+**Current state:** Direct Stripe SDK, signed manual webhook, and canonical local
+entitlements are implemented. Runtime imports and managed webhook registration
+are removed. The unused package/lockfile entry remains a package-maintenance
+cleanup until a permitted pnpm lock refresh can run.
 
-| Item | Detail |
+| Historical item (removed from runtime) | Former detail |
 |---|---|
-| Package | `stripe-replit-sync` (Replit-proprietary; not on npm public registry) |
-| Webhook registration | `initStripe.ts` calls `StripeSync.registerWebhook()` which auto-configures a Replit-hosted webhook endpoint |
-| DB schema | Populates a `stripe.*` Postgres schema; `stripeReconcile.ts` reads from `stripe.checkout_sessions` |
-| Credentials | `REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL` (all Replit-injected) |
+| Package | `stripe-replit-sync` managed the Replit-specific flow; only its unused dependency/lock entry remains pending cleanup |
+| Webhook registration | `initStripe.ts` called `StripeSync.registerWebhook()` for a Replit-hosted endpoint |
+| DB schema | Reconciliation read the managed `stripe.*` schema instead of canonical entitlements |
+| Credentials | `REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL` were Replit-injected |
 
-**Files:**
+**Current files:**
 - `artifacts/api-server/src/lib/stripeClient.ts`
-- `artifacts/api-server/src/lib/initStripe.ts`
-- `artifacts/api-server/src/lib/stripeReconcile.ts`
-- `artifacts/api-server/src/lib/webhookHandlers.ts`
+- `artifacts/api-server/src/routes/stripeWebhook.ts`
+- `artifacts/api-server/src/lib/billingEntitlements.ts`
+- `artifacts/api-server/src/routes/billing.ts`
 
-**Migration action:** Phase 2a. Remove `stripe-replit-sync`. Write a direct
-`stripe.webhooks.constructEvent` handler. Register the webhook manually in the
-Stripe dashboard. Replace or normalize the `stripe.*` schema.
+**Remaining action:** Apply migration `0045`, configure the direct secret and
+Price IDs, register the webhook manually, pass the Stripe test-mode matrix, and
+activate only founder-approved products through `BILLING_LIVE_PRODUCTS`.
 
 ---
 
@@ -570,9 +572,11 @@ required for the application to boot (`BOOT`), required for a feature to work
 | `WEB_REPL_RENEWAL` | REPLIT-ONLY | Connector token renewal; replaced in Phase 2a |
 | `STRIPE_SECRET_KEY` | FEATURE (Phase 2a) | Direct Stripe secret key; replaces connector credential fetch |
 | `STRIPE_WEBHOOK_SECRET` | FEATURE (Phase 2a) | Stripe-generated webhook signing secret; register endpoint manually |
-| `VITE_STRIPE_SIGNAL_AUDIT_LINK` | FEATURE | Stripe Payment Link URL for $29 product; falls back to interest form if unset |
-| `VITE_STRIPE_DATING_RESET_LINK` | FEATURE | Stripe Payment Link URL for $97 product |
-| `VITE_STRIPE_WINGMAN_LINK` | FEATURE | Stripe Payment Link URL for $197/mo product |
+| `STRIPE_PRICE_SIGNAL_AUDIT` | FEATURE (Phase 2a) | Server-only one-time Price ID for Signal Audit |
+| `STRIPE_PRICE_DATING_RESET` | FEATURE (Phase 2a) | Server-only one-time Price ID for Dating Reset |
+| `STRIPE_PRICE_WINGMAN` | FEATURE (Phase 2a) | Server-only recurring Price ID for Wingman |
+| `BILLING_LIVE_PRODUCTS` | RELEASE CONTROL | Comma-separated canonical products explicitly approved for checkout; empty keeps all enrollment closed |
+| `APP_ORIGIN` / `PUBLIC_APP_URL` | FEATURE (Phase 2a) | Canonical return origin for Checkout and customer portal |
 
 ### 3.5 Object storage (Phase 2b replacements)
 

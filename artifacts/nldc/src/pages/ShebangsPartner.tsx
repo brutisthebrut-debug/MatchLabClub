@@ -16,7 +16,7 @@ const PERKS = [
   {
   icon: Zap,
   title: "Free Profile Signal Audit",
-  desc: "Your full Signal Score (0–100), Signal Spectrum across 8 dimensions, a complete bio rewrite, and a 7-day action plan. This is the whole free tier, available to every Shebangs listener.",
+  desc: "A profile pattern read across 8 dimensions, an example bio rewrite, and concrete next actions. No card required.",
   },
   {
   icon: MessageCircle,
@@ -26,14 +26,14 @@ const PERKS = [
   {
   icon: Star,
   title: "20% off The Dating Reset",
-  desc: "Use code SHEBANGS20 at checkout for 20% off The Dating Reset ($97). That's a full profile rebuild, unlimited Chemistry Lab, and a 30-day check-in for $77.60.",
+  desc: "If this partner offer is active when Dating Reset enrollment opens, Stripe will display any accepted SHEBANGS20 discount and final terms before payment.",
   },
 ];
 
 const WHAT_MATCHLAB_DOES = [
   "Tells you what your dating profile is actually communicating, not what you think it's saying",
   "Rewrites your bio to be specific, warm, and interesting (not try-hard)",
-  "Scores your profile across 8 dimensions so you know exactly what to fix first",
+  "Reads your profile across 8 dimensions so you can decide what to test first",
   "Coaches your message replies so you're never staring at your phone wondering what to say",
   "Analyses your conversation patterns so you understand your own style",
 ];
@@ -47,7 +47,7 @@ export default function ShebangsPartner() {
 
   useMeta(
   "Shebangs × MatchLab Club. Exclusive Partner Offer",
-  "Shebangs.club members get exclusive access to MatchLab Club's free Profile Signal Audit and 20% off The Dating Reset. Find out what your profile is really saying."
+  "Shebangs.club members can use MatchLab Club's free profile read and register interest in partner pricing when paid enrollment is open."
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,7 +98,7 @@ export default function ShebangsPartner() {
   Shebangs listeners are people who take dating seriously, who want to show up as themselves and actually connect. That's exactly who MatchLab Club was built for.
   </p>
   <p className="text-muted-foreground/70 max-w-xl mx-auto">
-  As a Shebangs member, you get full free access to the Profile Signal Audit, Chemistry Lab message coaching, and 20% off The Dating Reset.
+  As a Shebangs member, you can use the free profile read and register interest in any approved partner pricing shown when paid enrollment opens.
   </p>
   </div>
   </div>

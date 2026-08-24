@@ -1174,9 +1174,11 @@ export const getCreateBillingCheckoutUrl = () => {
 }
 
 /**
- * Uses server-owned price IDs and stamps the signed-in user and canonical
-product into Stripe metadata. Creating or returning from a session does
-not grant access; a verified payment webhook does.
+ * Requires the canonical product to be explicitly approved in the
+server-only live-products allowlist, uses server-owned price IDs, and
+stamps the signed-in user and product into Stripe metadata. Creating or
+returning from a session does not grant access; a verified payment
+webhook does.
 
  * @summary Create an authenticated Stripe Checkout session
  */

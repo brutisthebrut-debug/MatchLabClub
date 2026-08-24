@@ -353,14 +353,14 @@ export default function Landing() {
               },
               {
                 step: "02",
-                title: "Watch your readiness climb",
-                desc: "Every move nudges one central number. Your Match Readiness grows as Echo learns your patterns.",
+                title: "Deepen the private picture",
+                desc: "Each tool can add context, subject to the permissions you choose for that source.",
                 color: "hsl(var(--brand-gold))",
               },
               {
                 step: "03",
-                title: "Earn the introduction",
-                desc: "When you are genuinely ready, Echo works toward introducing you to people near you. No swipe carousel.",
+                title: "Be considered for an introduction",
+                desc: "If you opt in and fit, consent, geography, capacity, and availability align, MatchLab may consider a controlled introduction. No swipe carousel.",
                 color: "hsl(142 55% 50%)",
               },
             ].map((item, i) => (
@@ -396,7 +396,7 @@ export default function Landing() {
               <span className="gradient-text italic pr-1">to the table.</span>
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed font-medium">
-              These are the tools Echo uses to help you right now. Each one is useful today on its own, and each one also helps Echo know you better, which is what earns you introductions to people you would never have found on your own.
+              These tools can help on their own. With your permission, selected outputs can also deepen the private context used for coaching or controlled-pilot consideration. Use never guarantees an introduction.
             </p>
           </div>
 
@@ -407,7 +407,7 @@ export default function Landing() {
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
           >
             {[
-              { icon: FileText, title: "Signal Check", desc: "A fast read of your profile with bio and prompt rewrites, plus a Signal Score.", href: "/signal-check", color: "hsl(var(--brand-indigo))" },
+              { icon: FileText, title: "Signal Check", desc: "A fast read of your profile with bio and prompt observations plus an example rewrite.", href: "/signal-check", color: "hsl(var(--brand-indigo))" },
               { icon: Camera, title: "Photo Critique", desc: "Always-on deterministic checklist, plus opt-in vision to read how your photos actually land.", href: "/signal-check", color: "hsl(326 100% 59%)" },
               { icon: MessageCircle, title: "Message Coach", desc: "Paste a conversation and get replies with the reasoning behind each.", href: "/coach", color: "hsl(190 55% 55%)" },
               { icon: History, title: "Insights & History", desc: "Paste your message history to see communication patterns and your attachment style.", href: "/insights", color: "hsl(var(--brand-gold))" },
@@ -518,7 +518,7 @@ export default function Landing() {
             <motion.div className="glass-strong rounded-[2rem] p-10 border border-[hsl(142_55%_50%/0.3)] shadow-lg" {...fadeUp(0.1)}>
               <Shield className="w-12 h-12 text-[hsl(142_55%_50%)] mb-6" />
               <h3 className="font-bold text-foreground text-2xl mb-4">Clear privacy boundaries</h3>
-              <p className="text-muted-foreground leading-relaxed font-medium">Our deterministic engine runs with no external calls. Deep AI via Anthropic is strictly opt-in, zero-retention, never sold, and never used for training. Export or delete everything anytime.</p>
+              <p className="text-muted-foreground leading-relaxed font-medium">Our structural engine runs with no external model call. Deep AI is opt-in, and provider handling is described in Privacy and Integrations. Export and deletion controls live in Account.</p>
             </motion.div>
             
             <motion.div className="glass-strong rounded-[2rem] p-10 border border-[hsl(248_62%_52%/0.3)] shadow-lg" {...fadeUp(0.2)}>
@@ -530,7 +530,7 @@ export default function Landing() {
             <motion.div className="glass-strong rounded-[2rem] p-10 border border-[hsl(326_100%_59%/0.3)] shadow-lg" {...fadeUp(0.3)}>
               <LockKeyhole className="w-12 h-12 text-[hsl(326_100%_59%)] mb-6" />
               <h3 className="font-bold text-foreground text-2xl mb-4">Honest capabilities</h3>
-              <p className="text-muted-foreground leading-relaxed font-medium">We do not sell magic. We provide tools that require your input. Readiness is earned through interaction, not bought with a premium tier.</p>
+              <p className="text-muted-foreground leading-relaxed font-medium">We do not sell magic, matches, or guaranteed outcomes. Paid status grants the purchased support scope; it never overrides consent, fit, safety, availability, or human judgment.</p>
             </motion.div>
           </div>
         </div>
@@ -578,14 +578,14 @@ export default function Landing() {
 
             <motion.div className="glass-strong rounded-[2.5rem] p-12 border border-[hsl(248_62%_52%/0.5)] shadow-2xl relative flex flex-col glow-violet" {...fadeUp(0.2)}>
               <div className="absolute top-0 right-10 -translate-y-1/2 px-4 py-1.5 bg-[hsl(248_62%_52%)] text-white text-sm font-bold uppercase tracking-wider rounded-full shadow-lg">
-                Lifetime Access
+                One-time product
               </div>
               <div className="flex-1">
                 <p className="text-2xl font-bold text-foreground mb-2">The Club</p>
                 <p className="text-5xl font-serif font-bold mb-6">$97 <span className="text-xl text-muted-foreground font-sans font-medium">one-time</span></p>
-                <p className="text-lg text-muted-foreground mb-10 font-medium">Full access to the current suite of tools, forever. Watch your readiness score grow over time.</p>
+                <p className="text-lg text-muted-foreground mb-10 font-medium">A one-time Dating Reset entitlement with the included scope shown on the pricing and checkout pages.</p>
                 <ul className="space-y-4 mb-10">
-                  <li className="flex items-center gap-3 font-bold text-foreground"><CheckSquare className="w-5 h-5 text-[hsl(248_62%_52%)]" /> Unlimited Signal Checks</li>
+                  <li className="flex items-center gap-3 font-bold text-foreground"><CheckSquare className="w-5 h-5 text-[hsl(248_62%_52%)]" /> Repeat Signal Checks as included</li>
                   <li className="flex items-center gap-3 font-bold text-foreground"><CheckSquare className="w-5 h-5 text-[hsl(248_62%_52%)]" /> Full Copilot Suite</li>
                   <li className="flex items-center gap-3 font-bold text-foreground"><CheckSquare className="w-5 h-5 text-[hsl(248_62%_52%)]" /> Deep AI Vision & Analysis</li>
                 </ul>

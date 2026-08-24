@@ -10,7 +10,7 @@ export default function CheckoutCancel() {
   );
   const product = params.get("product") || "dating-reset";
 
-  useMeta("Order Cancelled", "No worries, your order wasn't completed. Come back whenever you're ready.");
+  useMeta("Checkout Not Completed", "This checkout was not completed. Come back whenever you're ready.");
 
   return (
   <AppLayout>
@@ -24,11 +24,11 @@ export default function CheckoutCancel() {
   </div>
 
   <h1 className="font-serif text-3xl font-bold text-foreground mb-4">
-  No worries, nothing was charged.
+  Checkout wasn't completed here.
   </h1>
 
   <p className="text-muted-foreground leading-relaxed mb-3">
-  Your order wasn't completed, and nothing was taken from your card. Come back whenever you're ready.
+  MatchLab did not activate paid access from this checkout. Stripe and your Account billing page remain the source of truth for any payment status.
   </p>
 
   <p className="text-muted-foreground/60 text-sm mb-10">
@@ -57,7 +57,7 @@ export default function CheckoutCancel() {
   Free tools, no card needed
   </p>
   <ul className="space-y-2 text-sm text-muted-foreground">
-  <li>→ <Link href="/signal-check" className="hover:text-foreground transition-colors">3-Min Signal Check</Link>, free, instant score</li>
+  <li>→ <Link href="/signal-check" className="hover:text-foreground transition-colors">3-Min Signal Check</Link>, free profile read</li>
   <li>→ <Link href="/start" className="hover:text-foreground transition-colors">Full Profile Signal Audit</Link>, still free</li>
   <li>→ <Link href="/lab" className="hover:text-foreground transition-colors">Chemistry Lab</Link>, message coaching</li>
   </ul>

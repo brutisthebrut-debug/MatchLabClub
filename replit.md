@@ -4,7 +4,7 @@ AI-powered "second brain for your dating life" — a companion web + mobile app 
 
 ## Privacy & AI in one paragraph
 
-Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by default: no keys, no external calls, no rate limits. On top of that, Anthropic Claude is opt-in via a single per-account toggle (`ai_content_consent`, surfaced in `/account` as "Deep AI lane"). The Claude layer covers bio rewrites, message coaching, Compatibility Compass synthesis, Hinge import summaries, Instagram tone extraction, and profile photo critique (Claude vision, opt-in only, with a deterministic photo checklist as the always-on baseline). When the toggle is off, or when a Claude call fails or hits the daily cap, the deterministic engine handles the request and nothing breaks. Anthropic processes prompts under their zero-retention API policy. We never sell, share, or train on user content. Users can export and delete everything from their account at any time. Any marketing copy that says "no external AI" without qualification is stale and should be rewritten.
+Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by default: no keys, no external calls, no rate limits. On top of that, Anthropic Claude is opt-in via a single per-account toggle (`ai_content_consent`, surfaced in `/account` as "Deep AI lane"). The Claude layer covers bio rewrites, message coaching, Compatibility Compass synthesis, Hinge import summaries, Instagram tone extraction, and profile photo critique (Claude vision, opt-in only, with a deterministic photo checklist as the always-on baseline). When the toggle is off, or when a Claude call fails or hits the daily cap, the deterministic engine handles the request and nothing breaks. Provider handling must be described by the current Privacy and Integrations pages rather than an unverified retention slogan. MatchLab does not sell private content to advertisers. Users have self-service export and deletion controls, subject to records a processor or law requires. Any marketing copy that says "no external AI" without qualification is stale and should be rewritten.
 
 ## Run & Operate
 
@@ -76,14 +76,15 @@ Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by de
 - **Message coach** — paste conversation, get 3 reply options (Playful/Direct/Warm) with rationale
 - **Email insights** — paste message history, get communication patterns, attachment style, profile tips
 - **Integrations settings** — consent-first UI for Gmail, Calendar, screenshot upload, social import (coming soon)
-- **Pricing** — 3-tier pricing with podcast discount, FAQ accordion
-- **Waitlist** — live count, signup form, early listener perks
+- **Pricing** — free and paid support scopes, controlled-enrollment status, FAQ accordion
+- **Waitlist** — live count, signup form, and explicit non-guaranteed enrollment principles
 
 ## Stripe checkout operations
 
 Checkout (`/checkout/:product`) creates an authenticated Stripe Checkout session
-through `/api/me/billing/checkout` using server-only Price IDs. When Stripe is
-not configured it falls back to the existing purchase-interest capture.
+through `/api/me/billing/checkout` only when the canonical product is explicitly
+approved in `BILLING_LIVE_PRODUCTS`; it then uses server-only Price IDs. Closed
+or incompletely configured products fall back to purchase-interest capture.
 
 The direct Stripe SDK verifies raw signed webhooks and writes idempotent
 `stripe_events` plus canonical `billing_entitlements`. Those events grant,

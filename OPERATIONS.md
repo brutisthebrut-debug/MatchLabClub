@@ -79,9 +79,11 @@ the page falls back to the existing "save your spot" purchase-interest form.
 | Signal Audit one-time Price ID | `STRIPE_PRICE_SIGNAL_AUDIT` |
 | Dating Reset one-time Price ID | `STRIPE_PRICE_DATING_RESET` |
 | Monthly Wingman recurring Price ID | `STRIPE_PRICE_WINGMAN` |
+| Approved products open for checkout | `BILLING_LIVE_PRODUCTS` (comma-separated canonical slugs; empty means enrollment stays closed) |
 
 The secret key and price IDs must never use a `VITE_` prefix or enter the browser
-bundle.
+bundle. Add a product to `BILLING_LIVE_PRODUCTS` only after its price, service
+scope, capacity, and checkout terms have founder approval.
 
 ### Stripe dashboard setup
 
@@ -97,6 +99,9 @@ bundle.
 4. Configure the Stripe customer portal to allow payment-method changes and
    end-of-period subscription cancellation.
 5. Apply migration `0045` before enabling checkout.
+6. After founder approval of the exact offer and fulfillment capacity, add only
+   that canonical slug (`signal-audit`, `dating-reset`, or `wingman`) to
+   `BILLING_LIVE_PRODUCTS`. Price IDs alone do not open enrollment.
 
 ### Entitlement behavior
 

@@ -30,7 +30,7 @@ const PRODUCT_COPY: Record<string, ProductCopy> = {
   "signal-audit": {
   name: "Profile Signal Audit",
   headline: "Your audit is confirmed.",
-  subhead: "Your Profile Signal Audit is ready. Here's how to get the most out of it in the next 48 hours.",
+  subhead: "Your verified Profile Signal Audit access is active. Here are the available next actions.",
   nextHref: "/start",
   nextLabel: "Run My Signal Audit",
   steps: [
@@ -43,7 +43,7 @@ const PRODUCT_COPY: Record<string, ProductCopy> = {
   {
   icon: Star,
   title: "Read your full report",
-  desc: "Your Signal Score, 8-dimension Spectrum, rewritten bio, prompt rewrites, and photo checklist, all in one place.",
+  desc: "Your profile observations, 8-dimension pattern read, bio and prompt drafts, and photo checklist appear together.",
   timeframe: "~5 min after submission",
   },
   {
@@ -54,16 +54,16 @@ const PRODUCT_COPY: Record<string, ProductCopy> = {
   },
   {
   icon: Mail,
-  title: "Founder review note",
-  desc: "During beta, every order gets a personal founder note within 48 hours. Watch your inbox.",
-  timeframe: "Within 48 hours",
+  title: "Request support if something is unclear",
+  desc: "Your purchase does not silently authorize human review. Contact support if you want help with the report or its billing state.",
+  timeframe: "Optional",
   },
   ],
   },
   "dating-reset": {
   name: "The Dating Reset",
   headline: "The Dating Reset is yours.",
-  subhead: "Everything is ready. Here's the order that gets you results fastest.",
+  subhead: "Your verified Dating Reset access is active. Work through it in the order that fits you.",
   nextHref: "/start",
   nextLabel: "Start My Dating Reset",
   steps: [
@@ -87,24 +87,24 @@ const PRODUCT_COPY: Record<string, ProductCopy> = {
   },
   {
   icon: Mail,
-  title: "Founder review note",
-  desc: "Personal founder note within 48 hours. We look at every Dating Reset order directly.",
-  timeframe: "Within 48 hours",
+  title: "Choose whether to request human support",
+  desc: "Human review is not automatic. Any approved review service will describe its scope, capacity, and timing before you submit private material to it.",
+  timeframe: "Optional",
   },
   ],
   },
   "wingman": {
   name: "Monthly Wingman",
   headline: "Welcome to the team.",
-  subhead: "Your Wingman membership is active. We'll be in touch within 24 hours to schedule your first session.",
+  subhead: "Your verified Wingman membership is active. The dashboard shows the support currently available to your account.",
   nextHref: "/dashboard",
   nextLabel: "Go to Dashboard",
   steps: [
   {
   icon: Clock,
-  title: "Expect a message within 24 hours",
-  desc: "We'll reach out to your email to schedule your first strategy session and understand your current situation.",
-  timeframe: "Within 24 hours",
+  title: "Review your active membership scope",
+  desc: "Availability and scheduling are communicated separately. Payment does not guarantee a session time, introduction, candidate, response, or outcome.",
+  timeframe: "First step",
   },
   {
   icon: Zap,
@@ -114,9 +114,9 @@ const PRODUCT_COPY: Record<string, ProductCopy> = {
   },
   {
   icon: MessageCircle,
-  title: "Unlimited message coaching is live",
-  desc: "Start using Chemistry Lab for any conversation you're in right now. Don't wait for your first session.",
-  timeframe: "Immediately",
+  title: "Use the support shown in your account",
+  desc: "Start with the tools and capacity currently displayed. Contact support if the verified entitlement and visible access do not agree.",
+  timeframe: "As available",
   },
   {
   icon: Heart,

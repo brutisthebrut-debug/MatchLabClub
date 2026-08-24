@@ -133,15 +133,15 @@ export default function Waitlist() {
   You're <span className="gradient-text-violet">#{submitted.position}</span> on the list.
   </h2>
   <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed text-sm">
-  We'll email you at {submitted.email} when your spot opens. Founding members get 40% off Monthly Coaching, locked in forever.
+  We'll email you at {submitted.email} if an approved spot opens. Any price, discount, renewal terms, and service scope will be shown before checkout.
   </p>
 
   <div className="glass border border-white/8 rounded-2xl p-5 text-left mb-6 space-y-3">
   <p className="font-semibold text-foreground text-sm">What happens next</p>
   {[
   "Confirmation email on its way now",
-  "Early access opens within 48 hours for most",
-  "Your founding-member discount is locked in automatically",
+  "We'll email you if an approved enrollment window opens",
+  "Any valid discount and its terms will appear at checkout",
   "First to try every new feature before public launch",
   ].map((step, i) => (
   <div key={i} className="flex items-start gap-3 text-sm">
@@ -241,14 +241,14 @@ export default function Waitlist() {
   <p className="text-xs text-muted-foreground font-medium">. The MatchLab Club Team</p>
   </motion.div>
 
-  {/* Early Access Perks */}
+  {/* Enrollment principles */}
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-6 space-y-3">
-  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">Early access perks</p>
+  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">Enrollment principles</p>
   <div className="grid sm:grid-cols-3 gap-4">
   {[
-  { badge: "40% off", title: "Lifetime founding-member discount", desc: "Locked in forever, never expires", color: "hsl(var(--brand-gold))" },
-  { badge: "First in", title: "Priority access", desc: "Before public launch, guaranteed", color: "hsl(var(--brand-indigo))" },
-  { badge: "Bonus", title: "Free Full Dating Reset", desc: "First 50 members who complete an audit", color: "hsl(var(--brand-green))" },
+  { badge: "Clear price", title: "No hidden discount promise", desc: "Any valid offer appears in Stripe before payment", color: "hsl(var(--brand-gold))" },
+  { badge: "Capacity", title: "Controlled enrollment", desc: "Products open only after scope and capacity approval", color: "hsl(var(--brand-indigo))" },
+  { badge: "Consent", title: "No outcome guarantee", desc: "Payment never buys an introduction or dating result", color: "hsl(var(--brand-green))" },
   ].map((perk, i) => (
   <div key={i} className="glass border border-white/8 rounded-2xl p-5 text-center card-hover" data-testid={`card-perk-${i}`}>
   <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full mb-3" style={{ background: `${withAlpha(perk.color, 0.12)}`, color: perk.color, border: `1px solid ${withAlpha(perk.color, 0.2)}` }}>{perk.badge}</span>

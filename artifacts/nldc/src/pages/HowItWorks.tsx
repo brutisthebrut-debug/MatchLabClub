@@ -58,7 +58,7 @@ const SIGNAL_SOURCES = [
   {
     icon: FileText,
     label: "Profile audits",
-    detail: "Your bio, prompts, and Signal Score across eight dimensions.",
+    detail: "Your bio, prompts, and profile observations across eight dimensions.",
     color: INDIGO,
   },
   {
@@ -130,8 +130,8 @@ const LOOP = [
   {
     icon: MapPin,
     step: "04",
-    title: "You get matched, near you",
-    desc: "When readiness is high enough, the engine works toward introducing you to people close by that you would not find on your own.",
+    title: "You may be considered nearby",
+    desc: "If you opt in, MatchLab may consider a controlled introduction when fit, consent, geography, capacity, and availability align.",
     color: GREEN,
   },
 ];
@@ -305,8 +305,8 @@ function MachineSnapshot({
 
 export default function HowItWorks() {
   useMeta(
-    "How It Works: From your signals to real matches",
-    "See the whole machine end to end. Feed your real signals, watch Your Mirror understand you, climb your Match Readiness, and earn introductions to people near you.",
+    "How MatchLab Works: Tools, permissions, and introductions",
+    "See how private tools build context, how source permissions stay separate, and how the optional controlled-introduction pilot works.",
     absoluteUrl(DEFAULT_OG_IMAGE),
     { canonicalUrl: absoluteUrl("/how-it-works") },
   );
@@ -343,7 +343,7 @@ export default function HowItWorks() {
             >
               You become genuinely ready.{" "}
               <span className="gradient-text italic pr-1">
-                Then you get matched.
+                Then you choose what happens next.
               </span>
             </motion.h1>
 
@@ -353,8 +353,9 @@ export default function HowItWorks() {
             >
               MatchLab is a second brain for your dating life. You feed it real
               signals, it builds an honest model of who you are, your Match
-              Readiness climbs, and the payoff is introductions to people near
-              you that you would never find on your own.
+              Readiness can summarize how complete that picture is. If you opt
+              in, it may support controlled-pilot consideration, but it never
+              guarantees an introduction or dating outcome.
             </motion.p>
 
             <motion.div
@@ -549,7 +550,7 @@ export default function HowItWorks() {
                 {
                   icon: CheckCircle2,
                   title: "Readiness gates the payoff",
-                  desc: "Matching opens once readiness is high enough. The work comes first, on purpose, so the introductions are worth it.",
+                  desc: "A readiness threshold can gate pilot eligibility, but it does not promise a candidate, introduction, response, or outcome.",
                   color: GREEN,
                 },
               ].map((c) => (
@@ -613,12 +614,12 @@ export default function HowItWorks() {
               Step four
             </p>
             <h2 className="text-3xl md:text-4xl font-serif font-bold leading-tight mb-5">
-              You get matched, near you.
+              You may be considered near you.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              This is the payoff the readiness work earns. The engine looks for
-              people close to you that fit the model it has built, and works
-              toward an introduction. No swipe carousel, no endless feed.
+              If you deliberately join the controlled pilot, MatchLab may look
+              for a nearby fit. A candidate remains private until an authorized
+              reviewer sends an introduction, and availability is never promised.
             </p>
           </motion.div>
 
@@ -691,7 +692,7 @@ export default function HowItWorks() {
                 {
                   icon: Sparkles,
                   title: "Deep AI is opt in",
-                  desc: "Anthropic Claude layers on only when you turn it on, under a zero-retention policy. Off by default, off whenever you want.",
+                  desc: "The named model provider is used only when you turn the account control on. Current provider handling is described in Privacy and Integrations.",
                 },
                 {
                   icon: Lock,
@@ -725,9 +726,8 @@ export default function HowItWorks() {
               needed, and your results are saved for when you come back.
             </p>
             <p className="text-base text-muted-foreground/80 leading-relaxed mb-9">
-              Free gets the readiness climb started. The paid tiers feed the
-              machine the deepest signals, so you clear the bar and unlock
-              matching sooner.
+              Paid tiers grant only the support scope shown at checkout. They do
+              not buy priority over consent and fit, or guarantee an introduction.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button

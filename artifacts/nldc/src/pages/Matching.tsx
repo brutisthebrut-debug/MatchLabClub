@@ -579,12 +579,11 @@ export default function Matching() {
           <p className="text-muted-foreground mt-4 max-w-2xl leading-relaxed">
             This is the payoff, not the headline. The more the machine knows
             you, the better it matches you, so matching stays gated behind your
-            readiness. When it opens, you get AI-driven introductions inside
-            your radius (25, 35, or 45 miles) to people you would never find on
-            your own. Wingman customers also get founder-curated intros, hand
-            picked. Open to every gender and orientation. No swipe carousel, no
-            infinite scroll, just a small number of well-considered people near
-            you.
+            readiness. If you opt in, MatchLab may consider controlled
+            introductions inside your radius (25, 35, or 45 miles). Wingman can
+            include pilot consideration, but payment never guarantees a
+            candidate, introduction, response, or outcome. Open to every gender
+            and orientation. No swipe carousel or infinite scroll.
           </p>
         </motion.div>
 

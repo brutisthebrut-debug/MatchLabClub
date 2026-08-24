@@ -38,20 +38,26 @@ export default function Terms() {
   <p className="text-muted-foreground leading-relaxed max-w-xl mx-auto">
   We've written this the way we'd want to read it, clear, direct, no legalese. If anything seems unclear, email us and we'll explain it in plain English.
   </p>
-  <p className="text-muted-foreground/50 text-xs mt-4">Last updated: May 2026</p>
+  <p className="text-muted-foreground/50 text-xs mt-4">Last updated: August 24, 2026</p>
   </div>
 
   <div className="space-y-6">
   <Section icon={Heart} title="What MatchLab Club is (and isn't)">
-  <p><strong className="text-foreground">What it is:</strong> A dating coaching tool. MatchLab Club analyses your dating profile, messages, and communication style to give you personalised, actionable coaching. Think of it as an intelligent mirror, honest feedback and a path forward.</p>
+  <p><strong className="text-foreground">What it is:</strong> A relationship decision companion with self-understanding tools, coaching workflows, and an optional controlled-introduction pilot. It helps you interpret information you choose to share, preserve your own record, and decide what to do next.</p>
   <p><strong className="text-foreground">What it isn't:</strong></p>
   <ul className="space-y-1.5 list-none">
   <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not therapy or mental health counselling</li>
-  <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not a professional matchmaking service</li>
+  <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not an open dating marketplace or an on-demand supply of matches</li>
   <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not a guarantee of any outcome, dates, relationships, or otherwise</li>
   <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not a substitute for your own judgment in your relationships</li>
   </ul>
   <p>If you're working through something that feels bigger than dating, anxiety, self-worth, past trauma, we'd gently suggest talking to a therapist alongside anything you do here.</p>
+  </Section>
+
+  <Section icon={Heart} title="Controlled introductions">
+  <p><strong className="text-foreground">Introductions are optional and limited.</strong> Joining the pool means you may be considered for a founder-reviewed introduction. It does not promise that a suitable person is available, that you will receive an introduction by a particular date, or that another member will say yes.</p>
+  <p><strong className="text-foreground">Private decisions stay private.</strong> A candidate remains internal until an authorized founder sends it. Your response is not revealed as mutual interest unless the corresponding member response permits that next step.</p>
+  <p><strong className="text-foreground">Use your own judgment.</strong> Compatibility reads and founder review are decision support, not identity, background, safety, medical, or legal verification. Follow the safety tools and report concerns, but make your own meeting and relationship decisions.</p>
   </Section>
 
   <Section icon={FileText} title="Your content">
@@ -61,13 +67,13 @@ export default function Terms() {
   </Section>
 
   <Section icon={Sparkles} title="The Wellness Center and your match profile">
-  <p><strong className="text-foreground">Everything you share here is captured.</strong> The Wellness Center is how the engine gets to know you. When you answer a wellness prompt, log a reflection, or complete a quiz, that answer is saved in full and used across all of what we do for you: personal coaching, compatibility matching, and anonymised product research. There is no per-answer toggle to set, because the whole point is that the more the engine knows you, the better it can match you.</p>
-  <p><strong className="text-foreground">By using the Wellness Center, you agree to this.</strong> Engaging with these prompts is your consent for comprehensive capture across those uses. We keep the same promises we make everywhere else: we never sell your data, we never train external models on your private content, and any research use is anonymised.</p>
-  <p><strong className="text-foreground">You stay in control of the door.</strong> You can view everything we hold in your Data Vault, delete any answer or your whole profile at any time, and export your data whenever you want. Capture is assumed; deletion is always yours.</p>
+  <p><strong className="text-foreground">Saving is not blanket permission.</strong> A new wellness answer defaults to coaching use only. Matching and research use require an explicit scope you can change later without rewriting the answer.</p>
+  <p><strong className="text-foreground">Imported sources are separate too.</strong> Keeping a source, allowing Echo to process it, confirming proposed learning, and allowing derived matching use are independent choices. All downstream uses default off for a newly saved import.</p>
+  <p><strong className="text-foreground">You stay in control.</strong> You can review stored data, change available permissions, delete individual records, export your account data, or transactionally delete the account.</p>
   </Section>
 
   <Section icon={Star} title="Our coaching output">
-  <p><strong className="text-foreground">You can use it freely.</strong> The rewrites, scores, analyses, and suggestions we generate are our intellectual property, but you're fully and permanently licenced to use them for your own purposes. Copy them into your profile. Send them to your matches. Share them with friends. That's what they're for.</p>
+  <p><strong className="text-foreground">You can use it freely.</strong> The rewrites, observations, analyses, and suggestions we generate are our intellectual property, but you're fully and permanently licenced to use them for your own purposes. Copy them into your profile. Share them with people you trust. That's what they're for.</p>
   <p><strong className="text-foreground">No commercial resale.</strong> The one thing we ask: don't resell or redistribute our coaching output as your own product or service. Using the output is fine. Building a competing service on top of our output isn't.</p>
   </Section>
 
@@ -90,10 +96,10 @@ export default function Terms() {
   </Section>
 
   <Section icon={FileText} title="Subscriptions and cancellation">
-  <p><strong className="text-foreground">Monthly Wingman.</strong> Billed monthly. Cancel anytime from your account settings, no penalty, no questions. Cancellation stops future charges; any remaining time in your billing period continues until it ends.</p>
-  <p><strong className="text-foreground">The Dating Reset.</strong> One-time payment. No recurring charge.</p>
-  <p><strong className="text-foreground">Refunds.</strong> If you're unhappy with a purchase, email us within 14 days and we'll make it right. We'd rather earn your trust than keep your money.</p>
-  <p><strong className="text-foreground">Data on cancellation.</strong> Your account data is retained for 30 days after cancellation in case you change your mind. After that, it's deleted unless you request otherwise.</p>
+  <p><strong className="text-foreground">One-time products.</strong> A Signal Audit or Dating Reset checkout is a one-time payment unless the checkout screen expressly says otherwise. A fully refunded one-time payment ends that paid entitlement.</p>
+  <p><strong className="text-foreground">Monthly Wingman.</strong> When offered, Wingman renews monthly until canceled. Use Plan &amp; billing in Account to open Stripe's secure portal. End-of-period cancellation stops future renewal while paid access continues through the current period. Failed payment can suspend access; a later successful renewal can restore it.</p>
+  <p><strong className="text-foreground">Refunds.</strong> Any specific refund term shown at checkout applies in addition to rights that cannot legally be waived. Otherwise, contact hello@matchlab.club for review. Refunding a subscription charge does not by itself stop future renewal; cancel the subscription separately when you want renewal to end.</p>
+  <p><strong className="text-foreground">Billing and account data are separate.</strong> Canceling a subscription does not delete your MatchLab account. Use the account deletion control when you want stored account data removed. Account deletion first attempts to stop any continuing subscription renewal and does not proceed if that cannot be confirmed.</p>
   </Section>
 
   <Section icon={Mail} title="Changes and contact">

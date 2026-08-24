@@ -7,6 +7,7 @@ import {
   billingCustomerForUser,
   billingStateForUser,
   configuredPriceId,
+  isBillingProductLive,
   productConfig,
 } from "../lib/billingEntitlements";
 import { getUncachableStripeClient, isStripeConnected } from "../lib/stripeClient";
@@ -47,6 +48,10 @@ router.post("/me/billing/checkout", async (req, res): Promise<void> => {
     return;
   }
   const product = parsed.data.product;
+  if (!isBillingProductLive(product)) {
+    res.status(503).json({ error: "Enrollment for this product is not open yet." });
+    return;
+  }
   const price = configuredPriceId(product);
   const origin = publicOrigin(req);
   if (!(await isStripeConnected()) || !price || !origin) {

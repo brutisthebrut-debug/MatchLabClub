@@ -153,8 +153,8 @@ export default function Matches() {
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
               When you and someone both say yes, the conversation opens here.
-              This is the payoff of the readiness climb: real people, near you,
-              ready to talk.
+              A conversation opens here only after a deliberately sent proposal
+              and both members' consent.
             </p>
           </motion.div>
 
@@ -165,8 +165,7 @@ export default function Matches() {
               data-testid="banner-matches-sample"
             >
               <p className="text-sm text-muted-foreground">
-                This is a sample. Sign in to see your real matches and start
-                talking.
+                This is a sample. Sign in to see your actual introduction state.
               </p>
               <Button
                 onClick={() => login()}

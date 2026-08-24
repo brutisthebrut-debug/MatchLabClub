@@ -5,7 +5,7 @@ import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowRight, Sparkles, Zap, Heart, Lock, FlaskConical, Target, Gauge } from "lucide-react";
+import { CheckCircle, ArrowRight, Sparkles, Zap, Heart, Lock, Target, Gauge } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TrustBadge } from "@/components/TrustBadge";
 import { ShareButton } from "@/components/echo/ShareButton";
@@ -14,43 +14,64 @@ import { trackEvent } from "@/lib/analytics";
 const TIER_SHARE_TEXT: Record<string, string> = {
   "Free Signal Check": "MatchLab Club Free Signal Check: a 3-minute audit that shows what your profile is actually projecting.",
   "Dating Reset": "MatchLab Club Dating Reset: $97 for a full rebuild of how you show up, profile, prompts, photos, and messaging.",
-  "Wingman": "MatchLab Club Wingman: $197 a month for the deep AI lane plus a human coach review.",
+  "Wingman": "MatchLab Club Wingman: $197 a month when enrollment is open, with expanded support and consideration for the controlled introduction pilot.",
 };
 
-const TIERS = [
+interface PricingTier {
+  name: string;
+  outcome: string;
+  readinessPayoff: string;
+  price: string;
+  promoPrice: string | null;
+  period: string;
+  popular: boolean;
+  badge: string | null;
+  desc: string;
+  cta: string;
+  href: string;
+  nextStep: string;
+  accentColor: string;
+  icon: React.ElementType;
+  features: string[];
+  excluded: string[];
+  walkaway: string[];
+  betaNote?: string;
+}
+
+const TIERS: PricingTier[] = [
   {
     name: "Free Signal Check",
-    outcome: "Start the readiness climb, free",
-    readinessPayoff: "Puts your first Match Readiness signals on the board so the climb toward matching begins.",
+    outcome: "Get a useful first read, free",
+    readinessPayoff: "Adds your first profile observations to a private record you can refine over time.",
     price: "$0",
     promoPrice: null,
     period: "",
     popular: false,
     badge: null,
-    desc: "3 minutes. No card. Walk away knowing your Signal Score, your archetype, and the one thing most likely to change your results.",
+    desc: "3 minutes. No card. Walk away with a profile pattern snapshot and one concrete improvement to try.",
     cta: "Get My Free Audit",
     href: "/start",
     nextStep: "→ 3-minute intake wizard · no credit card · instant report",
     accentColor: "hsl(228 18% 60%)",
     icon: Sparkles,
     features: [
-      "Free Signal Check: 60-second bio score with one example rewrite",
-      "Preview of the full Profile Signal Audit (score + top 3 risks)",
-      "Signal Spectrum snapshot across 8 dimensions",
+      "Free Signal Check: 60-second bio read with one example rewrite",
+      "Preview of the full Profile Signal Audit and top 3 risks",
+      "Profile pattern snapshot across 8 dimensions",
       "Chemistry Lab teaser, message analysis (demo)",
     ],
     excluded: [
       "Upgrade required to see the full audit, prompt rewrites, photo checklist, and action plan",
       "Full bio rewrite",
       "Message coaching sessions",
-      "Score history tracking",
+      "Saved history and progress context",
     ],
-    walkaway: ["Your Signal Score teaser", "Your top 3 risks", "One example rewrite line"],
+    walkaway: ["Your profile pattern snapshot", "Your top 3 risks", "One example rewrite line"],
   },
   {
     name: "Dating Reset",
-    outcome: "Climb to match-ready, faster",
-    readinessPayoff: "A full profile rebuild feeds the machine the deepest signals, so your readiness jumps and matching opens sooner.",
+    outcome: "Build a focused dating reset",
+    readinessPayoff: "A deeper profile record supports better coaching context; it never buys or guarantees an introduction.",
     price: "$97",
     promoPrice: null,
     period: "one-time",
@@ -59,12 +80,12 @@ const TIERS = [
     desc: "A complete rebuild of how you present yourself. Profile, prompts, messaging, photos, and a 7-day action plan.",
     cta: "Begin My Reset",
     href: "/checkout/dating-reset",
-    nextStep: "→ Secure checkout · founder-reviewed within 48 hours · start Day 1 immediately",
+    nextStep: "→ Secure checkout when enrollment is open · access follows verified payment",
     accentColor: "hsl(var(--brand-indigo))",
     icon: Zap,
     features: [
       "Unlimited Profile Signal Audits",
-      "Full Signal Spectrum across 8 dimensions",
+      "Full profile pattern read across 8 dimensions",
       "Complete rewritten bio that sounds like you, not a template",
       "All prompts rewritten with coach notes",
       "Full photo checklist (5 categories)",
@@ -72,7 +93,7 @@ const TIERS = [
       "Chemistry Lab, full message coaching",
       "10 message coaching sessions",
       "7-day personalised action plan",
-      "Score history + progress tracking",
+      "Saved history + progress context",
       "Communication Pattern Import (full)",
       "Priority access to new features",
     ],
@@ -85,45 +106,42 @@ const TIERS = [
   },
   {
     name: "Wingman",
-    outcome: "Skip the line to curated matches",
-    readinessPayoff: "Top readiness lane plus founder-curated intros, hand picked inside your radius once you clear the bar.",
+    outcome: "Expanded support, when enrollment is open",
+    readinessPayoff: "Includes consideration for a controlled introduction pilot, subject to fit, consent, capacity, and availability.",
     price: "$197",
-    promoPrice: "$118",
+    promoPrice: null,
     period: "per month",
     popular: false,
-    badge: "Launch Cohort Deal",
-    desc: "Everything in The Dating Reset, plus a real human coach in your corner, every week.",
-    cta: "Join the Wingman Club",
+    badge: "Limited enrollment",
+    desc: "A monthly support tier with expanded coaching capacity and controlled-introduction consideration. Specific availability is confirmed before enrollment.",
+    cta: "Check Wingman Availability",
     href: "/checkout/wingman",
-    nextStep: "→ Reserve your cohort spot · today's launch price locks in for life",
+    nextStep: "→ Monthly billing · manage or cancel from Account · no introduction guarantee",
     accentColor: "hsl(var(--brand-gold))",
     icon: Heart,
     features: [
       "Everything in The Dating Reset",
-      "Direct access to a real dating coach",
-      "Weekly 45-min strategy session (scheduled within 48h of joining)",
-      "Unlimited message coaching",
+      "Expanded coaching and message-review capacity",
       "Audit after every major profile change",
-      "Members-only community access",
       "Pre-date coaching briefs",
-      "Priority access to all new features, first",
+      "Consideration for the controlled introduction pilot",
+      "Subscription management through the secure billing portal",
     ],
     excluded: [],
-    walkaway: ["A real coach in your corner, weekly", "Unlimited coaching and audits", "A community of people doing the work"],
-    betaNote: "Currently in private beta. We schedule your first session within 48 hours of joining, founder-matched to a coach suited to your situation.",
+    walkaway: ["A deeper support lane", "More room for iterative coaching", "Pilot consideration without a promised match"],
   },
 ];
 
 const FAQS = [
   { q: "How is this different from generic dating advice?", a: "We give you specific, personalised output: a rewritten version of YOUR bio, coaching on YOUR messages, your Signal Spectrum across 8 dimensions, and an action plan built around YOUR situation. Nothing here could apply to someone else. That's the point." },
-  { q: "Is the free audit actually free? No hidden catch?", a: "Yes, completely free. We give you a real, substantive audit including your Signal Score and Spectrum because we believe if you see the quality, you'll upgrade. No credit card required." },
+  { q: "Is the free audit actually free? No hidden catch?", a: "Yes. It includes a substantive first profile read and one example rewrite. No credit card is required." },
   { q: "What is The Dating Reset, exactly?", a: "It's a complete overhaul of your dating presence. Your bio rewritten to sound like you, all prompts improved, a full photo checklist, your 8-dimension Signal Spectrum, Dating Diagnosis, Chemistry Lab message coaching, and a 7-day action plan. One payment, everything included." },
-  { q: "How does the coaching engine work, and who reviews my audit?", a: "Hybrid AI. Our deterministic engine is always-on (built on structured dating frameworks and real profile patterns, no external calls, never rate-limited, no key needed). On top of that, Anthropic Claude is layered in as an opt-in 'Deep AI lane' for tools that benefit from semantic depth: bio rewrites, message coaching, Compatibility Compass reads, and import summaries. You control it per account, off by default, and you can turn it off anytime. Human review only happens on the $197 Wingman tier, where a real coach reads your audit and meets with you weekly. The $97 Dating Reset is an AI-only audit plus the full reset plan, with no live coach attached. The $29 Signal Audit is a one-time AI audit, also no live coach. Beta founder-review notes are a separate, limited offer that applies only to early Dating Reset buyers." },
-  { q: "What if I'm not happy?", a: "We'll redo it or refund it. Dating is vulnerable and we take this seriously. Reach out within 30 days and we'll make it right. No questions asked." },
-  { q: "Does this send my data to AI?", a: "The deterministic engine runs on our servers and makes no external calls. That layer is on for every account by default. On top of it, Anthropic Claude is layered in for a few tools that benefit from semantic depth: bio rewrites, message coaching, Compatibility Compass reads, Hinge import summaries, Instagram tone extraction. When Claude is in the loop, your prompt is sent to Anthropic and processed under their zero-retention API policy. We never sell or share your content with advertisers, and we never use it to train models. Bios, messages, and profile data are encrypted at rest." },
+  { q: "How does the coaching engine work, and who reviews my audit?", a: "The structural engine runs on MatchLab's servers. Optional Deep AI can add semantic depth for supported tools when you enable it. Human access is limited to services you deliberately request, such as an approved coaching or controlled-introduction workflow, plus support and safety needs. The checkout page controls the exact scope of any paid offer." },
+  { q: "What if I'm not happy?", a: "Contact support and we will review the issue and the terms shown for your checkout. Refund rights required by law are unaffected. A full refund of a one-time purchase ends that paid entitlement." },
+  { q: "Does this send my data to AI?", a: "The structural engine runs on MatchLab's servers. Optional Deep AI sends the minimum relevant prompt content to the named provider only when you enable that account control. Provider handling is subject to the current provider terms described in Privacy and Integrations. We do not sell your private content to advertisers." },
   { q: "Can I turn the AI off?", a: "Yes. There's one toggle in Settings called Deep AI lane. Off means every call routes through the deterministic engine. No feature disappears, nothing breaks. You just get the structural read without the Claude pass on top. Flip it back on whenever. We log every change so the history is yours." },
-  { q: "What if I don't trust AI with my dating life?", a: "Then leave the Deep AI lane off. You still get a full audit, full action plan, message coaching, and your Signal Score from the deterministic engine. It was the original product. The Claude layer is an option, not the floor. Either way you can export and delete everything from your account at any time. See the full consent-first breakdown on the Integrations page." },
-  { q: "How quickly will I see results?", a: "Most members who implement the action plan see measurably better results, more matches, better conversations, more dates, within 7–14 days. We track your Signal Score over time so progress is visible, not just felt." },
+  { q: "What if I don't trust AI with my dating life?", a: "Leave the Deep AI lane off. The structural tools remain available without that external model layer. You can export or delete your account data from Account, subject to transaction records a payment processor must retain." },
+  { q: "How quickly will I see results?", a: "There is no promised timeline or guaranteed dating outcome. The product gives you structured observations, drafts, and actions to test; results still depend on your choices, other people, platform conditions, fit, and timing." },
 ];
 
 const fadeUp = (delay = 0) => ({
@@ -136,7 +154,7 @@ const fadeUp = (delay = 0) => ({
 export default function Pricing() {
   useMeta(
     "Pricing: Free, $97 & $197 Coaching",
-    "Three ways to feed the engine that turns your real signals into real matches. Start free with the Signal Check, go deeper with the Dating Reset, or get founder-curated intros with Wingman.",
+    "Start with a free profile read, choose a one-time reset when enrollment is open, or check availability for the limited Wingman support tier.",
     absoluteUrl(DEFAULT_OG_IMAGE),
     { canonicalUrl: absoluteUrl("/pricing") },
   );
@@ -155,15 +173,15 @@ export default function Pricing() {
 
         <div className="max-w-6xl mx-auto relative z-10 pt-4">
 
-          {/* Launch Cohort Banner */}
+          {/* Enrollment Banner */}
           <motion.div {...fadeUp(0)}
             className="relative rounded-2xl p-4 md:p-5 mb-14 text-center overflow-hidden shimmer glass-elevated border-gold-glow card-hover"
-            data-testid="banner-launch-cohort"
+            data-testid="banner-enrollment-status"
           >
             <div className="flex items-center justify-center gap-3 flex-wrap relative z-10">
               <Sparkles className="w-5 h-5 text-[hsl(43_65%_68%)] animate-pulse" />
-              <span className="font-semibold text-foreground text-[15px]">Launch cohort:</span>
-              <span className="text-muted-foreground text-[15px]">today's price locks in for life.</span>
+              <span className="font-semibold text-foreground text-[15px]">Controlled enrollment:</span>
+              <span className="text-muted-foreground text-[15px]">a paid product opens only after its service scope and capacity are approved.</span>
             </div>
           </motion.div>
 
@@ -171,13 +189,13 @@ export default function Pricing() {
           <motion.div {...fadeUp(0.05)} className="text-center mb-16 lg:mb-20">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6 glass border border-[hsl(248_62%_52%/0.25)]">
               <span className="flex h-2 w-2 rounded-full bg-[hsl(248_62%_52%)]"></span>
-              <span className="text-[11px] font-bold uppercase tracking-widest gradient-text">From signal to match</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest gradient-text">Choose your support depth</span>
             </div>
             <h1 className="text-5xl md:text-7xl font-extrabold text-foreground mb-6 tracking-tight leading-[1.05]">
               Simple, <span className="gradient-text-violet">honest pricing.</span>
             </h1>
             <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-8">
-              Start the engine free. Pay to go deeper and faster toward real matches. Cancel or delete anytime.
+              Start free. Paid enrollment opens product by product, with the exact scope and billing terms shown before checkout.
             </p>
             <Link href="/sample-report"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-strong border border-[hsl(248_62%_52%/0.3)] hover:border-[hsl(248_62%_52%/0.6)] hover:bg-[hsl(248_62%_52%/0.08)] transition-all group text-sm font-semibold text-foreground shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(61,53,204,0.15)]">
@@ -332,13 +350,13 @@ export default function Pricing() {
                     
                     {tier.price !== "$0" ? (
                       <p className="text-center text-[11px] font-bold mt-2" style={{ color: "hsl(142 50% 45%)" }}>
-                        30-day guarantee. If your matches don't improve, full refund
+                        Checkout-specific refund terms apply. Statutory rights are unaffected
                       </p>
                     ) : (
                       <p className="text-center text-[11px] text-muted-foreground/80 mt-2 font-medium">Free forever · no account required · results saved</p>
                     )}
                     
-                    {"betaNote" in tier && tier.betaNote && (
+                    {tier.betaNote && (
                       <div className="mt-4 p-3.5 rounded-2xl text-[11px] text-muted-foreground leading-relaxed glass border border-[hsl(43_65%_55%/0.2)]">
                         <span className="font-bold text-[hsl(43_65%_45%)]">Private beta:</span> {tier.betaNote}
                       </div>
@@ -406,15 +424,15 @@ export default function Pricing() {
                 {
                   step: "2",
                   title: "Your report generates instantly",
-                  desc: "Signal Score, Personal Blueprint, full bio rewrite, rewritten prompts, photo checklist, message strategy, Compatibility Compass, and your 7-day action plan. Ready in seconds.",
+                  desc: "Profile observations, Personal Blueprint, bio and prompt drafts, photo checklist, message strategy, Compatibility Compass, and your 7-day action plan. Ready in seconds.",
                   color: "hsl(190 70% 50%)",
                   align: "md:text-left md:items-start",
                   padding: "md:pt-24"
                 },
                 {
                   step: "3",
-                  title: "During beta: a personal founder review note",
-                  desc: "For founding beta users, the founder reads your report and writes a personal note on the 1–2 highest-impact things specific to your situation. This takes up to 48 hours and is not a template.",
+                  title: "You choose any human-review workflow",
+                  desc: "A paid order does not silently authorize founder or coach access. If an approved service includes human review, its scope and timing are shown separately and require your deliberate participation.",
                   color: "hsl(43 65% 55%)",
                   align: "md:text-right md:items-end",
                   padding: "md:pt-0"
@@ -422,7 +440,7 @@ export default function Pricing() {
                 {
                   step: "4",
                   title: "You start with Day 1 of your action plan",
-                  desc: "Don't wait for the founder note. Start with the 7-day plan immediately. Most people who do it see measurably better results within the first week.",
+                  desc: "Use the plan as a set of experiments, not a result guarantee. Keep what helps, revise what does not, and move at your own pace.",
                   color: "hsl(142 55% 60%)",
                   align: "md:text-left md:items-start",
                   padding: "md:pt-24"
@@ -464,7 +482,7 @@ export default function Pricing() {
             </div>
           </motion.div>
 
-          {/* Founder-Reviewed Beta Offer */}
+          {/* Controlled introduction pilot */}
           <motion.div {...fadeUp(0.3)}
             className="max-w-4xl mx-auto mb-24 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden text-center sm:text-left"
             style={{ 
@@ -480,23 +498,23 @@ export default function Pricing() {
             <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-8">
               <div className="w-20 h-20 rounded-3xl flex-shrink-0 flex items-center justify-center"
                 style={{ background: "hsl(43 65% 55% / 0.15)", border: "1px solid hsl(43 65% 55% / 0.3)", boxShadow: "0 0 30px hsl(43 65% 55% / 0.2)" }}>
-                <FlaskConical className="w-10 h-10 text-[hsl(43_65%_65%)] drop-shadow-[0_0_8px_hsl(43_65%_65%/0.8)]" />
+                <Lock className="w-10 h-10 text-[hsl(43_65%_65%)] drop-shadow-[0_0_8px_hsl(43_65%_65%/0.8)]" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap mb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-[hsl(43_65%_65%)]">Beta Offer</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-[hsl(43_65%_65%)]">Controlled pilot</span>
                   <span className="h-1 w-1 rounded-full bg-[hsl(43_65%_65%/0.5)]"></span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-[hsl(348_55%_65%/0.4)] text-[hsl(348_55%_75%)] bg-[hsl(348_55%_65%/0.15)] shadow-[0_0_10px_hsl(348_55%_65%/0.2)]">Limited spots</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-[hsl(348_55%_65%/0.4)] text-[hsl(348_55%_75%)] bg-[hsl(348_55%_65%/0.15)] shadow-[0_0_10px_hsl(348_55%_65%/0.2)]">Limited availability</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight">Founder-Reviewed Dating Reset</h3>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight">What controlled introductions mean</h3>
                 <p className="text-[15px] text-white/70 leading-relaxed mb-8 max-w-2xl">
-                  Early beta users get the full $97 Dating Reset, plus a personal note from the founder reviewing your results and suggesting one specific next move. Not a template. An actual read of your situation.
+                  The pilot is not an open marketplace and payment does not buy a match. MatchLab may privately consider eligible members when fit, location, consent, capacity, and availability align. A proposed introduction stays private until an authorized reviewer deliberately sends it.
                 </p>
                 <div className="grid sm:grid-cols-3 gap-4 mb-8 text-left">
                   {[
-                    { label: "What you get", value: "Full Dating Reset + founder personal review note" },
-                    { label: "Turnaround", value: "Within 48 hours of your audit completing" },
-                    { label: "Why limited", value: "Founder does every review personally, keeping it to 20 spots" },
+                    { label: "What payment means", value: "Access to the purchased support tier, never a guaranteed introduction" },
+                    { label: "What stays private", value: "Candidates, internal proposals, and reviewer notes until an introduction is deliberately sent" },
+                    { label: "Why availability varies", value: "Fit, mutual consent, geography, member supply, safety, and operating capacity all matter" },
                   ].map(item => (
                     <div key={item.label} className="rounded-2xl bg-white/5 border border-white/10 p-4 hover:bg-white/10 transition-colors">
                       <p className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2">{item.label}</p>
@@ -505,12 +523,12 @@ export default function Pricing() {
                   ))}
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-5">
-                  <Link href="/checkout/dating-reset"
+                  <Link href="/matching"
                     className="w-full sm:w-auto px-8 py-4 rounded-full text-[15px] font-bold border-0 text-[hsl(248_62%_16%)] text-center transition-transform hover:scale-105"
                     style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(43 85% 65%))", boxShadow: "0 10px 30px hsl(43 65% 55% / 0.4)" }}>
-                    Claim a Founder-Reviewed Spot →
+                    Read how the pilot works →
                   </Link>
-                  <p className="text-[13px] font-medium text-white/60">Same price as the Dating Reset, $97 one-time</p>
+                  <p className="text-[13px] font-medium text-white/60">No timing, candidate, response, or outcome is promised</p>
                 </div>
               </div>
             </div>
@@ -530,11 +548,11 @@ export default function Pricing() {
                 </div>
                 
                 <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mb-6 tracking-tight leading-tight max-w-3xl mx-auto">
-                  You are not buying a tool. You are buying readiness, and <span className="gradient-text">matching is the payoff.</span>
+                  You are buying a defined support product, <span className="gradient-text">not a dating outcome.</span>
                 </h2>
                 
                 <p className="text-[17px] text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-                  The more the machine knows you, the better it matches you. Every audit, rewrite, and quiz feeds one rising Match Readiness meter. Paid tiers feed it the deepest signals, so you clear the bar and unlock founder-curated intros near you sooner.
+                  Tools can deepen the record MatchLab uses for coaching and, if you opt in, controlled-pilot consideration. Paid status never overrides fit, mutual consent, safety, geography, availability, or human judgment.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -545,7 +563,7 @@ export default function Pricing() {
                     style={{ background: "linear-gradient(135deg, hsl(248 62% 52%), hsl(326 100% 59%))", boxShadow: "0 10px 30px hsl(248 62% 52% / 0.3)" }}
                     data-testid="link-pricing-to-matching"
                   >
-                    See how matching unlocks
+                    See how the pilot works
                     <ArrowRight className="w-5 h-5" />
                   </Link>
                   <Link
@@ -553,7 +571,7 @@ export default function Pricing() {
                     className="inline-flex items-center gap-2 text-[15px] font-semibold text-muted-foreground hover:text-foreground transition-colors group"
                     data-testid="link-pricing-to-how-it-works"
                   >
-                    How the climb works
+                    How MatchLab works
                     <div className="w-1 h-1 rounded-full bg-foreground opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   </Link>
                 </div>

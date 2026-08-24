@@ -317,14 +317,14 @@ export default function SampleReport() {
   </div>
   </SectionCard>
 
-  {/* Founder Review Note */}
+  {/* Illustrative human review */}
   <motion.div {...fadeUp(0.1)} className="glass border border-[hsl(248_62%_52%/0.35)] rounded-2xl overflow-hidden">
   <div className="px-5 py-4 border-b border-white/5 bg-[hsl(248_62%_52%/0.08)]">
   <div className="flex items-center gap-3">
   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] flex items-center justify-center text-white text-xs font-bold">F</div>
   <div>
-  <p className="text-sm font-semibold text-foreground">Founder Review Note</p>
-  <p className="text-xs text-muted-foreground/50">Personal note, included with Dating Reset</p>
+  <p className="text-sm font-semibold text-foreground">Example Human Review</p>
+  <p className="text-xs text-muted-foreground/50">Illustrative only; not included unless an offer explicitly says so</p>
   </div>
   </div>
   </div>
@@ -338,7 +338,7 @@ export default function SampleReport() {
   <Star key={i} className="w-3.5 h-3.5" fill="hsl(var(--brand-gold))" stroke="hsl(var(--brand-gold))" />
   ))}
   </div>
-  <p className="text-xs text-muted-foreground/50">Founder-reviewed · Sample content only</p>
+  <p className="text-xs text-muted-foreground/50">Hand-written example · Sample content only</p>
   </div>
   </div>
   </motion.div>
@@ -488,7 +488,7 @@ export default function SampleReport() {
   <strong className="text-foreground">Instantly:</strong> You get your AI-generated report. Signal Score, Blueprint, profile rewrite, message strategy, and 7-day plan.
   </p>
   <p className="text-sm text-muted-foreground leading-relaxed">
-  <strong className="text-foreground">Within 24 hours (beta):</strong> During the founding beta, your report gets a personal review note from the founder, a short, direct note on the 1-2 things that'll make the biggest difference for you specifically.
+  <strong className="text-foreground">Human review:</strong> It is not automatic. If an approved offer includes it, that offer will state the reviewer, scope, capacity, and timing before checkout.
   </p>
   <p className="text-sm text-muted-foreground leading-relaxed">
   <strong className="text-foreground">Your privacy:</strong> You choose what you submit. Nothing is stored beyond what you share. You can export or delete your data at any time.
@@ -497,7 +497,7 @@ export default function SampleReport() {
   </Collapsible>
   <Collapsible title="Is this real AI or template content?">
   <p className="text-sm text-muted-foreground leading-relaxed pt-1">
-  The AI coaching engine generates output specific to what you share, not a template fill-in. The deterministic engine ships with every account by default: built in-house, no external calls, no rate limits, always available. If Deep AI lane is on in Settings, Anthropic Claude is layered on top for tools that benefit from semantic depth (bio rewrites, message coaching, Compatibility Compass, imports), processed under their zero-retention API policy. The founder review note is written by a human. The sample report above was written by hand for illustration.
+  The coaching engine generates output from what you share rather than filling a static template. The structural engine ships with every account by default. If Deep AI is on in Settings, the named provider is layered onto supported tools under the current handling described in Privacy and Integrations. The example human-review note above was written by hand for illustration and is not a purchase promise.
   </p>
   </Collapsible>
   <Collapsible title="Is this for everyone, not just straight/cis daters?">
@@ -511,7 +511,7 @@ export default function SampleReport() {
   <motion.div {...fadeUp(0.15)} className="mt-8 glass border border-white/8 rounded-2xl p-6 text-center space-y-4">
   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.08)] text-xs text-[hsl(248_62%_62%)] font-semibold">
   <span className="w-1.5 h-1.5 rounded-full bg-[hsl(142_55%_60%)] animate-pulse" />
-  Live beta · First 25 users · Personal founder review included
+  Sample report · Human-review example is illustrative, not an included service
   </div>
   <h2 className="text-xl font-bold text-foreground">Get your own report</h2>
   <p className="text-sm text-muted-foreground max-w-md mx-auto">

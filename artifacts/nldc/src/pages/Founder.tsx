@@ -6024,7 +6024,7 @@ You looked at Jordan's sample Dating Reset report. That's the exact format we'd 
 
 The free Signal Check takes 3 minutes and gives you your own score and breakdown (no account needed): [link]
 
-If you want the full report, bio rewrite, message strategy, 7-day plan, plus a founder review note during the beta, the Dating Reset is $97: [link]
+If you want the full report, bio rewrite, message strategy, and 7-day plan, Dating Reset enrollment and its current terms are here: [link]
 
 Any questions, just reply to this., [Founder name]`,
   },

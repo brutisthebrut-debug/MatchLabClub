@@ -42,13 +42,13 @@ const PRODUCTS: Record<Product, ProductConfig> = {
   description:
   "Your full Profile Signal Audit with bio rewrite, all prompts rewritten, photo checklist, and your 7-day action plan. One payment, everything delivered.",
   features: [
-  "Your full Signal Score (0–100) + 8-dimension Spectrum",
+  "Your full profile pattern read across 8 dimensions",
   "Bio rewritten to actually sound like you",
   "Every prompt rewritten with coach notes",
   "Photo checklist across 5 categories",
   "Dating Diagnosis, pattern review",
   "Personalised 7-day action plan",
-  "Founder review note during beta (within 48h)",
+  "Private report saved to your account",
   ],
   cta: "Get My Audit, $29",
   icon: Zap,
@@ -66,11 +66,11 @@ const PRODUCTS: Record<Product, ProductConfig> = {
   "A complete rebuild of how you present yourself, profile, prompts, messaging, photos, and a 7-day action plan. Walk away with a profile that's finally working.",
   features: [
   "Everything in the $29 Signal Audit, plus:",
-  "Unlimited future Signal Audits (re-run after every change)",
-  "Chemistry Lab, 10 message coaching sessions",
+  "Repeat Signal Audits as the product allows",
+  "Expanded Chemistry Lab and message-coaching capacity",
   "Communication pattern import (full)",
-  "Score history + progress tracking",
-  "Founder review note during beta (within 48h)",
+  "Saved history + progress context",
+  "Human review only when separately described and deliberately requested",
   "Priority access to new features",
   ],
   cta: "Get The Dating Reset, $97",
@@ -86,15 +86,14 @@ const PRODUCTS: Record<Product, ProductConfig> = {
   badge: "For serious daters",
   badgeColor: "hsl(43 65% 52%)",
   description:
-  "Your personal dating coach, available whenever you need guidance. Weekly sessions, unlimited coaching.",
+  "A limited-enrollment monthly support tier with expanded coaching capacity and controlled-introduction consideration.",
   features: [
   "Everything in The Dating Reset",
-  "Weekly 1:1 coaching sessions",
-  "Unlimited message coaching",
+  "Expanded coaching and message-review capacity",
   "Monthly profile refresh and updates",
   "Priority access to new features",
-  "Direct founder access",
-  "Cancel anytime, no penalty",
+  "Controlled-introduction consideration, not a guaranteed match",
+  "Manage renewal or cancel from Account",
   ],
   cta: "Join Monthly Wingman, $197/mo",
   icon: Crown,
@@ -205,8 +204,8 @@ function PaidForm({ product }: { product: Product }) {
   <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/8 border border-amber-500/20">
   <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
   <div className="text-xs text-amber-300/80 leading-relaxed space-y-1.5">
-  <p><strong>Beta, payment opens shortly.</strong> Save your spot now and we'll email you the moment checkout opens, at the locked-in beta price.</p>
-  <p className="text-amber-300/60">No charge today. Beta orders get the founder review note. You can also start your free Signal Check at <Link href="/start" className="underline hover:text-amber-200">/start</Link>.</p>
+  <p><strong>Enrollment is not open for this product yet.</strong> Save your interest and we'll email you if its scope, capacity, price, and terms are approved for sale.</p>
+  <p className="text-amber-300/60">No charge today and no service or introduction is promised. You can start your free Signal Check at <Link href="/start" className="underline hover:text-amber-200">/start</Link>.</p>
   </div>
   </div>
   <div className="space-y-2">
@@ -246,7 +245,7 @@ function PaidForm({ product }: { product: Product }) {
   autoCapitalize="characters"
   />
   <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
-  Promo codes are handled personally during beta follow-up, we'll apply yours when we email you.
+  A submitted code is only a note of interest. Any valid discount and its terms will appear in the eventual Stripe checkout.
   </p>
   </div>
   <Button
@@ -335,7 +334,7 @@ export default function Checkout({ product }: { product: string }) {
   <div className="flex items-center gap-2">
   <Sparkles className="w-5 h-5 text-[hsl(248_62%_52%)]" />
   <h2 className="font-semibold text-foreground">
-  {resolvedProduct === "wingman" ? "Save your spot" : "Complete your order"}
+  {resolvedProduct === "wingman" ? "Check enrollment" : "Complete your order"}
   </h2>
   </div>
 
@@ -344,11 +343,11 @@ export default function Checkout({ product }: { product: string }) {
   <div className="pt-2 space-y-2">
   <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
   <CheckCircle2 className="w-3 h-3" />
-  30-day guarantee, we'll redo it or refund it
+  Refund terms are shown at checkout; statutory rights are unaffected
   </div>
   <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
   <CheckCircle2 className="w-3 h-3" />
-  Cancel anytime, no penalty
+  Monthly plans can be managed from Account; cancellation ends renewal
   </div>
   <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
   <CheckCircle2 className="w-3 h-3" />

@@ -57,6 +57,14 @@ export function configuredPriceId(product: BillingProduct): string | null {
   return process.env[PRODUCT_CONFIG[product].priceEnv]?.trim() || null;
 }
 
+export function isBillingProductLive(product: BillingProduct): boolean {
+  const configured = process.env["BILLING_LIVE_PRODUCTS"]
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return configured?.includes(product) ?? false;
+}
+
 export function inferProduct(
   metadata: Stripe.Metadata | null | undefined,
   priceId?: string | null,

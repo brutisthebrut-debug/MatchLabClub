@@ -167,7 +167,7 @@ export default function Account() {
       toast({
         title: next ? "Deep AI lane: on" : "Deep AI lane: off",
         description: next
-          ? "Anthropic Claude is now layered on top of the deterministic baseline for tools that benefit from it. Prompts run under Anthropic's zero-retention API policy."
+          ? "Anthropic Claude is now layered on top of the structural baseline for supported tools. Current provider handling is described in Privacy and Integrations."
           : "You're back on the deterministic baseline. Every feature still works, just without the Claude layer on top.",
       });
     } catch (err) {
@@ -504,7 +504,7 @@ export default function Account() {
                     Hybrid setup. The deterministic engine is always on. Fast, free, never rate-limited.
                     With this on, Anthropic Claude is layered on top for tools that benefit from semantic depth:
                     bio rewrites, message coaching, Compatibility Compass reads, Hinge import summaries, Instagram tone extraction.
-                    Anthropic processes prompts under their zero-retention API policy. I never sell or train on your content.
+                    Current provider handling is described in Privacy and Integrations. MatchLab does not sell your private content to advertisers.
                     Off means baseline only. Nothing breaks either way.
                   </p>
                 </div>
