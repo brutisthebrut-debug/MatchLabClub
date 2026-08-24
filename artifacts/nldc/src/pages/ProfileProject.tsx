@@ -18,6 +18,12 @@ import {
   versionedAuditRecord,
 } from "@/lib/profileProjectRecords";
 import {
+  createProfilePhotoLabRun,
+  deleteProfilePhotoLabRun,
+  listProfilePhotoLabRuns,
+  presentPhotoLabRun,
+} from "@/lib/profilePhotoLab";
+import {
   getGetMyPhotosQueryKey,
   getListAuditReportVersionsQueryKey,
   getListProfilesQueryKey,
@@ -33,7 +39,7 @@ import {
   type DatingProfile,
   type ProfileRewrite,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Check,
@@ -54,10 +60,51 @@ import { Link } from "wouter";
 
 const MAX_PHOTOS = 6;
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+const PHOTO_LAB_QUERY_KEY = ["profile-project", "photo-lab-runs"] as const;
+
+type PhotoShotType =
+  | "solo_face"
+  | "full_body"
+  | "activity"
+  | "group"
+  | "candid"
+  | "other";
+
+interface PhotoSignals {
+  shotType: PhotoShotType;
+  wellLit: boolean;
+  genuineExpression: boolean;
+}
+
+const SHOT_TYPES: Array<{ value: PhotoShotType; label: string }> = [
+  { value: "solo_face", label: "Solo face" },
+  { value: "full_body", label: "Full body" },
+  { value: "activity", label: "Activity" },
+  { value: "group", label: "Group" },
+  { value: "candid", label: "Candid" },
+  { value: "other", label: "Other" },
+];
 
 function photoSrc(url: string): string {
   if (url.startsWith("http") || url.startsWith("/")) return url;
   return `/api/${url}`;
+}
+
+async function imageDataUrl(url: string): Promise<string | undefined> {
+  try {
+    const response = await fetch(photoSrc(url), { credentials: "same-origin" });
+    if (!response.ok) return undefined;
+    const blob = await response.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () =>
+        resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return undefined;
+  }
 }
 
 const PLATFORMS = [
@@ -125,6 +172,17 @@ export default function ProfileProject() {
   const requestUploadUrl = useRequestUploadUrl();
   const addPhoto = useAddMyPhoto();
   const deletePhoto = useDeleteMyPhoto();
+  const photoLabRunsQuery = useQuery({
+    queryKey: PHOTO_LAB_QUERY_KEY,
+    queryFn: listProfilePhotoLabRuns,
+    retry: false,
+  });
+  const createPhotoLabRun = useMutation({
+    mutationFn: createProfilePhotoLabRun,
+  });
+  const deletePhotoLabRun = useMutation({
+    mutationFn: deleteProfilePhotoLabRun,
+  });
 
   const [draft, setDraft] = useState<ProfileProjectDraft>(
     emptyProfileProjectDraft,
@@ -136,6 +194,8 @@ export default function ProfileProject() {
     number | null
   >(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoSignals, setPhotoSignals] = useState<Record<number, PhotoSignals>>({});
+  const [selectedPhotoLabRunId, setSelectedPhotoLabRunId] = useState<number | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const profiles = useMemo(
@@ -184,6 +244,14 @@ export default function ProfileProject() {
     : null;
   const activeAuditSections = reportSections(activeAuditRecord?.report ?? null);
   const photos = photosQuery.data ?? [];
+  const photoLabRuns = photoLabRunsQuery.data ?? [];
+  const selectedPhotoLabRun =
+    photoLabRuns.find((run) => run.id === selectedPhotoLabRunId) ??
+    photoLabRuns[0] ??
+    null;
+  const presentedPhotoLabRun = selectedPhotoLabRun
+    ? presentPhotoLabRun(selectedPhotoLabRun)
+    : null;
 
   function patchDraft(patch: Partial<ProfileProjectDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
@@ -351,6 +419,74 @@ export default function ProfileProject() {
         title: "Could not remove that photo",
         variant: "destructive",
       });
+    }
+  }
+
+  function signalsFor(photoId: number, index: number): PhotoSignals {
+    return (
+      photoSignals[photoId] ?? {
+        shotType: index === 0 ? "solo_face" : "other",
+        wellLit: false,
+        genuineExpression: false,
+      }
+    );
+  }
+
+  function patchPhotoSignals(
+    photoId: number,
+    index: number,
+    patch: Partial<PhotoSignals>,
+  ) {
+    setPhotoSignals((current) => ({
+      ...current,
+      [photoId]: { ...signalsFor(photoId, index), ...patch },
+    }));
+  }
+
+  async function analyzeProfilePhotos() {
+    if (photos.length === 0) return;
+    try {
+      const inputs = await Promise.all(
+        photos.map(async (photo, index) => {
+          const signals = signalsFor(photo.id, index);
+          const imageBase64 = await imageDataUrl(photo.url);
+          return {
+            id: `profile-photo-${photo.id}`,
+            shotType: signals.shotType,
+            wellLit: signals.wellLit,
+            genuineExpression: signals.genuineExpression,
+            ...(imageBase64 ? { imageBase64 } : {}),
+          };
+        }),
+      );
+      const run = await createPhotoLabRun.mutateAsync({
+        photos: inputs,
+        datingGoal: draft.lookingFor.trim() || null,
+        sourceApp: draft.platform.trim() || null,
+      });
+      await queryClient.invalidateQueries({ queryKey: PHOTO_LAB_QUERY_KEY });
+      setSelectedPhotoLabRunId(run.id);
+      toast({
+        title: "Photo analysis saved",
+        description: "This run is now reopenable in Profile Project history.",
+      });
+    } catch {
+      toast({
+        title: "Could not save the photo analysis",
+        description: "Your photos and earlier analysis history were not changed.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function removePhotoLabRun(runId: number) {
+    try {
+      await deletePhotoLabRun.mutateAsync(runId);
+      if (selectedPhotoLabRunId === runId) setSelectedPhotoLabRunId(null);
+      await queryClient.invalidateQueries({ queryKey: PHOTO_LAB_QUERY_KEY });
+      toast({ title: "Photo analysis removed" });
+    } catch {
+      toast({ title: "Could not remove that analysis", variant: "destructive" });
     }
   }
 
@@ -770,24 +906,22 @@ export default function ProfileProject() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                      Persistent photo collection
+                      Photo workspace
                     </p>
                     <h2 className="mt-2 font-serif text-2xl font-bold">
-                      Your profile photos
+                      Your profile photos and analysis
                     </h2>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                      These are the actual private photos attached to your
-                      account. Adding or removing one updates the durable member
-                      record, not a temporary Photo Lab session.
+                      Build the lineup from your private saved photos, describe
+                      each shot, then preserve every analysis as a new run you can
+                      reopen. An analysis never authorizes matching use.
                     </p>
                   </div>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => photoInputRef.current?.click()}
-                    disabled={
-                      uploadingPhoto || photos.length >= MAX_PHOTOS
-                    }
+                    disabled={uploadingPhoto || photos.length >= MAX_PHOTOS}
                   >
                     {uploadingPhoto ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -815,46 +949,236 @@ export default function ProfileProject() {
                   </div>
                 ) : photos.length === 0 ? (
                   <div className="mt-6 rounded-2xl border border-dashed border-foreground/15 p-5 text-sm text-muted-foreground">
-                    No persistent profile photos yet. Add up to {MAX_PHOTOS}.
+                    Add at least one persistent profile photo to create a saved analysis.
                   </div>
                 ) : (
-                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {photos.map((photo, index) => (
-                      <div
-                        key={photo.id}
-                        className="group relative aspect-square overflow-hidden rounded-2xl border border-foreground/10 bg-muted"
-                      >
-                        <img
-                          src={photoSrc(photo.url)}
-                          alt={index === 0 ? "Current lead profile photo" : "Profile photo"}
-                          className="h-full w-full object-cover"
-                        />
-                        {index === 0 && (
-                          <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-1 text-xs font-bold">
-                            Lead
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => void removePhoto(photo.id)}
-                          className="absolute right-2 top-2 rounded-full bg-black/65 p-2 text-white opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                          aria-label="Remove photo"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                  <>
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {photos.map((photo, index) => {
+                        const signals = signalsFor(photo.id, index);
+                        return (
+                          <div
+                            key={photo.id}
+                            className="overflow-hidden rounded-2xl border border-foreground/10 bg-background/60"
+                          >
+                            <div className="group relative aspect-square bg-muted">
+                              <img
+                                src={photoSrc(photo.url)}
+                                alt={index === 0 ? "Current lead profile photo" : "Profile photo"}
+                                className="h-full w-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => void removePhoto(photo.id)}
+                                className="absolute right-2 top-2 rounded-full bg-black/65 p-2 text-white opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                                aria-label="Remove photo"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <div className="space-y-3 p-4">
+                              <div>
+                                <Label htmlFor={`shot-type-${photo.id}`}>Shot type</Label>
+                                <select
+                                  id={`shot-type-${photo.id}`}
+                                  value={signals.shotType}
+                                  onChange={(event) =>
+                                    patchPhotoSignals(photo.id, index, {
+                                      shotType: event.target.value as PhotoShotType,
+                                    })
+                                  }
+                                  className="mt-1 h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                                >
+                                  {SHOT_TYPES.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={signals.wellLit}
+                                  onChange={(event) =>
+                                    patchPhotoSignals(photo.id, index, {
+                                      wellLit: event.target.checked,
+                                    })
+                                  }
+                                />
+                                Well lit
+                              </label>
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={signals.genuineExpression}
+                                  onChange={(event) =>
+                                    patchPhotoSignals(photo.id, index, {
+                                      genuineExpression: event.target.checked,
+                                    })
+                                  }
+                                />
+                                Genuine expression
+                              </label>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-foreground/10 bg-background/55 p-4">
+                      <div>
+                        <p className="font-bold">Create a new analysis run</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Raw image bytes are used only during this request and
+                          discarded. The saved record keeps photo ids, your
+                          selections, the written result, and its timestamp.
+                        </p>
                       </div>
-                    ))}
-                  </div>
+                      <Button
+                        type="button"
+                        onClick={() => void analyzeProfilePhotos()}
+                        disabled={createPhotoLabRun.isPending}
+                      >
+                        {createPhotoLabRun.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <ScanSearch className="mr-2 h-4 w-4" />
+                        )}
+                        Analyze and save
+                      </Button>
+                    </div>
+                  </>
                 )}
 
                 <div className="mt-5 flex items-start gap-3 rounded-2xl border border-foreground/10 bg-background/55 p-4">
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[hsl(248_62%_52%)]" />
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Storage and reveal are separate. These photos remain private
-                    unless you separately enable mutual-match reveal. Photo Lab
-                    analysis still runs in memory and is not yet durable, so its
-                    route remains available until analysis history is built.
+                    Photo storage, analysis, and mutual-match reveal are three
+                    separate permissions. Removing a source photo does not rewrite
+                    an earlier analysis; its provenance remains visible until you
+                    delete that saved run or your account.
                   </p>
+                </div>
+
+                <div className="mt-7 grid gap-5 lg:grid-cols-[14rem_minmax(0,1fr)]">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold">Analysis history</h3>
+                    {photoLabRunsQuery.isLoading ? (
+                      <p className="mt-3 text-sm text-muted-foreground">Loading history</p>
+                    ) : photoLabRuns.length === 0 ? (
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                        Your first saved analysis will appear here.
+                      </p>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        {photoLabRuns.map((run) => (
+                          <button
+                            key={run.id}
+                            type="button"
+                            onClick={() => setSelectedPhotoLabRunId(run.id)}
+                            className={
+                              "w-full rounded-xl border p-3 text-left text-sm " +
+                              (selectedPhotoLabRun?.id === run.id
+                                ? "border-[hsl(248_62%_52%/0.45)] bg-[hsl(248_62%_52%/0.08)]"
+                                : "border-foreground/10")
+                            }
+                          >
+                            <span className="block font-bold">Run #{run.id}</span>
+                            <span className="mt-1 block text-xs text-muted-foreground">
+                              {formatSavedAt(run.createdAt)} · {run.sourcePhotoIds.length} photos
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {presentedPhotoLabRun ? (
+                    <div className="rounded-2xl border border-foreground/10 bg-background/55 p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                            Saved run #{presentedPhotoLabRun.id}
+                          </p>
+                          <h3 className="mt-2 font-serif text-2xl font-bold">
+                            {presentedPhotoLabRun.summary}
+                          </h3>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void removePhotoLabRun(presentedPhotoLabRun.id)}
+                          disabled={deletePhotoLabRun.isPending}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete run
+                        </Button>
+                      </div>
+                      <p className="mt-4 text-sm leading-6">
+                        {presentedPhotoLabRun.leadShotRationale}
+                      </p>
+                      <div className="mt-5 space-y-3">
+                        {presentedPhotoLabRun.ranked.map((item) => {
+                          const photoId = Number(item.id.replace("profile-photo-", ""));
+                          const source = photos.find((photo) => photo.id === photoId);
+                          return (
+                            <div key={item.id} className="rounded-xl border border-foreground/10 p-4">
+                              <div className="flex items-center gap-3">
+                                {source ? (
+                                  <img
+                                    src={photoSrc(source.url)}
+                                    alt=""
+                                    className="h-12 w-12 rounded-lg object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">
+                                    Removed
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="font-bold">{item.role}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Position {item.rank} · source photo #{photoId}
+                                  </p>
+                                </div>
+                              </div>
+                              {item.notes.length > 0 && (
+                                <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+                                  {item.notes.map((note) => <li key={note}>{note}</li>)}
+                                </ul>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {presentedPhotoLabRun.checklist.length > 0 && (
+                        <div className="mt-5">
+                          <h4 className="font-bold">Lineup checklist</h4>
+                          <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+                            {presentedPhotoLabRun.checklist.map((item) => (
+                              <li key={item.category}>
+                                <span className="font-semibold text-foreground">{item.category}:</span>{" "}
+                                {item.advice}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {presentedPhotoLabRun.visionAnalysis?.summary && (
+                        <div className="mt-5 rounded-xl bg-[hsl(248_62%_52%/0.08)] p-4">
+                          <p className="text-xs font-bold uppercase tracking-widest">Optional image read</p>
+                          <p className="mt-2 text-sm leading-6">
+                            {presentedPhotoLabRun.visionAnalysis.summary}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-foreground/15 p-5 text-sm text-muted-foreground">
+                      Select or create an analysis to reopen its written result.
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -872,20 +1196,16 @@ export default function ProfileProject() {
                     for capture and generation until those steps move in too.
                   </p>
                 </Link>
-                <Link
-                  href="/photo-lab"
-                  className="rounded-3xl border border-foreground/10 bg-background/65 p-5 transition-colors hover:border-[hsl(248_62%_52%/0.3)]"
-                >
-                  <ImageUp className="h-5 w-5 text-[hsl(326_100%_50%)]" />
+                <div className="rounded-3xl border border-foreground/10 bg-background/65 p-5">
+                  <FileClock className="h-5 w-5 text-[hsl(326_100%_50%)]" />
                   <h2 className="mt-4 font-serif text-xl font-bold">
-                    Analyze a temporary lineup
+                    Photo Lab is now part of this project
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Ranking still runs in a non-persistent session. This route
-                    will not retire until its results can be saved and reopened
-                    inside Profile Project.
+                    Lineup analysis, privacy context, and reopenable history now
+                    live with the profile and photos they belong to.
                   </p>
-                </Link>
+                </div>
               </section>
             </main>
 
