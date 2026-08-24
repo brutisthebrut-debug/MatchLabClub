@@ -121,7 +121,10 @@ export function ProfileAuditCapture({
 
   const readyToSubmit =
     draft.firstName.trim().length > 0 &&
+    draft.age.trim().length > 0 &&
     Number.isInteger(Number(draft.age)) &&
+    Number(draft.age) >= 18 &&
+    Number(draft.age) <= 100 &&
     draft.app.length > 0 &&
     draft.goal.length > 0 &&
     draft.bio.trim().length > 0;
