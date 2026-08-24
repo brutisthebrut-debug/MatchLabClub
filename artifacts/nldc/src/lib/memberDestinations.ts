@@ -84,6 +84,8 @@ const ROUTE_DESTINATION_PREFIXES: readonly [
   ["/milestones", "journey"],
   ["/journey", "journey"],
 
+  ["/copilot/profile", "my-matchlab"],
+
   ["/compatibility-compass", "matches"],
   ["/future-connections", "matches"],
   ["/verification", "matches"],
