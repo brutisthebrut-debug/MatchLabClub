@@ -35,7 +35,10 @@ report versions, the persistent private photo collection, and immutable Photo
 Lab analyses that can be reopened or deleted. The standalone Photo Lab and
 own-profile audit routes now redirect only after their signed-in workflows were
 absorbed; durable report ids survive the compatibility redirect. Profile Reader
-remains separate because it interprets another person's profile.
+remains separate because it interprets another person's profile. My MatchLab
+now also owns the durable boundary between Echo's grounded working themes,
+proposed learning, member confirmation/correction/dismissal, and a separate
+reversible matching-use grant.
 See `SHELL_MIGRATION.md` for the completion standard, route matrix, and
 segment plan.
 
@@ -78,8 +81,8 @@ segment plan.
 - `/start`, `/signal-check`, and `/diagnosis` redirect to canonical capture;
   `/report/:id` preserves the durable audit id in canonical history.
 - TypeScript project references and the API and web app typechecks pass.
-- Web suite: 35 files, 247 tests passed.
-- Full API suite on a clean Postgres 16 service: 100 files and 925 tests passed;
+- Web suite: 36 files, 250 tests passed.
+- Full API suite on a clean Postgres 16 service: 101 files and 930 tests passed;
   2 files and 8 optional OCR tests skipped.
 - GitHub Actions run 32747162456 passed both required jobs on PR #4: frozen
   install, typecheck, lint, schema drift, voice lint, web tests, the complete
@@ -108,6 +111,10 @@ segment plan.
   evidence-validated Profile Project reads: 35 web files with 247 tests, the
   ordered migration chain through `0046`, and 100 API files with 925 tests on
   clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32786262672 passed both required jobs on PR #17 for the
+  confirmed Mirror learning lifecycle: 36 web files with 250 tests, the ordered
+  migration chain through `0047`, and 101 API files with 930 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
