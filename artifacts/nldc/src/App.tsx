@@ -13,6 +13,10 @@ import {
   getListWellnessAnswersQueryKey,
 } from "@workspace/api-client-react";
 import { hasCompletedOnboarding } from "@/lib/onboardingState";
+import {
+  PROFILE_PROJECT_AUDIT_CAPTURE_HREF,
+  profileProjectAuditHistoryHref,
+} from "@/lib/profileProjectRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -200,7 +204,7 @@ function Router() {
         <Route path="/trust-data" component={MemberDestination} />
         {/* Audit capture/generation is owned by Profile Project. */}
         <Route path="/start">
-          <Redirect to="/my-matchlab/profile#audit-capture" />
+          <Redirect to={PROFILE_PROJECT_AUDIT_CAPTURE_HREF} />
         </Route>
         <Route path="/dashboard" component={Dashboard} />
         {/* Preserve durable report deep links while reopening the same audit in
@@ -208,7 +212,7 @@ function Router() {
         <Route path="/report/:id">
           {(params: { id?: string } | null) => (
             <Redirect
-              to={`/my-matchlab/profile?audit=${params?.id ?? ""}#audit-history`}
+              to={profileProjectAuditHistoryHref(params?.id)}
             />
           )}
         </Route>
@@ -226,7 +230,7 @@ function Router() {
         {/* Signal Check's own-profile read is absorbed into the evidence-gated
             Profile Project capture. Both old entry URLs remain redirects. */}
         <Route path="/diagnosis">
-          <Redirect to="/my-matchlab/profile#audit-capture" />
+          <Redirect to={PROFILE_PROJECT_AUDIT_CAPTURE_HREF} />
         </Route>
         <Route path="/lab" component={Lab} />
         {/* Photo Lab is fully absorbed into the durable Profile Project.
@@ -235,7 +239,7 @@ function Router() {
           <Redirect to="/my-matchlab/profile" />
         </Route>
         <Route path="/signal-check">
-          <Redirect to="/my-matchlab/profile#audit-capture" />
+          <Redirect to={PROFILE_PROJECT_AUDIT_CAPTURE_HREF} />
         </Route>
         <Route path="/roadmap" component={Roadmap} />
         <Route path="/privacy" component={Privacy} />
