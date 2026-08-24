@@ -337,6 +337,13 @@
       "when": 1787696400000,
       "tag": "0047_confirmed_mirror_learnings",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1787782800000,
+      "tag": "0048_saved_communication_records",
+      "breakpoints": true
     }
   ]
 }
