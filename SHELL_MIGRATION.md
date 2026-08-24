@@ -190,10 +190,37 @@ State: merged to `main` and verified.
   ordered migrations through `0046`, and 100 API files with 925 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3C1: confirmed Mirror learning lifecycle
+
+State: merged to `main` and verified.
+
+- My MatchLab now owns an owner-scoped durable learning record with explicit
+  source type, source reference, evidence label, observation, proposed text,
+  member-confirmed text, confidence, and decision timestamps.
+- Refreshing current grounded Mirror themes creates or updates proposals still
+  under review. It never overwrites a confirmed or dismissed member decision.
+- Confirmation, correction, dismissal, and returning a confirmation to review
+  are distinct server transitions. A correction returns to proposed rather
+  than silently becoming truth.
+- Matching use is a separate default-closed, reversible grant available only
+  after confirmation. Revoking that grant, rewriting, dismissing, or
+  unconfirming pauses active candidacy server-side for review; confirmation
+  never resumes candidacy automatically.
+- My MatchLab presents the review workflow without sample fallback or a human
+  worth/readiness score. The durable records are covered by member export and
+  both account-deletion paths.
+- No old relationship-language route was retired in this sub-segment because
+  its behavior and saved record have not yet been fully absorbed.
+- PR #17 merged as `ac48203c`; GitHub Actions run `32786262672` passed
+  typecheck, lint, schema drift, voice lint, 36 web files with 250 tests,
+  ordered migrations through `0047`, and 101 API files with 930 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Consolidate Mirror trends, relationship-language tools, and confirmed
-   learning into the My MatchLab record.
+1. Consolidate Mirror trends and relationship-language tools into contextual
+   My MatchLab capabilities that write through the confirmed-learning record;
+   retire old routes only after saved behavior and deep links are absorbed.
 2. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
 3. Consolidate games and quizzes into Play with confirmed-learning handoff.
