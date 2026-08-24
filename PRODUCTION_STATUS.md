@@ -122,6 +122,11 @@ segment plan.
   saved Communication record: 36 web files with 250 tests, the ordered
   migration chain through `0047`, and 101 API files with 932 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32789073048 passed both required jobs on PR #22 for
+  durable Connection Style and Personal Blueprint source records: 36 web files
+  with 250 tests, the ordered migration chain through `0048`, and 102 API files
+  with 936 tests on clean Postgres 16. The 8 skipped API tests remain the
+  optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod

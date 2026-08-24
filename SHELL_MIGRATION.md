@@ -238,11 +238,37 @@ State: merged to `main` and verified.
   ordered migrations through `0047`, and 101 API files with 932 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3C2B1: durable Communication lens sources
+
+State: merged to `main` and verified.
+
+- Connection Style and Personal Blueprint now save their complete validated
+  inputs and full member-visible results in one owner-scoped Communication
+  source table rather than relying on browser-only state.
+- Returning members rehydrate those saved results. Authenticated Personal
+  Blueprint users also migrate a legacy browser result into the server record
+  before local state is removed.
+- My MatchLab's Communication capability renders both saved sources and can
+  send either into the existing review-only Mirror learning lifecycle. Nothing
+  is auto-confirmed and matching use remains a separate grant.
+- Removing a source also removes its derived learning. If that learning had
+  matching approval, active candidacy is paused before removal.
+- Communication sources are included in member export and both account-deletion
+  paths. OpenAPI covers read, save, delete, and proposal behavior.
+- The `/connection-style` and `/blueprint` deep links remain available because
+  their capture forms have not yet been embedded in My MatchLab. This segment
+  does not claim those routes are retired.
+- PR #22 merged as `f73c486e`; GitHub Actions run `32789073048` passed
+  typecheck, lint, schema drift, voice lint, 36 web files with 250 tests,
+  ordered migrations through `0048`, and 102 API files with 936 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Absorb Connection Style and Personal Blueprint capture/results into the
-   Communication record, then retire only the duplicated routes whose saved
-   behavior and deep links are covered.
+1. Embed Connection Style and Personal Blueprint capture and result review in
+   My MatchLab Communication, preserve the existing paths as deep-link
+   redirects, and retire only the duplicated page ownership after regression
+   coverage proves parity.
 2. Consolidate Mirror trends into My MatchLab with provenance, changes over
    time, uncertainty, and contradictions.
 3. Consolidate dates, journal, debrief, experiments, and reflections into a
