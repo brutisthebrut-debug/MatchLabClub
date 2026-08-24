@@ -46,7 +46,7 @@ export function syncMirrorLearnings(): Promise<LearningEnvelope> {
 }
 
 export function proposeCommunicationLearning(
-  source: "care_dialect" | "standards",
+  source: "care_dialect" | "standards" | "connection_style" | "personal_blueprint",
 ): Promise<MirrorLearning> {
   return json("/me/mirror-learnings/communication", {
     method: "POST",

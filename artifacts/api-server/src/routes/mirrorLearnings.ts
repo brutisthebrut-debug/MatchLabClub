@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import {
   db,
   careDialectProfilesTable,
+  communicationRecordsTable,
   flagSelectionsTable,
   matchPoolMembershipTable,
   mirrorLearningsTable,
@@ -26,7 +27,7 @@ const DecisionBody = z.discriminatedUnion("action", [
 ]);
 
 const CommunicationProposalBody = z.object({
-  source: z.enum(["care_dialect", "standards"]),
+  source: z.enum(["care_dialect", "standards", "connection_style", "personal_blueprint"]),
 });
 
 function iso(value: Date | string | null): string | null {
@@ -239,6 +240,42 @@ router.post(
         confidence: Math.round(
           Math.max(0, Math.min(1, (giveWeight + receiveWeight) / 2)) * 100,
         ),
+      });
+      res.json(serialize(learning));
+      return;
+    }
+
+    if (parsed.data.source === "connection_style" || parsed.data.source === "personal_blueprint") {
+      const [record] = await db.select().from(communicationRecordsTable).where(and(
+        eq(communicationRecordsTable.userId, userId),
+        eq(communicationRecordsTable.lens, parsed.data.source),
+      )).limit(1);
+      if (!record) {
+        res.status(422).json({
+          error: parsed.data.source === "connection_style"
+            ? "Complete your Connection Style lens before sending it to review."
+            : "Complete your Personal Blueprint before sending it to review.",
+        });
+        return;
+      }
+      const result = record.result as Record<string, unknown>;
+      const isStyle = parsed.data.source === "connection_style";
+      const styleName = typeof result.name === "string" ? result.name : "saved connection pattern";
+      const activation = typeof result.activationPattern === "string" ? result.activationPattern : "";
+      const communication = typeof result.communicationStyle === "string" ? result.communicationStyle : "";
+      const growth = typeof result.growthEdge === "string" ? result.growthEdge : "";
+      const observation = isStyle
+        ? `Your saved Connection Style lens identified ${styleName}. ${activation}`.trim()
+        : `Your saved Personal Blueprint described this communication pattern: ${communication}`;
+      const proposedLearning = isStyle
+        ? `My current connection pattern is ${styleName}. ${activation}`.trim()
+        : `${communication}${growth ? ` My current growth edge is: ${growth}` : ""}`;
+      const learning = await upsertCommunicationProposal(userId, {
+        sourceRef: isStyle ? "connection-style" : "personal-blueprint",
+        sourceLabel: isStyle ? "Connection Style" : "Personal Blueprint",
+        observation,
+        proposedLearning,
+        confidence: record.confidence,
       });
       res.json(serialize(learning));
       return;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ import { SavedContextChip } from "@/components/SavedContextChip";
 import { blueprintSchema, parseAiJson, type BlueprintOutput } from "@/lib/aiSchemas";
 import { ToneBar, ConfidenceLabel } from "@/components/ToneBar";
 import { getConfidenceLevel } from "@/lib/toneUtils";
+import { deleteCommunicationRecord, listCommunicationRecords, saveCommunicationRecord } from "@/lib/communicationRecords";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -186,11 +187,57 @@ export default function Blueprint() {
   const [want, setWant] = useState("");
   const [result, setResult] = useState<BlueprintResult | null>(loadStoredResult);
   const [usedFallback, setUsedFallback] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
   const { isAuthenticated } = useAuth();
   const isBrandNewUser = isAuthenticated && !result;
   const savedCtx = useSavedContext();
+
+  useEffect(() => {
+  if (!isAuthenticated) return;
+  void listCommunicationRecords().then(async ({ records }) => {
+  const saved = records.find(record => record.lens === "personal_blueprint");
+  if (saved) {
+  const input = saved.input as { selfDescription?: string; pattern?: string; misread?: string; want?: string };
+  setText(input.selfDescription ?? "");
+  setPattern(input.pattern ?? "");
+  setMisread(input.misread ?? "");
+  setWant(input.want ?? "");
+  setResult(saved.result as BlueprintResult);
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  return;
+  }
+  const legacy = loadStoredResult();
+  if (legacy) {
+  await saveCommunicationRecord("personal_blueprint", {
+  input: { selfDescription: "", pattern: "", misread: "", want: "", legacy: true },
+  result: legacy,
+  generatedBy: "legacy_local",
+  confidence: 50,
+  });
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  }
+  }).catch(() => undefined);
+  }, [isAuthenticated]);
+
+  async function persist(resultToSave: BlueprintResult, generatedBy: "ai" | "deterministic") {
+  saveStoredResult(resultToSave);
+  if (!isAuthenticated) return;
+  const confidence = Math.min(100, 40 + Math.floor(text.trim().length / 40) + [pattern, misread, want].filter(Boolean).length * 12);
+  setSaveError(null);
+  try {
+  await saveCommunicationRecord("personal_blueprint", {
+  input: { selfDescription: text, pattern, misread, want },
+  result: resultToSave,
+  generatedBy,
+  confidence,
+  });
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  } catch {
+  setSaveError("Your blueprint is visible here, but it did not save to My MatchLab. Try again before leaving this page.");
+  }
+  }
 
   async function handleAnalyze(extraTone?: string) {
   if (!text.trim()) return;
@@ -221,18 +268,18 @@ export default function Blueprint() {
   const validationFailed = ai.validated === false;
   if (ai.isFallback || validationFailed || !ai.output.trim()) {
   setUsedFallback(true);
-  saveStoredResult(deterministic);
+  await persist(deterministic, "deterministic");
   setResult(deterministic);
   return;
   }
   const parsed = parseAiJson(blueprintSchema, ai.output);
   const final = parsed ?? deterministic;
   setUsedFallback(parsed == null);
-  saveStoredResult(final);
+  await persist(final, parsed ? "ai" : "deterministic");
   setResult(final);
   } catch {
   setUsedFallback(true);
-  saveStoredResult(deterministic);
+  await persist(deterministic, "deterministic");
   setResult(deterministic);
   }
   }
@@ -354,6 +401,7 @@ export default function Blueprint() {
   </Button>
   </div>
   )}
+  {!isDemo && saveError && <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-xs text-muted-foreground">{saveError}</div>}
   <div className="space-y-4">
   {SECTIONS.map((s, i) => (
   <motion.div key={s.key} {...fadeUp(0.05 * i)} className="glass border border-white/8 rounded-2xl p-5 sm:p-6">
@@ -376,7 +424,7 @@ export default function Blueprint() {
   )}
   {result && (
   <div className="mt-5 flex justify-center">
-  <button onClick={() => { try { localStorage.removeItem(STORAGE_KEY); } catch {} setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
+  <button onClick={() => { try { localStorage.removeItem(STORAGE_KEY); } catch {} if (isAuthenticated) void deleteCommunicationRecord("personal_blueprint"); setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
   <RefreshCw className="w-3.5 h-3.5" />Start over
   </button>

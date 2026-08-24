@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
@@ -12,6 +12,7 @@ import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
+import { deleteCommunicationRecord, listCommunicationRecords, saveCommunicationRecord } from "@/lib/communicationRecords";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -249,11 +250,50 @@ export default function ConnectionStyle() {
   const [result, setResult] = useState<StyleKey | null>(null);
   const [override, setOverride] = useState<StyleOverride>({});
   const [usedFallback, setUsedFallback] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
   const isBrandNewUser = isAuthenticated && !result;
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
   const answered = answers.filter(a => a >= 0).length;
+
+  useEffect(() => {
+  if (!isAuthenticated) return;
+  void listCommunicationRecords().then(({ records }) => {
+  const saved = records.find(record => record.lens === "connection_style");
+  if (!saved) return;
+  const input = saved.input as { answers?: number[] };
+  const savedResult = saved.result as StyleOverride & { styleKey?: StyleKey };
+  if (!savedResult.styleKey || !STYLES[savedResult.styleKey]) return;
+  if (Array.isArray(input.answers) && input.answers.length === QUESTIONS.length) setAnswers(input.answers);
+  setResult(savedResult.styleKey);
+  setOverride(savedResult);
+  });
+  }, [isAuthenticated]);
+
+  async function persist(styleKey: StyleKey, personalized: StyleOverride, generatedBy: "ai" | "deterministic") {
+  if (!isAuthenticated) return;
+  const base = STYLES[styleKey];
+  setSaveError(null);
+  try {
+  await saveCommunicationRecord("connection_style", {
+  input: { answers },
+  result: {
+  styleKey,
+  name: base.name,
+  tagline: personalized.tagline ?? base.tagline,
+  strengths: personalized.strengths ?? base.strengths,
+  activationPattern: personalized.activationPattern ?? base.activationPattern,
+  whatHelps: personalized.whatHelps ?? base.whatHelps,
+  nextExperiment: personalized.nextExperiment ?? base.nextExperiment,
+  },
+  generatedBy,
+  confidence: 100,
+  });
+  } catch {
+  setSaveError("Your result is visible here, but it did not save to My MatchLab. Try again before leaving this page.");
+  }
+  }
 
   function handleAnswer(qi: number, oi: number) {
   setAnswers(prev => { const n = [...prev]; n[qi] = oi; return n; });
@@ -319,16 +359,20 @@ export default function ConnectionStyle() {
   const validationFailed = ai.validated === false;
   if (ai.isFallback || validationFailed || !ai.output.trim()) {
   setUsedFallback(true);
+  await persist(styleKey, {}, "deterministic");
   return;
   }
   const parsed = tryParseOverride(ai.output);
   if (parsed) {
   setOverride(parsed);
+  await persist(styleKey, parsed, "ai");
   } else {
   setUsedFallback(true);
+  await persist(styleKey, {}, "deterministic");
   }
   } catch {
   setUsedFallback(true);
+  await persist(styleKey, {}, "deterministic");
   }
   }
 
@@ -366,16 +410,20 @@ export default function ConnectionStyle() {
   const validationFailed = ai.validated === false;
   if (ai.isFallback || validationFailed || !ai.output.trim()) {
   setUsedFallback(true);
+  await persist(styleKey, {}, "deterministic");
   return;
   }
   const parsed = tryParseOverride(ai.output);
   if (parsed) {
   setOverride(parsed);
+  await persist(styleKey, parsed, "ai");
   } else {
   setUsedFallback(true);
+  await persist(styleKey, {}, "deterministic");
   }
   } catch {
   setUsedFallback(true);
+  await persist(styleKey, {}, "deterministic");
   }
   }
 
@@ -460,6 +508,7 @@ export default function ConnectionStyle() {
   testId="button-retry-connection-style"
   />
   )}
+  {saveError && <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-xs text-muted-foreground">{saveError}</div>}
   {/* Header */}
   <div className="rounded-3xl p-8 border text-center" style={{ background: style!.bg, borderColor: style!.border }}>
   <div className="mb-4 flex justify-center"><Glyph name={style!.icon} className="w-12 h-12" color={style!.color} /></div>
@@ -515,7 +564,7 @@ export default function ConnectionStyle() {
   />
 
   <div className="flex justify-center">
-  <button onClick={() => { setResult(null); setAnswers(Array(QUESTIONS.length).fill(-1)); }}
+  <button onClick={() => { if (isAuthenticated) void deleteCommunicationRecord("connection_style"); setResult(null); setOverride({}); setAnswers(Array(QUESTIONS.length).fill(-1)); }}
   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
   <RefreshCw className="w-3.5 h-3.5" />Retake
   </button>

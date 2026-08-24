@@ -52,6 +52,7 @@ import photoLabRouter from "./photoLab";
 import eventsRouter from "./events";
 import safetyRouter from "./safety";
 import careDialectRouter from "./careDialect";
+import communicationRouter from "./communication";
 import connectorsRouter from "./connectors";
 import devAuthRouter from "./devAuth";
 import { isDevEnvironment } from "../lib/devSeed";
@@ -111,6 +112,7 @@ router.use(photoLabRouter);
 router.use(eventsRouter);
 router.use(safetyRouter);
 router.use(careDialectRouter);
+router.use(communicationRouter);
 router.use(connectorsRouter);
 
 // Development-only test-user preview + safe test-login. Mounted only outside
