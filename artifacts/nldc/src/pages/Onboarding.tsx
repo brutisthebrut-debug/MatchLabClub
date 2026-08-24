@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,11 +14,12 @@ import {
   MessageCircle,
   Sparkles,
   Loader2,
-  TrendingUp,
   Award,
-  Zap,
-  Icon,
   Target,
+  ShieldCheck,
+  LockKeyhole,
+  Database,
+  Brain,
 } from "lucide-react";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -27,14 +28,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   useCreateWellnessAnswer,
-  useGetMatchingState,
   useGetMirrorPortrait,
-  getGetMatchingStateQueryKey,
   getGetMirrorPortraitQueryKey,
   getListWellnessAnswersQueryKey,
   getGetAccountSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { STARTER_MODULE } from "@/lib/wellnessQuestionBank";
+import { buildOnboardingStarterAnswers } from "@/lib/onboardingCapture";
 import {
   markOnboardingComplete,
   rememberOnboardingGoal,
@@ -73,34 +73,53 @@ const SOURCES = [
   {
     icon: ImageUp,
     title: "Scan a profile screenshot",
-    desc: "Upload a photo or screenshot and we read the signal.",
+    desc: "Open the scan flow and review its choices before you submit anything.",
     href: "/scan",
     cta: "Open Photo Scan",
-    points: 15,
   },
   {
     icon: Download,
     title: "Import your Hinge export",
-    desc: "Bring your match and message history in one file.",
+    desc: "Choose storage, Echo, confirmed learning, and matching permissions separately.",
     href: "/imports",
     cta: "Open Imports",
-    points: 30,
   },
   {
     icon: MessageCircle,
     title: "Coach a real conversation",
-    desc: "Paste a chat and get reply options that sound like you.",
+    desc: "Get help with a conversation without turning it into a matching signal.",
     href: "/coach",
     cta: "Open Message Coach",
-    points: 10,
   },
   {
     icon: Plug,
-    title: "See every data source",
-    desc: "The Connection Center shows what each source adds and never touches.",
+    title: "Review sources and permissions",
+    desc: "See what is stored and change each allowed use whenever you need to.",
     href: "/connections",
-    cta: "Open Connection Center",
-    points: 0,
+    cta: "Open Connections",
+  },
+];
+
+const CONSENT_CHOICES = [
+  {
+    icon: Database,
+    title: "Stored",
+    detail: "Whether MatchLab keeps the source at all.",
+  },
+  {
+    icon: Brain,
+    title: "Echo use",
+    detail: "Whether Echo may use the source while helping you.",
+  },
+  {
+    icon: Check,
+    title: "Confirmed learning",
+    detail: "What you choose to add to My MatchLab.",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Matching use",
+    detail: "Whether confirmed information may help with introductions.",
   },
 ];
 
@@ -111,79 +130,10 @@ const fadeStep = {
   transition: { duration: 0.4, ease: [0.25, 1, 0.5, 1] as [number, number, number, number] },
 };
 
-function AnimatedMeter({ score, label, previousScore }: { score: number, label: string, previousScore?: number | null }) {
-  const [displayScore, setDisplayScore] = useState(previousScore ?? 0);
-  
-  useEffect(() => {
-    let startTime: number;
-    const duration = 1500;
-    const startValue = previousScore ?? 0;
-    
-    function update(time: number) {
-      if (!startTime) startTime = time;
-      const progress = Math.min((time - startTime) / duration, 1);
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      setDisplayScore(startValue + (score - startValue) * easeOutQuart);
-      
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      }
-    }
-    requestAnimationFrame(update);
-  }, [score, previousScore]);
-
-  const percentage = Math.max(0, Math.min(100, displayScore));
-  
-  return (
-    <div className="bg-background/80 border border-border/50 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(248_62%_52%/0.03)] to-[hsl(326_100%_59%/0.03)] pointer-events-none" />
-      <div className="flex items-end justify-between mb-4 relative z-10">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5" />
-            {label}
-          </p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-4xl font-bold font-serif tabular-nums text-foreground tracking-tight">
-              {Math.round(displayScore)}
-            </span>
-            <span className="text-muted-foreground font-semibold">/ 100</span>
-          </div>
-        </div>
-        {previousScore !== null && previousScore !== undefined && score > previousScore && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.5, type: "spring" }}
-            className="bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_45%)] dark:text-[hsl(142_55%_60%)] px-3 py-1.5 rounded-xl font-bold text-sm flex items-center gap-1"
-          >
-            <TrendingUp className="w-4 h-4" />
-            +{Math.round(score - previousScore)} pts
-          </motion.div>
-        )}
-      </div>
-      
-      <div className="h-4 w-full bg-secondary/80 rounded-full overflow-hidden relative z-10 p-0.5">
-        <motion.div
-          className="h-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)] rounded-full relative"
-          style={{ width: `${percentage}%` }}
-        >
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] translate-x-[-100%] animate-[shimmer_2s_infinite]" />
-        </motion.div>
-      </div>
-      <div className="flex justify-between mt-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest relative z-10">
-        <span>Cold Start</span>
-        <span>Match Ready</span>
-      </div>
-    </div>
-  );
-}
-
-
 export default function Onboarding() {
   useMeta(
     "Meet Echo",
-    "A two-minute hello. Tell Echo your goal, share a few words about yourself, connect a source, and start your Match Readiness climb.",
+    "A short, consent-first hello. Tell Echo what brings you here, share only what feels useful, and choose every downstream use separately.",
   );
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -196,11 +146,8 @@ export default function Onboarding() {
   const [seeking, setSeeking] = useState<string[]>(() => readOnboardingSeeking());
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const [readinessBefore, setReadinessBefore] = useState<number | null>(null);
 
   const createAnswer = useCreateWellnessAnswer();
-  const matchingState = useGetMatchingState();
-  const readiness = matchingState.data?.readiness?.score ?? 0;
 
   const portraitQuery = useGetMirrorPortrait({
     query: {
@@ -251,33 +198,21 @@ export default function Onboarding() {
   }
 
   async function saveBaseline() {
-    const entries = Object.entries(answers).filter(([, v]) => v.trim().length > 0);
-    if (entries.length === 0) {
+    const starterAnswers = buildOnboardingStarterAnswers(answers);
+    if (starterAnswers.length === 0) {
       setStep(2);
       return;
     }
     setSaving(true);
-    setReadinessBefore(readiness);
     try {
-      for (const [questionId, answer] of entries) {
-        const q = STARTER_MODULE.find((sq) => sq.id === questionId);
-        if (!q) continue;
-        await createAnswer.mutateAsync({
-          data: {
-            questionId,
-            dimension: q.dimension,
-            category: q.category,
-            questionText: q.text,
-            answer: answer.trim(),
-          },
-        });
+      for (const answer of starterAnswers) {
+        await createAnswer.mutateAsync({ data: answer });
       }
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: getListWellnessAnswersQueryKey() }),
-        queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getGetAccountSummaryQueryKey() }),
       ]);
-      trackEvent("onboarding_baseline_saved", { count: entries.length });
+      trackEvent("onboarding_baseline_saved", { count: starterAnswers.length });
       setStep(2);
     } catch {
       toast({
@@ -336,7 +271,7 @@ export default function Onboarding() {
               />
             </div>
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
-              <span className="text-[hsl(248_62%_52%)]">{progress}%</span> Ready
+              Step <span className="text-[hsl(248_62%_52%)]">{step + 1}</span> of {totalSteps}
             </p>
           </div>
         </div>
@@ -358,7 +293,7 @@ export default function Onboarding() {
                     {firstName ? `Hey ${firstName}, I'm Echo.` : "Hi, I'm Echo."}
                   </h1>
                   <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
-                    I'm the friend who gets to know you, helps you get genuinely ready, and walks you toward the person you would never have found on your own. The more you share with me, the better I get at it.
+                    I'm here to get to know you, help you understand what you want, and stay with you through what happens next. Share only what feels useful. You remain in control of what I can use.
                   </p>
                 </div>
 
@@ -457,7 +392,7 @@ export default function Onboarding() {
                     className="h-14 px-8 rounded-full text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                     data-testid="onboarding-next-0"
                   >
-                    Start the Climb <ArrowRight className="ml-2 h-5 w-5" />
+                    Let Echo get to know me <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </motion.div>
@@ -474,8 +409,16 @@ export default function Onboarding() {
                   </p>
                 </div>
                 
-                <div className="mb-10">
-                  <AnimatedMeter score={readiness} label="Where you are now" />
+                <div className="mb-10 rounded-3xl border border-[hsl(248_62%_52%/0.2)] bg-[hsl(248_62%_52%/0.06)] p-5">
+                  <p className="flex items-center gap-2 font-bold text-foreground">
+                    <ShieldCheck className="h-5 w-5 text-[hsl(248_62%_52%)]" />
+                    Saved for coaching only
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    These answers help Echo respond to you. They do not become matching
+                    signals, research data, or confirmed My MatchLab learning unless
+                    you make those separate choices later.
+                  </p>
                 </div>
 
                 <div className="space-y-6 mb-10">
@@ -535,19 +478,35 @@ export default function Onboarding() {
               <motion.div key="step2" {...fadeStep} className="max-w-2xl mx-auto w-full">
                 <div className="mb-8">
                   <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight mb-4">
-                    Momentum Unlocked
+                    You choose what comes next
                   </h1>
                   <p className="text-lg text-muted-foreground leading-relaxed">
-                    Every source you connect helps Echo know you better and opens up new features. Pick one to try now, or do it later. You control your data.
+                    You can add a source now or wait. Opening a source does not grant every use. MatchLab asks separately before storing it, letting Echo use it, confirming a learning, or using it for matching.
                   </p>
                 </div>
                 
-                <div className="mb-10">
-                  <AnimatedMeter score={readiness} label="Readiness after your first answers" previousScore={readinessBefore} />
+                <div className="mb-10 grid gap-3 sm:grid-cols-2">
+                  {CONSENT_CHOICES.map((choice) => {
+                    const ChoiceIcon = choice.icon;
+                    return (
+                      <div
+                        key={choice.title}
+                        className="rounded-2xl border border-border/60 bg-background/60 p-4"
+                      >
+                        <span className="flex items-center gap-2 font-bold text-foreground">
+                          <ChoiceIcon className="h-4 w-4 text-[hsl(248_62%_52%)]" />
+                          {choice.title}
+                        </span>
+                        <p className="mt-1.5 text-sm leading-5 text-muted-foreground">
+                          {choice.detail}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="grid gap-4 mb-10">
-                  {SOURCES.map((s, i) => {
+                  {SOURCES.map((s) => {
                     const Icon = s.icon;
                     return (
                       <button
@@ -567,11 +526,6 @@ export default function Onboarding() {
                           </div>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-border/50">
-                          {s.points > 0 && (
-                            <div className="flex items-center gap-1.5 bg-[hsl(38_90%_50%/0.15)] text-[hsl(38_90%_40%)] dark:text-[hsl(38_90%_60%)] px-3 py-1.5 rounded-xl text-xs font-bold">
-                              <Zap className="w-3.5 h-3.5" /> +{s.points} pts
-                            </div>
-                          )}
                           <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-[hsl(248_62%_52%)] group-hover:text-white transition-colors">
                             <ArrowRight className="h-4 w-4" />
                           </div>
@@ -596,7 +550,7 @@ export default function Onboarding() {
                     className="h-14 px-8 rounded-full text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                     data-testid="onboarding-next-2"
                   >
-                    Continue to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                    See Echo's first reflection <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </motion.div>
@@ -608,10 +562,10 @@ export default function Onboarding() {
                   <Sparkles className="h-12 w-12 text-white animate-pulse" />
                 </div>
                 <h1 className="font-serif text-4xl font-bold leading-tight md:text-5xl tracking-tight mb-4">
-                  Here's my first read on you
+                  Here's a first reflection
                 </h1>
                 <p className="mx-auto mt-4 max-w-lg text-lg text-muted-foreground leading-relaxed">
-                  This is what Echo can see so far, built entirely from what you just shared. It gets sharper with every move you make.
+                  This is a draft reflection built only from what you shared. It can help the conversation, but it is not confirmed learning until you choose to keep it in My MatchLab.
                 </p>
 
                 {portraitQuery.isLoading ? (
@@ -633,9 +587,6 @@ export default function Onboarding() {
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(248_62%_52%)] px-4 py-1.5 text-xs font-bold text-white shadow-sm">
                         <Eye className="h-3.5 w-3.5" /> {portrait.stageLabel}
                       </span>
-                      <span className="rounded-full border-2 border-foreground/10 bg-background/80 px-4 py-1.5 text-xs font-bold text-muted-foreground">
-                        {portrait.coveragePercent}% of you mapped
-                      </span>
                     </div>
                     <p
                       className="mt-6 font-serif text-2xl md:text-3xl font-bold leading-snug text-foreground relative z-10"
@@ -646,7 +597,7 @@ export default function Onboarding() {
                     {portrait.nextSignal && (
                       <div className="mt-8 rounded-2xl border border-[hsl(326_100%_59%/0.2)] bg-background/80 p-5 relative z-10">
                         <p className="text-xs font-bold uppercase tracking-widest text-[hsl(326_100%_59%)] flex items-center gap-2">
-                          <Zap className="w-3.5 h-3.5" /> Your Best Next Move
+                          <Sparkles className="w-3.5 h-3.5" /> A gentle next step
                         </p>
                         <p className="mt-2 text-lg font-bold text-foreground">{portrait.nextSignal.label}</p>
                         <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
@@ -664,7 +615,7 @@ export default function Onboarding() {
                     className="h-16 px-10 rounded-full text-lg font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
                     data-testid="onboarding-finish"
                   >
-                    Enter Your Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                    Go to Today <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </motion.div>
