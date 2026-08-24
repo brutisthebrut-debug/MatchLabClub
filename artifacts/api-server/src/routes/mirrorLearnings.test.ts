@@ -215,4 +215,27 @@ describe("Mirror learning lifecycle", () => {
     });
     expect(response.body.observation).toMatch(/communicates openly/i);
   });
+
+  it("derives a review proposal from a saved Connection Style source", async () => {
+    const { db, communicationRecordsTable } = await import("../lib/testDb");
+    testApp.setUser({ id: "learning-style" });
+    await db.insert(communicationRecordsTable).values({
+      userId: "learning-style",
+      lens: "connection_style",
+      input: { answers: [0, 1, 2, 3, 0, 1] },
+      result: { name: "Secure Builder", activationPattern: "You invest steadily when interest is mutual." },
+      generatedBy: "deterministic",
+      confidence: 100,
+    });
+    const response = await request(testApp.app)
+      .post("/api/me/mirror-learnings/communication")
+      .send({ source: "connection_style" });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      status: "proposed",
+      matchingUseApproved: false,
+      source: { ref: "connection-style", type: "relationship_language" },
+    });
+    expect(response.body.proposedLearning).toMatch(/Secure Builder/);
+  });
 });
