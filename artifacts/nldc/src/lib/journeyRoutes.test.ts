@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GUIDED_DEBRIEF_HREF, shouldOpenGuidedDebrief } from "./journeyRoutes";
+import { datesCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, readJourneyRouteState, shouldOpenGuidedDebrief } from "./journeyRoutes";
 
 describe("Journey compatibility routes", () => {
   it("keeps the old guided debrief entry pointed at Journey", () => {
@@ -10,5 +10,15 @@ describe("Journey compatibility routes", () => {
   it("recognizes routers that expose the query through window.search", () => {
     expect(shouldOpenGuidedDebrief("/journey", "?capture=guided-date")).toBe(true);
     expect(shouldOpenGuidedDebrief("/journey", "")).toBe(false);
+  });
+
+  it("preserves journal and date list state through compatibility redirects", () => {
+    expect(journalCompatibilityHref("/mirror/journal?view=trash&q=boundaries")).toBe("/journey?kind=reflection&view=trash&q=boundaries");
+    expect(datesCompatibilityHref("/mirror/dates", "?q=coffee&note=42")).toBe("/journey?kind=date&q=coffee&date=42");
+  });
+
+  it("reopens exact durable source ids and rejects invalid ids", () => {
+    expect(readJourneyRouteState("/journey?reflection=12").source).toEqual({ type: "journal_entry", id: 12 });
+    expect(readJourneyRouteState("/journey?date=-2").source).toBeNull();
   });
 });
