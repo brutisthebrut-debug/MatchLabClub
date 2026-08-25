@@ -4766,6 +4766,49 @@ paths:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
   /me/dating-wins/{id}:
+    patch:
+      tags: [Matching]
+      operationId: updateDatingWin
+      summary: Update one of the signed-in user's dating wins
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatingWinInput'
+      responses:
+        '200':
+          description: Updated dating win.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatingWin'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Not found or not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
     delete:
       tags: [Matching]
       operationId: deleteDatingWin
@@ -4781,6 +4824,39 @@ paths:
       responses:
         '204':
           description: Deleted.
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Not found or not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/dating-wins/{id}/restore:
+    post:
+      tags: [Matching]
+      operationId: restoreDatingWin
+      summary: Restore a removed dating win
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Restored dating win.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatingWin'
         '401':
           description: Not authenticated.
           content:
