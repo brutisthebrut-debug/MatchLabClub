@@ -27,6 +27,8 @@ export default function Play() {
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
 
+  // Account history is authoritative after sign-in; device storage is only an
+  // anonymous continuity fallback and never substitutes for a failed API read.
   useEffect(() => {
     setLocalResults(readQuizResults());
     if (typeof window !== "undefined" && shouldFocusQuizCatalog("/play", window.location.search)) {
