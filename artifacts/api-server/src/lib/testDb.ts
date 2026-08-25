@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+
 /**
  * In-memory fake of `@workspace/db` and the `drizzle-orm` operators used by
  * the route layer. Lets the supertest-based route tests exercise the real
@@ -410,6 +412,13 @@ ensureStore("post_date_notes");
 export const postDateNotesTable = makeTable("post_date_notes");
 ensureStore("dating_wins");
 export const datingWinsTable = makeTable("dating_wins");
+export const journeyExperimentsTable = makeTable("journey_experiments");
+export const insertJourneyExperimentSchema = z.object({
+  title: z.string().trim().min(1).max(500),
+  description: z.string().trim().max(5000),
+  status: z.enum(["planned", "tried", "helped", "did-not-help"]),
+  result: z.string().trim().max(5000),
+});
 ensureStore("behavioral_growth_events");
 export const behavioralGrowthEventsTable = makeTable(
   "behavioral_growth_events",
