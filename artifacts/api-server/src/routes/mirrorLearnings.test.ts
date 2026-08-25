@@ -76,6 +76,7 @@ describe("Mirror learning lifecycle", () => {
     testApp.setUser(null);
     expect((await request(testApp.app).get("/api/me/mirror-learnings")).status).toBe(401);
     expect((await request(testApp.app).post("/api/me/mirror-learnings/sync")).status).toBe(401);
+    expect((await request(testApp.app).get("/api/me/mirror-trends")).status).toBe(401);
   });
 
   it("turns a real portrait theme into an owner-scoped proposal", async () => {
@@ -96,6 +97,7 @@ describe("Mirror learning lifecycle", () => {
   });
 
   it("keeps confirmation and matching use as separate decisions", async () => {
+    const { db, mirrorLearningEventsTable } = await import("../lib/testDb");
     testApp.setUser({ id: "learning-confirm" });
     const sync = await request(testApp.app).post("/api/me/mirror-learnings/sync");
     const id = sync.body.learnings[0].id;
@@ -115,6 +117,87 @@ describe("Mirror learning lifecycle", () => {
       .patch(`/api/me/mirror-learnings/${id}`)
       .send({ action: "set_matching", approved: true });
     expect(approved.body.matchingUseApproved).toBe(true);
+
+    const events = await db.select().from(mirrorLearningEventsTable);
+    expect(events.map((event) => event.action)).toEqual([
+      "proposed",
+      "confirm",
+      "matching_approved",
+    ]);
+  });
+
+  it("reports provenance, uncertainty, possible tensions, and owner-scoped history", async () => {
+    const { db, mirrorLearningsTable, mirrorLearningEventsTable } = await import("../lib/testDb");
+    testApp.setUser({ id: "learning-trends" });
+    await db.insert(mirrorLearningsTable).values([
+      {
+        userId: "learning-trends",
+        sourceType: "relationship_language",
+        sourceRef: "connection-style",
+        sourceLabel: "Connection Style",
+        observation: "Saved assessment",
+        proposedLearning: "I move fast and invest when interest feels mutual.",
+        status: "proposed",
+        confidence: 62,
+        matchingUseApproved: false,
+      },
+      {
+        userId: "learning-trends",
+        sourceType: "relationship_language",
+        sourceRef: "personal-blueprint",
+        sourceLabel: "Personal Blueprint",
+        observation: "Saved assessment",
+        proposedLearning: "I stay cautious and hold back until trust is established.",
+        memberLearning: "I stay cautious and hold back until trust is established.",
+        status: "confirmed",
+        confidence: 88,
+        matchingUseApproved: false,
+      },
+      {
+        userId: "somebody-else",
+        sourceType: "mirror_portrait",
+        sourceRef: "private",
+        sourceLabel: "Private source",
+        observation: "Other member",
+        proposedLearning: "This must never cross account boundaries.",
+        status: "confirmed",
+        confidence: 100,
+        matchingUseApproved: false,
+      },
+    ]);
+    const ownRows = await db.select().from(mirrorLearningsTable);
+    const ownLearning = ownRows.find((row) => row.userId === "learning-trends");
+    await db.insert(mirrorLearningEventsTable).values({
+      userId: "learning-trends",
+      learningId: ownLearning!.id,
+      action: "proposed",
+      sourceType: ownLearning!.sourceType,
+      sourceRef: ownLearning!.sourceRef,
+      sourceLabel: ownLearning!.sourceLabel,
+      priorStatus: null,
+      newStatus: "proposed",
+      priorText: null,
+      newText: ownLearning!.proposedLearning,
+      confidence: ownLearning!.confidence,
+      matchingUseApproved: false,
+    });
+
+    const response = await request(testApp.app).get("/api/me/mirror-trends");
+    expect(response.status).toBe(200);
+    expect(response.body.summary).toMatchObject({ confirmed: 1, inReview: 1, dismissed: 0 });
+    expect(response.body.sources).toHaveLength(2);
+    expect(response.body.sources[0].source).toEqual(expect.objectContaining({ type: "relationship_language" }));
+    expect(response.body.uncertainties).toEqual([
+      expect.objectContaining({ sourceLabel: "Connection Style", confidence: 62 }),
+    ]);
+    expect(response.body.contradictions).toEqual([
+      expect.objectContaining({ label: "Pace and protection" }),
+    ]);
+    expect(response.body.changes).toEqual([
+      expect.objectContaining({ action: "proposed", source: expect.objectContaining({ label: "Connection Style" }) }),
+    ]);
+    expect(JSON.stringify(response.body)).not.toContain("somebody-else");
+    expect(JSON.stringify(response.body)).not.toContain("Private source");
   });
 
   it("returns a correction to proposed and pauses active candidacy", async () => {

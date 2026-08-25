@@ -36,6 +36,7 @@ import {
   matchingNudgeStateTable,
   mirrorDigestPrefsTable,
   mirrorLearningsTable,
+  mirrorLearningEventsTable,
   communicationRecordsTable,
   companionStateTable,
   companionMessagesTable,
@@ -342,6 +343,7 @@ async function buildExportPayload(userId: string) {
     matchingNudgeState,
     mirrorDigestPrefs,
     mirrorLearnings,
+    mirrorLearningEvents,
     communicationRecords,
     journeyEvents,
     wyrAnswers,
@@ -387,6 +389,7 @@ async function buildExportPayload(userId: string) {
     db.select().from(matchingNudgeStateTable).where(eq(matchingNudgeStateTable.userId, userId)),
     db.select().from(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
     db.select().from(mirrorLearningsTable).where(eq(mirrorLearningsTable.userId, userId)),
+    db.select().from(mirrorLearningEventsTable).where(eq(mirrorLearningEventsTable.userId, userId)),
     db.select().from(communicationRecordsTable).where(eq(communicationRecordsTable.userId, userId)),
     db.select().from(journeyEventsTable).where(eq(journeyEventsTable.userId, userId)),
     db.select().from(wyrAnswersTable).where(eq(wyrAnswersTable.userId, userId)),
@@ -520,6 +523,7 @@ async function buildExportPayload(userId: string) {
       matchingNudgeState,
       mirrorDigestPrefs,
       mirrorLearnings,
+      mirrorLearningEvents,
       communicationRecords,
       journeyEvents,
       wyrAnswers,
@@ -903,6 +907,7 @@ router.delete("/account", async (req, res): Promise<void> => {
     db.delete(userVerificationsTable).where(eq(userVerificationsTable.userId, userId)),
     db.delete(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
     db.delete(mirrorLearningsTable).where(eq(mirrorLearningsTable.userId, userId)),
+    db.delete(mirrorLearningEventsTable).where(eq(mirrorLearningEventsTable.userId, userId)),
   ]);
 
   // Echo companion surfaces: the evolving model of the user, the conversation
@@ -1621,6 +1626,12 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(mirrorLearningsTable.userId, userId))
         .returning({ id: mirrorLearningsTable.id });
       tables["mirror_learnings"] = mirrorLearningsDel.length;
+
+      const mirrorLearningEventsDel = await tx
+        .delete(mirrorLearningEventsTable)
+        .where(eq(mirrorLearningEventsTable.userId, userId))
+        .returning({ id: mirrorLearningEventsTable.id });
+      tables["mirror_learning_events"] = mirrorLearningEventsDel.length;
 
       const communicationRecordsDel = await tx
         .delete(communicationRecordsTable)

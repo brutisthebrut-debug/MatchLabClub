@@ -26,6 +26,7 @@ import {
 import { Link } from "wouter";
 import { MirrorLearningReview } from "@/components/mirror/MirrorLearningReview";
 import { CommunicationRecord } from "@/components/mirror/CommunicationRecord";
+import { MirrorTrends } from "@/components/mirror/MirrorTrends";
 
 export default function MyMatchLab() {
   useMeta(
@@ -207,6 +208,8 @@ export default function MyMatchLab() {
               </section>
 
               <MirrorLearningReview canSync={Boolean(portrait)} />
+
+              <MirrorTrends />
 
               <CommunicationRecord />
 

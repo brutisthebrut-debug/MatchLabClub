@@ -69,7 +69,6 @@ const HelpMeReply = lazy(() => import("@/pages/copilot/HelpMeReply"));
 const DebriefWhatHappened = lazy(() => import("@/pages/copilot/DebriefWhatHappened"));
 const WeeklyGrowthPlan = lazy(() => import("@/pages/copilot/WeeklyGrowthPlan"));
 const PrepareForDate = lazy(() => import("@/pages/copilot/PrepareForDate"));
-const FounderDemoJourney = lazy(() => import("@/pages/copilot/FounderDemoJourney"));
 const FlirtCoach = lazy(() => import("@/pages/copilot/FlirtCoach"));
 const Account = lazy(() => import("@/pages/Account"));
 const Sessions = lazy(() => import("@/pages/Sessions"));
@@ -301,7 +300,6 @@ function Router() {
         <Route path="/copilot/debrief" component={DebriefWhatHappened} />
         <Route path="/copilot/weekly-plan" component={WeeklyGrowthPlan} />
         <Route path="/copilot/prep" component={PrepareForDate} />
-        <Route path="/copilot/demo" component={FounderDemoJourney} />
         <Route path="/copilot/flirt" component={FlirtCoach} />
         <Route path="/me" component={SelfHub} />
         <Route path="/onboarding" component={Onboarding} />

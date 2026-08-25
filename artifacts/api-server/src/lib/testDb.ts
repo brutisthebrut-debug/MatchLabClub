@@ -345,6 +345,8 @@ Object.assign(stores.mirror_learnings.defaults, {
   dismissedAt: null,
 });
 export const mirrorLearningsTable = makeTable("mirror_learnings");
+ensureStore("mirror_learning_events");
+export const mirrorLearningEventsTable = makeTable("mirror_learning_events");
 ensureStore("communication_records");
 export const communicationRecordsTable = makeTable("communication_records");
 ensureStore("match_pool_membership");

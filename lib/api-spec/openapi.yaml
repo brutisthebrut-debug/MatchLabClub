@@ -5424,6 +5424,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/mirror-trends:
+    get:
+      tags: [Matching]
+      operationId: getMemberMirrorTrends
+      summary: Show source-backed Mirror learnings and their member-governed history
+      description: |
+        Returns the signed-in member's current learning sources, unresolved
+        uncertainty, possible contextual tensions, and append-only lifecycle
+        changes. This report preserves provenance and does not calculate a
+        readiness or human-worth score. Matching-use approval remains a
+        separate member decision.
+      responses:
+        '200':
+          description: The member's source-backed Mirror change report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberMirrorTrendReport'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/mirror-learnings:
     get:
       tags: [Matching]
@@ -13297,6 +13322,147 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MirrorLearning'
+
+    MemberMirrorTrendSource:
+      type: object
+      required: [learningId, source, text, status, confidence, matchingUseApproved, updatedAt]
+      properties:
+        learningId:
+          type: integer
+        source:
+          $ref: '#/components/schemas/MirrorLearningSource'
+        text:
+          type: string
+        status:
+          type: string
+          enum: [proposed, confirmed]
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        matchingUseApproved:
+          type: boolean
+        updatedAt:
+          type: string
+          nullable: true
+
+    MemberMirrorTrendUncertainty:
+      type: object
+      required: [learningId, sourceLabel, confidence, reason]
+      properties:
+        learningId:
+          type: integer
+        sourceLabel:
+          type: string
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        reason:
+          type: string
+
+    MemberMirrorTrendTensionSide:
+      type: object
+      required: [learningId, sourceLabel, text]
+      properties:
+        learningId:
+          type: integer
+        sourceLabel:
+          type: string
+        text:
+          type: string
+
+    MemberMirrorTrendTension:
+      type: object
+      required: [label, left, right]
+      properties:
+        label:
+          type: string
+        left:
+          $ref: '#/components/schemas/MemberMirrorTrendTensionSide'
+        right:
+          $ref: '#/components/schemas/MemberMirrorTrendTensionSide'
+
+    MirrorLearningEvent:
+      type: object
+      required:
+        - id
+        - learningId
+        - action
+        - source
+        - priorStatus
+        - newStatus
+        - priorText
+        - newText
+        - confidence
+        - matchingUseApproved
+        - createdAt
+      properties:
+        id:
+          type: integer
+        learningId:
+          type: integer
+          nullable: true
+        action:
+          type: string
+          enum: [proposed, source_refreshed, confirm, revise, dismiss, unconfirm, matching_approved, matching_revoked, source_removed]
+        source:
+          $ref: '#/components/schemas/MirrorLearningSource'
+        priorStatus:
+          type: string
+          nullable: true
+        newStatus:
+          type: string
+          nullable: true
+        priorText:
+          type: string
+          nullable: true
+        newText:
+          type: string
+          nullable: true
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        matchingUseApproved:
+          type: boolean
+        createdAt:
+          type: string
+          nullable: true
+
+    MemberMirrorTrendReport:
+      type: object
+      required: [summary, sources, uncertainties, contradictions, changes]
+      properties:
+        summary:
+          type: object
+          required: [confirmed, inReview, dismissed, headline]
+          properties:
+            confirmed:
+              type: integer
+            inReview:
+              type: integer
+            dismissed:
+              type: integer
+            headline:
+              type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberMirrorTrendSource'
+        uncertainties:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberMirrorTrendUncertainty'
+        contradictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberMirrorTrendTension'
+        changes:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/MirrorLearningEvent'
 
     MirrorLearningDecision:
       oneOf:
