@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, postDateNotesTable } from "@workspace/db";
+import { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, postDateNotesTable } from "@workspace/db";
 import { summarizeUserJourney } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
@@ -20,7 +20,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [journalEntries, dateNotes, wins, experiments] = await Promise.all([
+  const [journalEntries, dateNotes, wins, experiments, followUps] = await Promise.all([
     db.select().from(journalEntriesTable).where(and(
       eq(journalEntriesTable.userId, userId),
       requestedView === "trash" ? isNotNull(journalEntriesTable.deletedAt) : isNull(journalEntriesTable.deletedAt),
@@ -37,6 +37,10 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       eq(journeyExperimentsTable.userId, userId),
       requestedView === "trash" ? isNotNull(journeyExperimentsTable.deletedAt) : isNull(journeyExperimentsTable.deletedAt),
     )).orderBy(desc(journeyExperimentsTable.createdAt)),
+    db.select().from(journeyFollowUpsTable).where(and(
+      eq(journeyFollowUpsTable.userId, userId),
+      requestedView === "trash" ? isNotNull(journeyFollowUpsTable.deletedAt) : isNull(journeyFollowUpsTable.deletedAt),
+    )).orderBy(desc(journeyFollowUpsTable.createdAt)),
   ]);
 
   const records = [
@@ -100,6 +104,21 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       updatedAt: iso(experiment.updatedAt),
       href: `/journey?experiment=${experiment.id}`,
     })),
+    ...followUps.map((followUp) => ({
+      id: `follow-up:${followUp.id}`,
+      kind: "follow-up" as const,
+      source: { type: "journey_follow_up" as const, id: followUp.id, label: "Follow-up" },
+      title: followUp.question,
+      body: followUp.answer,
+      details: {
+        status: followUp.status,
+        answeredAt: followUp.answeredAt ? iso(followUp.answeredAt) : null,
+        linkedSource: { type: followUp.sourceType, id: followUp.sourceId, label: followUp.sourceLabel },
+      },
+      occurredAt: iso(followUp.answeredAt ?? followUp.createdAt),
+      updatedAt: iso(followUp.updatedAt),
+      href: `/journey?followUp=${followUp.id}`,
+    })),
   ].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
 
   res.json({
@@ -109,6 +128,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       dates: dateNotes.length,
       wins: wins.length,
       experiments: experiments.length,
+      followUps: followUps.length,
       headline: requestedView === "trash"
         ? (records.length === 0 ? "Nothing is waiting to be restored." : `${records.length} removed moment${records.length === 1 ? "" : "s"} can still be restored.`)
         : (records.length === 0
