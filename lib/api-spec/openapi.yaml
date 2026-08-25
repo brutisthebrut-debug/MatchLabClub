@@ -676,6 +676,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/quiz-results:
+    get:
+      tags: [Auth]
+      operationId: getMyQuizResults
+      summary: List the signed-in member's durable derived quiz results
+      description: |
+        Returns active quiz result rows owned by the caller. Results contain
+        only the server-scored archetype and dimensions plus independent
+        learning/Echo/matching permission state. Raw answer indexes are never
+        stored and therefore cannot be returned.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Owner-scoped durable quiz results.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results]
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DurableQuizResult'
+        '401':
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/care-dialect:
     get:
       tags: [Auth]
@@ -11203,6 +11236,33 @@ components:
         status:
           type: string
           const: complete
+        uploadedAt:
+          type: string
+
+    DurableQuizResult:
+      type: object
+      required: [id, slug, archetypeKey, archetypeName, dimensions, learningConfirmed, echoUseAllowed, matchingUseAllowed, takenAt, uploadedAt]
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        archetypeKey:
+          type: string
+        archetypeName:
+          type: string
+        dimensions:
+          type: array
+          items:
+            type: string
+        learningConfirmed:
+          type: boolean
+        echoUseAllowed:
+          type: boolean
+        matchingUseAllowed:
+          type: boolean
+        takenAt:
+          type: string
         uploadedAt:
           type: string
           format: date-time
