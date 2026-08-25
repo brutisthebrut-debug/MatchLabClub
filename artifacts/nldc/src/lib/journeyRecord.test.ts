@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getJourneyRecord, removeJourneyItem, restoreJourneyItem, saveDateDebrief, saveReflection, saveWin, type JourneyRecordItem } from "./journeyRecord";
+import { getJourneyRecord, removeJourneyItem, restoreJourneyItem, saveDateDebrief, saveExperiment, saveReflection, saveWin, type JourneyRecordItem } from "./journeyRecord";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -55,6 +55,16 @@ describe("Journey record client", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/me/dating-wins/9", expect.objectContaining({ method: "PATCH", body: JSON.stringify(input) }));
   });
 
+  it("creates and edits experiments through the durable Journey API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 10 }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const input = { title: "Ask directly", description: "Try it once.", status: "planned" as const, result: "" };
+    await saveExperiment(input);
+    await saveExperiment({ ...input, status: "tried", result: "It felt clearer." }, 10);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/me/journey/experiments", expect.objectContaining({ method: "POST", body: JSON.stringify(input) }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/me/journey/experiments/10", expect.objectContaining({ method: "PATCH" }));
+  });
+
   it("surfaces mutation errors instead of pretending a save worked", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Entry not found" }) }));
     await expect(saveReflection({ prompt: null, body: "Still here", tags: [], mood: null }, 99)).rejects.toThrow("Entry not found");
@@ -78,5 +88,15 @@ describe("Journey record client", () => {
     await restoreJourneyItem(item);
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/me/dating-wins/14", { method: "DELETE", credentials: "include" });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/me/dating-wins/14/restore", { method: "POST", credentials: "include" });
+  });
+
+  it("targets the experiment source for remove and restore", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const item = { source: { type: "journey_experiment", id: 18, label: "Experiment" } } as JourneyRecordItem;
+    await removeJourneyItem(item);
+    await restoreJourneyItem(item);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/me/journey/experiments/18", { method: "DELETE", credentials: "include" });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/me/journey/experiments/18/restore", { method: "POST", credentials: "include" });
   });
 });

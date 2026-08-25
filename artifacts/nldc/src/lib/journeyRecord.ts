@@ -1,9 +1,9 @@
-export type JourneyRecordKind = "reflection" | "date" | "win";
+export type JourneyRecordKind = "reflection" | "date" | "win" | "experiment";
 
 export interface JourneyRecordItem {
   id: string;
   kind: JourneyRecordKind;
-  source: { type: "journal_entry" | "post_date_note" | "dating_win"; id: number; label: string };
+  source: { type: "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment"; id: number; label: string };
   title: string;
   body: string;
   details: Record<string, unknown>;
@@ -13,7 +13,7 @@ export interface JourneyRecordItem {
 }
 
 export interface JourneyRecordResponse {
-  summary: { total: number; reflections: number; dates: number; wins: number; headline: string };
+  summary: { total: number; reflections: number; dates: number; wins: number; experiments: number; headline: string };
   records: JourneyRecordItem[];
 }
 
@@ -42,6 +42,15 @@ export type WinCategory = "sent-it" | "great-convo" | "got-a-date" | "noticed-so
 export interface WinInput {
   category: WinCategory;
   body: string;
+}
+
+export type ExperimentStatus = "planned" | "tried" | "helped" | "did-not-help";
+
+export interface ExperimentInput {
+  title: string;
+  description: string;
+  status: ExperimentStatus;
+  result: string;
 }
 
 async function request<T>(url: string, method: "POST" | "PATCH" | "DELETE", payload?: unknown): Promise<T> {
@@ -84,10 +93,15 @@ export async function saveWin(input: WinInput, id?: number): Promise<{ id: numbe
   return request<{ id: number }>(id ? `/api/me/dating-wins/${id}` : "/api/me/dating-wins", id ? "PATCH" : "POST", input);
 }
 
+export async function saveExperiment(input: ExperimentInput, id?: number): Promise<{ id: number }> {
+  return request<{ id: number }>(id ? `/api/me/journey/experiments/${id}` : "/api/me/journey/experiments", id ? "PATCH" : "POST", input);
+}
+
 function sourcePath(item: JourneyRecordItem): string {
   if (item.source.type === "journal_entry") return `/api/journal/${item.source.id}`;
   if (item.source.type === "post_date_note") return `/api/post-date-notes/${item.source.id}`;
-  return `/api/me/dating-wins/${item.source.id}`;
+  if (item.source.type === "dating_win") return `/api/me/dating-wins/${item.source.id}`;
+  return `/api/me/journey/experiments/${item.source.id}`;
 }
 
 export async function removeJourneyItem(item: JourneyRecordItem): Promise<unknown> {

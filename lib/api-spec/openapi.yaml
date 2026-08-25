@@ -4458,7 +4458,8 @@ paths:
       operationId: getMyJourneyRecord
       summary: Get the signed-in member's canonical saved Journey record
       description: |
-        Combines the caller's journal reflections and post-date notes into one
+        Combines the caller's journal reflections, post-date notes, wins, and
+        experiments into one
         chronological, source-backed record. Active records are returned by
         default; `view=trash` returns only recoverable soft-deleted records.
         Raw member content is returned only to its owner and other members'
@@ -4488,6 +4489,136 @@ paths:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
         '400':
           description: Invalid Journey view.
+
+  /me/journey/experiments:
+    get:
+      tags: [Matching]
+      operationId: getJourneyExperiments
+      summary: List the signed-in member's Journey experiments
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: view
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, trash]
+            default: active
+      responses:
+        '200':
+          description: Owner-scoped experiment records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JourneyExperiment'
+        '400':
+          description: Invalid view.
+        '401':
+          description: Not authenticated.
+    post:
+      tags: [Matching]
+      operationId: createJourneyExperiment
+      summary: Create a durable Journey experiment
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JourneyExperimentInput'
+      responses:
+        '201':
+          description: Created experiment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyExperiment'
+        '400':
+          description: Invalid experiment.
+        '401':
+          description: Not authenticated.
+
+  /me/journey/experiments/{id}:
+    patch:
+      tags: [Matching]
+      operationId: updateJourneyExperiment
+      summary: Update the member's original Journey experiment
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JourneyExperimentInput'
+      responses:
+        '200':
+          description: Updated experiment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyExperiment'
+        '400':
+          description: Invalid experiment.
+        '401':
+          description: Not authenticated.
+        '404':
+          description: Not found or not owned by the caller.
+    delete:
+      tags: [Matching]
+      operationId: deleteJourneyExperiment
+      summary: Soft-remove the member's Journey experiment
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removed.
+        '401':
+          description: Not authenticated.
+        '404':
+          description: Not found or not owned by the caller.
+
+  /me/journey/experiments/{id}/restore:
+    post:
+      tags: [Matching]
+      operationId: restoreJourneyExperiment
+      summary: Restore a removed Journey experiment
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Restored experiment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyExperiment'
+        '401':
+          description: Not authenticated.
+        '404':
+          description: Not found or not owned by the caller.
 
   /me/journey/summary:
     get:
@@ -12847,7 +12978,7 @@ components:
       properties:
         type:
           type: string
-          enum: [journal_entry, post_date_note]
+          enum: [journal_entry, post_date_note, dating_win, journey_experiment]
         id:
           type: integer
         label:
@@ -12861,7 +12992,7 @@ components:
           type: string
         kind:
           type: string
-          enum: [reflection, date]
+          enum: [reflection, date, win, experiment]
         source:
           $ref: '#/components/schemas/JourneyRecordSource'
         title:
@@ -12884,7 +13015,7 @@ components:
       properties:
         summary:
           type: object
-          required: [total, reflections, dates, headline]
+          required: [total, reflections, dates, wins, experiments, headline]
           properties:
             total:
               type: integer
@@ -12895,12 +13026,58 @@ components:
             dates:
               type: integer
               minimum: 0
+            wins:
+              type: integer
+              minimum: 0
+            experiments:
+              type: integer
+              minimum: 0
             headline:
               type: string
         records:
           type: array
           items:
             $ref: '#/components/schemas/JourneyRecordItem'
+
+    JourneyExperiment:
+      type: object
+      required: [id, title, description, status, result, triedAt, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [planned, tried, helped, did-not-help]
+        result:
+          type: string
+        triedAt:
+          type: [string, 'null']
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    JourneyExperimentInput:
+      type: object
+      required: [title, description, status, result]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        description:
+          type: string
+          maxLength: 5000
+        status:
+          type: string
+          enum: [planned, tried, helped, did-not-help]
+        result:
+          type: string
+          maxLength: 5000
 
     Achievement:
       type: object

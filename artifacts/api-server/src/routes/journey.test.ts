@@ -126,7 +126,7 @@ describe("GET /api/me/journey/record", () => {
   });
 
   it("combines only the member's active reflections and date notes", async () => {
-    const { db, datingWinsTable, journalEntriesTable, postDateNotesTable } = await import("../lib/testDb");
+    const { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, postDateNotesTable } = await import("../lib/testDb");
     testApp.setUser({ id: "journey-owner" });
     await db.insert(journalEntriesTable).values([
       { userId: "journey-owner", prompt: "What changed?", body: "I named what I needed.", tags: ["reflection"], mood: 4, deletedAt: null, updatedAt: new Date() },
@@ -147,23 +147,27 @@ describe("GET /api/me/journey/record", () => {
     });
     await db.insert(datingWinsTable).values({ userId: "journey-owner", category: "personal-win", body: "I asked for what I wanted.", deletedAt: null, updatedAt: new Date() });
     await db.insert(datingWinsTable).values({ userId: "somebody-else", category: "personal-win", body: "Private other-member win", deletedAt: null, updatedAt: new Date() });
+    await db.insert(journeyExperimentsTable).values({ userId: "journey-owner", title: "Leave room", description: "Stop at 80 percent.", status: "planned", result: "", deletedAt: null, updatedAt: new Date() });
+    await db.insert(journeyExperimentsTable).values({ userId: "somebody-else", title: "Private experiment", description: "Not yours", status: "planned", result: "", deletedAt: null, updatedAt: new Date() });
 
     const response = await request(testApp.app).get("/api/me/journey/record");
     expect(response.status).toBe(200);
-    expect(response.body.summary).toMatchObject({ total: 3, reflections: 1, dates: 1, wins: 1 });
-    expect(response.body.records.map((row: { kind: string }) => row.kind).sort()).toEqual(["date", "reflection", "win"]);
+    expect(response.body.summary).toMatchObject({ total: 4, reflections: 1, dates: 1, wins: 1, experiments: 1 });
+    expect(response.body.records.map((row: { kind: string }) => row.kind).sort()).toEqual(["date", "experiment", "reflection", "win"]);
     expect(JSON.stringify(response.body)).not.toContain("Deleted thought");
     expect(JSON.stringify(response.body)).not.toContain("Private other-member entry");
     expect(JSON.stringify(response.body)).not.toContain("Private other-member win");
+    expect(JSON.stringify(response.body)).not.toContain("Private experiment");
     expect(response.body.records).toEqual(expect.arrayContaining([
       expect.objectContaining({ source: { type: "journal_entry", id: expect.any(Number), label: "Journal" }, href: expect.stringMatching(/^\/journey\?reflection=/), details: expect.objectContaining({ prompt: "What changed?", mood: 4 }) }),
       expect.objectContaining({ title: "Date with Sam", href: expect.stringMatching(/^\/journey\?date=/), details: expect.objectContaining({ personLabel: "Sam", dateAt: null }) }),
       expect.objectContaining({ source: { type: "dating_win", id: expect.any(Number), label: "Win" }, href: expect.stringMatching(/^\/journey\?win=/), details: { category: "personal-win" } }),
+      expect.objectContaining({ source: { type: "journey_experiment", id: expect.any(Number), label: "Experiment" }, href: expect.stringMatching(/^\/journey\?experiment=/), details: expect.objectContaining({ status: "planned" }) }),
     ]));
   });
 
   it("returns only the member's removed moments in the recoverable trash view", async () => {
-    const { db, datingWinsTable, journalEntriesTable, postDateNotesTable } = await import("../lib/testDb");
+    const { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, postDateNotesTable } = await import("../lib/testDb");
     testApp.setUser({ id: "journey-trash-owner" });
     await db.insert(journalEntriesTable).values([
       { userId: "journey-trash-owner", prompt: "Keep", body: "Active thought", tags: [], deletedAt: null, updatedAt: new Date() },
@@ -172,13 +176,15 @@ describe("GET /api/me/journey/record", () => {
     ]);
     await db.insert(postDateNotesTable).values({ userId: "journey-trash-owner", summary: "Removed date", whatWentWell: "", whatDidnt: "", deletedAt: new Date(), updatedAt: new Date() });
     await db.insert(datingWinsTable).values({ userId: "journey-trash-owner", category: "great-convo", body: "Removed win", deletedAt: new Date(), updatedAt: new Date() });
+    await db.insert(journeyExperimentsTable).values({ userId: "journey-trash-owner", title: "Removed experiment", description: "Try it", status: "tried", result: "Learned", deletedAt: new Date(), updatedAt: new Date() });
 
     const response = await request(testApp.app).get("/api/me/journey/record?view=trash");
     expect(response.status).toBe(200);
-    expect(response.body.summary).toMatchObject({ total: 3, reflections: 1, dates: 1, wins: 1 });
+    expect(response.body.summary).toMatchObject({ total: 4, reflections: 1, dates: 1, wins: 1, experiments: 1 });
     expect(JSON.stringify(response.body)).toContain("Removed thought");
     expect(JSON.stringify(response.body)).toContain("Removed date");
     expect(JSON.stringify(response.body)).toContain("Removed win");
+    expect(JSON.stringify(response.body)).toContain("Removed experiment");
     expect(JSON.stringify(response.body)).not.toContain("Active thought");
     expect(JSON.stringify(response.body)).not.toContain("Other removed thought");
   });

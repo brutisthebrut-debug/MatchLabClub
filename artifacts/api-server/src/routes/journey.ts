@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import { db, datingWinsTable, journalEntriesTable, postDateNotesTable } from "@workspace/db";
+import { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, postDateNotesTable } from "@workspace/db";
 import { summarizeUserJourney } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
@@ -20,7 +20,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [journalEntries, dateNotes, wins] = await Promise.all([
+  const [journalEntries, dateNotes, wins, experiments] = await Promise.all([
     db.select().from(journalEntriesTable).where(and(
       eq(journalEntriesTable.userId, userId),
       requestedView === "trash" ? isNotNull(journalEntriesTable.deletedAt) : isNull(journalEntriesTable.deletedAt),
@@ -33,6 +33,10 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       eq(datingWinsTable.userId, userId),
       requestedView === "trash" ? isNotNull(datingWinsTable.deletedAt) : isNull(datingWinsTable.deletedAt),
     )).orderBy(desc(datingWinsTable.createdAt)),
+    db.select().from(journeyExperimentsTable).where(and(
+      eq(journeyExperimentsTable.userId, userId),
+      requestedView === "trash" ? isNotNull(journeyExperimentsTable.deletedAt) : isNull(journeyExperimentsTable.deletedAt),
+    )).orderBy(desc(journeyExperimentsTable.createdAt)),
   ]);
 
   const records = [
@@ -81,6 +85,21 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       updatedAt: iso(win.updatedAt),
       href: `/journey?win=${win.id}`,
     })),
+    ...experiments.map((experiment) => ({
+      id: `experiment:${experiment.id}`,
+      kind: "experiment" as const,
+      source: { type: "journey_experiment", id: experiment.id, label: "Experiment" },
+      title: experiment.title,
+      body: experiment.description,
+      details: {
+        status: experiment.status,
+        result: experiment.result,
+        triedAt: experiment.triedAt ? iso(experiment.triedAt) : null,
+      },
+      occurredAt: iso(experiment.triedAt ?? experiment.createdAt),
+      updatedAt: iso(experiment.updatedAt),
+      href: `/journey?experiment=${experiment.id}`,
+    })),
   ].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
 
   res.json({
@@ -89,6 +108,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       reflections: journalEntries.length,
       dates: dateNotes.length,
       wins: wins.length,
+      experiments: experiments.length,
       headline: requestedView === "trash"
         ? (records.length === 0 ? "Nothing is waiting to be restored." : `${records.length} removed moment${records.length === 1 ? "" : "s"} can still be restored.`)
         : (records.length === 0

@@ -18,7 +18,7 @@ import {
   PROFILE_PROJECT_AUDIT_CAPTURE_HREF,
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
-import { datesCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, winsCompatibilityHref } from "@/lib/journeyRoutes";
+import { datesCompatibilityHref, experimentsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, winsCompatibilityHref } from "@/lib/journeyRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -53,7 +53,6 @@ const CareDialect = lazy(() => import("@/pages/CareDialect"));
 const CompatibilityCompass = lazy(() => import("@/pages/CompatibilityCompass"));
 const ProgressTimeline = lazy(() => import("@/pages/ProgressTimeline"));
 const ProgressPatterns = lazy(() => import("@/pages/ProgressPatterns"));
-const ProgressExperiments = lazy(() => import("@/pages/ProgressExperiments"));
 const ProgressFollowUp = lazy(() => import("@/pages/ProgressFollowUp"));
 const ProgressScorecard = lazy(() => import("@/pages/ProgressScorecard"));
 const ProgressFeed = lazy(() => import("@/pages/ProgressFeed"));
@@ -201,6 +200,11 @@ function WinsCompatibilityRedirect() {
   return <Redirect to={winsCompatibilityHref(location, typeof window === "undefined" ? "" : window.location.search)} />;
 }
 
+function ExperimentsCompatibilityRedirect() {
+  const [location] = useLocation();
+  return <Redirect to={experimentsCompatibilityHref(location, typeof window === "undefined" ? "" : window.location.search)} />;
+}
+
 function Router() {
   usePageTracking();
   return (
@@ -293,7 +297,7 @@ function Router() {
         {/* Progress Workspace */}
         <Route path="/progress/timeline" component={ProgressTimeline} />
         <Route path="/progress/patterns" component={ProgressPatterns} />
-        <Route path="/progress/experiments" component={ProgressExperiments} />
+        <Route path="/progress/experiments" component={ExperimentsCompatibilityRedirect} />
         <Route path="/progress/followup" component={ProgressFollowUp} />
         <Route path="/progress/scorecard" component={ProgressScorecard} />
         <Route path="/progress/feed" component={ProgressFeed} />
