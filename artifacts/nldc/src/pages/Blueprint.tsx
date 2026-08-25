@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -179,8 +178,8 @@ function CopyBtn({ text, label }: { text: string; label?: string }) {
   );
 }
 
-export default function Blueprint() {
-  useMeta("Personal Blueprint", "A coaching lens on your first impression, dating patterns, communication style, and growth edge, based only on what you choose to share.");
+export function BlueprintExperience({ embedded = false }: { embedded?: boolean }) {
+  useMeta(embedded ? "My MatchLab" : "Personal Blueprint", "A coaching lens on your first impression, dating patterns, communication style, and growth edge, based only on what you choose to share.");
   const [text, setText] = useState("");
   const [pattern, setPattern] = useState("");
   const [misread, setMisread] = useState("");
@@ -217,6 +216,7 @@ export default function Blueprint() {
   confidence: 50,
   });
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  window.dispatchEvent(new Event("communication-record-updated"));
   }
   }).catch(() => undefined);
   }, [isAuthenticated]);
@@ -288,8 +288,7 @@ export default function Blueprint() {
   const isDemo = !result;
 
   return (
-  <AppLayout>
-  <div className="min-h-screen mesh-bg py-10 px-4">
+  <div id="communication-personal-blueprint" className={embedded ? "mt-6 border-t border-foreground/10 pt-6" : "min-h-screen mesh-bg py-10 px-4"}>
   <div className="orb orb-violet fixed w-[400px] h-[400px] -top-20 -left-20 opacity-30 pointer-events-none" />
   <div className="max-w-3xl mx-auto relative z-10">
   <motion.div {...fadeUp()} className="mb-8">
@@ -424,7 +423,7 @@ export default function Blueprint() {
   )}
   {result && (
   <div className="mt-5 flex justify-center">
-  <button onClick={() => { try { localStorage.removeItem(STORAGE_KEY); } catch {} if (isAuthenticated) void deleteCommunicationRecord("personal_blueprint"); setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
+  <button onClick={() => { try { localStorage.removeItem(STORAGE_KEY); } catch {} if (isAuthenticated) void deleteCommunicationRecord("personal_blueprint").finally(() => window.dispatchEvent(new Event("communication-record-updated"))); setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
   <RefreshCw className="w-3.5 h-3.5" />Start over
   </button>
@@ -434,6 +433,9 @@ export default function Blueprint() {
   </AnimatePresence>
   </div>
   </div>
-  </AppLayout>
   );
+}
+
+export default function Blueprint() {
+  return <BlueprintExperience />;
 }

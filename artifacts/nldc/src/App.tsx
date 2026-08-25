@@ -38,7 +38,6 @@ const CheckoutSuccess = lazy(() => import("@/pages/CheckoutSuccess"));
 const CheckoutCancel = lazy(() => import("@/pages/CheckoutCancel"));
 const Founder = lazy(() => import("@/pages/Founder"));
 const ShebangsPartner = lazy(() => import("@/pages/ShebangsPartner"));
-const Blueprint = lazy(() => import("@/pages/Blueprint"));
 const MirrorProfile = lazy(() => import("@/pages/MirrorProfile"));
 const YourMirror = lazy(() => import("@/pages/YourMirror"));
 const Echo = lazy(() => import("@/pages/Echo"));
@@ -48,7 +47,6 @@ const Reflection = lazy(() => import("@/pages/Reflection"));
 const ProfileReader = lazy(() => import("@/pages/ProfileReader"));
 const StyleMap = lazy(() => import("@/pages/StyleMap"));
 const NextMessage = lazy(() => import("@/pages/NextMessage"));
-const ConnectionStyle = lazy(() => import("@/pages/ConnectionStyle"));
 const CareDialect = lazy(() => import("@/pages/CareDialect"));
 const CompatibilityCompass = lazy(() => import("@/pages/CompatibilityCompass"));
 const ProgressTimeline = lazy(() => import("@/pages/ProgressTimeline"));
@@ -252,7 +250,11 @@ function Router() {
         <Route path="/founder" component={Founder} />
         <Route path="/partners/shebangs" component={ShebangsPartner} />
         {/* New coaching modules */}
-        <Route path="/blueprint" component={Blueprint} />
+        {/* Preserved deep link; App owns the compatibility redirect while the
+            reusable experience renders in My MatchLab and regression tests. */}
+        <Route path="/blueprint">
+          <Redirect to="/my-matchlab?communication=personal-blueprint" />
+        </Route>
         <Route path="/mirror" component={MirrorProfile} />
         <Route path="/your-mirror" component={YourMirror} />
         <Route path="/echo" component={Echo} />
@@ -267,7 +269,10 @@ function Router() {
         <Route path="/glow-up">
           <Redirect to="/my-matchlab/profile" />
         </Route>
-        <Route path="/connection-style" component={ConnectionStyle} />
+        {/* Preserved deep link into My MatchLab Communication. */}
+        <Route path="/connection-style">
+          <Redirect to="/my-matchlab?communication=connection-style" />
+        </Route>
         <Route path="/care-dialect" component={CareDialect} />
         <Route path="/compatibility-compass" component={CompatibilityCompass} />
         {/* Progress Workspace */}

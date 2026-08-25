@@ -1,7 +1,4 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { HubTabs } from "@/components/layout/HubTabs";
-import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -244,8 +241,8 @@ interface StyleOverride {
   nextExperiment?: string;
 }
 
-export default function ConnectionStyle() {
-  useMeta("Connection Style Lens", "Six questions that reveal your connection pattern, how you attach, what activates your risk loop, and one experiment worth trying.");
+export function ConnectionStyleExperience({ embedded = false }: { embedded?: boolean }) {
+  useMeta(embedded ? "My MatchLab" : "Connection Style Lens", "Six questions that reveal your connection pattern, how you attach, what activates your risk loop, and one experiment worth trying.");
   const [answers, setAnswers] = useState<number[]>(Array(QUESTIONS.length).fill(-1));
   const [result, setResult] = useState<StyleKey | null>(null);
   const [override, setOverride] = useState<StyleOverride>({});
@@ -290,6 +287,7 @@ export default function ConnectionStyle() {
   generatedBy,
   confidence: 100,
   });
+  window.dispatchEvent(new Event("communication-record-updated"));
   } catch {
   setSaveError("Your result is visible here, but it did not save to My MatchLab. Try again before leaving this page.");
   }
@@ -438,9 +436,7 @@ export default function ConnectionStyle() {
   } : null;
 
   return (
-  <AppLayout>
-  <HubTabs hub="mirror" />
-  <div className="min-h-screen mesh-bg py-10 px-4">
+  <div id="communication-connection-style" className={embedded ? "mt-6 border-t border-foreground/10 pt-6" : "min-h-screen mesh-bg py-10 px-4"}>
   <div className="orb orb-violet fixed w-[360px] h-[360px] -top-10 -left-10 opacity-30 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">
   <motion.div {...fadeUp()} className="mb-6">
@@ -553,18 +549,8 @@ export default function ConnectionStyle() {
   <p className="text-xs text-muted-foreground">This is a pattern lens, not a fixed identity. You may recognize yourself in more than one style. Use it as a starting point for self-reflection, not a label to carry.</p>
   </div>
 
-  <ToolHandoff
-  testId="connection-style-handoff"
-  fedLine="Knowing your connection style names how you show up. To make it part of how I read you, answer a few wellness questions or get a compatibility read."
-  steps={[
-  { label: "Map your wellness", href: "/wellness", desc: "Turn this lens into saved signal that raises your readiness." },
-  { label: "Get a compatibility read", href: "/compatibility-compass", desc: "See how your style reads for fit." },
-  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
-  ]}
-  />
-
   <div className="flex justify-center">
-  <button onClick={() => { if (isAuthenticated) void deleteCommunicationRecord("connection_style"); setResult(null); setOverride({}); setAnswers(Array(QUESTIONS.length).fill(-1)); }}
+  <button onClick={() => { if (isAuthenticated) void deleteCommunicationRecord("connection_style").finally(() => window.dispatchEvent(new Event("communication-record-updated"))); setResult(null); setOverride({}); setAnswers(Array(QUESTIONS.length).fill(-1)); }}
   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
   <RefreshCw className="w-3.5 h-3.5" />Retake
   </button>
@@ -574,6 +560,9 @@ export default function ConnectionStyle() {
   </AnimatePresence>
   </div>
   </div>
-  </AppLayout>
   );
+}
+
+export default function ConnectionStyle() {
+  return <ConnectionStyleExperience />;
 }

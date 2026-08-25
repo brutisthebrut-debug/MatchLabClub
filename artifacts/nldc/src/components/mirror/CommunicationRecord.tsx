@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, HeartHandshake, Loader2, MessagesSquare, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, HeartHandshake, Loader2, MessagesSquare, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { flagLabel } from "@/lib/flags";
 import { proposeCommunicationLearning } from "@/lib/mirrorLearnings";
 import { listCommunicationRecords, type CommunicationRecord as SavedCommunicationRecord } from "@/lib/communicationRecords";
+import { ConnectionStyleExperience } from "@/pages/ConnectionStyle";
+import { BlueprintExperience } from "@/pages/Blueprint";
 
 interface CareDialectState {
   hasProfile: boolean;
@@ -40,6 +42,11 @@ export function CommunicationRecord() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<"care_dialect" | "standards" | "connection_style" | "personal_blueprint" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [activeLens, setActiveLens] = useState<"connection-style" | "personal-blueprint" | null>(() => {
+    if (typeof window === "undefined") return null;
+    const value = new URLSearchParams(window.location.search).get("communication");
+    return value === "connection-style" || value === "personal-blueprint" ? value : null;
+  });
 
   useEffect(() => {
     Promise.all([
@@ -54,6 +61,16 @@ export function CommunicationRecord() {
       })
       .catch((err: Error) => setMessage(err.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      void listCommunicationRecords()
+        .then((result) => setRecords(result.records))
+        .catch((err: Error) => setMessage(err.message));
+    };
+    window.addEventListener("communication-record-updated", refresh);
+    return () => window.removeEventListener("communication-record-updated", refresh);
   }, []);
 
   async function propose(source: "care_dialect" | "standards" | "connection_style" | "personal_blueprint") {
@@ -73,6 +90,21 @@ export function CommunicationRecord() {
   const hasFlags = Boolean((flags?.bringFlags.length ?? 0) + (flags?.seekFlags.length ?? 0));
   const connectionStyle = records.find((record) => record.lens === "connection_style");
   const blueprint = records.find((record) => record.lens === "personal_blueprint");
+
+  function openLens(lens: "connection-style" | "personal-blueprint") {
+    setActiveLens(lens);
+    const url = new URL(window.location.href);
+    url.searchParams.set("communication", lens);
+    window.history.replaceState({}, "", url);
+    window.setTimeout(() => document.getElementById(`communication-${lens}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  }
+
+  function closeLens() {
+    setActiveLens(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("communication");
+    window.history.replaceState({}, "", url);
+  }
 
   return (
     <section className="rounded-[2rem] border border-foreground/10 bg-background/72 p-5 shadow-sm sm:p-7">
@@ -140,7 +172,7 @@ export function CommunicationRecord() {
                 </Button>
               </>
             ) : <p className="mt-2 text-sm leading-6 text-muted-foreground">No Connection Style result has been saved yet.</p>}
-            <Link href="/connection-style" className="mt-4 flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_52%)]">Review connection pattern <ArrowRight className="h-4 w-4" /></Link>
+            <Button className="mt-4" size="sm" variant="ghost" onClick={() => openLens("connection-style")}>Open here <ArrowRight className="ml-2 h-4 w-4" /></Button>
           </article>
 
           <article className="rounded-2xl border border-foreground/10 bg-background/58 p-5">
@@ -154,8 +186,17 @@ export function CommunicationRecord() {
                 </Button>
               </>
             ) : <p className="mt-2 text-sm leading-6 text-muted-foreground">No Personal Blueprint has been saved yet.</p>}
-            <Link href="/blueprint" className="mt-4 flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_52%)]">Review personal blueprint <ArrowRight className="h-4 w-4" /></Link>
+            <Button className="mt-4" size="sm" variant="ghost" onClick={() => openLens("personal-blueprint")}>Open here <ArrowRight className="ml-2 h-4 w-4" /></Button>
           </article>
+        </div>
+      )}
+
+      {activeLens && (
+        <div className="relative mt-6 rounded-3xl border border-foreground/10 bg-background/60 p-4 sm:p-6">
+          <Button aria-label="Close Communication tool" className="absolute right-4 top-4 z-20" size="icon" variant="ghost" onClick={closeLens}>
+            <X className="h-4 w-4" />
+          </Button>
+          {activeLens === "connection-style" ? <ConnectionStyleExperience embedded /> : <BlueprintExperience embedded />}
         </div>
       )}
 
