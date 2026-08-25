@@ -37,12 +37,14 @@ export interface DateDebriefInput {
   outcome: DateOutcome | null;
 }
 
-async function request<T>(url: string, method: "POST" | "PATCH", payload: unknown): Promise<T> {
+async function request<T>(url: string, method: "POST" | "PATCH" | "DELETE", payload?: unknown): Promise<T> {
   const response = await fetch(url, {
     method,
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    ...(payload === undefined ? {} : {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
   });
   const body = (await response.json().catch(() => null)) as T | { error?: string } | null;
   if (!response.ok) {
@@ -53,8 +55,9 @@ async function request<T>(url: string, method: "POST" | "PATCH", payload: unknow
   return body as T;
 }
 
-export async function getJourneyRecord(): Promise<JourneyRecordResponse> {
-  const response = await fetch("/api/me/journey/record", { credentials: "include" });
+export async function getJourneyRecord(view: "active" | "trash" = "active"): Promise<JourneyRecordResponse> {
+  const url = view === "trash" ? "/api/me/journey/record?view=trash" : "/api/me/journey/record";
+  const response = await fetch(url, { credentials: "include" });
   const body = (await response.json().catch(() => null)) as JourneyRecordResponse | { error?: string } | null;
   if (!response.ok) {
     throw new Error(body && "error" in body && body.error ? body.error : "Your Journey could not load.");
@@ -68,4 +71,16 @@ export async function saveReflection(input: ReflectionInput, id?: number): Promi
 
 export async function saveDateDebrief(input: DateDebriefInput, id?: number): Promise<unknown> {
   return request(id ? `/api/post-date-notes/${id}` : "/api/post-date-notes", id ? "PATCH" : "POST", input);
+}
+
+function sourcePath(item: JourneyRecordItem): string {
+  return item.source.type === "journal_entry" ? `/api/journal/${item.source.id}` : `/api/post-date-notes/${item.source.id}`;
+}
+
+export async function removeJourneyItem(item: JourneyRecordItem): Promise<unknown> {
+  return request(sourcePath(item), "DELETE");
+}
+
+export async function restoreJourneyItem(item: JourneyRecordItem): Promise<unknown> {
+  return request(`${sourcePath(item)}/restore`, "POST");
 }
