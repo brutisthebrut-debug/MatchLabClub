@@ -372,10 +372,27 @@ State: merged to `main` and verified.
   ordered migrations through `0049`, and 102 API files with 941 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D2B2: guided date-debrief absorption
+
+State: merged to `main` and verified.
+
+- Journey now owns guided date debrief, with optional date/person/platform
+  context, simplified reflection chips, outcome, and follow-up intent.
+- The canonical post-date note saves before coaching output appears. A grounded
+  deterministic result remains when optional AI enhancement is unavailable,
+  while failed persistence never displays a false saved state.
+- Anonymous note ids remain available for login claim handoff.
+- `/copilot/debrief` is a compatibility redirect into Journey. The old component
+  no longer owns a route.
+- PR #35 merged as `679d7bd1`; GitHub Actions run `32864197737` passed
+  typecheck, lint, schema drift, voice lint, 41 web files with 265 tests,
+  ordered migrations through `0049`, and 102 API files with 941 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Add guided date-debrief parity, then turn only fully absorbed member routes
-   into compatibility redirects after parity tests.
+1. Preserve exact journal/date source deep links in Journey, then turn those
+   fully absorbed duplicate member pages into compatibility redirects.
 2. Absorb experiments, wins, and follow-up reflections into the same record.
 3. Consolidate games and quizzes into Play with confirmed-learning handoff.
 4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
