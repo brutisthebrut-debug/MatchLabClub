@@ -11,14 +11,24 @@ import {
   restoreJourneyItem,
   saveDateDebrief,
   saveReflection,
+  saveWin,
   type DateOutcome,
   type JourneyRecordItem,
   type JourneyRecordResponse,
+  type WinCategory,
 } from "@/lib/journeyRecord";
 import { readJourneyRouteState, shouldOpenGuidedDebrief } from "@/lib/journeyRoutes";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 
-type Composer = { kind: "reflection" | "date" | "guided-date"; item?: JourneyRecordItem };
+type Composer = { kind: "reflection" | "date" | "win" | "guided-date"; item?: JourneyRecordItem };
+
+const WIN_CATEGORIES: Array<{ value: WinCategory; label: string }> = [
+  { value: "sent-it", label: "Sent it" },
+  { value: "great-convo", label: "Great conversation" },
+  { value: "got-a-date", label: "Got a date" },
+  { value: "noticed-something", label: "Noticed a pattern" },
+  { value: "personal-win", label: "Personal win" },
+];
 
 const FELT_GOOD = ["Good chemistry", "Easy conversation", "Mutual curiosity", "Real connection", "I felt like myself", "They were engaged", "Physical attraction"];
 const FELT_OFF = ["Forced conversation", "Felt one-sided", "Wasn't present", "Mixed signals", "Felt judged", "Too much pressure", "Something felt off"];
@@ -107,6 +117,41 @@ function ReflectionComposer({ item, onCancel, onSaved }: { item?: JourneyRecordI
       </div>
       {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
       <div className="mt-5 flex justify-end"><Button type="submit" disabled={saving || !body.trim()}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{item ? "Save changes" : "Keep reflection"}</Button></div>
+    </form>
+  );
+}
+
+function WinComposer({ item, onCancel, onSaved }: { item?: JourneyRecordItem; onCancel: () => void; onSaved: () => void }) {
+  const savedCategory = item && typeof item.details.category === "string" ? item.details.category as WinCategory : "personal-win";
+  const [category, setCategory] = useState<WinCategory>(savedCategory);
+  const [body, setBody] = useState(item?.body ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!body.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await saveWin({ category, body: body.trim() }, item?.source.id);
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "This win could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-7 rounded-3xl border border-[hsl(43_65%_55%/0.28)] bg-[hsl(43_65%_55%/0.06)] p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[hsl(43_65%_45%)]">Win</p><h2 className="mt-1 font-serif text-2xl font-bold">{item ? "Edit this win" : "What moved forward?"}</h2></div><Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button></div>
+      <div className="mt-5 grid gap-4">
+        <label className="grid gap-2 text-sm font-bold">Kind of win<select value={category} onChange={(event) => setCategory(event.target.value as WinCategory)} className="h-10 rounded-md border border-input bg-background px-3 text-sm font-normal">{WIN_CATEGORIES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+        <label className="grid gap-2 text-sm font-bold">What happened?<textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={2000} required rows={5} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal leading-6 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Capture the moment, including what you did differently or want to repeat." /></label>
+      </div>
+      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      <div className="mt-5 flex justify-end"><Button type="submit" disabled={saving || !body.trim()}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{item ? "Save changes" : "Keep win"}</Button></div>
     </form>
   );
 }
@@ -252,7 +297,7 @@ function GuidedDateComposer({ onCancel, onSaved }: { onCancel: () => void; onSav
 }
 
 function JourneyItem({ item, removed, busy, onEdit, onRemove, onRestore }: { item: JourneyRecordItem; removed: boolean; busy: boolean; onEdit: () => void; onRemove: () => void; onRestore: () => void }) {
-  const Icon = item.kind === "date" ? CalendarCheck : BookHeart;
+  const Icon = item.kind === "date" ? CalendarCheck : item.kind === "win" ? Sparkles : BookHeart;
   const positive = detailString(item, "whatWentWell");
   const difficult = detailString(item, "whatDidnt");
   return (
@@ -276,7 +321,7 @@ export default function Journey() {
   const [record, setRecord] = useState<JourneyRecordResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "reflection" | "date">(initialRoute.kind);
+  const [filter, setFilter] = useState<"all" | "reflection" | "date" | "win">(initialRoute.kind);
   const [query, setQuery] = useState(initialRoute.query);
   const [composer, setComposer] = useState<Composer | null>(() => shouldOpenGuidedDebrief(location, browserSearch) ? { kind: "guided-date" } : null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -301,9 +346,9 @@ export default function Journey() {
     }
   }, [initialRoute.source, loading, record, recordView]);
 
-  function saved(kind: "reflection" | "date") {
+  function saved(kind: "reflection" | "date" | "win") {
     setComposer(null);
-    setNotice(kind === "reflection" ? "Reflection saved to your Journey." : "Date debrief saved to your Journey.");
+    setNotice(kind === "reflection" ? "Reflection saved to your Journey." : kind === "date" ? "Date debrief saved to your Journey." : "Win saved to your Journey.");
     setRecordView("active");
     load("active");
   }
@@ -356,14 +401,16 @@ export default function Journey() {
         <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight sm:text-5xl">Keep the thread, not a score.</h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">One private record of what happened, what you noticed, and what you want to try next.</p>
 
-        <div className="mt-7 grid gap-3 sm:grid-cols-3">
+        <div className="mt-7 grid gap-3 sm:grid-cols-4">
           <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "guided-date" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Debrief a date</button>
           <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "reflection" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Add a reflection</button>
+          <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "win" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(43_65%_55%/0.45)]"><Plus className="mr-2 h-4 w-4" />Log a win</button>
           <Link href="/copilot/weekly-plan" className="rounded-2xl border border-foreground/10 p-4 text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]">Choose a weekly experiment</Link>
         </div>
 
         {composer?.kind === "reflection" && <ReflectionComposer key={`reflection-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("reflection")} />}
         {composer?.kind === "date" && <DateComposer key={`date-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("date")} />}
+        {composer?.kind === "win" && <WinComposer key={`win-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("win")} />}
         {composer?.kind === "guided-date" && <GuidedDateComposer onCancel={() => setComposer(null)} onSaved={guidedSaved} />}
         {notice && <p className="mt-5 rounded-2xl border border-[hsl(150_45%_45%/0.25)] bg-[hsl(150_45%_45%/0.08)] px-4 py-3 text-sm font-bold">{notice}</p>}
 
@@ -373,8 +420,8 @@ export default function Journey() {
           <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm">{error}<Button size="sm" variant="outline" className="ml-3" onClick={() => load()}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button></div>
         ) : record ? (
           <section className="mt-10">
-            <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5"><p className="font-bold">{record.summary.headline}</p><p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs</p></div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap gap-2"><Button size="sm" variant={recordView === "active" ? "default" : "outline"} onClick={() => setRecordView("active")}>Journey</Button><Button size="sm" variant={recordView === "trash" ? "default" : "outline"} onClick={() => setRecordView("trash")}>Recently removed</Button><span className="mx-1 hidden h-8 border-l border-foreground/10 sm:block" />{(["all", "reflection", "date"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "secondary" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : "Reflections"}</Button>)}</div><div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div></div>
+            <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5"><p className="font-bold">{record.summary.headline}</p><p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs · {record.summary.wins} wins</p></div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap gap-2"><Button size="sm" variant={recordView === "active" ? "default" : "outline"} onClick={() => setRecordView("active")}>Journey</Button><Button size="sm" variant={recordView === "trash" ? "default" : "outline"} onClick={() => setRecordView("trash")}>Recently removed</Button><span className="mx-1 hidden h-8 border-l border-foreground/10 sm:block" />{(["all", "reflection", "date", "win"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "secondary" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : value === "win" ? "Wins" : "Reflections"}</Button>)}</div><div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div></div>
             {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} removed={recordView === "trash"} busy={busyItem === item.id} onRemove={() => { void remove(item); }} onRestore={() => { void restore(item); }} onEdit={() => { setNotice(null); setComposer({ kind: item.kind, item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">{recordView === "trash" ? "Nothing is waiting to be restored." : "No saved moments match this view."}</p><p className="mt-2 text-sm text-muted-foreground">{recordView === "trash" ? "Removed moments will stay recoverable here." : "Change the filter or capture the next moment you want to keep."}</p></div>}
           </section>
         ) : null}
