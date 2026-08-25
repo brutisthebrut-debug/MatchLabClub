@@ -30,6 +30,7 @@ import {
   extractWellnessAnswers,
   type QuizArchetype,
 } from "@/lib/quizzes";
+import { PLAY_QUIZ_CATALOG_HREF } from "@/lib/playRoutes";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -129,7 +130,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
             <h1 className="text-3xl font-serif font-bold text-foreground mb-4">Quiz not found</h1>
             <p className="text-muted-foreground mb-8 text-base">That quiz doesn't exist, but the Quiz Lab is full of other reads.</p>
             <Button asChild size="lg" className="rounded-full w-full font-bold shadow-md">
-              <Link href="/quizzes">Browse all quizzes <ArrowRight className="ml-2 w-4 h-4" /></Link>
+              <Link href={PLAY_QUIZ_CATALOG_HREF}>Browse all quizzes <ArrowRight className="ml-2 w-4 h-4" /></Link>
             </Button>
           </div>
         </div>
@@ -315,7 +316,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
         <div className="max-w-2xl mx-auto relative z-10">
           {/* Breadcrumb */}
           <motion.div {...fadeUp()} className="mb-8">
-            <Link href="/quizzes" className="text-sm font-semibold text-muted-foreground hover:text-[hsl(248_62%_52%)] inline-flex items-center gap-2 transition-colors">
+            <Link href={PLAY_QUIZ_CATALOG_HREF} className="text-sm font-semibold text-muted-foreground hover:text-[hsl(248_62%_52%)] inline-flex items-center gap-2 transition-colors">
               <ArrowLeft className="w-4 h-4" /> All quizzes
             </Link>
           </motion.div>
@@ -480,10 +481,10 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <Eye className="w-5 h-5 text-[hsl(248_62%_52%)]" />
-                    <h3 className="font-bold text-foreground text-lg">What your Mirror just learned</h3>
+                    <h3 className="font-bold text-foreground text-lg">Your result is saved</h3>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                    This result is now part of how I read you. It sharpened these parts of your picture:
+                    This derived result is saved without your raw answer indexes. Review it before deciding whether it becomes confirmed learning or can be used by Echo or matching.
                   </p>
                   <div className="flex flex-wrap gap-2 mb-6">
                     {quiz.feeds.map((d) => (
@@ -616,7 +617,8 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     steps={[
                       { label: "See your Mirror", href: "/your-mirror", desc: "See the full picture I have of you." },
                       { label: "Map your wellness", href: "/wellness", desc: "Answer a few more questions to raise your readiness." },
-                      { label: "Take another quiz", href: "/quizzes", desc: "Each one adds a new angle on you." },
+                      { label: "Take another quiz", href: PLAY_QUIZ_CATALOG_HREF, desc: "Each one adds a new angle on you." },
+                      { label: "Review permissions", href: "/imports", desc: "Choose whether saved results become confirmed learning." },
                     ]}
                   />
                 </div>

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db, importedSourcesTable } from "@workspace/db";
 import { getQuizBySlug, scoreQuiz } from "@workspace/quiz-engine";
 import {
@@ -13,6 +13,56 @@ import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
+
+/**
+ * GET /api/me/quiz-results
+ *
+ * Returns the signed-in member's durable, server-scored quiz results. Only the
+ * derived archetype and dimensions were ever stored; raw answer indexes are
+ * not available to this read path. Anonymous play continues to use the local
+ * device result until its claim token is attached during sign-in.
+ */
+router.get("/me/quiz-results", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
+
+  const rows = await db
+    .select()
+    .from(importedSourcesTable)
+    .where(and(
+      eq(importedSourcesTable.userId, req.user.id),
+      eq(importedSourcesTable.source, "quiz"),
+      isNull(importedSourcesTable.deletedAt),
+    ))
+    .orderBy(desc(importedSourcesTable.uploadedAt));
+
+  const results = rows.flatMap((row) => {
+    const summary = row.parsedSummary;
+    const slug = typeof summary?.slug === "string" ? summary.slug : null;
+    const archetypeKey = typeof summary?.archetypeKey === "string" ? summary.archetypeKey : null;
+    const archetypeName = typeof summary?.archetype === "string" ? summary.archetype : null;
+    const dimensions = Array.isArray(summary?.dimensions)
+      ? summary.dimensions.filter((value): value is string => typeof value === "string")
+      : [];
+    if (!slug || !archetypeKey || !archetypeName) return [];
+    return [{
+      id: row.id,
+      slug,
+      archetypeKey,
+      archetypeName,
+      dimensions,
+      learningConfirmed: row.learningConfirmed,
+      echoUseAllowed: row.echoUseAllowed,
+      matchingUseAllowed: row.matchingUseAllowed,
+      takenAt: row.uploadedAt instanceof Date ? row.uploadedAt.toISOString() : String(row.uploadedAt),
+      uploadedAt: row.uploadedAt instanceof Date ? row.uploadedAt.toISOString() : String(row.uploadedAt),
+    }];
+  });
+
+  res.json({ results });
+});
 
 /**
  * POST /api/me/instagram-paste
