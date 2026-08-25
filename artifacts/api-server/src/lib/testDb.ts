@@ -412,6 +412,7 @@ ensureStore("post_date_notes");
 export const postDateNotesTable = makeTable("post_date_notes");
 ensureStore("dating_wins");
 export const datingWinsTable = makeTable("dating_wins");
+ensureStore("journey_experiments");
 export const journeyExperimentsTable = makeTable("journey_experiments");
 export const insertJourneyExperimentSchema = z.object({
   title: z.string().trim().min(1).max(500),
