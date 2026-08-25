@@ -7,6 +7,7 @@ import {
   communicationRecordsTable,
   flagSelectionsTable,
   matchPoolMembershipTable,
+  mirrorLearningEventsTable,
   mirrorLearningsTable,
   type MirrorLearningRow,
 } from "@workspace/db";
@@ -56,6 +57,27 @@ function serialize(row: MirrorLearningRow) {
   };
 }
 
+async function recordLearningEvent(
+  row: MirrorLearningRow,
+  action: string,
+  prior?: MirrorLearningRow | null,
+): Promise<void> {
+  await db.insert(mirrorLearningEventsTable).values({
+    userId: row.userId,
+    learningId: row.id,
+    action,
+    sourceType: row.sourceType,
+    sourceRef: row.sourceRef,
+    sourceLabel: row.sourceLabel,
+    priorStatus: prior?.status ?? null,
+    newStatus: row.status,
+    priorText: prior ? (prior.memberLearning ?? prior.proposedLearning) : null,
+    newText: row.memberLearning ?? row.proposedLearning,
+    confidence: row.confidence,
+    matchingUseApproved: row.matchingUseApproved,
+  });
+}
+
 async function pauseMatchingForLearningReview(userId: string): Promise<void> {
   const [membership] = await db
     .select()
@@ -99,16 +121,17 @@ export async function syncPortraitProposals(userId: string): Promise<MirrorLearn
       updatedAt: new Date(),
     };
     if (!current) {
-      await db.insert(mirrorLearningsTable).values({
+      const [created] = await db.insert(mirrorLearningsTable).values({
         userId,
         sourceType: "mirror_portrait",
         sourceRef: theme.key,
         status: "proposed",
         matchingUseApproved: false,
         ...values,
-      });
+      }).returning();
+      if (created) await recordLearningEvent(created, "proposed");
     } else if (current.status === "proposed") {
-      await db
+      const [updated] = await db
         .update(mirrorLearningsTable)
         .set(values)
         .where(
@@ -116,7 +139,12 @@ export async function syncPortraitProposals(userId: string): Promise<MirrorLearn
             eq(mirrorLearningsTable.id, current.id),
             eq(mirrorLearningsTable.userId, userId),
           ),
-        );
+        )
+        .returning();
+      if (updated && (
+        updated.proposedLearning !== current.proposedLearning ||
+        updated.confidence !== current.confidence
+      )) await recordLearningEvent(updated, "source_refreshed", current);
     }
   }
 
@@ -161,6 +189,10 @@ async function upsertCommunicationProposal(
         ),
       )
       .returning();
+    if (updated && (
+      updated.proposedLearning !== current.proposedLearning ||
+      updated.confidence !== current.confidence
+    )) await recordLearningEvent(updated, "source_refreshed", current);
     return updated!;
   }
   const [created] = await db
@@ -173,8 +205,92 @@ async function upsertCommunicationProposal(
       ...proposal,
     })
     .returning();
+  if (created) await recordLearningEvent(created, "proposed");
   return created!;
 }
+
+const TENSION_RULES = [
+  { left: /move|open|invest|all-in|quick|fast/i, right: /slow|guard|hold back|distance|cautious/i, label: "Pace and protection" },
+  { left: /steady|stable|consistent|predictable/i, right: /intensity|spark|unpredict|chase|excit/i, label: "Stability and intensity" },
+  { left: /direct|name what|communicat.*open/i, right: /quiet|understate|hold.*back|withdraw/i, label: "Directness and reserve" },
+] as const;
+
+router.get("/me/mirror-trends", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const userId = req.user.id;
+  const [learnings, events] = await Promise.all([
+    db.select().from(mirrorLearningsTable)
+      .where(eq(mirrorLearningsTable.userId, userId))
+      .orderBy(desc(mirrorLearningsTable.updatedAt)),
+    db.select().from(mirrorLearningEventsTable)
+      .where(eq(mirrorLearningEventsTable.userId, userId))
+      .orderBy(desc(mirrorLearningEventsTable.createdAt))
+      .limit(50),
+  ]);
+  const active = learnings.filter((row) => row.status !== "dismissed");
+  const sources = active.map((row) => ({
+    learningId: row.id,
+    source: { type: row.sourceType, ref: row.sourceRef, label: row.sourceLabel },
+    text: row.memberLearning ?? row.proposedLearning,
+    status: row.status,
+    confidence: row.confidence,
+    matchingUseApproved: row.matchingUseApproved,
+    updatedAt: iso(row.updatedAt),
+  }));
+  const uncertainties = active
+    .filter((row) => row.status === "proposed" || row.confidence < 70)
+    .map((row) => ({
+      learningId: row.id,
+      sourceLabel: row.sourceLabel,
+      confidence: row.confidence,
+      reason: row.status === "proposed"
+        ? "This is still a proposal awaiting your confirmation or correction."
+        : "This source has limited supporting signal.",
+    }));
+  const contradictions: Array<{
+    label: string;
+    left: { learningId: number; sourceLabel: string; text: string };
+    right: { learningId: number; sourceLabel: string; text: string };
+  }> = [];
+  for (const rule of TENSION_RULES) {
+    const left = active.find((row) => rule.left.test(row.memberLearning ?? row.proposedLearning));
+    const right = active.find((row) => row.id !== left?.id && rule.right.test(row.memberLearning ?? row.proposedLearning));
+    if (left && right) contradictions.push({
+      label: rule.label,
+      left: { learningId: left.id, sourceLabel: left.sourceLabel, text: left.memberLearning ?? left.proposedLearning },
+      right: { learningId: right.id, sourceLabel: right.sourceLabel, text: right.memberLearning ?? right.proposedLearning },
+    });
+  }
+  res.json({
+    summary: {
+      confirmed: learnings.filter((row) => row.status === "confirmed").length,
+      inReview: learnings.filter((row) => row.status === "proposed").length,
+      dismissed: learnings.filter((row) => row.status === "dismissed").length,
+      headline: events.length === 0
+        ? "Your current sources are visible. Change history will build as you review them."
+        : `${events.length} learning change${events.length === 1 ? "" : "s"} are now traceable to their source.`,
+    },
+    sources,
+    uncertainties,
+    contradictions,
+    changes: events.map((event) => ({
+      id: event.id,
+      learningId: event.learningId,
+      action: event.action,
+      source: { type: event.sourceType, ref: event.sourceRef, label: event.sourceLabel },
+      priorStatus: event.priorStatus,
+      newStatus: event.newStatus,
+      priorText: event.priorText,
+      newText: event.newText,
+      confidence: event.confidence,
+      matchingUseApproved: event.matchingUseApproved,
+      createdAt: iso(event.createdAt),
+    })),
+  });
+});
 
 router.get("/me/mirror-learnings", async (req, res): Promise<void> => {
   if (!req.user?.id) {
@@ -417,6 +533,10 @@ router.patch("/me/mirror-learnings/:id", async (req, res): Promise<void> => {
       ),
     )
     .returning();
+  const eventAction = parsed.data.action === "set_matching"
+    ? (parsed.data.approved ? "matching_approved" : "matching_revoked")
+    : parsed.data.action;
+  if (updated) await recordLearningEvent(updated, eventAction, current);
   if (pauseMatching) await pauseMatchingForLearningReview(userId);
   res.json(serialize(updated!));
 });
