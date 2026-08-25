@@ -389,11 +389,26 @@ State: merged to `main` and verified.
   ordered migrations through `0049`, and 102 API files with 941 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D2C: canonical Journey source-route retirement
+
+State: merged to `main` and verified.
+
+- `/mirror/journal` and `/mirror/dates` are compatibility redirects after their
+  create, edit, search, kind filter, trash/restore, and guided capture behavior
+  was absorbed by Journey.
+- Redirects preserve search text, active/trash state, record kind, and exact
+  durable source ids. Invalid ids are ignored instead of opening a different
+  member record.
+- Canonical source links now point directly into Journey and reopen the original
+  active record for editing. Durable APIs and source data remain in place.
+- PR #37 merged as `2f6babb5`; GitHub Actions run `32865345421` passed
+  typecheck, lint, schema drift, voice lint, 41 web files with 267 tests,
+  ordered migrations through `0049`, and 102 API files with 941 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Preserve exact journal/date source deep links in Journey, then turn those
-   fully absorbed duplicate member pages into compatibility redirects.
-2. Absorb experiments, wins, and follow-up reflections into the same record.
-3. Consolidate games and quizzes into Play with confirmed-learning handoff.
-4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+1. Absorb experiments, wins, and follow-up reflections into the same record.
+2. Consolidate games and quizzes into Play with confirmed-learning handoff.
+3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
