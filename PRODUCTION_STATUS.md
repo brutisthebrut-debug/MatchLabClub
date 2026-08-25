@@ -135,6 +135,14 @@ segment plan.
   member-governed Mirror change record: 38 web files with 255 tests, the
   ordered migration chain through `0049`, and 102 API files with 937 tests on
   clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32798465856 passed both required jobs on PR #28 for the
+  persistent seeded-demo flag: 39 web files with 256 tests, the ordered
+  migration chain through `0049`, and 102 API files with 937 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32801706555 passed both required jobs on PR #29 for the
+  canonical Journey record foundation: 40 web files with 258 tests, the
+  ordered migration chain through `0049`, and 102 API files with 939 tests on
+  clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
