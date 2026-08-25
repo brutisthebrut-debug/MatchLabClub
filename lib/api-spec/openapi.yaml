@@ -4452,6 +4452,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/journey/record:
+    get:
+      tags: [Matching]
+      operationId: getMyJourneyRecord
+      summary: Get the signed-in member's canonical saved Journey record
+      description: |
+        Combines the caller's active journal reflections and post-date notes
+        into one chronological, source-backed record. Raw member content is
+        returned only to its owner. Deleted items and other members' records
+        are excluded. This is a private history, not a readiness score.
+      responses:
+        '200':
+          description: The caller's canonical Journey record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyRecord'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/journey/summary:
     get:
       tags: [Matching]
@@ -12727,6 +12751,67 @@ components:
           description: >-
             True when the caller has any journey event on record, so the
             client can show a first-week welcome state instead of zeros.
+
+    JourneyRecordSource:
+      type: object
+      required: [type, id, label]
+      properties:
+        type:
+          type: string
+          enum: [journal_entry, post_date_note]
+        id:
+          type: integer
+        label:
+          type: string
+
+    JourneyRecordItem:
+      type: object
+      required: [id, kind, source, title, body, details, occurredAt, updatedAt, href]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [reflection, date]
+        source:
+          $ref: '#/components/schemas/JourneyRecordSource'
+        title:
+          type: string
+        body:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        occurredAt:
+          type: string
+        updatedAt:
+          type: string
+        href:
+          type: string
+
+    JourneyRecord:
+      type: object
+      required: [summary, records]
+      properties:
+        summary:
+          type: object
+          required: [total, reflections, dates, headline]
+          properties:
+            total:
+              type: integer
+              minimum: 0
+            reflections:
+              type: integer
+              minimum: 0
+            dates:
+              type: integer
+              minimum: 0
+            headline:
+              type: string
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyRecordItem'
 
     Achievement:
       type: object
