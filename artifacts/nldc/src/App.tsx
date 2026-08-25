@@ -13,6 +13,7 @@ import {
   getListWellnessAnswersQueryKey,
 } from "@workspace/api-client-react";
 import { hasCompletedOnboarding } from "@/lib/onboardingState";
+import { DemoAccountFlag } from "@/components/DemoAccountFlag";
 import {
   PROFILE_PROJECT_AUDIT_CAPTURE_HREF,
   profileProjectAuditHistoryHref,
@@ -358,6 +359,7 @@ function App() {
           <OnboardingGate />
           <Router />
         </WouterRouter>
+        <DemoAccountFlag />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
