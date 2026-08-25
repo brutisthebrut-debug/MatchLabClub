@@ -446,10 +446,29 @@ State: merged to `main` and verified.
   ordered migrations through `0050`, and 104 API files with 948 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D3C: durable follow-up reflection absorption
+
+State: merged to `main` and verified.
+
+- The browser-only demo follow-up list is replaced by account-backed Journey
+  follow-up records linked to an owned reflection, date debrief, win, or
+  experiment. The server validates that the source is active and member-owned.
+- Journey owns creation from an exact source moment, starter questions,
+  pending/answered/skipped states, editing, search/filter, exact deep links,
+  recoverable removal, and restoration.
+- A `follow_up_logged` readiness signal is written exactly once on the first
+  answered state. Skipping, reopening, or editing an answer cannot inflate it.
+- Follow-ups are included in member export and both account-deletion paths.
+  Migration `0051` and its Drizzle snapshot define the durable source.
+- `/progress/followup` now redirects to the canonical Journey follow-up view.
+  Existing Echo recommendation send-through telemetry remains separate.
+- PR #43 merged as `69d383a3`; GitHub Actions run `32896879027` passed
+  typecheck, lint, schema drift, voice lint, 41 web files with 276 tests,
+  ordered migrations through `0051`, and 105 API files with 951 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Replace demo-only follow-up state with durable Journey-owned reflection
-   records, then retire its duplicate screen only after lifecycle parity.
-2. Consolidate games and quizzes into Play with confirmed-learning handoff.
-3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+1. Consolidate games and quizzes into Play with confirmed-learning handoff.
+2. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
