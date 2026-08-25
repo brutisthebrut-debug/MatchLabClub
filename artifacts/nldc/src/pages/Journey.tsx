@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "wouter";
-import { BookHeart, CalendarCheck, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles } from "lucide-react";
+import { ArchiveRestore, BookHeart, CalendarCheck, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   getJourneyRecord,
+  removeJourneyItem,
+  restoreJourneyItem,
   saveDateDebrief,
   saveReflection,
   type DateOutcome,
@@ -132,7 +134,7 @@ function DateComposer({ item, onCancel, onSaved }: { item?: JourneyRecordItem; o
   );
 }
 
-function JourneyItem({ item, onEdit }: { item: JourneyRecordItem; onEdit: () => void }) {
+function JourneyItem({ item, removed, busy, onEdit, onRemove, onRestore }: { item: JourneyRecordItem; removed: boolean; busy: boolean; onEdit: () => void; onRemove: () => void; onRestore: () => void }) {
   const Icon = item.kind === "date" ? CalendarCheck : BookHeart;
   const positive = detailString(item, "whatWentWell");
   const difficult = detailString(item, "whatDidnt");
@@ -143,7 +145,9 @@ function JourneyItem({ item, onEdit }: { item: JourneyRecordItem; onEdit: () => 
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.body}</p>
       {positive && <p className="mt-3 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt good:</strong> {positive}</p>}
       {difficult && <p className="mt-1 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt difficult:</strong> {difficult}</p>}
-      <div className="mt-4 flex flex-wrap gap-4"><button type="button" onClick={onEdit} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit here</button><Link href={item.href} className="text-xs font-bold text-muted-foreground hover:underline">Open source record</Link></div>
+      <div className="mt-4 flex flex-wrap gap-4">
+        {removed ? <button type="button" disabled={busy} onClick={onRestore} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline disabled:opacity-50"><ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />Restore</button> : <><button type="button" onClick={onEdit} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit here</button><button type="button" disabled={busy} onClick={onRemove} className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"><Trash2 className="mr-1.5 h-3.5 w-3.5" />Remove</button><Link href={item.href} className="text-xs font-bold text-muted-foreground hover:underline">Open source record</Link></>}
+      </div>
     </article>
   );
 }
@@ -156,18 +160,50 @@ export default function Journey() {
   const [query, setQuery] = useState("");
   const [composer, setComposer] = useState<Composer | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [recordView, setRecordView] = useState<"active" | "trash">("active");
+  const [busyItem, setBusyItem] = useState<string | null>(null);
 
-  function load() {
+  const load = useCallback((view: "active" | "trash" = recordView) => {
     setLoading(true);
     setError(null);
-    void getJourneyRecord().then(setRecord).catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
-  }
-  useEffect(load, []);
+    void getJourneyRecord(view).then(setRecord).catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
+  }, [recordView]);
+  useEffect(() => { load(recordView); }, [load, recordView]);
 
   function saved(kind: "reflection" | "date") {
     setComposer(null);
     setNotice(kind === "reflection" ? "Reflection saved to your Journey." : "Date debrief saved to your Journey.");
-    load();
+    setRecordView("active");
+    load("active");
+  }
+
+  async function remove(item: JourneyRecordItem) {
+    if (!window.confirm("Remove this moment from your Journey? You can restore it later.")) return;
+    setBusyItem(item.id);
+    setError(null);
+    try {
+      await removeJourneyItem(item);
+      setNotice("Moment removed. It is still available under Recently removed.");
+      load("active");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "This moment could not be removed.");
+    } finally {
+      setBusyItem(null);
+    }
+  }
+
+  async function restore(item: JourneyRecordItem) {
+    setBusyItem(item.id);
+    setError(null);
+    try {
+      await restoreJourneyItem(item);
+      setNotice("Moment restored to your Journey.");
+      load("trash");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "This moment could not be restored.");
+    } finally {
+      setBusyItem(null);
+    }
   }
 
   const records = useMemo(() => (record?.records ?? []).filter((item) => {
@@ -200,8 +236,8 @@ export default function Journey() {
         ) : record ? (
           <section className="mt-10">
             <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5"><p className="font-bold">{record.summary.headline}</p><p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs</p></div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex gap-2">{(["all", "reflection", "date"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "default" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : "Reflections"}</Button>)}</div><div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div></div>
-            {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} onEdit={() => { setNotice(null); setComposer({ kind: item.kind, item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">No saved moments match this view.</p><p className="mt-2 text-sm text-muted-foreground">Change the filter or capture the next moment you want to keep.</p></div>}
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap gap-2"><Button size="sm" variant={recordView === "active" ? "default" : "outline"} onClick={() => setRecordView("active")}>Journey</Button><Button size="sm" variant={recordView === "trash" ? "default" : "outline"} onClick={() => setRecordView("trash")}>Recently removed</Button><span className="mx-1 hidden h-8 border-l border-foreground/10 sm:block" />{(["all", "reflection", "date"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "secondary" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : "Reflections"}</Button>)}</div><div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div></div>
+            {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} removed={recordView === "trash"} busy={busyItem === item.id} onRemove={() => { void remove(item); }} onRestore={() => { void restore(item); }} onEdit={() => { setNotice(null); setComposer({ kind: item.kind, item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">{recordView === "trash" ? "Nothing is waiting to be restored." : "No saved moments match this view."}</p><p className="mt-2 text-sm text-muted-foreground">{recordView === "trash" ? "Removed moments will stay recoverable here." : "Change the filter or capture the next moment you want to keep."}</p></div>}
           </section>
         ) : null}
       </main>
