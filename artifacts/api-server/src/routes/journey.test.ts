@@ -126,7 +126,7 @@ describe("GET /api/me/journey/record", () => {
   });
 
   it("combines only the member's active reflections and date notes", async () => {
-    const { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, postDateNotesTable } = await import("../lib/testDb");
+    const { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, postDateNotesTable } = await import("../lib/testDb");
     testApp.setUser({ id: "journey-owner" });
     await db.insert(journalEntriesTable).values([
       { userId: "journey-owner", prompt: "What changed?", body: "I named what I needed.", tags: ["reflection"], mood: 4, deletedAt: null, updatedAt: new Date() },
@@ -149,25 +149,29 @@ describe("GET /api/me/journey/record", () => {
     await db.insert(datingWinsTable).values({ userId: "somebody-else", category: "personal-win", body: "Private other-member win", deletedAt: null, updatedAt: new Date() });
     await db.insert(journeyExperimentsTable).values({ userId: "journey-owner", title: "Leave room", description: "Stop at 80 percent.", status: "planned", result: "", deletedAt: null, updatedAt: new Date() });
     await db.insert(journeyExperimentsTable).values({ userId: "somebody-else", title: "Private experiment", description: "Not yours", status: "planned", result: "", deletedAt: null, updatedAt: new Date() });
+    await db.insert(journeyFollowUpsTable).values({ userId: "journey-owner", sourceType: "journal_entry", sourceId: 1, sourceLabel: "What changed?", question: "Did it hold up?", status: "answered", answer: "Yes.", deletedAt: null, updatedAt: new Date() });
+    await db.insert(journeyFollowUpsTable).values({ userId: "somebody-else", sourceType: "journal_entry", sourceId: 2, sourceLabel: "Private", question: "Private follow-up", status: "pending", answer: "", deletedAt: null, updatedAt: new Date() });
 
     const response = await request(testApp.app).get("/api/me/journey/record");
     expect(response.status).toBe(200);
-    expect(response.body.summary).toMatchObject({ total: 4, reflections: 1, dates: 1, wins: 1, experiments: 1 });
-    expect(response.body.records.map((row: { kind: string }) => row.kind).sort()).toEqual(["date", "experiment", "reflection", "win"]);
+    expect(response.body.summary).toMatchObject({ total: 5, reflections: 1, dates: 1, wins: 1, experiments: 1, followUps: 1 });
+    expect(response.body.records.map((row: { kind: string }) => row.kind).sort()).toEqual(["date", "experiment", "follow-up", "reflection", "win"]);
     expect(JSON.stringify(response.body)).not.toContain("Deleted thought");
     expect(JSON.stringify(response.body)).not.toContain("Private other-member entry");
     expect(JSON.stringify(response.body)).not.toContain("Private other-member win");
     expect(JSON.stringify(response.body)).not.toContain("Private experiment");
+    expect(JSON.stringify(response.body)).not.toContain("Private follow-up");
     expect(response.body.records).toEqual(expect.arrayContaining([
       expect.objectContaining({ source: { type: "journal_entry", id: expect.any(Number), label: "Journal" }, href: expect.stringMatching(/^\/journey\?reflection=/), details: expect.objectContaining({ prompt: "What changed?", mood: 4 }) }),
       expect.objectContaining({ title: "Date with Sam", href: expect.stringMatching(/^\/journey\?date=/), details: expect.objectContaining({ personLabel: "Sam", dateAt: null }) }),
       expect.objectContaining({ source: { type: "dating_win", id: expect.any(Number), label: "Win" }, href: expect.stringMatching(/^\/journey\?win=/), details: { category: "personal-win" } }),
       expect.objectContaining({ source: { type: "journey_experiment", id: expect.any(Number), label: "Experiment" }, href: expect.stringMatching(/^\/journey\?experiment=/), details: expect.objectContaining({ status: "planned" }) }),
+      expect.objectContaining({ source: { type: "journey_follow_up", id: expect.any(Number), label: "Follow-up" }, href: expect.stringMatching(/^\/journey\?followUp=/), details: expect.objectContaining({ status: "answered", linkedSource: expect.objectContaining({ type: "journal_entry" }) }) }),
     ]));
   });
 
   it("returns only the member's removed moments in the recoverable trash view", async () => {
-    const { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, postDateNotesTable } = await import("../lib/testDb");
+    const { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, postDateNotesTable } = await import("../lib/testDb");
     testApp.setUser({ id: "journey-trash-owner" });
     await db.insert(journalEntriesTable).values([
       { userId: "journey-trash-owner", prompt: "Keep", body: "Active thought", tags: [], deletedAt: null, updatedAt: new Date() },
@@ -177,14 +181,16 @@ describe("GET /api/me/journey/record", () => {
     await db.insert(postDateNotesTable).values({ userId: "journey-trash-owner", summary: "Removed date", whatWentWell: "", whatDidnt: "", deletedAt: new Date(), updatedAt: new Date() });
     await db.insert(datingWinsTable).values({ userId: "journey-trash-owner", category: "great-convo", body: "Removed win", deletedAt: new Date(), updatedAt: new Date() });
     await db.insert(journeyExperimentsTable).values({ userId: "journey-trash-owner", title: "Removed experiment", description: "Try it", status: "tried", result: "Learned", deletedAt: new Date(), updatedAt: new Date() });
+    await db.insert(journeyFollowUpsTable).values({ userId: "journey-trash-owner", sourceType: "journey_experiment", sourceId: 1, sourceLabel: "Removed experiment", question: "Removed follow-up", status: "pending", answer: "", deletedAt: new Date(), updatedAt: new Date() });
 
     const response = await request(testApp.app).get("/api/me/journey/record?view=trash");
     expect(response.status).toBe(200);
-    expect(response.body.summary).toMatchObject({ total: 4, reflections: 1, dates: 1, wins: 1, experiments: 1 });
+    expect(response.body.summary).toMatchObject({ total: 5, reflections: 1, dates: 1, wins: 1, experiments: 1, followUps: 1 });
     expect(JSON.stringify(response.body)).toContain("Removed thought");
     expect(JSON.stringify(response.body)).toContain("Removed date");
     expect(JSON.stringify(response.body)).toContain("Removed win");
     expect(JSON.stringify(response.body)).toContain("Removed experiment");
+    expect(JSON.stringify(response.body)).toContain("Removed follow-up");
     expect(JSON.stringify(response.body)).not.toContain("Active thought");
     expect(JSON.stringify(response.body)).not.toContain("Other removed thought");
   });
