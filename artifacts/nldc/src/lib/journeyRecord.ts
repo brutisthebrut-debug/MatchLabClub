@@ -17,6 +17,42 @@ export interface JourneyRecordResponse {
   records: JourneyRecordItem[];
 }
 
+export interface ReflectionInput {
+  prompt: string | null;
+  body: string;
+  tags: string[];
+  mood: number | null;
+}
+
+export type DateOutcome = "another_date" | "no_more" | "unsure" | "ghosted";
+
+export interface DateDebriefInput {
+  dateAt: string | null;
+  personLabel: string | null;
+  platform: string | null;
+  summary: string;
+  whatWentWell: string;
+  whatDidnt: string;
+  followUpPlanned: boolean;
+  outcome: DateOutcome | null;
+}
+
+async function request<T>(url: string, method: "POST" | "PATCH", payload: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method,
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const body = (await response.json().catch(() => null)) as T | { error?: string } | null;
+  if (!response.ok) {
+    throw new Error(body && typeof body === "object" && "error" in body && body.error
+      ? body.error
+      : "That moment could not be saved.");
+  }
+  return body as T;
+}
+
 export async function getJourneyRecord(): Promise<JourneyRecordResponse> {
   const response = await fetch("/api/me/journey/record", { credentials: "include" });
   const body = (await response.json().catch(() => null)) as JourneyRecordResponse | { error?: string } | null;
@@ -24,4 +60,12 @@ export async function getJourneyRecord(): Promise<JourneyRecordResponse> {
     throw new Error(body && "error" in body && body.error ? body.error : "Your Journey could not load.");
   }
   return body as JourneyRecordResponse;
+}
+
+export async function saveReflection(input: ReflectionInput, id?: number): Promise<unknown> {
+  return request(id ? `/api/journal/${id}` : "/api/journal", id ? "PATCH" : "POST", input);
+}
+
+export async function saveDateDebrief(input: DateDebriefInput, id?: number): Promise<unknown> {
+  return request(id ? `/api/post-date-notes/${id}` : "/api/post-date-notes", id ? "PATCH" : "POST", input);
 }
