@@ -45,7 +45,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       },
       occurredAt: iso(entry.createdAt),
       updatedAt: iso(entry.updatedAt),
-      href: `/mirror/journal?entry=${entry.id}`,
+      href: `/journey?reflection=${entry.id}`,
     })),
     ...dateNotes.map((note) => ({
       id: `date:${note.id}`,
@@ -64,7 +64,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       },
       occurredAt: iso(note.dateAt ?? note.createdAt),
       updatedAt: iso(note.updatedAt),
-      href: `/mirror/dates?note=${note.id}`,
+      href: `/journey?date=${note.id}`,
     })),
   ].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
 

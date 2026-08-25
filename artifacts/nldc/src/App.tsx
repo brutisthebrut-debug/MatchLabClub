@@ -18,7 +18,7 @@ import {
   PROFILE_PROJECT_AUDIT_CAPTURE_HREF,
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
-import { GUIDED_DEBRIEF_HREF } from "@/lib/journeyRoutes";
+import { datesCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref } from "@/lib/journeyRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -101,8 +101,6 @@ const Feedback = lazy(() => import("@/pages/Feedback"));
 const SampleReport = lazy(() => import("@/pages/SampleReport"));
 const Scan = lazy(() => import("@/pages/Scan"));
 const Trash = lazy(() => import("@/pages/Trash"));
-const JournalPage = lazy(() => import("@/pages/mirror/JournalPage"));
-const DatesPage = lazy(() => import("@/pages/mirror/DatesPage"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Quizzes = lazy(() => import("@/pages/Quizzes"));
@@ -189,6 +187,16 @@ function ScrollToTop() {
   return null;
 }
 
+function JournalCompatibilityRedirect() {
+  const [location] = useLocation();
+  return <Redirect to={journalCompatibilityHref(location, typeof window === "undefined" ? "" : window.location.search)} />;
+}
+
+function DatesCompatibilityRedirect() {
+  const [location] = useLocation();
+  return <Redirect to={datesCompatibilityHref(location, typeof window === "undefined" ? "" : window.location.search)} />;
+}
+
 function Router() {
   usePageTracking();
   return (
@@ -260,8 +268,10 @@ function Router() {
         <Route path="/your-mirror" component={YourMirror} />
         <Route path="/echo" component={Echo} />
         <Route path="/how-it-works" component={HowItWorks} />
-        <Route path="/mirror/journal" component={JournalPage} />
-        <Route path="/mirror/dates" component={DatesPage} />
+        {/* Journal and date records are fully absorbed into Journey. Preserve
+            list state and exact durable ids for every saved compatibility URL. */}
+        <Route path="/mirror/journal" component={JournalCompatibilityRedirect} />
+        <Route path="/mirror/dates" component={DatesCompatibilityRedirect} />
         <Route path="/archetype" component={Archetype} />
         <Route path="/reflection" component={Reflection} />
         <Route path="/profile-reader" component={ProfileReader} />

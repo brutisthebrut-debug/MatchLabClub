@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { ArchiveRestore, ArrowRight, BookHeart, CalendarCheck, Heart, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
@@ -15,7 +15,7 @@ import {
   type JourneyRecordItem,
   type JourneyRecordResponse,
 } from "@/lib/journeyRecord";
-import { shouldOpenGuidedDebrief } from "@/lib/journeyRoutes";
+import { readJourneyRouteState, shouldOpenGuidedDebrief } from "@/lib/journeyRoutes";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 
 type Composer = { kind: "reflection" | "date" | "guided-date"; item?: JourneyRecordItem };
@@ -263,7 +263,7 @@ function JourneyItem({ item, removed, busy, onEdit, onRemove, onRestore }: { ite
       {positive && <p className="mt-3 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt good:</strong> {positive}</p>}
       {difficult && <p className="mt-1 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt difficult:</strong> {difficult}</p>}
       <div className="mt-4 flex flex-wrap gap-4">
-        {removed ? <button type="button" disabled={busy} onClick={onRestore} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline disabled:opacity-50"><ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />Restore</button> : <><button type="button" onClick={onEdit} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit here</button><button type="button" disabled={busy} onClick={onRemove} className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"><Trash2 className="mr-1.5 h-3.5 w-3.5" />Remove</button><Link href={item.href} className="text-xs font-bold text-muted-foreground hover:underline">Open source record</Link></>}
+        {removed ? <button type="button" disabled={busy} onClick={onRestore} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline disabled:opacity-50"><ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />Restore</button> : <><button type="button" onClick={onEdit} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit here</button><button type="button" disabled={busy} onClick={onRemove} className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"><Trash2 className="mr-1.5 h-3.5 w-3.5" />Remove</button></>}
       </div>
     </article>
   );
@@ -271,15 +271,18 @@ function JourneyItem({ item, removed, busy, onEdit, onRemove, onRestore }: { ite
 
 export default function Journey() {
   const [location] = useLocation();
+  const browserSearch = typeof window === "undefined" ? "" : window.location.search;
+  const initialRoute = readJourneyRouteState(location, browserSearch);
   const [record, setRecord] = useState<JourneyRecordResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "reflection" | "date">("all");
-  const [query, setQuery] = useState("");
-  const [composer, setComposer] = useState<Composer | null>(() => shouldOpenGuidedDebrief(location, typeof window === "undefined" ? "" : window.location.search) ? { kind: "guided-date" } : null);
+  const [filter, setFilter] = useState<"all" | "reflection" | "date">(initialRoute.kind);
+  const [query, setQuery] = useState(initialRoute.query);
+  const [composer, setComposer] = useState<Composer | null>(() => shouldOpenGuidedDebrief(location, browserSearch) ? { kind: "guided-date" } : null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [recordView, setRecordView] = useState<"active" | "trash">("active");
+  const [recordView, setRecordView] = useState<"active" | "trash">(initialRoute.view);
   const [busyItem, setBusyItem] = useState<string | null>(null);
+  const deepLinkHandled = useRef(false);
 
   const load = useCallback((view: "active" | "trash" = recordView) => {
     setLoading(true);
@@ -287,6 +290,16 @@ export default function Journey() {
     void getJourneyRecord(view).then(setRecord).catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
   }, [recordView]);
   useEffect(() => { load(recordView); }, [load, recordView]);
+  useEffect(() => {
+    if (loading || deepLinkHandled.current || !initialRoute.source) return;
+    deepLinkHandled.current = true;
+    const source = initialRoute.source;
+    const item = record?.records.find((candidate) => candidate.source.type === source.type && candidate.source.id === source.id);
+    if (item && recordView === "active") {
+      setComposer({ kind: item.kind, item });
+      setNotice("Opened the exact saved moment from your link.");
+    }
+  }, [initialRoute.source, loading, record, recordView]);
 
   function saved(kind: "reflection" | "date") {
     setComposer(null);
