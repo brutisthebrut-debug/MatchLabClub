@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link } from "wouter";
-import { ArchiveRestore, BookHeart, CalendarCheck, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { ArchiveRestore, ArrowRight, BookHeart, CalendarCheck, Heart, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,46 @@ import {
   type JourneyRecordItem,
   type JourneyRecordResponse,
 } from "@/lib/journeyRecord";
+import { shouldOpenGuidedDebrief } from "@/lib/journeyRoutes";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 
-type Composer = { kind: "reflection" | "date"; item?: JourneyRecordItem };
+type Composer = { kind: "reflection" | "date" | "guided-date"; item?: JourneyRecordItem };
+
+const FELT_GOOD = ["Good chemistry", "Easy conversation", "Mutual curiosity", "Real connection", "I felt like myself", "They were engaged", "Physical attraction"];
+const FELT_OFF = ["Forced conversation", "Felt one-sided", "Wasn't present", "Mixed signals", "Felt judged", "Too much pressure", "Something felt off"];
+const GUIDED_OUTCOMES: Array<{ label: string; value: DateOutcome }> = [
+  { label: "Another date", value: "another_date" },
+  { label: "No more dates", value: "no_more" },
+  { label: "No response", value: "ghosted" },
+  { label: "Still deciding", value: "unsure" },
+];
+
+interface GuidedResult { patternRead: string; coachInsight: string }
+
+function guidedFallback(good: string[], off: string[], outcome: DateOutcome | null): GuidedResult {
+  const patternRead = good.length > off.length
+    ? "There is real signal in what felt easy, mutual, or true to you. Keep noticing whether that quality stays consistent as the connection gets more specific."
+    : good.length > 0
+      ? "This sounds mixed rather than simply good or bad. Hold both sides of the experience; the useful question is whether the difficult parts were situational or part of the fit."
+      : "Not every interaction gives a clean answer. What felt absent or effortful is still useful information about the conditions where you connect best.";
+  const coachInsight = outcome === "another_date"
+    ? "Stay curious and consistent without turning one promising interaction into proof of the whole relationship."
+    : outcome === "no_more" || outcome === "ghosted"
+      ? "Let the ending be information, not a verdict on your worth. Keep the clearest lesson and release the rest."
+      : "Give yourself a little room before deciding what this meant or what you should do next.";
+  return { patternRead, coachInsight };
+}
+
+function parseGuidedResult(raw: string | undefined, fallback: GuidedResult): GuidedResult {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw) as Partial<GuidedResult>;
+    return {
+      patternRead: typeof parsed.patternRead === "string" && parsed.patternRead.length > 10 ? parsed.patternRead : fallback.patternRead,
+      coachInsight: typeof parsed.coachInsight === "string" && parsed.coachInsight.length > 10 ? parsed.coachInsight : fallback.coachInsight,
+    };
+  } catch { return fallback; }
+}
 
 function when(value: string): string {
   const date = new Date(value);
@@ -134,6 +173,84 @@ function DateComposer({ item, onCancel, onSaved }: { item?: JourneyRecordItem; o
   );
 }
 
+function GuidedDateComposer({ onCancel, onSaved }: { onCancel: () => void; onSaved: () => void }) {
+  const [what, setWhat] = useState("");
+  const [dateAt, setDateAt] = useState("");
+  const [personLabel, setPersonLabel] = useState("");
+  const [platform, setPlatform] = useState("");
+  const [good, setGood] = useState<string[]>([]);
+  const [off, setOff] = useState<string[]>([]);
+  const [outcome, setOutcome] = useState<DateOutcome | null>(null);
+  const [followUpPlanned, setFollowUpPlanned] = useState(false);
+  const [result, setResult] = useState<GuidedResult | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const enhance = useEnhanceAi();
+
+  function toggle(value: string, selected: string[], setSelected: (values: string[]) => void) {
+    setSelected(selected.includes(value) ? selected.filter((item) => item !== value) : [...selected, value]);
+  }
+
+  async function generate() {
+    if (!what.trim() && good.length === 0 && off.length === 0) return;
+    setSaving(true);
+    setError(null);
+    const fallback = guidedFallback(good, off, outcome);
+    try {
+      const note = await saveDateDebrief({
+        dateAt: dateAt ? new Date(`${dateAt}T12:00:00`).toISOString() : null,
+        personLabel: personLabel.trim() || null,
+        platform: platform.trim() || null,
+        summary: what.trim() || "Debrief captured from the moments I selected.",
+        whatWentWell: good.join(", "),
+        whatDidnt: off.join(", "),
+        followUpPlanned,
+        outcome,
+      });
+      rememberAnonymousId("postDateNotes", note.id);
+      setResult(fallback);
+      onSaved();
+      const prompt = [
+        what.trim() && `What happened: ${what.trim()}`,
+        good.length > 0 && `What felt good: ${good.join(", ")}`,
+        off.length > 0 && `What felt difficult or confusing: ${off.join(", ")}`,
+        outcome && `Current outcome: ${outcome}`,
+        "Return JSON with patternRead and coachInsight. Be warm, direct, specific, non-clinical, and avoid certainty beyond the evidence.",
+      ].filter(Boolean).join("\n\n");
+      enhance.mutate({ data: { toolName: "Journey date debrief", prompt, expectJson: true } }, {
+        onSuccess: (data) => setResult(parseGuidedResult((data as { output?: string } | undefined)?.output, fallback)),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Your debrief could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (result) return (
+    <section className="mt-7 rounded-3xl border border-[hsl(348_55%_65%/0.25)] bg-[hsl(348_55%_65%/0.05)] p-5 sm:p-6">
+      <div className="flex items-center gap-2 text-[hsl(348_55%_55%)]"><Heart className="h-4 w-4" /><p className="text-xs font-bold uppercase tracking-[0.16em]">Saved to Journey</p></div>
+      {enhance.isPending && <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Echo is reading the pattern…</p>}
+      <div className="mt-5 grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-foreground/10 bg-background/70 p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pattern read</p><p className="mt-3 text-sm leading-6 text-muted-foreground">{result.patternRead}</p></div><div className="rounded-2xl border border-foreground/10 bg-background/70 p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">What to carry forward</p><p className="mt-3 text-sm leading-6 text-muted-foreground">{result.coachInsight}</p></div></div>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><Link href="/coach" className="inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)] hover:underline">Ask Echo about your next message <ArrowRight className="ml-1.5 h-4 w-4" /></Link><Button type="button" variant="outline" onClick={onCancel}>Back to Journey</Button></div>
+    </section>
+  );
+
+  return (
+    <section className="mt-7 rounded-3xl border border-[hsl(348_55%_65%/0.25)] bg-[hsl(348_55%_65%/0.05)] p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[hsl(348_55%_55%)]">Guided date debrief</p><h2 className="mt-1 font-serif text-2xl font-bold">What happened, and what did you notice?</h2><p className="mt-2 text-sm text-muted-foreground">Save the facts first. Echo will offer a grounded pattern read without turning one date into a verdict.</p></div><Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button></div>
+      <div className="mt-5 grid gap-4 sm:grid-cols-3"><label className="grid gap-2 text-sm font-bold">Date<Input type="date" value={dateAt} onChange={(event) => setDateAt(event.target.value)} /></label><label className="grid gap-2 text-sm font-bold">First name or label<Input value={personLabel} onChange={(event) => setPersonLabel(event.target.value)} maxLength={120} placeholder="Optional" /></label><label className="grid gap-2 text-sm font-bold">Where you met<Input value={platform} onChange={(event) => setPlatform(event.target.value)} maxLength={40} placeholder="Optional" /></label></div>
+      <label className="mt-4 grid gap-2 text-sm font-bold">What happened?<textarea value={what} onChange={(event) => setWhat(event.target.value)} maxLength={20000} rows={5} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal leading-6 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="A date, a conversation, or a message exchange—brief is fine." /></label>
+      <div className="mt-5"><p className="text-sm font-bold">What felt good?</p><div className="mt-2 flex flex-wrap gap-2">{FELT_GOOD.map((value) => <button type="button" key={value} onClick={() => toggle(value, good, setGood)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${good.includes(value) ? "border-[hsl(142_45%_42%/0.5)] bg-[hsl(142_45%_42%/0.12)]" : "border-foreground/10 bg-background"}`}>{value}</button>)}</div></div>
+      <div className="mt-5"><p className="text-sm font-bold">What felt difficult or confusing?</p><div className="mt-2 flex flex-wrap gap-2">{FELT_OFF.map((value) => <button type="button" key={value} onClick={() => toggle(value, off, setOff)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${off.includes(value) ? "border-[hsl(348_55%_55%/0.5)] bg-[hsl(348_55%_55%/0.12)]" : "border-foreground/10 bg-background"}`}>{value}</button>)}</div></div>
+      <div className="mt-5"><p className="text-sm font-bold">Where does it stand?</p><div className="mt-2 flex flex-wrap gap-2">{GUIDED_OUTCOMES.map(({ label, value }) => <button type="button" key={label} onClick={() => setOutcome(outcome === value ? null : value)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${outcome === value ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.12)]" : "border-foreground/10 bg-background"}`}>{label}</button>)}</div></div>
+      <label className="mt-5 flex items-center gap-3 text-sm font-bold"><input type="checkbox" checked={followUpPlanned} onChange={(event) => setFollowUpPlanned(event.target.checked)} className="h-4 w-4" />I plan to follow up</label>
+      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      <div className="mt-6 flex justify-end"><Button type="button" onClick={() => { void generate(); }} disabled={saving || (!what.trim() && good.length === 0 && off.length === 0)}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}Save and read the pattern</Button></div>
+    </section>
+  );
+}
+
 function JourneyItem({ item, removed, busy, onEdit, onRemove, onRestore }: { item: JourneyRecordItem; removed: boolean; busy: boolean; onEdit: () => void; onRemove: () => void; onRestore: () => void }) {
   const Icon = item.kind === "date" ? CalendarCheck : BookHeart;
   const positive = detailString(item, "whatWentWell");
@@ -153,12 +270,13 @@ function JourneyItem({ item, removed, busy, onEdit, onRemove, onRestore }: { ite
 }
 
 export default function Journey() {
+  const [location] = useLocation();
   const [record, setRecord] = useState<JourneyRecordResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "reflection" | "date">("all");
   const [query, setQuery] = useState("");
-  const [composer, setComposer] = useState<Composer | null>(null);
+  const [composer, setComposer] = useState<Composer | null>(() => shouldOpenGuidedDebrief(location, typeof window === "undefined" ? "" : window.location.search) ? { kind: "guided-date" } : null);
   const [notice, setNotice] = useState<string | null>(null);
   const [recordView, setRecordView] = useState<"active" | "trash">("active");
   const [busyItem, setBusyItem] = useState<string | null>(null);
@@ -173,6 +291,12 @@ export default function Journey() {
   function saved(kind: "reflection" | "date") {
     setComposer(null);
     setNotice(kind === "reflection" ? "Reflection saved to your Journey." : "Date debrief saved to your Journey.");
+    setRecordView("active");
+    load("active");
+  }
+
+  function guidedSaved() {
+    setNotice("Date debrief saved to your Journey.");
     setRecordView("active");
     load("active");
   }
@@ -220,13 +344,14 @@ export default function Journey() {
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">One private record of what happened, what you noticed, and what you want to try next.</p>
 
         <div className="mt-7 grid gap-3 sm:grid-cols-3">
-          <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "date" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Debrief a date</button>
+          <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "guided-date" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Debrief a date</button>
           <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "reflection" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Add a reflection</button>
           <Link href="/copilot/weekly-plan" className="rounded-2xl border border-foreground/10 p-4 text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]">Choose a weekly experiment</Link>
         </div>
 
         {composer?.kind === "reflection" && <ReflectionComposer key={`reflection-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("reflection")} />}
         {composer?.kind === "date" && <DateComposer key={`date-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("date")} />}
+        {composer?.kind === "guided-date" && <GuidedDateComposer onCancel={() => setComposer(null)} onSaved={guidedSaved} />}
         {notice && <p className="mt-5 rounded-2xl border border-[hsl(150_45%_45%/0.25)] bg-[hsl(150_45%_45%/0.08)] px-4 py-3 text-sm font-bold">{notice}</p>}
 
         {loading ? (
