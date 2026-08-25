@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
-import { ArchiveRestore, ArrowRight, BookHeart, CalendarCheck, FlaskConical, Heart, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from "lucide-react";
+import { ArchiveRestore, ArrowRight, BookHeart, CalendarCheck, FlaskConical, Heart, HelpCircle, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles, Trash2 } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,12 @@ import {
   restoreJourneyItem,
   saveDateDebrief,
   saveExperiment,
+  saveFollowUp,
   saveReflection,
   saveWin,
   type DateOutcome,
   type ExperimentStatus,
+  type FollowUpStatus,
   type JourneyRecordItem,
   type JourneyRecordResponse,
   type WinCategory,
@@ -22,7 +24,7 @@ import {
 import { readJourneyRouteState, shouldOpenGuidedDebrief } from "@/lib/journeyRoutes";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 
-type Composer = { kind: "reflection" | "date" | "win" | "experiment" | "guided-date"; item?: JourneyRecordItem };
+type Composer = { kind: "reflection" | "date" | "win" | "experiment" | "follow-up" | "guided-date"; item?: JourneyRecordItem; sourceItem?: JourneyRecordItem };
 
 const WIN_CATEGORIES: Array<{ value: WinCategory; label: string }> = [
   { value: "sent-it", label: "Sent it" },
@@ -37,6 +39,13 @@ const EXPERIMENT_SUGGESTIONS = [
   "Ask directly for the plan instead of waiting for them to suggest it",
   "Name anxiety as a feeling, not evidence that something changed",
   "Give one uncertain connection two more genuine exchanges",
+];
+
+const FOLLOW_UP_SUGGESTIONS = [
+  "What feels different now that some time has passed?",
+  "What did their next action clarify?",
+  "What would I repeat or change next time?",
+  "Did the pattern I noticed hold up?",
 ];
 
 const FELT_GOOD = ["Good chemistry", "Easy conversation", "Mutual curiosity", "Real connection", "I felt like myself", "They were engaged", "Physical attraction"];
@@ -83,6 +92,14 @@ function when(value: string): string {
 function detailString(item: JourneyRecordItem, key: string): string {
   const value = item.details[key];
   return typeof value === "string" ? value : "";
+}
+
+function linkedSource(item: JourneyRecordItem): { type: "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment"; id: number; label: string } | null {
+  const value = item.details.linkedSource;
+  if (!value || typeof value !== "object") return null;
+  const source = value as Record<string, unknown>;
+  if ((source.type !== "journal_entry" && source.type !== "post_date_note" && source.type !== "dating_win" && source.type !== "journey_experiment") || typeof source.id !== "number" || typeof source.label !== "string") return null;
+  return { type: source.type, id: source.id, label: source.label };
 }
 
 function ReflectionComposer({ item, onCancel, onSaved }: { item?: JourneyRecordItem; onCancel: () => void; onSaved: () => void }) {
@@ -201,6 +218,58 @@ function ExperimentComposer({ item, onCancel, onSaved }: { item?: JourneyRecordI
       </div>
       {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
       <div className="mt-5 flex justify-end"><Button type="submit" disabled={saving || !title.trim()}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{item ? "Save experiment" : "Add to Journey"}</Button></div>
+    </form>
+  );
+}
+
+function FollowUpComposer({ item, sourceItem, sources, onCancel, onSaved }: { item?: JourneyRecordItem; sourceItem?: JourneyRecordItem; sources: JourneyRecordItem[]; onCancel: () => void; onSaved: () => void }) {
+  const savedSource = item ? linkedSource(item) : null;
+  const initialSource = savedSource
+    ? `${savedSource.type}:${savedSource.id}`
+    : sourceItem ? `${sourceItem.source.type}:${sourceItem.source.id}` : "";
+  const [sourceKey, setSourceKey] = useState(initialSource);
+  const [question, setQuestion] = useState(item?.title ?? "");
+  const [status, setStatus] = useState<FollowUpStatus>(item && typeof item.details.status === "string" ? item.details.status as FollowUpStatus : "pending");
+  const [answer, setAnswer] = useState(item?.body ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const selected = sources.find((candidate) => `${candidate.source.type}:${candidate.source.id}` === sourceKey);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!selected || !question.trim() || (status === "answered" && !answer.trim())) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await saveFollowUp({
+        sourceType: selected.source.type as "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment",
+        sourceId: selected.source.id,
+        sourceLabel: selected.title,
+        question: question.trim(),
+        status,
+        answer: status === "answered" ? answer.trim() : "",
+      }, item?.source.id);
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "This follow-up could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-7 rounded-3xl border border-[hsl(280_48%_58%/0.28)] bg-[hsl(280_48%_58%/0.06)] p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[hsl(280_48%_48%)]">Follow-up reflection</p><h2 className="mt-1 font-serif text-2xl font-bold">{item ? "Revisit this question" : "Leave yourself a question to return to"}</h2><p className="mt-2 text-sm text-muted-foreground">Every follow-up stays connected to the moment that prompted it.</p></div><Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button></div>
+      {!item && <div className="mt-5 flex flex-wrap gap-2">{FOLLOW_UP_SUGGESTIONS.map((suggestion) => <button type="button" key={suggestion} onClick={() => setQuestion(suggestion)} className="rounded-full border border-foreground/10 bg-background px-3 py-1.5 text-left text-xs font-bold hover:border-[hsl(280_48%_58%/0.4)]">{suggestion}</button>)}</div>}
+      <div className="mt-5 grid gap-4">
+        <label className="grid gap-2 text-sm font-bold">Moment to revisit<select value={sourceKey} onChange={(event) => setSourceKey(event.target.value)} required className="h-10 rounded-md border border-input bg-background px-3 text-sm font-normal"><option value="">Choose a saved moment</option>{sources.map((source) => <option key={source.id} value={`${source.source.type}:${source.source.id}`}>{source.source.label}: {source.title}</option>)}</select></label>
+        <label className="grid gap-2 text-sm font-bold">Question<Input value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={2000} required placeholder="What will be clearer after time or another interaction?" /></label>
+        <label className="grid gap-2 text-sm font-bold">Status<select value={status} onChange={(event) => { const next = event.target.value as FollowUpStatus; setStatus(next); if (next !== "answered") setAnswer(""); }} className="h-10 rounded-md border border-input bg-background px-3 text-sm font-normal"><option value="pending">Come back later</option><option value="answered">Answered</option><option value="skipped">Skip for now</option></select></label>
+        {status === "answered" && <label className="grid gap-2 text-sm font-bold">What do you know now?<textarea value={answer} onChange={(event) => setAnswer(event.target.value)} maxLength={10000} required rows={5} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal leading-6 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Answer in your own words. This will become part of the same Journey thread." /></label>}
+      </div>
+      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      <div className="mt-5 flex justify-end"><Button type="submit" disabled={saving || !selected || !question.trim() || (status === "answered" && !answer.trim())}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{item ? "Save follow-up" : "Add to Journey"}</Button></div>
     </form>
   );
 }
@@ -345,23 +414,25 @@ function GuidedDateComposer({ onCancel, onSaved }: { onCancel: () => void; onSav
   );
 }
 
-function JourneyItem({ item, removed, busy, onEdit, onRemove, onRestore }: { item: JourneyRecordItem; removed: boolean; busy: boolean; onEdit: () => void; onRemove: () => void; onRestore: () => void }) {
-  const Icon = item.kind === "date" ? CalendarCheck : item.kind === "win" ? Sparkles : item.kind === "experiment" ? FlaskConical : BookHeart;
+function JourneyItem({ item, removed, busy, onEdit, onFollowUp, onRemove, onRestore }: { item: JourneyRecordItem; removed: boolean; busy: boolean; onEdit: () => void; onFollowUp: () => void; onRemove: () => void; onRestore: () => void }) {
+  const Icon = item.kind === "date" ? CalendarCheck : item.kind === "win" ? Sparkles : item.kind === "experiment" ? FlaskConical : item.kind === "follow-up" ? HelpCircle : BookHeart;
   const positive = detailString(item, "whatWentWell");
   const difficult = detailString(item, "whatDidnt");
   const experimentResult = detailString(item, "result");
   const experimentStatus = detailString(item, "status");
+  const followUpSource = linkedSource(item);
   return (
     <article className="rounded-3xl border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-2 font-bold text-[hsl(248_62%_52%)]"><Icon className="h-4 w-4" /> {item.source.label}</span><span>{when(item.occurredAt)}</span></div>
       <h2 className="mt-3 font-serif text-xl font-bold">{item.title}</h2>
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.body}</p>
+      {followUpSource && <p className="mt-3 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">Linked moment:</strong> {followUpSource.label}</p>}
       {experimentStatus && <p className="mt-3 inline-flex rounded-full border border-foreground/10 bg-foreground/5 px-2.5 py-1 text-xs font-bold">{experimentStatus.replaceAll("-", " ")}</p>}
       {experimentResult && <p className="mt-3 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What happened:</strong> {experimentResult}</p>}
       {positive && <p className="mt-3 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt good:</strong> {positive}</p>}
       {difficult && <p className="mt-1 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt difficult:</strong> {difficult}</p>}
       <div className="mt-4 flex flex-wrap gap-4">
-        {removed ? <button type="button" disabled={busy} onClick={onRestore} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline disabled:opacity-50"><ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />Restore</button> : <><button type="button" onClick={onEdit} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit here</button><button type="button" disabled={busy} onClick={onRemove} className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"><Trash2 className="mr-1.5 h-3.5 w-3.5" />Remove</button></>}
+        {removed ? <button type="button" disabled={busy} onClick={onRestore} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline disabled:opacity-50"><ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />Restore</button> : <><button type="button" onClick={onEdit} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit here</button>{item.kind !== "follow-up" && <button type="button" onClick={onFollowUp} className="inline-flex items-center text-xs font-bold text-[hsl(280_48%_48%)] hover:underline"><HelpCircle className="mr-1.5 h-3.5 w-3.5" />Add follow-up</button>}<button type="button" disabled={busy} onClick={onRemove} className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"><Trash2 className="mr-1.5 h-3.5 w-3.5" />Remove</button></>}
       </div>
     </article>
   );
@@ -374,7 +445,7 @@ export default function Journey() {
   const [record, setRecord] = useState<JourneyRecordResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "reflection" | "date" | "win" | "experiment">(initialRoute.kind);
+  const [filter, setFilter] = useState<"all" | "reflection" | "date" | "win" | "experiment" | "follow-up">(initialRoute.kind);
   const [query, setQuery] = useState(initialRoute.query);
   const [composer, setComposer] = useState<Composer | null>(() => shouldOpenGuidedDebrief(location, browserSearch) ? { kind: "guided-date" } : null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -399,9 +470,9 @@ export default function Journey() {
     }
   }, [initialRoute.source, loading, record, recordView]);
 
-  function saved(kind: "reflection" | "date" | "win" | "experiment") {
+  function saved(kind: "reflection" | "date" | "win" | "experiment" | "follow-up") {
     setComposer(null);
-    setNotice(kind === "reflection" ? "Reflection saved to your Journey." : kind === "date" ? "Date debrief saved to your Journey." : kind === "win" ? "Win saved to your Journey." : "Experiment saved to your Journey.");
+    setNotice(kind === "reflection" ? "Reflection saved to your Journey." : kind === "date" ? "Date debrief saved to your Journey." : kind === "win" ? "Win saved to your Journey." : kind === "experiment" ? "Experiment saved to your Journey." : "Follow-up saved to your Journey.");
     setRecordView("active");
     load("active");
   }
@@ -446,6 +517,7 @@ export default function Journey() {
     const q = query.trim().toLowerCase();
     return !q || `${item.title} ${item.body} ${item.source.label}`.toLowerCase().includes(q);
   }), [record, filter, query]);
+  const followUpSources = useMemo(() => (record?.records ?? []).filter((item) => item.kind !== "follow-up"), [record]);
 
   return (
     <AppLayout>
@@ -454,17 +526,19 @@ export default function Journey() {
         <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight sm:text-5xl">Keep the thread, not a score.</h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">One private record of what happened, what you noticed, and what you want to try next.</p>
 
-        <div className="mt-7 grid gap-3 sm:grid-cols-4">
+        <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "guided-date" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Debrief a date</button>
           <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "reflection" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Add a reflection</button>
           <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "win" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(43_65%_55%/0.45)]"><Plus className="mr-2 h-4 w-4" />Log a win</button>
           <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "experiment" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(190_55%_50%/0.4)]"><Plus className="mr-2 h-4 w-4" />Choose an experiment</button>
+          <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "follow-up" }); }} disabled={followUpSources.length === 0} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(280_48%_58%/0.4)] disabled:cursor-not-allowed disabled:opacity-50"><Plus className="mr-2 h-4 w-4" />Add a follow-up</button>
         </div>
 
         {composer?.kind === "reflection" && <ReflectionComposer key={`reflection-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("reflection")} />}
         {composer?.kind === "date" && <DateComposer key={`date-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("date")} />}
         {composer?.kind === "win" && <WinComposer key={`win-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("win")} />}
         {composer?.kind === "experiment" && <ExperimentComposer key={`experiment-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("experiment")} />}
+        {composer?.kind === "follow-up" && <FollowUpComposer key={`follow-up-${composer.item?.id ?? composer.sourceItem?.id ?? "new"}`} item={composer.item} sourceItem={composer.sourceItem} sources={followUpSources} onCancel={() => setComposer(null)} onSaved={() => saved("follow-up")} />}
         {composer?.kind === "guided-date" && <GuidedDateComposer onCancel={() => setComposer(null)} onSaved={guidedSaved} />}
         {notice && <p className="mt-5 rounded-2xl border border-[hsl(150_45%_45%/0.25)] bg-[hsl(150_45%_45%/0.08)] px-4 py-3 text-sm font-bold">{notice}</p>}
 
@@ -474,9 +548,9 @@ export default function Journey() {
           <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm">{error}<Button size="sm" variant="outline" className="ml-3" onClick={() => load()}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button></div>
         ) : record ? (
           <section className="mt-10">
-            <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5"><p className="font-bold">{record.summary.headline}</p><p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs · {record.summary.wins} wins · {record.summary.experiments} experiments</p></div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap gap-2"><Button size="sm" variant={recordView === "active" ? "default" : "outline"} onClick={() => setRecordView("active")}>Journey</Button><Button size="sm" variant={recordView === "trash" ? "default" : "outline"} onClick={() => setRecordView("trash")}>Recently removed</Button><span className="mx-1 hidden h-8 border-l border-foreground/10 sm:block" />{(["all", "reflection", "date", "win", "experiment"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "secondary" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : value === "win" ? "Wins" : value === "experiment" ? "Experiments" : "Reflections"}</Button>)}</div><div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div></div>
-            {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} removed={recordView === "trash"} busy={busyItem === item.id} onRemove={() => { void remove(item); }} onRestore={() => { void restore(item); }} onEdit={() => { setNotice(null); setComposer({ kind: item.kind, item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">{recordView === "trash" ? "Nothing is waiting to be restored." : "No saved moments match this view."}</p><p className="mt-2 text-sm text-muted-foreground">{recordView === "trash" ? "Removed moments will stay recoverable here." : "Change the filter or capture the next moment you want to keep."}</p></div>}
+            <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5"><p className="font-bold">{record.summary.headline}</p><p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs · {record.summary.wins} wins · {record.summary.experiments} experiments · {record.summary.followUps} follow-ups</p></div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap gap-2"><Button size="sm" variant={recordView === "active" ? "default" : "outline"} onClick={() => setRecordView("active")}>Journey</Button><Button size="sm" variant={recordView === "trash" ? "default" : "outline"} onClick={() => setRecordView("trash")}>Recently removed</Button><span className="mx-1 hidden h-8 border-l border-foreground/10 sm:block" />{(["all", "reflection", "date", "win", "experiment", "follow-up"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "secondary" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : value === "win" ? "Wins" : value === "experiment" ? "Experiments" : value === "follow-up" ? "Follow-ups" : "Reflections"}</Button>)}</div><div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div></div>
+            {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} removed={recordView === "trash"} busy={busyItem === item.id} onRemove={() => { void remove(item); }} onRestore={() => { void restore(item); }} onFollowUp={() => { setNotice(null); setComposer({ kind: "follow-up", sourceItem: item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} onEdit={() => { setNotice(null); setComposer({ kind: item.kind, item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">{recordView === "trash" ? "Nothing is waiting to be restored." : "No saved moments match this view."}</p><p className="mt-2 text-sm text-muted-foreground">{recordView === "trash" ? "Removed moments will stay recoverable here." : "Change the filter or capture the next moment you want to keep."}</p></div>}
           </section>
         ) : null}
       </main>
