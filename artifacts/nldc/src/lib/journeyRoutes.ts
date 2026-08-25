@@ -2,9 +2,9 @@ export const GUIDED_DEBRIEF_HREF = "/journey?capture=guided-date";
 
 export interface JourneyRouteState {
   view: "active" | "trash";
-  kind: "all" | "reflection" | "date";
+  kind: "all" | "reflection" | "date" | "win";
   query: string;
-  source: { type: "journal_entry" | "post_date_note"; id: number } | null;
+  source: { type: "journal_entry" | "post_date_note" | "dating_win"; id: number } | null;
 }
 
 function routeParams(location: string, browserSearch = ""): URLSearchParams {
@@ -25,14 +25,16 @@ export function readJourneyRouteState(location: string, browserSearch = ""): Jou
   const params = routeParams(location, browserSearch);
   const reflectionId = positiveId(params.get("reflection"));
   const dateId = positiveId(params.get("date"));
+  const winId = positiveId(params.get("win"));
   const requestedKind = params.get("kind");
   return {
     view: params.get("view") === "trash" ? "trash" : "active",
-    kind: requestedKind === "reflection" || requestedKind === "date" ? requestedKind : "all",
+    kind: requestedKind === "reflection" || requestedKind === "date" || requestedKind === "win" ? requestedKind : "all",
     query: params.get("q")?.trim() ?? "",
     source: reflectionId
       ? { type: "journal_entry", id: reflectionId }
-      : dateId ? { type: "post_date_note", id: dateId } : null,
+      : dateId ? { type: "post_date_note", id: dateId }
+        : winId ? { type: "dating_win", id: winId } : null,
   };
 }
 
@@ -54,4 +56,14 @@ export function journalCompatibilityHref(location: string, browserSearch = ""): 
 
 export function datesCompatibilityHref(location: string, browserSearch = ""): string {
   return compatibilityHref("date", "note", location, browserSearch);
+}
+
+export function winsCompatibilityHref(location: string, browserSearch = ""): string {
+  const from = routeParams(location, browserSearch);
+  const to = new URLSearchParams({ kind: "win" });
+  const q = from.get("q")?.trim();
+  if (q) to.set("q", q);
+  const id = positiveId(from.get("win"));
+  if (id) to.set("win", String(id));
+  return `/journey?${to.toString()}`;
 }
