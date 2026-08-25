@@ -355,10 +355,27 @@ State: merged to `main` and verified.
   ordered migrations through `0049`, and 102 API files with 939 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D2B1: recoverable Journey removal
+
+State: merged to `main` and verified.
+
+- Journey now exposes explicit active and Recently removed views over the same
+  durable journal and post-date-note records.
+- Removal is always soft and recoverable. Restore targets the exact source id,
+  so it never creates a duplicate or shadow record.
+- Both views require authentication, remain owner-scoped, and reject unknown
+  view values. Mutation failures remain visible to the member.
+- The OpenAPI contract and regression coverage now include active/trash
+  separation, other-member isolation, removal, and restore endpoint routing.
+- PR #33 merged as `1eebf6b`; GitHub Actions run `32803866085` passed
+  typecheck, lint, schema drift, voice lint, 40 web files with 263 tests,
+  ordered migrations through `0049`, and 102 API files with 941 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Add Journey trash/restore and guided date-debrief parity, then turn only
-   fully absorbed member routes into compatibility redirects after parity tests.
+1. Add guided date-debrief parity, then turn only fully absorbed member routes
+   into compatibility redirects after parity tests.
 2. Absorb experiments, wins, and follow-up reflections into the same record.
 3. Consolidate games and quizzes into Play with confirmed-learning handoff.
 4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
