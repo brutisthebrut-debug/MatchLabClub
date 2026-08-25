@@ -10,7 +10,6 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 import { deleteCommunicationRecord, listCommunicationRecords, saveCommunicationRecord } from "@/lib/communicationRecords";
-import { Redirect } from "wouter";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -565,5 +564,5 @@ export function ConnectionStyleExperience({ embedded = false }: { embedded?: boo
 }
 
 export default function ConnectionStyle() {
-  return <Redirect to="/my-matchlab?communication=connection-style" />;
+  return <ConnectionStyleExperience />;
 }
