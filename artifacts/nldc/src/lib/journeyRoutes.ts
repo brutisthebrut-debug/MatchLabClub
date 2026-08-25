@@ -2,9 +2,9 @@ export const GUIDED_DEBRIEF_HREF = "/journey?capture=guided-date";
 
 export interface JourneyRouteState {
   view: "active" | "trash";
-  kind: "all" | "reflection" | "date" | "win";
+  kind: "all" | "reflection" | "date" | "win" | "experiment";
   query: string;
-  source: { type: "journal_entry" | "post_date_note" | "dating_win"; id: number } | null;
+  source: { type: "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment"; id: number } | null;
 }
 
 function routeParams(location: string, browserSearch = ""): URLSearchParams {
@@ -26,15 +26,17 @@ export function readJourneyRouteState(location: string, browserSearch = ""): Jou
   const reflectionId = positiveId(params.get("reflection"));
   const dateId = positiveId(params.get("date"));
   const winId = positiveId(params.get("win"));
+  const experimentId = positiveId(params.get("experiment"));
   const requestedKind = params.get("kind");
   return {
     view: params.get("view") === "trash" ? "trash" : "active",
-    kind: requestedKind === "reflection" || requestedKind === "date" || requestedKind === "win" ? requestedKind : "all",
+    kind: requestedKind === "reflection" || requestedKind === "date" || requestedKind === "win" || requestedKind === "experiment" ? requestedKind : "all",
     query: params.get("q")?.trim() ?? "",
     source: reflectionId
       ? { type: "journal_entry", id: reflectionId }
       : dateId ? { type: "post_date_note", id: dateId }
-        : winId ? { type: "dating_win", id: winId } : null,
+        : winId ? { type: "dating_win", id: winId }
+          : experimentId ? { type: "journey_experiment", id: experimentId } : null,
   };
 }
 
@@ -65,5 +67,15 @@ export function winsCompatibilityHref(location: string, browserSearch = ""): str
   if (q) to.set("q", q);
   const id = positiveId(from.get("win"));
   if (id) to.set("win", String(id));
+  return `/journey?${to.toString()}`;
+}
+
+export function experimentsCompatibilityHref(location: string, browserSearch = ""): string {
+  const from = routeParams(location, browserSearch);
+  const to = new URLSearchParams({ kind: "experiment" });
+  const q = from.get("q")?.trim();
+  if (q) to.set("q", q);
+  const id = positiveId(from.get("experiment"));
+  if (id) to.set("experiment", String(id));
   return `/journey?${to.toString()}`;
 }
