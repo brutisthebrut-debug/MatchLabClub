@@ -252,6 +252,8 @@ function Router() {
         <Route path="/founder" component={Founder} />
         <Route path="/partners/shebangs" component={ShebangsPartner} />
         {/* New coaching modules */}
+        {/* Preserved deep link; the capture/result experience now opens inside
+            the canonical My MatchLab Communication record. */}
         <Route path="/blueprint" component={Blueprint} />
         <Route path="/mirror" component={MirrorProfile} />
         <Route path="/your-mirror" component={YourMirror} />
@@ -267,6 +269,7 @@ function Router() {
         <Route path="/glow-up">
           <Redirect to="/my-matchlab/profile" />
         </Route>
+        {/* Preserved deep link into My MatchLab Communication. */}
         <Route path="/connection-style" component={ConnectionStyle} />
         <Route path="/care-dialect" component={CareDialect} />
         <Route path="/compatibility-compass" component={CompatibilityCompass} />
