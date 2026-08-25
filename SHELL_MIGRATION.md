@@ -263,16 +263,32 @@ State: merged to `main` and verified.
   ordered migrations through `0048`, and 102 API files with 936 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3C2B2: canonical Communication lens home
+
+State: merged to `main` and verified.
+
+- The real Connection Style and Personal Blueprint capture and result
+  experiences now render inside My MatchLab's Communication capability.
+- Saved-source cards open the correct embedded tool in place. Canonical query
+  links reopen the same experience directly.
+- `/connection-style` and `/blueprint` are now compatibility redirects into My
+  MatchLab, so saved links survive without maintaining duplicate page ownership.
+- Durable save, rehydration, legacy Blueprint migration, removal, export,
+  confirmed-learning review, and separate matching permission remain unchanged.
+- The Communication record refreshes immediately after a source is saved or
+  removed. The obsolete Connection Style handoff into unrelated legacy tools
+  was removed.
+- PR #24 merged as `c5c214c2`; GitHub Actions run `32795941566` passed
+  typecheck, lint, schema drift, voice lint, 37 web files with 253 tests,
+  ordered migrations through `0048`, and 102 API files with 936 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Embed Connection Style and Personal Blueprint capture and result review in
-   My MatchLab Communication, preserve the existing paths as deep-link
-   redirects, and retire only the duplicated page ownership after regression
-   coverage proves parity.
-2. Consolidate Mirror trends into My MatchLab with provenance, changes over
+1. Consolidate Mirror trends into My MatchLab with provenance, changes over
    time, uncertainty, and contradictions.
-3. Consolidate dates, journal, debrief, experiments, and reflections into a
+2. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
-4. Consolidate games and quizzes into Play with confirmed-learning handoff.
-5. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+3. Consolidate games and quizzes into Play with confirmed-learning handoff.
+4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.

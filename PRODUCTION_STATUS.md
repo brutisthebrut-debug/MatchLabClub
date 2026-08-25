@@ -127,6 +127,10 @@ segment plan.
   with 250 tests, the ordered migration chain through `0048`, and 102 API files
   with 936 tests on clean Postgres 16. The 8 skipped API tests remain the
   optional OCR suites.
+- GitHub Actions run 32795941566 passed both required jobs on PR #24 for the
+  canonical My MatchLab Communication home: 37 web files with 253 tests, the
+  ordered migration chain through `0048`, and 102 API files with 936 tests on
+  clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
