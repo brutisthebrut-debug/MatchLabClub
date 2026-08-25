@@ -116,6 +116,7 @@ const Milestones = lazy(() => import("@/pages/Milestones"));
 const Onboarding = lazy(() => import("@/pages/Onboarding"));
 const MemberDestination = lazy(() => import("@/pages/MemberDestination"));
 const MyMatchLab = lazy(() => import("@/pages/MyMatchLab"));
+const Journey = lazy(() => import("@/pages/Journey"));
 const ProfileProject = lazy(() => import("@/pages/ProfileProject"));
 
 const queryClient = new QueryClient();
@@ -197,7 +198,7 @@ function Router() {
         <Route path="/today" component={MemberDestination} />
         <Route path="/my-matchlab/profile" component={ProfileProject} />
         <Route path="/my-matchlab" component={MyMatchLab} />
-        <Route path="/journey" component={MemberDestination} />
+        <Route path="/journey" component={Journey} />
         <Route path="/play" component={MemberDestination} />
         <Route path="/trust-data" component={MemberDestination} />
         {/* Audit capture/generation is owned by Profile Project. */}
