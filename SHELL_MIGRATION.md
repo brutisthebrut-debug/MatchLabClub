@@ -337,10 +337,28 @@ State: merged to `main` and verified.
   ordered migrations through `0049`, and 102 API files with 939 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D2A: embedded Journey capture and editing
+
+State: merged to `main` and verified.
+
+- Journey now creates reflections and date debriefs directly inside the
+  canonical record and persists them through the existing durable APIs.
+- Every visible item retains its source id and full editable fields, so in-place
+  edits update the original record rather than creating a duplicate or lossy
+  shadow copy.
+- Successful saves reload the unified record; failed saves remain visible and
+  never claim success.
+- The legacy journal/date pages and durable source links remain available until
+  guided debrief and trash/restore parity are complete.
+- PR #31 merged as `ead434e1`; GitHub Actions run `32802950036` passed
+  typecheck, lint, schema drift, voice lint, 40 web files with 261 tests,
+  ordered migrations through `0049`, and 102 API files with 939 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Embed reflection and date-debrief capture/editing into Journey, then turn
-   redundant member routes into compatibility redirects after parity tests.
+1. Add Journey trash/restore and guided date-debrief parity, then turn only
+   fully absorbed member routes into compatibility redirects after parity tests.
 2. Absorb experiments, wins, and follow-up reflections into the same record.
 3. Consolidate games and quizzes into Play with confirmed-learning handoff.
 4. Complete the controlled Matches lifecycle, authenticated walkthroughs,

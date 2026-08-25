@@ -143,6 +143,10 @@ segment plan.
   canonical Journey record foundation: 40 web files with 258 tests, the
   ordered migration chain through `0049`, and 102 API files with 939 tests on
   clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32802950036 passed both required jobs on PR #31 for native
+  Journey reflection/date capture and editing: 40 web files with 261 tests, the
+  ordered migration chain through `0049`, and 102 API files with 939 tests on
+  clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
