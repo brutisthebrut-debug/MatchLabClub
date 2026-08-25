@@ -151,6 +151,10 @@ segment plan.
   recoverable Journey removal: 40 web files with 263 tests, the ordered
   migration chain through `0049`, and 102 API files with 941 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32864197737 passed both required jobs on PR #35 for guided
+  date-debrief absorption into Journey: 41 web files with 265 tests, the
+  ordered migration chain through `0049`, and 102 API files with 941 tests on
+  clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
