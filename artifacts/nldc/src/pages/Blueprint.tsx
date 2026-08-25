@@ -15,7 +15,6 @@ import { blueprintSchema, parseAiJson, type BlueprintOutput } from "@/lib/aiSche
 import { ToneBar, ConfidenceLabel } from "@/components/ToneBar";
 import { getConfidenceLevel } from "@/lib/toneUtils";
 import { deleteCommunicationRecord, listCommunicationRecords, saveCommunicationRecord } from "@/lib/communicationRecords";
-import { Redirect } from "wouter";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -438,5 +437,5 @@ export function BlueprintExperience({ embedded = false }: { embedded?: boolean }
 }
 
 export default function Blueprint() {
-  return <Redirect to="/my-matchlab?communication=personal-blueprint" />;
+  return <BlueprintExperience />;
 }
