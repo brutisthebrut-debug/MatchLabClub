@@ -18,6 +18,7 @@ import {
   PROFILE_PROJECT_AUDIT_CAPTURE_HREF,
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
+import { GUIDED_DEBRIEF_HREF } from "@/lib/journeyRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -67,7 +68,6 @@ const FutureConnections = lazy(() => import("@/pages/FutureConnections"));
 const Copilot = lazy(() => import("@/pages/Copilot"));
 const StartMyReset = lazy(() => import("@/pages/copilot/StartMyReset"));
 const HelpMeReply = lazy(() => import("@/pages/copilot/HelpMeReply"));
-const DebriefWhatHappened = lazy(() => import("@/pages/copilot/DebriefWhatHappened"));
 const WeeklyGrowthPlan = lazy(() => import("@/pages/copilot/WeeklyGrowthPlan"));
 const PrepareForDate = lazy(() => import("@/pages/copilot/PrepareForDate"));
 const FlirtCoach = lazy(() => import("@/pages/copilot/FlirtCoach"));
@@ -299,7 +299,10 @@ function Router() {
         <Route path="/copilot/profile">
           <Redirect to="/my-matchlab/profile" />
         </Route>
-        <Route path="/copilot/debrief" component={DebriefWhatHappened} />
+        {/* Guided date debrief is absorbed into the canonical Journey record. */}
+        <Route path="/copilot/debrief">
+          <Redirect to={GUIDED_DEBRIEF_HREF} />
+        </Route>
         <Route path="/copilot/weekly-plan" component={WeeklyGrowthPlan} />
         <Route path="/copilot/prep" component={PrepareForDate} />
         <Route path="/copilot/flirt" component={FlirtCoach} />

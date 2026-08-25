@@ -65,12 +65,12 @@ export async function getJourneyRecord(view: "active" | "trash" = "active"): Pro
   return body as JourneyRecordResponse;
 }
 
-export async function saveReflection(input: ReflectionInput, id?: number): Promise<unknown> {
-  return request(id ? `/api/journal/${id}` : "/api/journal", id ? "PATCH" : "POST", input);
+export async function saveReflection(input: ReflectionInput, id?: number): Promise<{ id: number }> {
+  return request<{ id: number }>(id ? `/api/journal/${id}` : "/api/journal", id ? "PATCH" : "POST", input);
 }
 
-export async function saveDateDebrief(input: DateDebriefInput, id?: number): Promise<unknown> {
-  return request(id ? `/api/post-date-notes/${id}` : "/api/post-date-notes", id ? "PATCH" : "POST", input);
+export async function saveDateDebrief(input: DateDebriefInput, id?: number): Promise<{ id: number }> {
+  return request<{ id: number }>(id ? `/api/post-date-notes/${id}` : "/api/post-date-notes", id ? "PATCH" : "POST", input);
 }
 
 function sourcePath(item: JourneyRecordItem): string {
