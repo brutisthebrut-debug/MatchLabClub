@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getJourneyRecord, removeJourneyItem, restoreJourneyItem, saveDateDebrief, saveReflection, type JourneyRecordItem } from "./journeyRecord";
+import { getJourneyRecord, removeJourneyItem, restoreJourneyItem, saveDateDebrief, saveReflection, saveWin, type JourneyRecordItem } from "./journeyRecord";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -45,6 +45,16 @@ describe("Journey record client", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/post-date-notes/8", expect.objectContaining({ method: "PATCH", body: JSON.stringify(input) }));
   });
 
+  it("creates and edits wins through the durable wins API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 9 }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const input = { category: "personal-win" as const, body: "I asked clearly." };
+    await saveWin(input);
+    await saveWin(input, 9);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/me/dating-wins", expect.objectContaining({ method: "POST", body: JSON.stringify(input) }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/me/dating-wins/9", expect.objectContaining({ method: "PATCH", body: JSON.stringify(input) }));
+  });
+
   it("surfaces mutation errors instead of pretending a save worked", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Entry not found" }) }));
     await expect(saveReflection({ prompt: null, body: "Still here", tags: [], mood: null }, 99)).rejects.toThrow("Entry not found");
@@ -58,5 +68,15 @@ describe("Journey record client", () => {
     await restoreJourneyItem(item);
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/post-date-notes/12", { method: "DELETE", credentials: "include" });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/post-date-notes/12/restore", { method: "POST", credentials: "include" });
+  });
+
+  it("targets the win source for remove and restore", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const item = { source: { type: "dating_win", id: 14, label: "Win" } } as JourneyRecordItem;
+    await removeJourneyItem(item);
+    await restoreJourneyItem(item);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/me/dating-wins/14", { method: "DELETE", credentials: "include" });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/me/dating-wins/14/restore", { method: "POST", credentials: "include" });
   });
 });

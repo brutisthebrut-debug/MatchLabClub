@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { datesCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, readJourneyRouteState, shouldOpenGuidedDebrief } from "./journeyRoutes";
+import { datesCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, readJourneyRouteState, shouldOpenGuidedDebrief, winsCompatibilityHref } from "./journeyRoutes";
 
 describe("Journey compatibility routes", () => {
   it("keeps the old guided debrief entry pointed at Journey", () => {
@@ -21,5 +21,10 @@ describe("Journey compatibility routes", () => {
   it("reopens exact durable source ids and rejects invalid ids", () => {
     expect(readJourneyRouteState("/journey?reflection=12").source).toEqual({ type: "journal_entry", id: 12 });
     expect(readJourneyRouteState("/journey?date=-2").source).toBeNull();
+    expect(readJourneyRouteState("/journey?win=7")).toMatchObject({ kind: "all", source: { type: "dating_win", id: 7 } });
+  });
+
+  it("keeps old wins links focused on the canonical Journey view", () => {
+    expect(winsCompatibilityHref("/progress/wins?q=courage&win=5")).toBe("/journey?kind=win&q=courage&win=5");
   });
 });

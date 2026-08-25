@@ -1,9 +1,9 @@
-export type JourneyRecordKind = "reflection" | "date";
+export type JourneyRecordKind = "reflection" | "date" | "win";
 
 export interface JourneyRecordItem {
   id: string;
   kind: JourneyRecordKind;
-  source: { type: "journal_entry" | "post_date_note"; id: number; label: string };
+  source: { type: "journal_entry" | "post_date_note" | "dating_win"; id: number; label: string };
   title: string;
   body: string;
   details: Record<string, unknown>;
@@ -13,7 +13,7 @@ export interface JourneyRecordItem {
 }
 
 export interface JourneyRecordResponse {
-  summary: { total: number; reflections: number; dates: number; headline: string };
+  summary: { total: number; reflections: number; dates: number; wins: number; headline: string };
   records: JourneyRecordItem[];
 }
 
@@ -35,6 +35,13 @@ export interface DateDebriefInput {
   whatDidnt: string;
   followUpPlanned: boolean;
   outcome: DateOutcome | null;
+}
+
+export type WinCategory = "sent-it" | "great-convo" | "got-a-date" | "noticed-something" | "personal-win";
+
+export interface WinInput {
+  category: WinCategory;
+  body: string;
 }
 
 async function request<T>(url: string, method: "POST" | "PATCH" | "DELETE", payload?: unknown): Promise<T> {
@@ -73,8 +80,14 @@ export async function saveDateDebrief(input: DateDebriefInput, id?: number): Pro
   return request<{ id: number }>(id ? `/api/post-date-notes/${id}` : "/api/post-date-notes", id ? "PATCH" : "POST", input);
 }
 
+export async function saveWin(input: WinInput, id?: number): Promise<{ id: number }> {
+  return request<{ id: number }>(id ? `/api/me/dating-wins/${id}` : "/api/me/dating-wins", id ? "PATCH" : "POST", input);
+}
+
 function sourcePath(item: JourneyRecordItem): string {
-  return item.source.type === "journal_entry" ? `/api/journal/${item.source.id}` : `/api/post-date-notes/${item.source.id}`;
+  if (item.source.type === "journal_entry") return `/api/journal/${item.source.id}`;
+  if (item.source.type === "post_date_note") return `/api/post-date-notes/${item.source.id}`;
+  return `/api/me/dating-wins/${item.source.id}`;
 }
 
 export async function removeJourneyItem(item: JourneyRecordItem): Promise<unknown> {

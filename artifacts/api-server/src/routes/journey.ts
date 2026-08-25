@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import { db, journalEntriesTable, postDateNotesTable } from "@workspace/db";
+import { db, datingWinsTable, journalEntriesTable, postDateNotesTable } from "@workspace/db";
 import { summarizeUserJourney } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
@@ -20,7 +20,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [journalEntries, dateNotes] = await Promise.all([
+  const [journalEntries, dateNotes, wins] = await Promise.all([
     db.select().from(journalEntriesTable).where(and(
       eq(journalEntriesTable.userId, userId),
       requestedView === "trash" ? isNotNull(journalEntriesTable.deletedAt) : isNull(journalEntriesTable.deletedAt),
@@ -29,6 +29,10 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       eq(postDateNotesTable.userId, userId),
       requestedView === "trash" ? isNotNull(postDateNotesTable.deletedAt) : isNull(postDateNotesTable.deletedAt),
     )).orderBy(desc(postDateNotesTable.dateAt), desc(postDateNotesTable.createdAt)),
+    db.select().from(datingWinsTable).where(and(
+      eq(datingWinsTable.userId, userId),
+      requestedView === "trash" ? isNotNull(datingWinsTable.deletedAt) : isNull(datingWinsTable.deletedAt),
+    )).orderBy(desc(datingWinsTable.createdAt)),
   ]);
 
   const records = [
@@ -66,6 +70,17 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       updatedAt: iso(note.updatedAt),
       href: `/journey?date=${note.id}`,
     })),
+    ...wins.map((win) => ({
+      id: `win:${win.id}`,
+      kind: "win" as const,
+      source: { type: "dating_win", id: win.id, label: "Win" },
+      title: "A win worth keeping",
+      body: win.body,
+      details: { category: win.category },
+      occurredAt: iso(win.createdAt),
+      updatedAt: iso(win.updatedAt),
+      href: `/journey?win=${win.id}`,
+    })),
   ].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
 
   res.json({
@@ -73,6 +88,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       total: records.length,
       reflections: journalEntries.length,
       dates: dateNotes.length,
+      wins: wins.length,
       headline: requestedView === "trash"
         ? (records.length === 0 ? "Nothing is waiting to be restored." : `${records.length} removed moment${records.length === 1 ? "" : "s"} can still be restored.`)
         : (records.length === 0

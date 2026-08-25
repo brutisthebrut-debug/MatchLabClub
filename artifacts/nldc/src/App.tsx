@@ -18,7 +18,7 @@ import {
   PROFILE_PROJECT_AUDIT_CAPTURE_HREF,
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
-import { datesCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref } from "@/lib/journeyRoutes";
+import { datesCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, winsCompatibilityHref } from "@/lib/journeyRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -85,7 +85,6 @@ const VoiceIntro = lazy(() => import("@/pages/VoiceIntro"));
 const Receipts = lazy(() => import("@/pages/Receipts"));
 const DataVault = lazy(() => import("@/pages/DataVault"));
 const Imports = lazy(() => import("@/pages/Imports"));
-const DatingWinsLog = lazy(() => import("@/pages/DatingWinsLog"));
 const WouldYouRather = lazy(() => import("@/pages/WouldYouRather"));
 const DailySpark = lazy(() => import("@/pages/DailySpark"));
 const Flags = lazy(() => import("@/pages/Flags"));
@@ -195,6 +194,11 @@ function JournalCompatibilityRedirect() {
 function DatesCompatibilityRedirect() {
   const [location] = useLocation();
   return <Redirect to={datesCompatibilityHref(location, typeof window === "undefined" ? "" : window.location.search)} />;
+}
+
+function WinsCompatibilityRedirect() {
+  const [location] = useLocation();
+  return <Redirect to={winsCompatibilityHref(location, typeof window === "undefined" ? "" : window.location.search)} />;
 }
 
 function Router() {
@@ -333,7 +337,7 @@ function Router() {
         <Route path="/photos" component={MatchPhotos} />
         <Route path="/vault" component={DataVault} />
         <Route path="/imports" component={Imports} />
-        <Route path="/progress/wins" component={DatingWinsLog} />
+        <Route path="/progress/wins" component={WinsCompatibilityRedirect} />
         <Route path="/games/would-you-rather" component={WouldYouRather} />
         <Route path="/games/daily-spark" component={DailySpark} />
         <Route path="/flags" component={Flags} />
