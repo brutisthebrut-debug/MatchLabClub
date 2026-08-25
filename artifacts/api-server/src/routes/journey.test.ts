@@ -153,8 +153,8 @@ describe("GET /api/me/journey/record", () => {
     expect(JSON.stringify(response.body)).not.toContain("Deleted thought");
     expect(JSON.stringify(response.body)).not.toContain("Private other-member entry");
     expect(response.body.records).toEqual(expect.arrayContaining([
-      expect.objectContaining({ source: { type: "journal_entry", id: expect.any(Number), label: "Journal" } }),
-      expect.objectContaining({ title: "Date with Sam", href: expect.stringMatching(/^\/mirror\/dates/) }),
+      expect.objectContaining({ source: { type: "journal_entry", id: expect.any(Number), label: "Journal" }, details: expect.objectContaining({ prompt: "What changed?", mood: 4 }) }),
+      expect.objectContaining({ title: "Date with Sam", href: expect.stringMatching(/^\/mirror\/dates/), details: expect.objectContaining({ personLabel: "Sam", dateAt: null }) }),
     ]));
   });
 });

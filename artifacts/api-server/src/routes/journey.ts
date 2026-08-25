@@ -34,6 +34,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       title: entry.prompt?.trim() || "Reflection",
       body: entry.body,
       details: {
+        prompt: entry.prompt ?? null,
         tags: entry.tags ?? [],
         mood: entry.mood ?? null,
       },
@@ -48,6 +49,8 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       title: note.personLabel?.trim() ? `Date with ${note.personLabel}` : "Post-date note",
       body: note.summary,
       details: {
+        dateAt: note.dateAt ? iso(note.dateAt) : null,
+        personLabel: note.personLabel ?? null,
         platform: note.platform ?? null,
         outcome: note.outcome ?? null,
         whatWentWell: note.whatWentWell ?? "",

@@ -1,31 +1,149 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "wouter";
-import { BookHeart, CalendarCheck, Loader2, RefreshCw, Search, Sparkles } from "lucide-react";
+import { BookHeart, CalendarCheck, Loader2, Pencil, Plus, RefreshCw, Search, Sparkles } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getJourneyRecord, type JourneyRecordItem, type JourneyRecordResponse } from "@/lib/journeyRecord";
+import {
+  getJourneyRecord,
+  saveDateDebrief,
+  saveReflection,
+  type DateOutcome,
+  type JourneyRecordItem,
+  type JourneyRecordResponse,
+} from "@/lib/journeyRecord";
+
+type Composer = { kind: "reflection" | "date"; item?: JourneyRecordItem };
 
 function when(value: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-function JourneyItem({ item }: { item: JourneyRecordItem }) {
+function detailString(item: JourneyRecordItem, key: string): string {
+  const value = item.details[key];
+  return typeof value === "string" ? value : "";
+}
+
+function ReflectionComposer({ item, onCancel, onSaved }: { item?: JourneyRecordItem; onCancel: () => void; onSaved: () => void }) {
+  const [prompt, setPrompt] = useState(item ? detailString(item, "prompt") : "");
+  const [body, setBody] = useState(item?.body ?? "");
+  const [tags, setTags] = useState(item && Array.isArray(item.details.tags) ? item.details.tags.join(", ") : "");
+  const [mood, setMood] = useState(item && typeof item.details.mood === "number" ? String(item.details.mood) : "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!body.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await saveReflection({
+        prompt: prompt.trim() || null,
+        body: body.trim(),
+        tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 20),
+        mood: mood ? Number(mood) : null,
+      }, item?.source.id);
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "This reflection could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-7 rounded-3xl border border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.05)] p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[hsl(248_62%_52%)]">Reflection</p><h2 className="mt-1 font-serif text-2xl font-bold">{item ? "Edit this moment" : "What do you want to remember?"}</h2></div><Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button></div>
+      <div className="mt-5 grid gap-4">
+        <label className="grid gap-2 text-sm font-bold">Optional prompt<Input value={prompt} onChange={(event) => setPrompt(event.target.value)} maxLength={500} placeholder="What changed, surprised you, or became clearer?" /></label>
+        <label className="grid gap-2 text-sm font-bold">Your reflection<textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={20000} required rows={6} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal leading-6 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Write it in your own words." /></label>
+        <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
+          <label className="grid gap-2 text-sm font-bold">Tags<Input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="growth, boundaries" /><span className="text-xs font-normal text-muted-foreground">Separate tags with commas.</span></label>
+          <label className="grid gap-2 text-sm font-bold">Mood<select value={mood} onChange={(event) => setMood(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm font-normal"><option value="">Not set</option>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label>
+        </div>
+      </div>
+      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      <div className="mt-5 flex justify-end"><Button type="submit" disabled={saving || !body.trim()}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{item ? "Save changes" : "Keep reflection"}</Button></div>
+    </form>
+  );
+}
+
+function DateComposer({ item, onCancel, onSaved }: { item?: JourneyRecordItem; onCancel: () => void; onSaved: () => void }) {
+  const savedDate = item ? detailString(item, "dateAt") : "";
+  const [dateAt, setDateAt] = useState(savedDate ? savedDate.slice(0, 10) : "");
+  const [personLabel, setPersonLabel] = useState(item ? detailString(item, "personLabel") : "");
+  const [platform, setPlatform] = useState(item ? detailString(item, "platform") : "");
+  const [summary, setSummary] = useState(item?.body ?? "");
+  const [whatWentWell, setWhatWentWell] = useState(item ? detailString(item, "whatWentWell") : "");
+  const [whatDidnt, setWhatDidnt] = useState(item ? detailString(item, "whatDidnt") : "");
+  const [followUpPlanned, setFollowUpPlanned] = useState(Boolean(item?.details.followUpPlanned));
+  const [outcome, setOutcome] = useState<DateOutcome | "">((item?.details.outcome as DateOutcome | null) ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!summary.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await saveDateDebrief({
+        dateAt: dateAt ? new Date(`${dateAt}T12:00:00`).toISOString() : null,
+        personLabel: personLabel.trim() || null,
+        platform: platform.trim() || null,
+        summary: summary.trim(),
+        whatWentWell: whatWentWell.trim(),
+        whatDidnt: whatDidnt.trim(),
+        followUpPlanned,
+        outcome: outcome || null,
+      }, item?.source.id);
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "This date debrief could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-7 rounded-3xl border border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.05)] p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[hsl(248_62%_52%)]">Date debrief</p><h2 className="mt-1 font-serif text-2xl font-bold">{item ? "Edit this debrief" : "Capture the date while it is fresh"}</h2></div><Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button></div>
+      <div className="mt-5 grid gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="grid gap-2 text-sm font-bold">Date<Input type="date" value={dateAt} onChange={(event) => setDateAt(event.target.value)} /></label>
+          <label className="grid gap-2 text-sm font-bold">First name or label<Input value={personLabel} onChange={(event) => setPersonLabel(event.target.value)} maxLength={120} placeholder="Optional" /></label>
+          <label className="grid gap-2 text-sm font-bold">Where you met<Input value={platform} onChange={(event) => setPlatform(event.target.value)} maxLength={40} placeholder="Optional" /></label>
+        </div>
+        <label className="grid gap-2 text-sm font-bold">What happened?<textarea value={summary} onChange={(event) => setSummary(event.target.value)} maxLength={20000} required rows={4} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal leading-6 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="The short version, in your own words." /></label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm font-bold">What felt good?<textarea value={whatWentWell} onChange={(event) => setWhatWentWell(event.target.value)} maxLength={20000} rows={3} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal leading-6 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" /></label>
+          <label className="grid gap-2 text-sm font-bold">What felt difficult?<textarea value={whatDidnt} onChange={(event) => setWhatDidnt(event.target.value)} maxLength={20000} rows={3} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal leading-6 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" /></label>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm font-bold">Where it stands<select value={outcome} onChange={(event) => setOutcome(event.target.value as DateOutcome | "")} className="h-10 rounded-md border border-input bg-background px-3 text-sm font-normal"><option value="">Not sure yet</option><option value="another_date">Another date</option><option value="no_more">No more dates</option><option value="unsure">Unsure</option><option value="ghosted">No response</option></select></label>
+          <label className="mt-7 flex h-10 items-center gap-3 rounded-md border border-input bg-background px-3 text-sm font-bold"><input type="checkbox" checked={followUpPlanned} onChange={(event) => setFollowUpPlanned(event.target.checked)} className="h-4 w-4" />I plan to follow up</label>
+        </div>
+      </div>
+      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      <div className="mt-5 flex justify-end"><Button type="submit" disabled={saving || !summary.trim()}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{item ? "Save changes" : "Keep debrief"}</Button></div>
+    </form>
+  );
+}
+
+function JourneyItem({ item, onEdit }: { item: JourneyRecordItem; onEdit: () => void }) {
   const Icon = item.kind === "date" ? CalendarCheck : BookHeart;
-  const positive = typeof item.details.whatWentWell === "string" ? item.details.whatWentWell : "";
-  const difficult = typeof item.details.whatDidnt === "string" ? item.details.whatDidnt : "";
+  const positive = detailString(item, "whatWentWell");
+  const difficult = detailString(item, "whatDidnt");
   return (
     <article className="rounded-3xl border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-2 font-bold text-[hsl(248_62%_52%)]"><Icon className="h-4 w-4" /> {item.source.label}</span>
-        <span>{when(item.occurredAt)}</span>
-      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-2 font-bold text-[hsl(248_62%_52%)]"><Icon className="h-4 w-4" /> {item.source.label}</span><span>{when(item.occurredAt)}</span></div>
       <h2 className="mt-3 font-serif text-xl font-bold">{item.title}</h2>
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.body}</p>
       {positive && <p className="mt-3 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt good:</strong> {positive}</p>}
       {difficult && <p className="mt-1 text-xs leading-5 text-muted-foreground"><strong className="text-foreground">What felt difficult:</strong> {difficult}</p>}
-      <Link href={item.href} className="mt-4 inline-flex text-xs font-bold text-[hsl(248_62%_52%)] hover:underline">Open source record</Link>
+      <div className="mt-4 flex flex-wrap gap-4"><button type="button" onClick={onEdit} className="inline-flex items-center text-xs font-bold text-[hsl(248_62%_52%)] hover:underline"><Pencil className="mr-1.5 h-3.5 w-3.5" />Edit here</button><Link href={item.href} className="text-xs font-bold text-muted-foreground hover:underline">Open source record</Link></div>
     </article>
   );
 }
@@ -36,6 +154,8 @@ export default function Journey() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "reflection" | "date">("all");
   const [query, setQuery] = useState("");
+  const [composer, setComposer] = useState<Composer | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   function load() {
     setLoading(true);
@@ -43,6 +163,12 @@ export default function Journey() {
     void getJourneyRecord().then(setRecord).catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
   }
   useEffect(load, []);
+
+  function saved(kind: "reflection" | "date") {
+    setComposer(null);
+    setNotice(kind === "reflection" ? "Reflection saved to your Journey." : "Date debrief saved to your Journey.");
+    load();
+  }
 
   const records = useMemo(() => (record?.records ?? []).filter((item) => {
     if (filter !== "all" && item.kind !== filter) return false;
@@ -58,10 +184,14 @@ export default function Journey() {
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">One private record of what happened, what you noticed, and what you want to try next.</p>
 
         <div className="mt-7 grid gap-3 sm:grid-cols-3">
-          <Link href="/copilot/debrief" className="rounded-2xl border border-foreground/10 p-4 text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]">Debrief a date</Link>
-          <Link href="/mirror/journal" className="rounded-2xl border border-foreground/10 p-4 text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]">Write or edit a reflection</Link>
+          <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "date" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Debrief a date</button>
+          <button type="button" onClick={() => { setNotice(null); setComposer({ kind: "reflection" }); }} className="flex items-center rounded-2xl border border-foreground/10 p-4 text-left text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]"><Plus className="mr-2 h-4 w-4" />Add a reflection</button>
           <Link href="/copilot/weekly-plan" className="rounded-2xl border border-foreground/10 p-4 text-sm font-bold hover:border-[hsl(248_62%_52%/0.35)]">Choose a weekly experiment</Link>
         </div>
+
+        {composer?.kind === "reflection" && <ReflectionComposer key={`reflection-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("reflection")} />}
+        {composer?.kind === "date" && <DateComposer key={`date-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("date")} />}
+        {notice && <p className="mt-5 rounded-2xl border border-[hsl(150_45%_45%/0.25)] bg-[hsl(150_45%_45%/0.08)] px-4 py-3 text-sm font-bold">{notice}</p>}
 
         {loading ? (
           <div className="mt-10 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading your Journey</div>
@@ -69,17 +199,9 @@ export default function Journey() {
           <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm">{error}<Button size="sm" variant="outline" className="ml-3" onClick={load}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button></div>
         ) : record ? (
           <section className="mt-10">
-            <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5">
-              <p className="font-bold">{record.summary.headline}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs</p>
-            </div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-2">
-                {(["all", "reflection", "date"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "default" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : "Reflections"}</Button>)}
-              </div>
-              <div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div>
-            </div>
-            {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">No saved moments match this view.</p><p className="mt-2 text-sm text-muted-foreground">Change the filter or capture the next moment you want to keep.</p></div>}
+            <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5"><p className="font-bold">{record.summary.headline}</p><p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs</p></div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex gap-2">{(["all", "reflection", "date"] as const).map((value) => <Button key={value} size="sm" variant={filter === value ? "default" : "outline"} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "date" ? "Dates" : "Reflections"}</Button>)}</div><div className="relative sm:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your Journey" /></div></div>
+            {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} onEdit={() => { setNotice(null); setComposer({ kind: item.kind, item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">No saved moments match this view.</p><p className="mt-2 text-sm text-muted-foreground">Change the filter or capture the next moment you want to keep.</p></div>}
           </section>
         ) : null}
       </main>
