@@ -15,6 +15,7 @@ describe("Journey compatibility routes", () => {
   it("preserves journal and date list state through compatibility redirects", () => {
     expect(journalCompatibilityHref("/mirror/journal?view=trash&q=boundaries")).toBe("/journey?kind=reflection&view=trash&q=boundaries");
     expect(datesCompatibilityHref("/mirror/dates", "?q=coffee&note=42")).toBe("/journey?kind=date&q=coffee&date=42");
+    expect(datesCompatibilityHref("/mirror/dates?view=trash&note=9")).toBe("/journey?kind=date&view=trash&date=9");
   });
 
   it("reopens exact durable source ids and rejects invalid ids", () => {
