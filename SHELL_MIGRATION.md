@@ -283,12 +283,35 @@ State: merged to `main` and verified.
   ordered migrations through `0048`, and 102 API files with 936 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3C3: member-governed Mirror changes
+
+State: merged to `main` and verified.
+
+- My MatchLab now owns a real Changes over time record grounded in durable
+  Mirror learnings rather than the legacy audit score aggregation.
+- Every current item retains source type, source reference, label, confidence,
+  review status, and independent matching-use approval.
+- Low-confidence and unconfirmed proposals remain visibly uncertain. A small,
+  deterministic set of possible tensions is framed as contextual questions,
+  never diagnoses or human-worth scores.
+- Migration `0049` adds append-only proposal, refresh, confirmation,
+  correction, dismissal, matching-permission, and source-removal history.
+- The authenticated API is owner-scoped, fails closed, and the history is
+  included in member export and account deletion.
+- The founder-only `/copilot/demo` route and component are removed. Founder and
+  administrative operations remain unchanged; any future public demo will use
+  a normal demo profile on the main product surface after core migration.
+- The old `/mirror/trends` endpoint remains temporarily for compatibility and
+  is not used by the canonical My MatchLab surface.
+- PR #26 merged as `4e8e472c`; GitHub Actions run `32797576360` passed
+  typecheck, lint, schema drift, voice lint, 38 web files with 255 tests,
+  ordered migrations through `0049`, and 102 API files with 937 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Consolidate Mirror trends into My MatchLab with provenance, changes over
-   time, uncertainty, and contradictions.
-2. Consolidate dates, journal, debrief, experiments, and reflections into a
+1. Consolidate dates, journal, debrief, experiments, and reflections into a
    durable Journey record.
-3. Consolidate games and quizzes into Play with confirmed-learning handoff.
-4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+2. Consolidate games and quizzes into Play with confirmed-learning handoff.
+3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
