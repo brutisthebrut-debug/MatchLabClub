@@ -32,6 +32,7 @@ import {
   matchProposalsTable,
   datingWinsTable,
   behavioralGrowthEventsTable,
+  journeyExperimentsTable,
   matchingReadinessSnapshotsTable,
   matchingNudgeStateTable,
   mirrorDigestPrefsTable,
@@ -339,6 +340,7 @@ async function buildExportPayload(userId: string) {
     connectorConnections,
     datingWins,
     behavioralGrowthEvents,
+    journeyExperiments,
     matchingReadinessSnapshots,
     matchingNudgeState,
     mirrorDigestPrefs,
@@ -385,6 +387,7 @@ async function buildExportPayload(userId: string) {
     db.select().from(connectorConnectionsTable).where(eq(connectorConnectionsTable.userId, userId)),
     db.select().from(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
     db.select().from(behavioralGrowthEventsTable).where(eq(behavioralGrowthEventsTable.userId, userId)),
+    db.select().from(journeyExperimentsTable).where(eq(journeyExperimentsTable.userId, userId)),
     db.select().from(matchingReadinessSnapshotsTable).where(eq(matchingReadinessSnapshotsTable.userId, userId)),
     db.select().from(matchingNudgeStateTable).where(eq(matchingNudgeStateTable.userId, userId)),
     db.select().from(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
@@ -519,6 +522,7 @@ async function buildExportPayload(userId: string) {
       connectorConnections,
       datingWins,
       behavioralGrowthEvents,
+      journeyExperiments,
       matchingReadinessSnapshots,
       matchingNudgeState,
       mirrorDigestPrefs,
@@ -857,6 +861,9 @@ router.delete("/account", async (req, res): Promise<void> => {
     db
       .delete(behavioralGrowthEventsTable)
       .where(eq(behavioralGrowthEventsTable.userId, userId)),
+    db
+      .delete(journeyExperimentsTable)
+      .where(eq(journeyExperimentsTable.userId, userId)),
     db
       .delete(matchingReadinessSnapshotsTable)
       .where(eq(matchingReadinessSnapshotsTable.userId, userId)),
@@ -1249,6 +1256,12 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(behavioralGrowthEventsTable.userId, userId))
         .returning({ id: behavioralGrowthEventsTable.id });
       tables["behavioral_growth_events"] = behavioralGrowthDel.length;
+
+      const journeyExperimentsDel = await tx
+        .delete(journeyExperimentsTable)
+        .where(eq(journeyExperimentsTable.userId, userId))
+        .returning({ id: journeyExperimentsTable.id });
+      tables["journey_experiments"] = journeyExperimentsDel.length;
 
       const matchingSnapshotDel = await tx
         .delete(matchingReadinessSnapshotsTable)
