@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { communicationRecordsTable, db, matchPoolMembershipTable, mirrorLearningsTable } from "@workspace/db";
+import { communicationRecordsTable, db, matchPoolMembershipTable, mirrorLearningEventsTable, mirrorLearningsTable } from "@workspace/db";
 
 const router: IRouter = Router();
 const Lens = z.enum(["connection_style", "personal_blueprint"]);
@@ -131,6 +131,22 @@ router.delete("/me/communication/:lens", async (req, res): Promise<void> => {
         updatedAt: new Date(),
       }).where(eq(matchPoolMembershipTable.userId, req.user.id));
     }
+  }
+  if (learning) {
+    await db.insert(mirrorLearningEventsTable).values({
+      userId: req.user.id,
+      learningId: learning.id,
+      action: "source_removed",
+      sourceType: learning.sourceType,
+      sourceRef: learning.sourceRef,
+      sourceLabel: learning.sourceLabel,
+      priorStatus: learning.status,
+      newStatus: null,
+      priorText: learning.memberLearning ?? learning.proposedLearning,
+      newText: null,
+      confidence: learning.confidence,
+      matchingUseApproved: false,
+    });
   }
   await db.delete(mirrorLearningsTable).where(and(
     eq(mirrorLearningsTable.userId, req.user.id),
