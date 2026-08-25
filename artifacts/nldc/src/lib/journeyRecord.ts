@@ -1,9 +1,11 @@
-export type JourneyRecordKind = "reflection" | "date" | "win" | "experiment";
+export type JourneyRecordKind = "reflection" | "date" | "win" | "experiment" | "follow-up";
+
+export type JourneySourceType = "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment";
 
 export interface JourneyRecordItem {
   id: string;
   kind: JourneyRecordKind;
-  source: { type: "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment"; id: number; label: string };
+  source: { type: JourneySourceType | "journey_follow_up"; id: number; label: string };
   title: string;
   body: string;
   details: Record<string, unknown>;
@@ -13,7 +15,7 @@ export interface JourneyRecordItem {
 }
 
 export interface JourneyRecordResponse {
-  summary: { total: number; reflections: number; dates: number; wins: number; experiments: number; headline: string };
+  summary: { total: number; reflections: number; dates: number; wins: number; experiments: number; followUps: number; headline: string };
   records: JourneyRecordItem[];
 }
 
@@ -51,6 +53,17 @@ export interface ExperimentInput {
   description: string;
   status: ExperimentStatus;
   result: string;
+}
+
+export type FollowUpStatus = "pending" | "answered" | "skipped";
+
+export interface FollowUpInput {
+  sourceType: JourneySourceType;
+  sourceId: number;
+  sourceLabel: string;
+  question: string;
+  status: FollowUpStatus;
+  answer: string;
 }
 
 async function request<T>(url: string, method: "POST" | "PATCH" | "DELETE", payload?: unknown): Promise<T> {
@@ -97,11 +110,16 @@ export async function saveExperiment(input: ExperimentInput, id?: number): Promi
   return request<{ id: number }>(id ? `/api/me/journey/experiments/${id}` : "/api/me/journey/experiments", id ? "PATCH" : "POST", input);
 }
 
+export async function saveFollowUp(input: FollowUpInput, id?: number): Promise<{ id: number }> {
+  return request<{ id: number }>(id ? `/api/me/journey/follow-ups/${id}` : "/api/me/journey/follow-ups", id ? "PATCH" : "POST", input);
+}
+
 function sourcePath(item: JourneyRecordItem): string {
   if (item.source.type === "journal_entry") return `/api/journal/${item.source.id}`;
   if (item.source.type === "post_date_note") return `/api/post-date-notes/${item.source.id}`;
   if (item.source.type === "dating_win") return `/api/me/dating-wins/${item.source.id}`;
-  return `/api/me/journey/experiments/${item.source.id}`;
+  if (item.source.type === "journey_experiment") return `/api/me/journey/experiments/${item.source.id}`;
+  return `/api/me/journey/follow-ups/${item.source.id}`;
 }
 
 export async function removeJourneyItem(item: JourneyRecordItem): Promise<unknown> {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { datesCompatibilityHref, experimentsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, readJourneyRouteState, shouldOpenGuidedDebrief, winsCompatibilityHref } from "./journeyRoutes";
+import { datesCompatibilityHref, experimentsCompatibilityHref, followUpsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, readJourneyRouteState, shouldOpenGuidedDebrief, winsCompatibilityHref } from "./journeyRoutes";
 
 describe("Journey compatibility routes", () => {
   it("keeps the old guided debrief entry pointed at Journey", () => {
@@ -23,6 +23,7 @@ describe("Journey compatibility routes", () => {
     expect(readJourneyRouteState("/journey?date=-2").source).toBeNull();
     expect(readJourneyRouteState("/journey?win=7")).toMatchObject({ kind: "all", source: { type: "dating_win", id: 7 } });
     expect(readJourneyRouteState("/journey?experiment=8")).toMatchObject({ source: { type: "journey_experiment", id: 8 } });
+    expect(readJourneyRouteState("/journey?followUp=9")).toMatchObject({ source: { type: "journey_follow_up", id: 9 } });
   });
 
   it("keeps old wins links focused on the canonical Journey view", () => {
@@ -31,5 +32,9 @@ describe("Journey compatibility routes", () => {
 
   it("keeps old experiment links focused on the canonical Journey view", () => {
     expect(experimentsCompatibilityHref("/progress/experiments?q=space&experiment=6")).toBe("/journey?kind=experiment&q=space&experiment=6");
+  });
+
+  it("keeps old follow-up links focused on the canonical Journey view", () => {
+    expect(followUpsCompatibilityHref("/progress/followup?q=clarity&followUp=11")).toBe("/journey?kind=follow-up&q=clarity&followUp=11");
   });
 });

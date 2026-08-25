@@ -43,6 +43,7 @@ export * from "./photo_lab_runs";
 export * from "./dating_wins";
 export * from "./behavioral_growth_events";
 export * from "./journey_experiments";
+export * from "./journey_follow_ups";
 export * from "./wyr_answers";
 export * from "./daily_spark_answers";
 export * from "./flag_selections";

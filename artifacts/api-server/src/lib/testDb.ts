@@ -420,6 +420,19 @@ export const insertJourneyExperimentSchema = z.object({
   status: z.enum(["planned", "tried", "helped", "did-not-help"]),
   result: z.string().trim().max(5000),
 });
+ensureStore("journey_follow_ups");
+export const journeyFollowUpsTable = makeTable("journey_follow_ups");
+export const insertJourneyFollowUpSchema = z.object({
+  sourceType: z.enum(["journal_entry", "post_date_note", "dating_win", "journey_experiment"]),
+  sourceId: z.number().int().positive(),
+  sourceLabel: z.string().trim().min(1).max(500),
+  question: z.string().trim().min(1).max(2000),
+  status: z.enum(["pending", "answered", "skipped"]),
+  answer: z.string().trim().max(10000),
+}).superRefine((value, ctx) => {
+  if (value.status === "answered" && !value.answer) ctx.addIssue({ code: "custom", path: ["answer"], message: "An answered follow-up needs an answer." });
+  if (value.status !== "answered" && value.answer) ctx.addIssue({ code: "custom", path: ["answer"], message: "Only answered follow-ups can contain an answer." });
+});
 ensureStore("behavioral_growth_events");
 export const behavioralGrowthEventsTable = makeTable(
   "behavioral_growth_events",

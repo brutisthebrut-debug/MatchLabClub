@@ -4620,6 +4620,136 @@ paths:
         '404':
           description: Not found or not owned by the caller.
 
+  /me/journey/follow-ups:
+    get:
+      tags: [Matching]
+      operationId: getJourneyFollowUps
+      summary: List the signed-in member's linked Journey follow-ups
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: view
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, trash]
+            default: active
+      responses:
+        '200':
+          description: Owner-scoped follow-up records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JourneyFollowUp'
+        '400':
+          description: Invalid view.
+        '401':
+          description: Not authenticated.
+    post:
+      tags: [Matching]
+      operationId: createJourneyFollowUp
+      summary: Create a follow-up linked to an owned Journey moment
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JourneyFollowUpInput'
+      responses:
+        '201':
+          description: Created follow-up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyFollowUp'
+        '400':
+          description: Invalid follow-up or source.
+        '401':
+          description: Not authenticated.
+
+  /me/journey/follow-ups/{id}:
+    patch:
+      tags: [Matching]
+      operationId: updateJourneyFollowUp
+      summary: Update or answer the member's linked follow-up
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JourneyFollowUpInput'
+      responses:
+        '200':
+          description: Updated follow-up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyFollowUp'
+        '400':
+          description: Invalid follow-up or source.
+        '401':
+          description: Not authenticated.
+        '404':
+          description: Not found or not owned by the caller.
+    delete:
+      tags: [Matching]
+      operationId: deleteJourneyFollowUp
+      summary: Soft-remove the member's linked follow-up
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removed.
+        '401':
+          description: Not authenticated.
+        '404':
+          description: Not found or not owned by the caller.
+
+  /me/journey/follow-ups/{id}/restore:
+    post:
+      tags: [Matching]
+      operationId: restoreJourneyFollowUp
+      summary: Restore a removed linked follow-up
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Restored follow-up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyFollowUp'
+        '401':
+          description: Not authenticated.
+        '404':
+          description: Not found or not owned by the caller.
+
   /me/journey/summary:
     get:
       tags: [Matching]
@@ -12978,7 +13108,7 @@ components:
       properties:
         type:
           type: string
-          enum: [journal_entry, post_date_note, dating_win, journey_experiment]
+          enum: [journal_entry, post_date_note, dating_win, journey_experiment, journey_follow_up]
         id:
           type: integer
         label:
@@ -12992,7 +13122,7 @@ components:
           type: string
         kind:
           type: string
-          enum: [reflection, date, win, experiment]
+          enum: [reflection, date, win, experiment, follow-up]
         source:
           $ref: '#/components/schemas/JourneyRecordSource'
         title:
@@ -13015,7 +13145,7 @@ components:
       properties:
         summary:
           type: object
-          required: [total, reflections, dates, wins, experiments, headline]
+          required: [total, reflections, dates, wins, experiments, followUps, headline]
           properties:
             total:
               type: integer
@@ -13030,6 +13160,9 @@ components:
               type: integer
               minimum: 0
             experiments:
+              type: integer
+              minimum: 0
+            followUps:
               type: integer
               minimum: 0
             headline:
@@ -13078,6 +13211,67 @@ components:
         result:
           type: string
           maxLength: 5000
+
+    JourneyFollowUpSource:
+      type: object
+      required: [type, id, label]
+      properties:
+        type:
+          type: string
+          enum: [journal_entry, post_date_note, dating_win, journey_experiment]
+        id:
+          type: integer
+          minimum: 1
+        label:
+          type: string
+
+    JourneyFollowUp:
+      type: object
+      required: [id, source, question, status, answer, answeredAt, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        source:
+          $ref: '#/components/schemas/JourneyFollowUpSource'
+        question:
+          type: string
+        status:
+          type: string
+          enum: [pending, answered, skipped]
+        answer:
+          type: string
+        answeredAt:
+          type: [string, 'null']
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    JourneyFollowUpInput:
+      type: object
+      required: [sourceType, sourceId, sourceLabel, question, status, answer]
+      properties:
+        sourceType:
+          type: string
+          enum: [journal_entry, post_date_note, dating_win, journey_experiment]
+        sourceId:
+          type: integer
+          minimum: 1
+        sourceLabel:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Display hint only; the server replaces it with the current owner-scoped source label.
+        question:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        status:
+          type: string
+          enum: [pending, answered, skipped]
+        answer:
+          type: string
+          maxLength: 10000
 
     Achievement:
       type: object

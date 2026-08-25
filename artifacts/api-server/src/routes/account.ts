@@ -33,6 +33,7 @@ import {
   datingWinsTable,
   behavioralGrowthEventsTable,
   journeyExperimentsTable,
+  journeyFollowUpsTable,
   matchingReadinessSnapshotsTable,
   matchingNudgeStateTable,
   mirrorDigestPrefsTable,
@@ -341,6 +342,7 @@ async function buildExportPayload(userId: string) {
     datingWins,
     behavioralGrowthEvents,
     journeyExperiments,
+    journeyFollowUps,
     matchingReadinessSnapshots,
     matchingNudgeState,
     mirrorDigestPrefs,
@@ -388,6 +390,7 @@ async function buildExportPayload(userId: string) {
     db.select().from(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
     db.select().from(behavioralGrowthEventsTable).where(eq(behavioralGrowthEventsTable.userId, userId)),
     db.select().from(journeyExperimentsTable).where(eq(journeyExperimentsTable.userId, userId)),
+    db.select().from(journeyFollowUpsTable).where(eq(journeyFollowUpsTable.userId, userId)),
     db.select().from(matchingReadinessSnapshotsTable).where(eq(matchingReadinessSnapshotsTable.userId, userId)),
     db.select().from(matchingNudgeStateTable).where(eq(matchingNudgeStateTable.userId, userId)),
     db.select().from(mirrorDigestPrefsTable).where(eq(mirrorDigestPrefsTable.userId, userId)),
@@ -523,6 +526,7 @@ async function buildExportPayload(userId: string) {
       datingWins,
       behavioralGrowthEvents,
       journeyExperiments,
+      journeyFollowUps,
       matchingReadinessSnapshots,
       matchingNudgeState,
       mirrorDigestPrefs,
@@ -864,6 +868,9 @@ router.delete("/account", async (req, res): Promise<void> => {
     db
       .delete(journeyExperimentsTable)
       .where(eq(journeyExperimentsTable.userId, userId)),
+    db
+      .delete(journeyFollowUpsTable)
+      .where(eq(journeyFollowUpsTable.userId, userId)),
     db
       .delete(matchingReadinessSnapshotsTable)
       .where(eq(matchingReadinessSnapshotsTable.userId, userId)),
@@ -1262,6 +1269,12 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(journeyExperimentsTable.userId, userId))
         .returning({ id: journeyExperimentsTable.id });
       tables["journey_experiments"] = journeyExperimentsDel.length;
+
+      const journeyFollowUpsDel = await tx
+        .delete(journeyFollowUpsTable)
+        .where(eq(journeyFollowUpsTable.userId, userId))
+        .returning({ id: journeyFollowUpsTable.id });
+      tables["journey_follow_ups"] = journeyFollowUpsDel.length;
 
       const matchingSnapshotDel = await tx
         .delete(matchingReadinessSnapshotsTable)
