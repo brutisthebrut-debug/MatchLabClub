@@ -250,8 +250,8 @@ function Router() {
         <Route path="/founder" component={Founder} />
         <Route path="/partners/shebangs" component={ShebangsPartner} />
         {/* New coaching modules */}
-        {/* Preserved deep link; the capture/result experience now opens inside
-            the canonical My MatchLab Communication record. */}
+        {/* Preserved deep link; App owns the compatibility redirect while the
+            reusable experience renders in My MatchLab and regression tests. */}
         <Route path="/blueprint">
           <Redirect to="/my-matchlab?communication=personal-blueprint" />
         </Route>
