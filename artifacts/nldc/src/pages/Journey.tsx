@@ -232,7 +232,7 @@ export default function Journey() {
         {loading ? (
           <div className="mt-10 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading your Journey</div>
         ) : error ? (
-          <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm">{error}<Button size="sm" variant="outline" className="ml-3" onClick={load}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button></div>
+          <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm">{error}<Button size="sm" variant="outline" className="ml-3" onClick={() => load()}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button></div>
         ) : record ? (
           <section className="mt-10">
             <div className="rounded-3xl border border-[hsl(248_62%_52%/0.18)] bg-[hsl(248_62%_52%/0.06)] p-5"><p className="font-bold">{record.summary.headline}</p><p className="mt-2 text-sm text-muted-foreground">{record.summary.reflections} reflections · {record.summary.dates} date debriefs</p></div>
