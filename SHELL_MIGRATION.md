@@ -467,8 +467,31 @@ State: merged to `main` and verified.
   ordered migrations through `0051`, and 105 API files with 951 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3E1: Quiz Lab absorption into Play
+
+State: merged to `main` and verified.
+
+- Play now owns the full canonical quiz catalog and saved-result history while
+  `/quizzes/:slug` remains the stable playable deep link.
+- Signed-in result history is read from the existing server-scored `quiz`
+  imported-source rows, so it persists across devices. Anonymous history is
+  explicitly labeled as device-only and never substitutes for a failed account
+  read.
+- The catalog and result screen distinguish storage, confirmed learning, Echo
+  use, and matching use. Saving a result no longer claims the Mirror learned it
+  before the member confirms that handoff.
+- `/quizzes` now redirects to Play's quiz section after catalog, saved-result,
+  retake, share, and exact playable-link parity.
+- No new table or migration was needed; account export and deletion already own
+  the canonical imported-source rows.
+- PR #45 merged as `d064ffa9`; GitHub Actions run `32898492683` passed
+  typecheck, lint, schema drift, voice lint, 43 web files with 279 tests,
+  ordered migrations through `0051`, and 106 API files with 953 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Consolidate games and quizzes into Play with confirmed-learning handoff.
+1. Absorb game result histories and confirmed-learning handoffs into Play,
+   then retire duplicate game entry screens only after lifecycle parity.
 2. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.

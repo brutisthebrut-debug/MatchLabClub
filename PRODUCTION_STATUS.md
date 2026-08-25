@@ -171,6 +171,11 @@ segment plan.
   durable, source-linked Journey follow-ups: 41 web files with 276 tests, the
   ordered migration chain through `0051`, and 105 API files with 951 tests on
   clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32898492683 passed both required jobs on PR #45 for Play's
+  canonical quiz catalog and durable result history: 43 web files with 279
+  tests, the ordered migration chain through `0051`, and 106 API files with
+  953 tests on clean Postgres 16. The 8 skipped API tests remain the optional
+  OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
