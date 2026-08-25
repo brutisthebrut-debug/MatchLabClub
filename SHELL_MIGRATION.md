@@ -308,10 +308,40 @@ State: merged to `main` and verified.
   ordered migrations through `0049`, and 102 API files with 937 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Review access checkpoint
+
+- The existing development-only `/api/dev` seeded preview remains protected by
+  both conditional mounting and handler-level production guards.
+- Seeded preview identities now carry a persistent global Demo account flag on
+  every screen. There is no shared password and no production auth bypass.
+- PR #28 merged as `ffa99e75`; GitHub Actions run `32798465856` passed all
+  required checks with 39 web files / 256 tests and 102 API files / 937 tests.
+
+## Segment 3D1: canonical Journey record foundation
+
+State: merged to `main` and verified.
+
+- `/journey` now owns a real, authenticated chronological record rather than a
+  generic card hub.
+- Active journal reflections and post-date notes appear in one searchable,
+  filterable thread with source provenance and durable source links.
+- The owner-scoped API excludes deleted records and every other member's data,
+  fails closed for anonymous callers, and does not substitute sample content.
+- The existing weekly derived summary and its high-volume and isolation tests
+  remain intact.
+- Journal, date, and debrief routes remain available until their capture and
+  editing behavior is fully embedded in Journey; this segment does not claim
+  those workflows are retired.
+- PR #29 merged as `c7dc7743`; GitHub Actions run `32801706555` passed
+  typecheck, lint, schema drift, voice lint, 40 web files with 258 tests,
+  ordered migrations through `0049`, and 102 API files with 939 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Consolidate dates, journal, debrief, experiments, and reflections into a
-   durable Journey record.
-2. Consolidate games and quizzes into Play with confirmed-learning handoff.
-3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+1. Embed reflection and date-debrief capture/editing into Journey, then turn
+   redundant member routes into compatibility redirects after parity tests.
+2. Absorb experiments, wins, and follow-up reflections into the same record.
+3. Consolidate games and quizzes into Play with confirmed-learning handoff.
+4. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
