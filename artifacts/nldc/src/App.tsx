@@ -19,6 +19,7 @@ import {
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
 import { datesCompatibilityHref, experimentsCompatibilityHref, followUpsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, winsCompatibilityHref } from "@/lib/journeyRoutes";
+import { PLAY_QUIZ_CATALOG_HREF } from "@/lib/playRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -100,7 +101,6 @@ const Scan = lazy(() => import("@/pages/Scan"));
 const Trash = lazy(() => import("@/pages/Trash"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
-const Quizzes = lazy(() => import("@/pages/Quizzes"));
 const QuizPlay = lazy(() => import("@/pages/QuizPlay"));
 const SelfHub = lazy(() => import("@/pages/SelfHub"));
 const Matching = lazy(() => import("@/pages/Matching"));
@@ -112,6 +112,7 @@ const Onboarding = lazy(() => import("@/pages/Onboarding"));
 const MemberDestination = lazy(() => import("@/pages/MemberDestination"));
 const MyMatchLab = lazy(() => import("@/pages/MyMatchLab"));
 const Journey = lazy(() => import("@/pages/Journey"));
+const Play = lazy(() => import("@/pages/Play"));
 const ProfileProject = lazy(() => import("@/pages/ProfileProject"));
 
 const queryClient = new QueryClient();
@@ -219,7 +220,7 @@ function Router() {
         <Route path="/my-matchlab/profile" component={ProfileProject} />
         <Route path="/my-matchlab" component={MyMatchLab} />
         <Route path="/journey" component={Journey} />
-        <Route path="/play" component={MemberDestination} />
+        <Route path="/play" component={Play} />
         <Route path="/trust-data" component={MemberDestination} />
         {/* Audit capture/generation is owned by Profile Project. */}
         <Route path="/start">
@@ -361,7 +362,11 @@ function Router() {
         <Route path="/sample-report" component={SampleReport} />
         <Route path="/scan" component={Scan} />
         <Route path="/trash" component={Trash} />
-        <Route path="/quizzes" component={Quizzes} />
+        {/* Quiz Lab's catalog and saved-result history are absorbed into Play;
+            playable quiz deep links remain stable. */}
+        <Route path="/quizzes">
+          <Redirect to={PLAY_QUIZ_CATALOG_HREF} />
+        </Route>
         <Route path="/quizzes/:slug">
           {(params: { slug?: string } | null) => <QuizPlay slug={params?.slug ?? ""} />}
         </Route>
