@@ -406,9 +406,30 @@ State: merged to `main` and verified.
   ordered migrations through `0049`, and 102 API files with 941 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D3A: durable win absorption
+
+State: merged to `main` and verified.
+
+- Journey now owns capture, editing, search/filter, exact deep links, removal,
+  and restoration for dating wins while preserving `dating_wins` as the single
+  durable source of truth.
+- Win mutations are authenticated and owner-scoped. Removal remains soft and
+  recoverable, and editing updates the original row instead of creating a
+  shadow copy.
+- `/progress/wins` is now a compatibility route into the canonical Journey
+  wins view. The underlying API and account export/deletion behavior remain.
+- Experiments and follow-up reflections were deliberately not folded in: their
+  current screens still hold demo state and thin counter events rather than a
+  complete durable content model.
+- PR #39 merged as `4cfbdeb4`; GitHub Actions run `32880218089` passed
+  typecheck, lint, schema drift, voice lint, 41 web files with 270 tests,
+  ordered migrations through `0049`, and 103 API files with 944 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Absorb experiments, wins, and follow-up reflections into the same record.
+1. Replace demo-only experiment and follow-up state with durable Journey-owned
+   records, then retire their duplicate screens only after lifecycle parity.
 2. Consolidate games and quizzes into Play with confirmed-learning handoff.
 3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
