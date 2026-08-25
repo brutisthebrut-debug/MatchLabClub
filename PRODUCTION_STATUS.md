@@ -163,6 +163,10 @@ segment plan.
   durable win absorption into Journey: 41 web files with 270 tests, the
   ordered migration chain through `0049`, and 103 API files with 944 tests on
   clean Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+- GitHub Actions run 32894920735 passed both required jobs on PR #41 for
+  durable Journey experiments: 41 web files with 273 tests, the ordered
+  migration chain through `0050`, and 104 API files with 948 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 - Schema-drift check passes using the workspace-pinned `drizzle-kit` binary and
   no network fallback.
 - OpenAPI was updated first and Orval regenerated the React client and Zod
@@ -199,7 +203,7 @@ Do not represent the current repository as production-ready. Automated Phase 0
 verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
-gates include applying migrations `0041` through `0045` in the release
+gates include applying migrations `0041` through `0050` in the release
 environment, completing the shell migration and authenticated walkthroughs,
 then exercising Checkout/webhooks, renewal, cancellation, failure, and refund
 behavior in Stripe test mode and obtaining founder/legal approval before any

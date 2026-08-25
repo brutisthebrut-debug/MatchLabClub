@@ -426,10 +426,30 @@ State: merged to `main` and verified.
   ordered migrations through `0049`, and 103 API files with 944 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D3B: durable experiment absorption
+
+State: merged to `main` and verified.
+
+- Browser-only demo experiment cards are replaced by account-backed Journey
+  experiment records with planned, tried, helped, and did-not-help states.
+- Journey owns experiment capture, starter suggestions, editing, results,
+  search/filter, exact deep links, recoverable removal, and restoration.
+- The existing matching-readiness action is recorded exactly once when an
+  experiment first crosses from planned into an attempted state; later edits
+  cannot inflate it.
+- Experiments are owner-scoped and included in member export and both account
+  deletion paths. Migration `0050` and its Drizzle snapshot define the source.
+- `/progress/experiments` now redirects to the canonical Journey experiment
+  view because lifecycle parity is complete.
+- PR #41 merged as `44cdf0fe`; GitHub Actions run `32894920735` passed
+  typecheck, lint, schema drift, voice lint, 41 web files with 273 tests,
+  ordered migrations through `0050`, and 104 API files with 948 tests on clean
+  Postgres 16. The 8 skipped API tests remain the optional OCR suites.
+
 ## Next segments
 
-1. Replace demo-only experiment and follow-up state with durable Journey-owned
-   records, then retire their duplicate screens only after lifecycle parity.
+1. Replace demo-only follow-up state with durable Journey-owned reflection
+   records, then retire its duplicate screen only after lifecycle parity.
 2. Consolidate games and quizzes into Play with confirmed-learning handoff.
 3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
