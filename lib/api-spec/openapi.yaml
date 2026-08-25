@@ -4458,10 +4458,21 @@ paths:
       operationId: getMyJourneyRecord
       summary: Get the signed-in member's canonical saved Journey record
       description: |
-        Combines the caller's active journal reflections and post-date notes
-        into one chronological, source-backed record. Raw member content is
-        returned only to its owner. Deleted items and other members' records
-        are excluded. This is a private history, not a readiness score.
+        Combines the caller's journal reflections and post-date notes into one
+        chronological, source-backed record. Active records are returned by
+        default; `view=trash` returns only recoverable soft-deleted records.
+        Raw member content is returned only to its owner and other members'
+        records are always excluded. This is a private history, not a score.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: view
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, trash]
+            default: active
       responses:
         '200':
           description: The caller's canonical Journey record.
@@ -4475,6 +4486,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+        '400':
+          description: Invalid Journey view.
 
   /me/journey/summary:
     get:

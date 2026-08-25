@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getJourneyRecord, saveDateDebrief, saveReflection } from "./journeyRecord";
+import { getJourneyRecord, removeJourneyItem, restoreJourneyItem, saveDateDebrief, saveReflection, type JourneyRecordItem } from "./journeyRecord";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -15,6 +15,14 @@ describe("Journey record client", () => {
   it("fails closed", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Not authenticated" }) }));
     await expect(getJourneyRecord()).rejects.toThrow("Not authenticated");
+  });
+
+  it("loads recoverable trash only when explicitly requested", async () => {
+    const record = { summary: { total: 0, reflections: 0, dates: 0, headline: "Nothing to restore." }, records: [] };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => record });
+    vi.stubGlobal("fetch", fetchMock);
+    await getJourneyRecord("trash");
+    expect(fetchMock).toHaveBeenCalledWith("/api/me/journey/record?view=trash", { credentials: "include" });
   });
 
   it("creates and edits reflections through the durable journal API", async () => {
@@ -40,5 +48,15 @@ describe("Journey record client", () => {
   it("surfaces mutation errors instead of pretending a save worked", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Entry not found" }) }));
     await expect(saveReflection({ prompt: null, body: "Still here", tags: [], mood: null }, 99)).rejects.toThrow("Entry not found");
+  });
+
+  it("soft-removes and restores the exact durable source record", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const item = { source: { type: "post_date_note", id: 12, label: "Date debrief" } } as JourneyRecordItem;
+    await removeJourneyItem(item);
+    await restoreJourneyItem(item);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/post-date-notes/12", { method: "DELETE", credentials: "include" });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/post-date-notes/12/restore", { method: "POST", credentials: "include" });
   });
 });

@@ -157,4 +157,28 @@ describe("GET /api/me/journey/record", () => {
       expect.objectContaining({ title: "Date with Sam", href: expect.stringMatching(/^\/mirror\/dates/), details: expect.objectContaining({ personLabel: "Sam", dateAt: null }) }),
     ]));
   });
+
+  it("returns only the member's removed moments in the recoverable trash view", async () => {
+    const { db, journalEntriesTable, postDateNotesTable } = await import("../lib/testDb");
+    testApp.setUser({ id: "journey-trash-owner" });
+    await db.insert(journalEntriesTable).values([
+      { userId: "journey-trash-owner", prompt: "Keep", body: "Active thought", tags: [], deletedAt: null, updatedAt: new Date() },
+      { userId: "journey-trash-owner", prompt: "Restore", body: "Removed thought", tags: [], deletedAt: new Date(), updatedAt: new Date() },
+      { userId: "another-owner", prompt: "Private", body: "Other removed thought", tags: [], deletedAt: new Date(), updatedAt: new Date() },
+    ]);
+    await db.insert(postDateNotesTable).values({ userId: "journey-trash-owner", summary: "Removed date", whatWentWell: "", whatDidnt: "", deletedAt: new Date(), updatedAt: new Date() });
+
+    const response = await request(testApp.app).get("/api/me/journey/record?view=trash");
+    expect(response.status).toBe(200);
+    expect(response.body.summary).toMatchObject({ total: 2, reflections: 1, dates: 1 });
+    expect(JSON.stringify(response.body)).toContain("Removed thought");
+    expect(JSON.stringify(response.body)).toContain("Removed date");
+    expect(JSON.stringify(response.body)).not.toContain("Active thought");
+    expect(JSON.stringify(response.body)).not.toContain("Other removed thought");
+  });
+
+  it("rejects unknown Journey views", async () => {
+    testApp.setUser({ id: "journey-owner" });
+    expect((await request(testApp.app).get("/api/me/journey/record?view=everything")).status).toBe(400);
+  });
 });
