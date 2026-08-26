@@ -35,6 +35,12 @@ jobs:
       - run: pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
       - run: pnpm --filter @workspace/nldc run test
       - run: pnpm --filter @workspace/nldc run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nldc-static-${{ github.sha }}
+          path: artifacts/nldc/dist/public
+          if-no-files-found: error
+          retention-days: 7
 
   database-verification:
     name: Postgres-backed API verification
