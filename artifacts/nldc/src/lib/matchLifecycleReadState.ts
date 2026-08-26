@@ -44,3 +44,22 @@ export function resolveMatchMessagesReadState(input: {
   if (!input.hasData) return "loading";
   return input.messageCount === 0 ? "empty" : "ready";
 }
+
+
+export type MatchSupportingReadState =
+  | "idle"
+  | "loading"
+  | "error"
+  | "ready";
+
+export function resolveMatchSupportingReadState(input: {
+  isEnabled: boolean;
+  isLoading: boolean;
+  isError: boolean;
+  hasData: boolean;
+}): MatchSupportingReadState {
+  if (!input.isEnabled) return "idle";
+  if (input.isLoading && !input.hasData) return "loading";
+  if (input.isError) return "error";
+  return input.hasData ? "ready" : "loading";
+}

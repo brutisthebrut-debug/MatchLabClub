@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   resolveMatchListReadState,
   resolveMatchMessagesReadState,
+  resolveMatchSupportingReadState,
   resolveMatchThreadReadState,
 } from "./matchLifecycleReadState";
 
@@ -81,5 +82,35 @@ describe("resolveMatchMessagesReadState", () => {
       hasData: true,
       messageCount: 0,
     })).toBe("empty");
+  });
+});
+
+
+describe("resolveMatchSupportingReadState", () => {
+  it("keeps a disabled optional read idle", () => {
+    expect(resolveMatchSupportingReadState({
+      isEnabled: false,
+      isLoading: false,
+      isError: false,
+      hasData: false,
+    })).toBe("idle");
+  });
+
+  it("distinguishes an enabled failure from unavailable data", () => {
+    expect(resolveMatchSupportingReadState({
+      isEnabled: true,
+      isLoading: false,
+      isError: true,
+      hasData: false,
+    })).toBe("error");
+  });
+
+  it("returns ready only when the read produced data", () => {
+    expect(resolveMatchSupportingReadState({
+      isEnabled: true,
+      isLoading: false,
+      isError: false,
+      hasData: true,
+    })).toBe("ready");
   });
 });

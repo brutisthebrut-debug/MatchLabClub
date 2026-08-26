@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   resolveMatchMessagesReadState,
+  resolveMatchSupportingReadState,
   resolveMatchThreadReadState,
 } from "@/lib/matchLifecycleReadState";
 import {
@@ -186,6 +187,8 @@ export default function MatchThread() {
       refetchInterval: 15_000,
     },
   });
+  const supportingReadsEnabled = isAuthenticated && id.length > 0;
+
   // Profile loads eagerly (not gated on the reveal toggle) so the compatibility
   // score shows up front. The server still withholds name and photos until the
   // counterpart turns reveal consent on; only the symmetric score and aggregate
@@ -193,7 +196,7 @@ export default function MatchThread() {
   const profileQuery = useGetConnectionProfile(id, {
     query: {
       queryKey: getGetConnectionProfileQueryKey(id),
-      enabled: isAuthenticated && id.length > 0,
+      enabled: supportingReadsEnabled,
       retry: false,
     },
   });
@@ -201,18 +204,30 @@ export default function MatchThread() {
   // StartersCard gate below), so we only fetch them under that exact condition.
   // Firing eagerly on every thread open would burn a Claude daily-cap token for
   // consent-on users on a card that never shows (closed threads, ongoing chats).
+  const startersEnabled =
+    supportingReadsEnabled &&
+    connectionQuery.isSuccess &&
+    connectionQuery.data?.status !== "closed" &&
+    messagesQuery.isSuccess &&
+    (messagesQuery.data?.length ?? 0) === 0;
   const startersQuery = useGetConnectionStarters(id, {
     query: {
       queryKey: getGetConnectionStartersQueryKey(id),
-      enabled:
-        isAuthenticated &&
-        id.length > 0 &&
-        connectionQuery.isSuccess &&
-        connectionQuery.data?.status !== "closed" &&
-        messagesQuery.isSuccess &&
-        (messagesQuery.data?.length ?? 0) === 0,
+      enabled: startersEnabled,
       retry: false,
     },
+  });
+  const profileReadState = resolveMatchSupportingReadState({
+    isEnabled: supportingReadsEnabled,
+    isLoading: profileQuery.isLoading,
+    isError: profileQuery.isError,
+    hasData: profileQuery.data !== undefined,
+  });
+  const startersReadState = resolveMatchSupportingReadState({
+    isEnabled: startersEnabled,
+    isLoading: startersQuery.isLoading,
+    isError: startersQuery.isError,
+    hasData: startersQuery.data !== undefined,
   });
 
   const sendMessage = useSendConnectionMessage();
@@ -355,6 +370,13 @@ export default function MatchThread() {
           invalidateThread();
           toast({ title: "You unmatched. This conversation is now closed." });
         },
+        onError: () => {
+          toast({
+            title: "We couldn't unmatch right now.",
+            description: "The conversation is unchanged. Try again.",
+            variant: "destructive",
+          });
+        },
       },
     );
   };
@@ -371,6 +393,14 @@ export default function MatchThread() {
             title: "Report sent.",
             description:
               "We closed this conversation and our team will review it.",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "We couldn't send the report.",
+            description:
+              "Nothing was changed. Keep your distance and try again.",
+            variant: "destructive",
           });
         },
       },
@@ -590,10 +620,28 @@ export default function MatchThread() {
               className="mb-4 glass border border-white/10 rounded-2xl p-5"
               data-testid="panel-reveal"
             >
-              {profileQuery.isLoading ? (
+              {profileReadState === "loading" ? (
                 <p className="text-sm text-muted-foreground/60">
                   Loading profile...
                 </p>
+              ) : profileReadState === "error" ? (
+                <div role="alert" data-testid="match-profile-error">
+                  <p className="text-sm font-semibold text-foreground">
+                    We couldn't load this profile.
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    No profile details are being substituted.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-3 rounded-full"
+                    onClick={() => void profileQuery.refetch()}
+                  >
+                    Try again
+                  </Button>
+                </div>
               ) : reveal ? (
                 <div>
                   <div className="flex items-center gap-2.5 mb-3">
@@ -640,6 +688,32 @@ export default function MatchThread() {
               )}
             </motion.div>
           )}
+
+          {!closed &&
+            messages.length === 0 &&
+            startersReadState === "error" && (
+              <div
+                className="mb-4 glass border border-destructive/25 rounded-2xl p-4"
+                role="alert"
+                data-testid="match-starters-error"
+              >
+                <p className="text-sm font-semibold text-foreground">
+                  We couldn't load conversation starters.
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  You can still write your own message, or try this read again.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mt-3 rounded-full"
+                  onClick={() => void startersQuery.refetch()}
+                >
+                  Try again
+                </Button>
+              </div>
+            )}
 
           {!closed && messages.length === 0 && starters.length > 0 && (
             <StartersCard starters={starters} onPick={setDraft} />
@@ -975,12 +1049,20 @@ function DateIdeasCard({ id, isDemo }: { id: string; isDemo: boolean }) {
           disabled={suggest.isPending}
           data-testid="button-suggest-date-ideas"
         >
-          {suggest.isPending ? "Thinking..." : "Suggest date ideas"}
+          {suggest.isPending
+            ? "Thinking..."
+            : suggest.isError
+              ? "Try again"
+              : "Suggest date ideas"}
         </Button>
       )}
       {!isDemo && suggest.isError && (
-        <p className="text-xs text-muted-foreground/50 mt-2">
-          Could not load ideas just now. Try again.
+        <p
+          className="text-xs text-destructive mt-2"
+          role="alert"
+          data-testid="date-ideas-error"
+        >
+          We couldn't load date ideas. Nothing was changed.
         </p>
       )}
     </motion.div>
