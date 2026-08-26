@@ -262,4 +262,5 @@ Stripe test mode and obtaining founder/legal approval before any live offer.
 PR #95 added a value-safe pre-production environment contract and CI coverage;
 it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value. PR #96
 moves the runtime and release contract to provider-neutral auth and trusted-origin
-names while retaining the old names only as temporary rollout fallbacks.
+names while retaining the old names only as temporary rollout fallbacks. Those
+fallback names are not accepted as substitutes by the release validator.
