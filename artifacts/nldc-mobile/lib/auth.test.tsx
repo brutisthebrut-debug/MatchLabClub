@@ -52,7 +52,13 @@ import {
   setUnauthorizedHandler,
   ApiError,
 } from "@workspace/api-client-react";
-import { AUTH_TOKEN_KEY, AuthProvider, useAuth } from "./auth";
+import {
+  AUTH_TOKEN_KEY,
+  AuthProvider,
+  getMobileOidcClientId,
+  getMobileOidcIssuerUrl,
+  useAuth,
+} from "./auth";
 
 // A small DOM consumer that mirrors the account screen's auth-driven UI
 // (matching the testIDs the screen uses in artifacts/nldc-mobile/app/(tabs)/account.tsx).
@@ -86,6 +92,9 @@ function setFetchHandler(handler: FetchHandler) {
 }
 
 beforeEach(() => {
+  process.env["EXPO_PUBLIC_OIDC_ISSUER_URL"] =
+    "https://identity.example.test";
+  process.env["EXPO_PUBLIC_OIDC_CLIENT_ID"] = "mobile-test-client";
   secureStore.clear();
   setAuthTokenGetter(null);
   setUnauthorizedHandler(null);
@@ -100,6 +109,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  delete process.env["EXPO_PUBLIC_OIDC_ISSUER_URL"];
+  delete process.env["EXPO_PUBLIC_OIDC_CLIENT_ID"];
   cleanup();
   vi.restoreAllMocks();
 });
@@ -110,6 +121,36 @@ function jsonResponse(status: number, body: unknown): Response {
     headers: { "content-type": "application/json" },
   });
 }
+
+describe("mobile OIDC configuration", () => {
+  it("prefers provider-neutral names and keeps legacy names only as rollout fallbacks", () => {
+    expect(
+      getMobileOidcIssuerUrl({
+        EXPO_PUBLIC_OIDC_ISSUER_URL: "https://identity.matchlab.club",
+        EXPO_PUBLIC_ISSUER_URL: "https://legacy.example.test",
+      }),
+    ).toBe("https://identity.matchlab.club");
+    expect(
+      getMobileOidcClientId({
+        EXPO_PUBLIC_OIDC_CLIENT_ID: "mobile-client",
+        EXPO_PUBLIC_REPL_ID: "legacy-client",
+      }),
+    ).toBe("mobile-client");
+    expect(
+      getMobileOidcIssuerUrl({
+        EXPO_PUBLIC_ISSUER_URL: "https://legacy.example.test",
+      }),
+    ).toBe("https://legacy.example.test");
+    expect(
+      getMobileOidcClientId({ EXPO_PUBLIC_REPL_ID: "legacy-client" }),
+    ).toBe("legacy-client");
+  });
+
+  it("returns empty configuration instead of defaulting to Replit", () => {
+    expect(getMobileOidcIssuerUrl({})).toBe("");
+    expect(getMobileOidcClientId({})).toBe("");
+  });
+});
 
 describe("mobile session expiration UX", () => {
   it("shows the expired-session banner and clears the stored token when /api/auth/user returns 401", async () => {
