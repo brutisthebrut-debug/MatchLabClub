@@ -19,5 +19,6 @@ describe("Play compatibility routing", () => {
     expect(embeddedPlayGame(PLAY_THIS_OR_THAT_HREF)).toBe("this-or-that");
     expect(embeddedPlayGame("/play", "?game=this-or-that")).toBe("this-or-that");
     expect(embeddedPlayGame("/play?game=unknown")).toBeNull();
+    expect(shouldFocusQuizCatalog(PLAY_THIS_OR_THAT_HREF)).toBe(false);
   });
 });
