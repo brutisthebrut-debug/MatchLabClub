@@ -76,38 +76,38 @@ export function validateReleaseEnvironment(
     errors.push("ISSUER_URL must not use the retired Replit identity provider.");
   }
 
-  // The runtime currently consumes this compatibility name as its OIDC client
-  // id. Keep the deployment honest until the auth migration renames it.
-  requireValue(env, "REPL_ID", errors);
-  warnings.push(
-    "REPL_ID is currently the OIDC client-id compatibility name; migrate runtime usage to OIDC_CLIENT_ID before removing it.",
-  );
+  requireValue(env, "OIDC_CLIENT_ID", errors);
 
-  const domains = requireValue(env, "REPLIT_DOMAINS", errors);
-  if (domains) {
-    for (const domain of domains.split(",").map((item) => item.trim())) {
-      if (
-        !domain ||
-        domain.includes("://") ||
-        domain.includes("/") ||
-        /\s/.test(domain)
-      ) {
+  const allowedOrigins = requireValue(env, "ALLOWED_ORIGINS", errors);
+  if (allowedOrigins) {
+    for (const origin of allowedOrigins.split(",").map((item) => item.trim())) {
+      const parsed = validateHttpsUrl(origin, "ALLOWED_ORIGINS", errors);
+      if (!parsed) break;
+      if (parsed.origin !== origin.replace(/\/$/, "")) {
         errors.push(
-          "REPLIT_DOMAINS must be a comma-separated hostname list without schemes or paths.",
+          "ALLOWED_ORIGINS entries must be exact origins without paths.",
         );
         break;
       }
-      if (/(^|\.)replit\.(app|dev|com)$/i.test(domain)) {
+      if (/(^|\.)replit\.(app|dev|com)$/i.test(parsed.hostname)) {
         errors.push(
-          "REPLIT_DOMAINS must not include a retired Replit application hostname.",
+          "ALLOWED_ORIGINS must not include a retired Replit application hostname.",
         );
         break;
       }
     }
   }
-  warnings.push(
-    "REPLIT_DOMAINS is currently the trusted-origin compatibility name; migrate runtime usage to ALLOWED_ORIGINS before removing it.",
-  );
+
+  if (value(env, "REPL_ID")) {
+    warnings.push(
+      "REPL_ID is deprecated; remove it after every environment uses OIDC_CLIENT_ID.",
+    );
+  }
+  if (value(env, "REPLIT_DOMAINS") || value(env, "REPLIT_EXPO_DEV_DOMAIN")) {
+    warnings.push(
+      "REPLIT_DOMAINS and REPLIT_EXPO_DEV_DOMAIN are deprecated; remove them after every environment uses ALLOWED_ORIGINS.",
+    );
+  }
 
   if (value(env, "BILLING_LIVE_PRODUCTS")) {
     errors.push(
