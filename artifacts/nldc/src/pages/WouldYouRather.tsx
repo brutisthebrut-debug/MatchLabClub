@@ -228,7 +228,11 @@ export function WouldYouRatherExperience({ embedded = false }: { embedded?: bool
 
           {/* Today's tradeoff */}
           <AnimatePresence mode="wait">
-            {current ? (
+            {isAuthenticated && answersLoading ? (
+              <motion.div key="answers-loading" {...fadeUp(0.06)} className="glass border border-white/10 rounded-2xl p-6 mb-6 text-sm text-muted-foreground">Loading your saved answers…</motion.div>
+            ) : isAuthenticated && answersFailed ? (
+              <motion.div key="answers-failed" {...fadeUp(0.06)} className="glass border border-destructive/30 rounded-2xl p-6 mb-6 text-sm text-destructive">Your saved answers could not load. No sample history has been substituted.</motion.div>
+            ) : current ? (
               <motion.div
                 key={current.id}
                 {...fadeUp(0.06)}
@@ -322,8 +326,6 @@ export function WouldYouRatherExperience({ embedded = false }: { embedded?: bool
             </div>
           )}
 
-          {isAuthenticated && answersLoading && <p className="mb-4 text-sm text-muted-foreground">Loading your saved answers…</p>}
-          {isAuthenticated && answersFailed && <p className="mb-4 text-sm text-destructive">Your saved answers could not load. No sample history has been substituted.</p>}
           {permissionError && <p className="mb-4 text-sm text-destructive">{permissionError}</p>}
 
           {/* Trust note */}
