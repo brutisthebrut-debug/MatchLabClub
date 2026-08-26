@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -7,8 +8,26 @@ import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { resolveMatchListReadState } from "@/lib/matchLifecycleReadState";
+import {
+  isValidMatchAgeRange,
+  MATCH_GENDER_OPTIONS,
+  MATCH_RADIUS_PRESETS,
+  normalizeMatchGenderPreference,
+  parseMatchPreferenceLines,
+  snapMatchRadiusKm,
+} from "@/lib/matchPreferences";
 import {
   useGetConnections,
   getGetConnectionsQueryKey,
@@ -18,6 +37,7 @@ import {
   getGetMatchingProposalsQueryKey,
   useRespondToMatchProposal,
   useUpdateMatchingPoolMembership,
+  useUpdateMatchingPreferences,
   type Connection,
   type MatchProposal,
 } from "@workspace/api-client-react";
@@ -227,6 +247,22 @@ export default function Matches() {
   });
   const respondProposal = useRespondToMatchProposal();
   const updatePool = useUpdateMatchingPoolMembership();
+  const updatePreferences = useUpdateMatchingPreferences();
+
+  const [showPreferences, setShowPreferences] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("preferences") === "1",
+  );
+  const [preferencesHydrated, setPreferencesHydrated] = useState(false);
+  const [preferencesDirty, setPreferencesDirty] = useState(false);
+  const [ageMin, setAgeMin] = useState(25);
+  const [ageMax, setAgeMax] = useState(45);
+  const [distanceKm, setDistanceKm] = useState("any");
+  const [genderPreference, setGenderPreference] = useState("any");
+  const [cityHint, setCityHint] = useState("");
+  const [dealBreakersText, setDealBreakersText] = useState("");
+  const [mustHavesText, setMustHavesText] = useState("");
 
   const connections = isDemo ? DEMO_CONNECTIONS : (serverData ?? []);
   const readState = resolveMatchListReadState({
@@ -243,6 +279,21 @@ export default function Matches() {
     poolStatus === "building" ||
     poolStatus === "ready" ||
     poolStatus === "concierge_only";
+  const preferences = matchingStateQuery.data?.preferences ?? null;
+
+  useEffect(() => {
+    if (!preferences || preferencesHydrated) return;
+    setAgeMin(typeof preferences.ageMin === "number" ? preferences.ageMin : 25);
+    setAgeMax(typeof preferences.ageMax === "number" ? preferences.ageMax : 45);
+    setDistanceKm(snapMatchRadiusKm(preferences.distanceKm));
+    setGenderPreference(
+      normalizeMatchGenderPreference(preferences.genderPreference),
+    );
+    setCityHint(preferences.cityHint ?? "");
+    setDealBreakersText((preferences.dealBreakers ?? []).join("\n"));
+    setMustHavesText((preferences.mustHaves ?? []).join("\n"));
+    setPreferencesHydrated(true);
+  }, [preferences, preferencesHydrated]);
 
   async function handleConsiderationChange(join: boolean) {
     try {
@@ -264,6 +315,59 @@ export default function Matches() {
       toast({
         title: "We couldn't change your consideration state.",
         description: "Your current setting is unchanged. Try again.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function handleSavePreferences() {
+    if (!isValidMatchAgeRange(ageMin, ageMax)) {
+      toast({
+        title: "Check the age range.",
+        description:
+          "Use whole-number ages from 18 to 120, with the minimum no higher than the maximum.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const distance = distanceKm === "any" ? null : Number(distanceKm);
+    const city = cityHint.trim();
+    if (city.length > 120) {
+      toast({
+        title: "The city or area is too long.",
+        description: "Keep it to 120 characters or fewer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updatePreferences.mutateAsync({
+        data: {
+          ageMin,
+          ageMax,
+          distanceKm: distance,
+          genderPreference:
+            genderPreference === "any" ? null : genderPreference,
+          cityHint: city.length === 0 ? null : city,
+          dealBreakers: parseMatchPreferenceLines(dealBreakersText),
+          mustHaves: parseMatchPreferenceLines(mustHavesText),
+        },
+      });
+      await queryClient.invalidateQueries({
+        queryKey: getGetMatchingStateQueryKey(),
+      });
+      setPreferencesDirty(false);
+      toast({
+        title: "Matching preferences saved.",
+        description:
+          "They guide controlled consideration; they do not generate a score or promise an introduction.",
+      });
+    } catch {
+      toast({
+        title: "We couldn't save your preferences.",
+        description: "Your current saved preferences are unchanged. Try again.",
         variant: "destructive",
       });
     }
@@ -412,19 +516,201 @@ export default function Matches() {
                           </Button>
                         </Link>
                       )}
-                      <Link href="/matching">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="rounded-full"
-                        >
-                          Review matching preferences
-                        </Button>
-                      </Link>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-full"
+                        aria-expanded={showPreferences}
+                        aria-controls="matching-preferences-panel"
+                        onClick={() => setShowPreferences((visible) => !visible)}
+                        data-testid="button-toggle-matching-preferences"
+                      >
+                        {showPreferences ? "Close preferences" : "Review matching preferences"}
+                      </Button>
                     </div>
                   </>
                 )}
               </div>
+
+              {showPreferences &&
+                !matchingStateQuery.isLoading &&
+                !matchingStateQuery.isError && (
+                  <div
+                    id="matching-preferences-panel"
+                    className="glass border border-white/10 rounded-2xl p-5"
+                    data-testid="matches-preferences"
+                  >
+                    <div className="mb-5">
+                      <p className="text-sm font-semibold text-foreground">
+                        Matching preferences
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                        These boundaries guide deliberate consideration. They
+                        are not a readiness score and do not promise an
+                        introduction.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="match-age-min">Minimum age</Label>
+                        <Input
+                          id="match-age-min"
+                          type="number"
+                          min={18}
+                          max={120}
+                          value={ageMin}
+                          onChange={(event) => {
+                            setAgeMin(Number(event.target.value));
+                            setPreferencesDirty(true);
+                          }}
+                          data-testid="input-match-age-min"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="match-age-max">Maximum age</Label>
+                        <Input
+                          id="match-age-max"
+                          type="number"
+                          min={18}
+                          max={120}
+                          value={ageMax}
+                          onChange={(event) => {
+                            setAgeMax(Number(event.target.value));
+                            setPreferencesDirty(true);
+                          }}
+                          data-testid="input-match-age-max"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="match-distance">Distance</Label>
+                        <Select
+                          value={distanceKm}
+                          onValueChange={(value) => {
+                            setDistanceKm(value);
+                            setPreferencesDirty(true);
+                          }}
+                        >
+                          <SelectTrigger
+                            id="match-distance"
+                            data-testid="select-match-distance"
+                          >
+                            <SelectValue placeholder="Choose a distance" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MATCH_RADIUS_PRESETS.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="match-gender">People to consider</Label>
+                        <Select
+                          value={genderPreference}
+                          onValueChange={(value) => {
+                            setGenderPreference(value);
+                            setPreferencesDirty(true);
+                          }}
+                        >
+                          <SelectTrigger
+                            id="match-gender"
+                            data-testid="select-match-gender"
+                          >
+                            <SelectValue placeholder="Choose a preference" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MATCH_GENDER_OPTIONS.map((value) => (
+                              <SelectItem key={value} value={value}>
+                                {value === "any"
+                                  ? "Any gender"
+                                  : value
+                                      .replace("-", " ")
+                                      .replace(/\b\w/g, (letter) =>
+                                        letter.toUpperCase(),
+                                      )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      <Label htmlFor="match-city">City or area</Label>
+                      <Input
+                        id="match-city"
+                        value={cityHint}
+                        maxLength={120}
+                        placeholder="Optional"
+                        onChange={(event) => {
+                          setCityHint(event.target.value);
+                          setPreferencesDirty(true);
+                        }}
+                        data-testid="input-match-city"
+                      />
+                    </div>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="match-must-haves">Must-haves</Label>
+                        <Textarea
+                          id="match-must-haves"
+                          rows={4}
+                          value={mustHavesText}
+                          placeholder="One per line or separated by commas"
+                          onChange={(event) => {
+                            setMustHavesText(event.target.value);
+                            setPreferencesDirty(true);
+                          }}
+                          data-testid="textarea-match-must-haves"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="match-deal-breakers">
+                          Deal-breakers
+                        </Label>
+                        <Textarea
+                          id="match-deal-breakers"
+                          rows={4}
+                          value={dealBreakersText}
+                          placeholder="One per line or separated by commas"
+                          onChange={(event) => {
+                            setDealBreakersText(event.target.value);
+                            setPreferencesDirty(true);
+                          }}
+                          data-testid="textarea-match-deal-breakers"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap items-center gap-3">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="rounded-full"
+                        disabled={
+                          updatePreferences.isPending || !preferencesDirty
+                        }
+                        onClick={() => void handleSavePreferences()}
+                        data-testid="button-save-matching-preferences"
+                      >
+                        {updatePreferences.isPending
+                          ? "Saving..."
+                          : "Save preferences"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Up to 50 entries are saved in each list.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
               <div
                 className="glass border border-white/10 rounded-2xl p-5"

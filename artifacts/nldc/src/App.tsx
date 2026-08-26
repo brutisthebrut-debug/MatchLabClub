@@ -97,7 +97,6 @@ const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const QuizPlay = lazy(() => import("@/pages/QuizPlay"));
 const SelfHub = lazy(() => import("@/pages/SelfHub"));
-const Matching = lazy(() => import("@/pages/Matching"));
 const MatchPath = lazy(() => import("@/pages/MatchPath"));
 const Verification = lazy(() => import("@/pages/Verification"));
 const ShareCard = lazy(() => import("@/pages/ShareCard"));
@@ -327,7 +326,11 @@ function Router() {
         <Route path="/copilot/flirt" component={FlirtCoach} />
         <Route path="/me" component={SelfHub} />
         <Route path="/onboarding" component={Onboarding} />
-        <Route path="/matching" component={Matching} />
+        {/* Matching preferences now live in the canonical Matches surface.
+            Preserve saved links and open the absorbed panel directly. */}
+        <Route path="/matching">
+          <Redirect to="/matches?preferences=1" />
+        </Route>
         <Route path="/match-path" component={MatchPath} />
         <Route path="/verification" component={Verification} />
         <Route path="/share-card" component={ShareCard} />
