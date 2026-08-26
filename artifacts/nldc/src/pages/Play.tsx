@@ -103,9 +103,7 @@ export default function Play() {
             const Icon = game.icon;
             const content = <><Icon className="h-5 w-5 text-[hsl(248_62%_52%)]" /><h3 className="mt-4 font-serif text-xl font-bold">{game.title}</h3><p className="mt-2 min-h-12 text-sm leading-6 text-muted-foreground">{game.description}</p><span className="mt-4 inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)]">Play <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></>;
             const className = "group rounded-3xl border border-foreground/10 bg-background/70 p-5 text-left shadow-sm hover:border-[hsl(248_62%_52%/0.35)]";
-            return game.id === "this-or-that" || game.id === "would-you-rather" || game.id === "daily-spark" || game.id === "scenarios" || game.id === "predict" || game.id === "time-capsule"
-              ? <button key={game.id} type="button" onClick={() => openGame(game.id)} className={className}>{content}</button>
-              : <Link key={game.id} href={game.href} className={className}>{content}</Link>;
+            return <button key={game.id} type="button" onClick={() => openGame(game.id)} className={className}>{content}</button>;
           })}</div>
         </section>
 
