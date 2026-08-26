@@ -255,9 +255,11 @@ verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
-environment, provisioning the separate visual web preview, migrating the
-remaining `REPL_ID` and `REPLIT_DOMAINS` compatibility names, then exercising
+environment, provisioning the separate visual web preview, configuring the provider-neutral
+`OIDC_CLIENT_ID` and `ALLOWED_ORIGINS` settings, then exercising
 Checkout/webhooks, renewal, cancellation, failure, and refund behavior in
 Stripe test mode and obtaining founder/legal approval before any live offer.
-PR #95 adds a value-safe pre-production environment contract and CI coverage;
-it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value.
+PR #95 added a value-safe pre-production environment contract and CI coverage;
+it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value. PR #96
+moves the runtime and release contract to provider-neutral auth and trusted-origin
+names while retaining the old names only as temporary rollout fallbacks.
