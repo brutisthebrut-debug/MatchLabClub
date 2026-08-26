@@ -273,7 +273,7 @@ export const BREAKDOWN_ROWS = [
     label: "Predict yourself",
     blurb:
       "Predicting how you will answer, then checking yourself, reveals how well your self-image matches reality.",
-    href: "/games/predict",
+    href: "/play?game=predict",
     cta: "Play a round",
     icon: Target,
   },
