@@ -154,6 +154,111 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+export function ProfileAuditReportView({
+  sections,
+}: {
+  sections: ReturnType<typeof reportSections>;
+}) {
+  return (
+    <div
+      className="mt-5 space-y-5"
+      data-testid="profile-audit-report-view"
+    >
+      {sections.bioRead && (
+        <div>
+          <h4 className="font-bold">How it reads</h4>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {sections.bioRead}
+          </p>
+        </div>
+      )}
+      {sections.strengths.length > 0 && (
+        <div>
+          <h4 className="font-bold">What is working</h4>
+          <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+            {sections.strengths.map((item) => (
+              <li key={item} className="flex gap-2">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {sections.cautions.length > 0 && (
+        <div>
+          <h4 className="font-bold">What to reconsider</h4>
+          <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+            {sections.cautions.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {sections.suggestedBio && (
+        <div
+          className="rounded-2xl border border-foreground/10 bg-background/70 p-4"
+          data-testid="profile-audit-suggested-bio"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h4 className="font-bold">Suggested bio</h4>
+            <CopyButton text={sections.suggestedBio} />
+          </div>
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
+            {sections.suggestedBio}
+          </p>
+        </div>
+      )}
+      {sections.prompts.length > 0 && (
+        <div>
+          <h4 className="font-bold">Suggested prompts</h4>
+          <div className="mt-2 space-y-3">
+            {sections.prompts.map((prompt, index) => (
+              <div
+                key={`${prompt.original}-${index}`}
+                className="rounded-2xl border border-foreground/10 bg-background/70 p-4"
+                data-testid={`profile-audit-prompt-${index}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      {prompt.original}
+                    </p>
+                    <p className="mt-2 text-sm leading-6">{prompt.rewritten}</p>
+                  </div>
+                  <CopyButton text={prompt.rewritten} />
+                </div>
+                {prompt.tip && (
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    {prompt.tip}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {sections.actions.length > 0 && (
+        <div>
+          <h4 className="font-bold">Practical next moves</h4>
+          <ul className="mt-2 space-y-2">
+            {sections.actions.map((item, index) => (
+              <li
+                key={`${item}-${index}`}
+                className="flex items-start justify-between gap-3 rounded-2xl border border-foreground/10 bg-background/70 p-4 text-sm text-muted-foreground"
+                data-testid={`profile-audit-action-${index}`}
+              >
+                <span className="leading-6">{item}</span>
+                <CopyButton text={item} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProfileProject() {
   useMeta(
     "Profile Project",
@@ -904,62 +1009,7 @@ export default function ProfileProject() {
                             instead of a sample or guessed result.
                           </p>
                         ) : (
-                          <div className="mt-5 space-y-5">
-                            {activeAuditSections.bioRead && (
-                              <div>
-                                <h4 className="font-bold">How it reads</h4>
-                                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                  {activeAuditSections.bioRead}
-                                </p>
-                              </div>
-                            )}
-                            {activeAuditSections.strengths.length > 0 && (
-                              <div>
-                                <h4 className="font-bold">What is working</h4>
-                                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
-                                  {activeAuditSections.strengths.map((item) => (
-                                    <li key={item} className="flex gap-2">
-                                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                                      {item}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {activeAuditSections.cautions.length > 0 && (
-                              <div>
-                                <h4 className="font-bold">What to reconsider</h4>
-                                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
-                                  {activeAuditSections.cautions.map((item) => (
-                                    <li key={item}>{item}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {activeAuditSections.suggestedBio && (
-                              <div className="rounded-2xl border border-foreground/10 bg-background/70 p-4">
-                                <div className="flex items-center justify-between gap-3">
-                                  <h4 className="font-bold">Suggested bio</h4>
-                                  <CopyButton
-                                    text={activeAuditSections.suggestedBio}
-                                  />
-                                </div>
-                                <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
-                                  {activeAuditSections.suggestedBio}
-                                </p>
-                              </div>
-                            )}
-                            {activeAuditSections.actions.length > 0 && (
-                              <div>
-                                <h4 className="font-bold">Practical next moves</h4>
-                                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
-                                  {activeAuditSections.actions.map((item) => (
-                                    <li key={item}>{item}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
+                          <ProfileAuditReportView sections={activeAuditSections} />
                         )}
                       </div>
                     ) : null}
