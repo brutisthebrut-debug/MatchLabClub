@@ -213,13 +213,15 @@ export async function collectSignalCounts(
     ));
   const scenarioCount = Number(scenarioRows[0]?.count ?? 0);
 
-  // Predict yourself: distinct rounds completed. One row per (user, item) via the
-  // unique index, so a plain count is the distinct count. We store only the
-  // predicted and actual counts, never which statements were marked true.
+  // Predict Yourself rounds count only after the member separately enables
+  // matching use. Saving a private round never moves the matching signal.
   const predictionRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(predictionResponsesTable)
-    .where(eq(predictionResponsesTable.userId, userId));
+    .where(and(
+      eq(predictionResponsesTable.userId, userId),
+      eq(predictionResponsesTable.matchingUseAllowed, true),
+    ));
   const predictionCount = Number(predictionRows[0]?.count ?? 0);
 
   // Time capsule: notes written to a future partner. Notes accumulate, so a
