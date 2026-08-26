@@ -467,8 +467,27 @@ State: merged to `main` and verified.
   ordered migrations through `0051`, and 105 API files with 951 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3E1: Quiz Lab absorption into Play
+
+State: merged to `main` and verified.
+
+- Play now owns the complete quiz catalog and the signed-in member's durable
+  server-scored result history. Anonymous results remain device-local until
+  claim during sign-in.
+- Account history is owner-scoped and excludes deleted or malformed sources.
+  A failed authenticated read does not substitute device or demo data.
+- Raw answer indexes are not stored. Saved result, confirmed learning, Echo use,
+  and matching use remain separate states controlled through the existing
+  source-permission workflow.
+- `/quizzes` redirects to Play's quiz section only after catalog and history
+  parity. Stable `/quizzes/:slug` play links remain available.
+- PR #45 merged as `d064ffa9`; GitHub Actions run `32898492683` passed
+  typecheck, lint, schema drift, voice lint, web/API tests, and ordered
+  migrations on clean Postgres 16. Stripe remains deferred and fail-closed.
+
 ## Next segments
 
-1. Consolidate games and quizzes into Play with confirmed-learning handoff.
+1. Absorb the individual game workflows and any reopenable results into Play,
+   retiring duplicate catalog ownership only after parity.
 2. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
