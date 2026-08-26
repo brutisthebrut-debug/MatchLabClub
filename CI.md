@@ -5,7 +5,7 @@ GitHub Actions is the repository CI gate. The workflow at
 
 | Job | Commands | Database | Blocking release evidence |
 |---|---|---|---|
-| `static-verification` | typecheck, lint, schema drift, voice lint, web tests | no | yes |
+| `static-verification` | typecheck, lint, release-environment contract tests, schema drift, voice lint, web tests | no | yes |
 | `database-verification` | ordered migrations plus the full API test suite | ephemeral Postgres 16 | yes |
 | `canonical-member-walkthrough` | seeded development sign-in plus desktop and phone Playwright walkthroughs | ephemeral Postgres 16 | yes |
 
@@ -27,6 +27,7 @@ corepack prepare pnpm@10.26.1 --activate
 pnpm install --frozen-lockfile
 pnpm run typecheck
 pnpm run lint
+pnpm run test:release-env
 pnpm --filter @workspace/db run check-schema-drift
 pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
 pnpm --filter @workspace/nldc run test
