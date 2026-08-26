@@ -65,6 +65,15 @@ segment plan.
   callable named `pino-http` export. PR #83 merged as `ae896838`; Actions run
   `33000690949` passed 52 web files with 309 tests and 111 API files with 983
   tests on clean Postgres. Eight optional OCR tests remained skipped.
+- The 15-page unrouted implementation audit is complete. Six absorbed shells
+  were removed: Dating Wins Log and Glow Up in PR #86 (`0d655fd2`), then
+  standalone experiments, follow-ups, Quiz Lab catalog, and audit Wizard in
+  PR #87 (`6179f951`). Actions runs `33002422151` and `33002915260`
+  passed both lanes; the latter recorded 52 web files with 301 tests and 111
+  API files with 983 tests, with eight optional OCR tests skipped. Eight
+  apparently unrouted files were retained because My MatchLab or Play embeds
+  their experiences. `Report.tsx` remains until its copy/version-history
+  regression coverage is migrated to Profile Project.
 - Authenticated mobile pages now have persistent bottom navigation for the five
   canonical destinations, with account and Trust & Data controls under the
   profile control. Echo and page content respect the mobile safe area. PR #78
@@ -240,8 +249,9 @@ verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
-environment, completing final shell cleanup, provisioning the separate visual web preview,
-plus authenticated accessibility and mobile walkthroughs, then exercising
+environment, migrating the remaining report-history coverage into Profile Project,
+provisioning the separate visual web preview, plus authenticated accessibility and
+mobile walkthroughs, then exercising
 Checkout/webhooks, renewal,
 cancellation, failure, and refund behavior in Stripe test mode and obtaining
 founder/legal approval before any live offer.
