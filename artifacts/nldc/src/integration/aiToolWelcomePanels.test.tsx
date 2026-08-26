@@ -44,6 +44,8 @@ let winsStore: Array<{ id: number; category: string; body: string; createdAt: st
 
 vi.mock("@workspace/api-client-react", () => ({
   useEnhanceAi: () => ({ mutateAsync: enhanceMutateAsync, isPending: false }),
+  useListAudits: () => ({ data: [], isLoading: false }),
+  getListAuditsQueryKey: () => ["list-audits"],
   useGetAiFallbackRate: () => ({ data: null, isLoading: false }),
   getGetAiFallbackRateQueryKey: () => ["ai-fallback-rate"],
   // Insights
