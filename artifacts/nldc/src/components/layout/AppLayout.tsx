@@ -2,12 +2,12 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { EchoPresence } from "@/components/layout/EchoPresence";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { GuestWorkBanner } from "@/components/auth/GuestWorkBanner";
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu } from "lucide-react";
 
 // Routes that keep the marketing top-nav even when signed in.
 // Everything else is treated as an "app" route and gets the sidebar shell.
@@ -36,7 +36,7 @@ function isMarketingRoute(location: string): boolean {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const showSidebar = isAuthenticated && !isMarketingRoute(location);
@@ -61,19 +61,22 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            aria-label="Open menu"
-            className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground"
+            aria-label="Open account and data controls"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] text-xs font-bold text-white shadow-sm"
             data-testid="button-open-sidebar"
           >
-            <Menu className="h-5 w-5" />
+            {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
           </button>
           <Link href="/today" className="flex items-center gap-2">
             <img src="/matchlab-logo.png" alt="MatchLab Club" className="h-8 w-auto" />
           </Link>
           <ThemeToggle />
         </header>
-        <main className="flex-1 flex flex-col">{children}</main>
+        <main className="flex flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+          {children}
+        </main>
       </div>
+      <MobileBottomNav />
       <EchoPresence />
     </div>
   );
