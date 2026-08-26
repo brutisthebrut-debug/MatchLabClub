@@ -224,13 +224,15 @@ export async function collectSignalCounts(
     ));
   const predictionCount = Number(predictionRows[0]?.count ?? 0);
 
-  // Time capsule: notes written to a future partner. Notes accumulate, so a
-  // plain row count is the signal. We read only the count here, never the note
-  // bodies, which are shown back only to the user who wrote them.
+  // Time Capsule notes count only after the member separately enables matching
+  // use. We read only the approved row count here, never the private bodies.
   const capsuleRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(timeCapsulesTable)
-    .where(eq(timeCapsulesTable.userId, userId));
+    .where(and(
+      eq(timeCapsulesTable.userId, userId),
+      eq(timeCapsulesTable.matchingUseAllowed, true),
+    ));
   const capsuleCount = Number(capsuleRows[0]?.count ?? 0);
 
   // Wingman: outside perspectives gathered. One answer row per answered invite,
