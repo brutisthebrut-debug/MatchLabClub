@@ -6200,8 +6200,8 @@ paths:
       description: |
         Returns the caller's responses to the scenario reels, newest first. Each
         response records only which option was chosen, never any free text.
-        Distinct scenarios answered feed matching readiness as a low-weight
-        communication and conflict-style signal.
+        Saving is storage-only. Only responses with explicit matching permission
+        contribute to matching signals.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -6226,8 +6226,8 @@ paths:
       summary: Record a scenario reel response
       description: |
         Records the option chosen for one scenario. Answering the same scenario
-        again updates the choice in place, so the distinct-scenario count stays
-        honest.
+        again updates the option in place. All downstream permission states
+        default closed and remain unchanged when the member changes the response.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -6256,6 +6256,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/scenarios/{scenarioId}/permissions:
+    patch:
+      tags: [Matching]
+      operationId: updateScenarioPermissions
+      summary: Update independent permissions for one owned scenario response
+      description: |
+        Saving a response is storage-only. This operation separately controls
+        Echo use, confirmed learning, and matching use. Omitted fields remain
+        unchanged, and only the response owner may update it.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportPermissionPatch'
+      responses:
+        '200':
+          description: Updated response and independent permission state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioResponse'
+        '400':
+          description: No permission change was supplied.
+        '401':
+          description: Authentication required.
+        '404':
+          description: Response not found or not owned.
 
   /me/predictions:
     get:
@@ -14228,12 +14265,18 @@ components:
 
     ScenarioResponse:
       type: object
-      required: [scenarioId, optionId, createdAt]
+      required: [scenarioId, optionId, echoUseAllowed, learningConfirmed, matchingUseAllowed, createdAt]
       properties:
         scenarioId:
           type: string
         optionId:
           type: string
+        echoUseAllowed:
+          type: boolean
+        learningConfirmed:
+          type: boolean
+        matchingUseAllowed:
+          type: boolean
         createdAt:
           type: string
 
