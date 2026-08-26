@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   resolveMatchListReadState,
+  resolveMatchMessagesReadState,
   resolveMatchThreadReadState,
 } from "./matchLifecycleReadState";
 
@@ -50,5 +51,35 @@ describe("resolveMatchThreadReadState", () => {
       isError: false,
       hasConnection: false,
     })).toBe("not-found");
+  });
+});
+
+
+describe("resolveMatchMessagesReadState", () => {
+  it("never turns an authenticated message failure into an empty thread", () => {
+    expect(resolveMatchMessagesReadState({
+      isLoading: false,
+      isError: true,
+      hasData: false,
+      messageCount: 0,
+    })).toBe("error");
+  });
+
+  it("keeps previously loaded messages visible but marks the read stale", () => {
+    expect(resolveMatchMessagesReadState({
+      isLoading: false,
+      isError: true,
+      hasData: true,
+      messageCount: 2,
+    })).toBe("stale");
+  });
+
+  it("returns empty only after a successful account read", () => {
+    expect(resolveMatchMessagesReadState({
+      isLoading: false,
+      isError: false,
+      hasData: true,
+      messageCount: 0,
+    })).toBe("empty");
   });
 });

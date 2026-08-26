@@ -19,7 +19,10 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { resolveMatchThreadReadState } from "@/lib/matchLifecycleReadState";
+import {
+  resolveMatchMessagesReadState,
+  resolveMatchThreadReadState,
+} from "@/lib/matchLifecycleReadState";
 import {
   Select,
   SelectContent,
@@ -226,14 +229,29 @@ export default function MatchThread() {
     hasConnection: connection !== null,
   });
   const messages = isDemo ? DEMO_MESSAGES : (messagesQuery.data ?? []);
+  const messageReadState = resolveMatchMessagesReadState({
+    isLoading: messagesQuery.isLoading,
+    isError: messagesQuery.isError,
+    hasData: messagesQuery.data !== undefined,
+    messageCount: messages.length,
+  });
   const closed = connection?.status === "closed";
+  const canMutateThread =
+    !closed &&
+    (messageReadState === "empty" || messageReadState === "ready");
   const starters = isDemo
     ? DEMO_STARTERS
     : (startersQuery.data?.starters ?? []);
 
   // Mark the thread read on open and whenever new inbound messages arrive.
   useEffect(() => {
-    if (isDemo || !id || !connection) return;
+    if (
+      isDemo ||
+      !id ||
+      !connection ||
+      messageReadState !== "ready"
+    )
+      return;
     if (messages.some((m) => !m.mine && m.readAt === null)) {
       markRead.mutate(
         { id },
@@ -266,7 +284,7 @@ export default function MatchThread() {
   };
 
   const performSend = (body: string) => {
-    if (isDemo || !body || sendMessage.isPending || closed) return;
+    if (isDemo || !body || sendMessage.isPending || !canMutateThread) return;
     setSafetyAdvice(null);
     sendMessage.mutate(
       { id, data: { body } },
@@ -294,7 +312,7 @@ export default function MatchThread() {
       !body ||
       sendMessage.isPending ||
       checkMessage.isPending ||
-      closed
+      !canMutateThread
     )
       return;
     const recentContext = messages
@@ -632,22 +650,73 @@ export default function MatchThread() {
             data-testid="thread-messages"
           >
             <div className="flex-1 space-y-3">
-              {messagesQuery.isLoading ? (
+              {messageReadState === "loading" ? (
                 <p className="text-sm text-muted-foreground/60">
                   Loading conversation...
                 </p>
-              ) : messages.length === 0 ? (
-                <div className="text-center py-12">
-                  <Heart
-                    className="w-7 h-7 text-muted-foreground/30 mx-auto mb-3"
-                    aria-hidden="true"
-                  />
-                  <p className="text-sm text-muted-foreground/70">
-                    You matched. Send the first message.
+              ) : messageReadState === "error" ? (
+                <div
+                  className="rounded-xl border border-destructive/25 p-4"
+                  role="alert"
+                  data-testid="match-messages-error"
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    We couldn't load your message history.
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Nothing was changed, and sending stays paused until the read
+                    succeeds.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-3 rounded-full"
+                    onClick={() => void messagesQuery.refetch()}
+                  >
+                    Try again
+                  </Button>
                 </div>
               ) : (
-                messages.map((m) => <Bubble key={m.id} message={m} />)
+                <>
+                  {messageReadState === "stale" && (
+                    <div
+                      className="mb-3 rounded-xl border border-destructive/25 p-4"
+                      role="alert"
+                      data-testid="match-messages-stale"
+                    >
+                      <p className="text-sm font-semibold text-foreground">
+                        This conversation may be out of date.
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Your last loaded messages are still visible. Sending is
+                        paused until the latest read succeeds.
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="mt-3 rounded-full"
+                        onClick={() => void messagesQuery.refetch()}
+                      >
+                        Refresh messages
+                      </Button>
+                    </div>
+                  )}
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Heart
+                        className="w-7 h-7 text-muted-foreground/30 mx-auto mb-3"
+                        aria-hidden="true"
+                      />
+                      <p className="text-sm text-muted-foreground/70">
+                        You matched. Send the first message.
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((m) => <Bubble key={m.id} message={m} />)
+                  )}
+                </>
               )}
               <div ref={endRef} />
             </div>
@@ -713,7 +782,12 @@ export default function MatchThread() {
                     handleSend();
                   }
                 }}
-                placeholder="Write a message..."
+                placeholder={
+                  canMutateThread
+                    ? "Write a message..."
+                    : "Messages are paused while the conversation refreshes"
+                }
+                disabled={!canMutateThread}
                 rows={2}
                 maxLength={4000}
                 className="resize-none rounded-2xl"
@@ -722,6 +796,7 @@ export default function MatchThread() {
               <Button
                 onClick={handleSend}
                 disabled={
+                  !canMutateThread ||
                   sendMessage.isPending ||
                   checkMessage.isPending ||
                   draft.trim().length === 0
