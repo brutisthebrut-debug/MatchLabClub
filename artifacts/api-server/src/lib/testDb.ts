@@ -234,7 +234,20 @@ stores.flag_selections = {
     seekFlags: [],
   },
 };
-ensureStore("scenario_responses");
+stores.scenario_responses = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    echoUseAllowed: false,
+    echoUseUpdatedAt: null,
+    learningConfirmed: false,
+    learningConfirmedAt: null,
+    matchingUseAllowed: false,
+    matchingUseUpdatedAt: null,
+  },
+};
 ensureStore("prediction_responses");
 stores.time_capsules = {
   rows: [],
