@@ -59,6 +59,14 @@ segment plan.
 
 ## Verified baseline
 
+- Authenticated mobile pages now have persistent bottom navigation for the five
+  canonical destinations, with account and Trust & Data controls under the
+  profile control. Echo and page content respect the mobile safe area. PR #78
+  and Actions run `32981344186` passed both verification lanes.
+- Persistent Echo now projects qualitative observations and next actions
+  without member-facing readiness totals, deltas, thresholds, lane percentages,
+  or points. PR #79 and Actions run `32982408409` passed both verification
+  lanes.
 - Canonical Matches owns authenticated consideration state, deliberately sent
   proposals, mutual-consent responses, conversation state, consideration
   membership, and saved matching preferences. The legacy `/matching` URL is a
