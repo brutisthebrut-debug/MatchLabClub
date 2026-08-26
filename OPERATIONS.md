@@ -4,6 +4,27 @@ Operational walkthroughs that used to live in `replit.md`. Day-to-day product
 docs stay in `replit.md`; this file holds the step-by-step setup/maintenance
 procedures that are only needed occasionally.
 
+## Release database migration
+
+The committed chain includes migrations `0041` through `0056`. Apply it only
+to the intended release database and keep paid products closed throughout the
+operation.
+
+1. Confirm the deployment environment passes `pnpm run validate:release-env`.
+2. Confirm `BILLING_LIVE_PRODUCTS` is empty.
+3. Confirm the managed Postgres provider has a current backup and a documented
+   restore point.
+4. Run `pnpm --filter @workspace/db run migrate` with the release
+   `DATABASE_URL`.
+5. Run `pnpm --filter @workspace/db run check-schema-drift`.
+6. Start the API and verify `/api/healthz` before allowing browser traffic.
+7. Record the database, migration timestamp, deployed commit SHA, operator, and
+   health-check result. Never place the connection URL or credentials in that
+   record.
+
+This runbook does not authorize a production migration. It defines the exact
+procedure for the separately approved release-environment operation.
+
 ## Error monitoring (Sentry)
 
 We use Sentry for production error monitoring. The free tier is fine for our volume.
@@ -17,8 +38,8 @@ Setup:
 
 1. Create a Sentry account and add two projects: one for `nldc-web` (platform: React) and one for `api-server` (platform: Node.js / Express).
 2. Copy each project's DSN.
-3. Paste the api-server DSN into the `SENTRY_DSN_API` env var, and the web DSN into `VITE_SENTRY_DSN` (Replit Secrets, "shared" environment so Vite exposes it).
-4. Restart the `artifacts/api-server: API Server` and `artifacts/nldc: web` workflows so the new env is picked up.
+3. Paste the API DSN into the API project's `SENTRY_DSN_API` setting and the web DSN into the visual project's build-time `VITE_SENTRY_DSN` setting.
+4. Redeploy the API and visual web projects so each runtime receives its updated setting.
 
 Both SDKs short-circuit to a no-op when their DSN is unset, so it is safe to leave either side unconfigured during local development.
 
@@ -49,7 +70,7 @@ Each user gets a private address `{handle}@receipts.matchlab.club` (the `handle`
 
 Related env var:
 
-- `RECEIPTS_WEBHOOK_SECRET` — shared secret the inbound email provider must send in the `x-receipts-secret` header. Defaults to `receipts-${REPL_ID}` when unset, so it is safe to ship before configuring a provider.
+- `RECEIPTS_WEBHOOK_SECRET` — required shared secret the inbound email provider must send in the `x-receipts-secret` header. When unset, every inbound webhook request is rejected with 401; the manual receipt-entry path remains available.
 
 ### Wiring up the inbound webhook (DNS + provider, the last mile)
 
