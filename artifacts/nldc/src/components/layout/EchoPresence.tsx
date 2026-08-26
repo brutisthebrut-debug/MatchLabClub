@@ -49,34 +49,30 @@ type Tab = "talk" | "notices" | "review";
 
 function toneAccent(tone: CompanionReaction["tone"]): {
   ring: string;
-  text: string;
   Icon: typeof TrendingUp;
 } {
   if (tone === "crossing")
     return {
       ring: "from-[#3D35CC] to-[#FF2D9B]",
-      text: "text-[hsl(326_100%_45%)]",
       Icon: Heart,
     };
   if (tone === "dip")
     return {
       ring: "from-[hsl(28_90%_55%)] to-[hsl(351_80%_55%)]",
-      text: "text-[hsl(28_90%_42%)]",
       Icon: TrendingDown,
     };
   return {
     ring: "from-[hsl(142_60%_45%)] to-[hsl(168_60%_45%)]",
-    text: "text-[hsl(142_55%_36%)]",
     Icon: TrendingUp,
   };
 }
 
 /**
  * The in-the-moment reaction card. Shown floating (when Echo is closed) and
- * inline at the top of the Talk tab (when open). Crossing the matching threshold
- * gets the loud, celebratory treatment with a link into matching; rises and dips
- * get a quieter, honest read. The score animates from where it was to where it
- * landed.
+ * inline at the top of the Talk tab (when open). A server-confirmed
+ * consideration update stays visible until the member reviews it; other
+ * qualitative observations remain quieter and temporary. Internal aggregates
+ * never render as a member score.
  */
 function ReactionCard({
   reaction,
