@@ -47,6 +47,7 @@ export function reportSections(report: AuditReport | null) {
       cautions: [] as string[],
       bioRead: null as string | null,
       suggestedBio: null as string | null,
+      prompts: [] as AuditReport["rewrittenPrompts"],
       actions: [] as string[],
     };
   }
@@ -56,6 +57,7 @@ export function reportSections(report: AuditReport | null) {
     cautions: report.risks,
     bioRead: report.bioAudit,
     suggestedBio: report.rewrittenBio,
+    prompts: report.rewrittenPrompts,
     actions: report.actionPlan.map(
       (item) => item.title + ": " + item.description,
     ),
