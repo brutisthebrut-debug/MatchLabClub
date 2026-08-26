@@ -915,13 +915,17 @@ State: merged to `main` and verified.
 
 State: in PR #96.
 
-- OIDC discovery and logout now prefer `OIDC_CLIENT_ID`; CORS and CSRF now
-  consume exact HTTPS origins from `ALLOWED_ORIGINS`.
+- OIDC discovery, logout, and mobile token exchange now require an explicit
+  HTTPS `ISSUER_URL` and prefer `OIDC_CLIENT_ID`; CORS and CSRF consume exact
+  HTTPS origins from `ALLOWED_ORIGINS`. There is no retired-provider default.
 - The former Replit-named variables remain temporary runtime fallbacks so an
   existing environment can roll forward safely, but the release validator and
   template require only the provider-neutral names.
+- Native mobile auth prefers `EXPO_PUBLIC_OIDC_ISSUER_URL` and
+  `EXPO_PUBLIC_OIDC_CLIENT_ID`, preserves its former names only as rollout
+  fallbacks, and fails closed with a clear configuration error when absent.
 - Focused tests cover precedence, missing configuration, malformed/insecure
-  origins, and rollout fallback behavior.
+  issuers and origins, native configuration, and rollout fallback behavior.
 - Removed the receipts webhook's predictable `receipts-${REPL_ID}` /
   `receipts-dev` fallback. When `RECEIPTS_WEBHOOK_SECRET` is absent, inbound
   requests now fail closed with 401; the manual member path remains available.
@@ -935,8 +939,12 @@ State: in PR #96.
 
 ## Next segments
 
-1.
+1. Merge PR #96 after the required exact-head GitHub runners execute
+   successfully; do not substitute Vercel or local-only evidence for that gate.
 2. Provision the separate visual Vercel project rooted at `artifacts/nldc`
-   when project-creation access is available.
+   when project-creation access is available. The refreshed Sites reference
+   visual is live at
+   `https://matchlab-echo-journey.sweetdmarlin.chatgpt.site` (version 45),
+   but it is not the authenticated production web deployment.
 3. Apply release migrations, run Stripe test-mode verification, and complete
    founder/legal release gates.
