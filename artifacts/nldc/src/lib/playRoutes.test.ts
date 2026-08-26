@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   embeddedPlayGame,
+  PLAY_DAILY_SPARK_HREF,
   PLAY_QUIZ_CATALOG_HREF,
   PLAY_THIS_OR_THAT_HREF,
   PLAY_WOULD_YOU_RATHER_HREF,
@@ -27,5 +28,11 @@ describe("Play compatibility routing", () => {
     expect(PLAY_WOULD_YOU_RATHER_HREF).toBe("/play?game=would-you-rather");
     expect(embeddedPlayGame(PLAY_WOULD_YOU_RATHER_HREF)).toBe("would-you-rather");
     expect(shouldFocusQuizCatalog(PLAY_WOULD_YOU_RATHER_HREF)).toBe(false);
+  });
+
+  it("reopens the canonical embedded Daily Spark history and capture", () => {
+    expect(PLAY_DAILY_SPARK_HREF).toBe("/play?game=daily-spark");
+    expect(embeddedPlayGame(PLAY_DAILY_SPARK_HREF)).toBe("daily-spark");
+    expect(shouldFocusQuizCatalog(PLAY_DAILY_SPARK_HREF)).toBe(false);
   });
 });
