@@ -111,6 +111,9 @@ describe("POST /api/me/daily-spark", () => {
     expect(res.status).toBe(201);
     expect(res.body.questionId).toBe("q1");
     expect(res.body.choice).toBe("playful");
+    expect(res.body.echoUseAllowed).toBe(false);
+    expect(res.body.learningConfirmed).toBe(false);
+    expect(res.body.matchingUseAllowed).toBe(false);
     expect(typeof res.body.createdAt).toBe("string");
   });
 
@@ -158,5 +161,57 @@ describe("GET /api/me/daily-spark", () => {
       expect(r.questionId).not.toBe("qb");
     }
     expect(res.body.some((r: { questionId: string }) => r.questionId === "qa")).toBe(true);
+  });
+});
+
+
+describe("PATCH /api/me/daily-spark/:questionId/permissions", () => {
+  it("rejects unauthenticated callers with 401", async () => {
+    testApp.setUser(null);
+    const res = await request(testApp.app)
+      .patch("/api/me/daily-spark/q1/permissions")
+      .send({ matchingUse: true });
+    expect(res.status).toBe(401);
+  });
+
+  it("requires at least one explicit permission change", async () => {
+    testApp.setUser({ id: USER_A });
+    await request(testApp.app)
+      .post("/api/me/daily-spark")
+      .send({ questionId: "q-empty-patch", choice: "a" });
+
+    const res = await request(testApp.app)
+      .patch("/api/me/daily-spark/q-empty-patch/permissions")
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it("updates independent permissions without changing the saved answer", async () => {
+    testApp.setUser({ id: USER_A });
+    await request(testApp.app)
+      .post("/api/me/daily-spark")
+      .send({ questionId: "q-permissions", choice: "curious" });
+
+    const res = await request(testApp.app)
+      .patch("/api/me/daily-spark/q-permissions/permissions")
+      .send({ learningConfirmed: true, matchingUse: true });
+    expect(res.status).toBe(200);
+    expect(res.body.choice).toBe("curious");
+    expect(res.body.echoUseAllowed).toBe(false);
+    expect(res.body.learningConfirmed).toBe(true);
+    expect(res.body.matchingUseAllowed).toBe(true);
+  });
+
+  it("does not let another member update an owned answer", async () => {
+    testApp.setUser({ id: USER_A });
+    await request(testApp.app)
+      .post("/api/me/daily-spark")
+      .send({ questionId: "q-owned", choice: "a" });
+
+    testApp.setUser({ id: USER_B });
+    const res = await request(testApp.app)
+      .patch("/api/me/daily-spark/q-owned/permissions")
+      .send({ matchingUse: true });
+    expect(res.status).toBe(404);
   });
 });
