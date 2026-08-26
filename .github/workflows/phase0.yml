@@ -34,6 +34,7 @@ jobs:
       - run: pnpm --filter @workspace/db run check-schema-drift
       - run: pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
       - run: pnpm --filter @workspace/nldc run test
+      - run: pnpm --filter @workspace/nldc run build
 
   database-verification:
     name: Postgres-backed API verification
