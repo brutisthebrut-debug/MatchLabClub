@@ -1,6 +1,6 @@
 # Member shell migration
 
-Last updated: 2026-08-24
+Last updated: 2026-08-26
 
 This file tracks the production migration from the legacy route-heavy shell to
 the approved MatchLab v1 information architecture.
@@ -740,10 +740,30 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
   the clean-Postgres API suite.
 
+## Segment 3F6: canonical matching preferences
+
+State: merged to `main` and verified.
+
+- Canonical Matches now owns the member's saved age range, distance, gender,
+  city or area, must-have, and deal-breaker preferences.
+- Preference reads remain part of the authenticated matching-state request.
+  Validation is explicit, failed writes leave the saved record unchanged, and
+  successful changes use the existing owner-scoped mutation.
+- Preferences guide controlled consideration without creating a member-facing
+  readiness score, compatibility percentage, ranking, candidate inventory, or
+  promise of an introduction.
+- The legacy `/matching` URL now redirects to Matches with the absorbed panel
+  open. Its duplicate profile read, self read, numeric readiness, and
+  algorithmic discovery controls are no longer routed member surfaces.
+- PR #75 merged as `f0beaeac`; GitHub Actions run `32979060118` passed
+  typecheck, lint, schema drift, voice lint, the full web suite, ordered
+  migrations, and the clean-Postgres API suite.
+
 ## Next segments
 
-1. Absorb matching preferences into canonical Matches, then retire the
-   score-heavy legacy Matching route.
-2. Complete remaining shell retirement.
-3. Run authenticated walkthroughs, accessibility checks, and mobile regression
-   evidence after the active product paths are consolidated.
+1. Complete remaining shell retirement and remove obsolete implementation files
+   only after confirming no supported route imports them.
+2. Run authenticated walkthroughs, accessibility checks, and mobile regression
+   evidence across the consolidated product paths.
+3. Prepare the release environment and execute the separate deployment,
+   migration, Stripe test-mode, and founder/legal release gates.
