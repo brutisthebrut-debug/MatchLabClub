@@ -44,7 +44,7 @@ const CANDOR_LABELS = ["Gentle", "Honest", "Blunt"];
 
 function SignInGate({ onSignIn }: { onSignIn: () => void }) {
   return (
-    <main className="mx-auto flex max-w-md flex-col items-center gap-4 px-6 py-24 text-center">
+    <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-6 py-24 text-center">
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] text-white">
         <Sparkles className="h-6 w-6" aria-hidden="true" />
       </span>
@@ -61,7 +61,7 @@ function SignInGate({ onSignIn }: { onSignIn: () => void }) {
       >
         Sign in
       </button>
-    </main>
+    </div>
   );
 }
 
@@ -145,7 +145,7 @@ export default function Echo() {
 
   return (
     <AppLayout>
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
       <header className="mb-8">
         <p className="flex items-center gap-2 text-sm font-medium text-[hsl(326_100%_45%)]">
           <Sparkles className="h-4 w-4" aria-hidden="true" />
@@ -476,7 +476,7 @@ export default function Echo() {
           </section>
         </div>
       </div>
-      </main>
+      </div>
     </AppLayout>
   );
 }
