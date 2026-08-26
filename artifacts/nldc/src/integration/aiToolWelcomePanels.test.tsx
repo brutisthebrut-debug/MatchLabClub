@@ -165,6 +165,7 @@ vi.mock("@workspace/replit-auth-web", () => ({
 import ProfileReader from "@/pages/ProfileReader";
 import NextMessage from "@/pages/NextMessage";
 import PatternBreaker from "@/pages/PatternBreaker";
+import Blueprint from "@/pages/Blueprint";
 import CompatibilityCompass from "@/pages/CompatibilityCompass";
 import Archetype from "@/pages/Archetype";
 import Insights from "@/pages/Insights";
@@ -273,6 +274,29 @@ const drivers: Driver[] = [
       );
       expect(togglers.length).toBeGreaterThan(0);
       fireEvent.click(togglers[0]!);
+    },
+  },
+  {
+    // Gating variant: !result — panel shows for authenticated users who
+    // haven't yet run the tool (result is null).
+    name: "Blueprint",
+    Page: Blueprint,
+    emptyStateTestId: "blueprint-empty-state",
+    // Anonymous users see the demo blueprint (isDemo = !result = true when
+    // result is null). The watermark text below the results is the marker.
+    anonymousDemoMatcher: /Example blueprint, fill in the form above to get yours/i,
+    runTool: async () => {
+      const textarea = screen.getByPlaceholderText(/Be as honest or vague as you like/i);
+      fireEvent.change(textarea, {
+        target: { value: "I'm curious, empathetic, and tend to think before I speak." },
+      });
+      const button = screen.getByRole("button", { name: /Build My Blueprint/i });
+      fireEvent.click(button);
+      // The mocked enhance returns isFallback:true, which falls back to the
+      // deterministic local output and sets result — clearing the panel.
+      await waitFor(() => {
+        expect(enhanceMutateAsync).toHaveBeenCalled();
+      });
     },
   },
   // -----------------------------------------------------------------------
