@@ -393,6 +393,13 @@
       "when": 1788387600000,
       "tag": "0055_prediction_permission_boundary",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1788474000000,
+      "tag": "0056_time_capsule_permission_boundary",
+      "breakpoints": true
     }
   ]
 }

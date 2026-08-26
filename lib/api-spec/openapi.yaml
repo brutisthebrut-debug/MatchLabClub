@@ -6403,9 +6403,9 @@ paths:
       summary: List the signed-in user's notes to a future partner
       description: |
         Returns the caller's time-capsule notes, newest first, so they can replay
-        what they wrote earlier. The note body is the user's own content shown
-        only to them. Distinct notes written feed matching readiness as a
-        low-weight intent and values signal.
+        what they wrote earlier. The raw note body is owner-only. Saving is
+        storage-only, and only notes with explicit matching permission contribute
+        a derived count to matching signals.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -6429,8 +6429,8 @@ paths:
       operationId: createTimeCapsule
       summary: Write a note to a future partner
       description: |
-        Stores one short note. Notes accumulate over time so the user can return
-        and replay them; each distinct note nudges readiness.
+        Stores one short private note for owner replay. Every downstream
+        permission defaults closed and must be changed separately.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -6459,6 +6459,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/time-capsules/{id}/permissions:
+    patch:
+      tags: [Matching]
+      operationId: updateTimeCapsulePermissions
+      summary: Update independent permissions for one owned Time Capsule note
+      description: |
+        Saving a note is storage-only. This operation separately controls Echo
+        use, confirmed learning, and matching use. Omitted fields remain
+        unchanged, and only the note owner may update it. The raw body remains
+        owner-only regardless of permission state.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportPermissionPatch'
+      responses:
+        '200':
+          description: Updated note and independent permission state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeCapsule'
+        '400':
+          description: Invalid id or no permission change supplied.
+        '401':
+          description: Authentication required.
+        '404':
+          description: Note not found or not owned.
 
   /me/wingman:
     get:
@@ -14372,12 +14411,18 @@ components:
 
     TimeCapsule:
       type: object
-      required: [id, body, createdAt]
+      required: [id, body, echoUseAllowed, learningConfirmed, matchingUseAllowed, createdAt]
       properties:
         id:
           type: integer
         body:
           type: string
+        echoUseAllowed:
+          type: boolean
+        learningConfirmed:
+          type: boolean
+        matchingUseAllowed:
+          type: boolean
         createdAt:
           type: string
 
