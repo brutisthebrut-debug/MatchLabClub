@@ -501,11 +501,44 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
   the clean-Postgres API suite. Stripe remains deferred and fail-closed.
 
+## Segment 3E2B1: Would You Rather permission boundary
+
+State: merged to `main` and verified.
+
+- Migration `0052` separates private answer storage from Echo use, confirmed
+  learning, and matching use. Every downstream permission defaults closed,
+  including for existing rows after migration.
+- The owner-scoped API updates any of the three permissions independently
+  without changing the saved answer. Cross-member updates return not found.
+- Matching signal counts now include only answers with explicit matching
+  permission; creating or changing a private answer alone cannot move matching.
+- PR #50 merged as `2d268612`; GitHub Actions run `32924064090` passed
+  typecheck, lint, schema drift, voice lint, web tests, migration `0052`, and
+  the clean-Postgres API suite.
+
+## Segment 3E2B2: Would You Rather absorption into Play
+
+State: merged to `main` and verified.
+
+- Play now owns the complete Would You Rather capture flow and the member's
+  owner-scoped durable answer history.
+- Each saved answer exposes independent confirmed-learning, Echo-use, and
+  matching-use controls. Answer creation invalidates only answer history;
+  matching state changes only after a permission update.
+- Signed-out visitors retain a local sample board. Signed-in loading and failure
+  states never substitute sample history, and capture waits for account history
+  so an existing answer cannot be duplicated accidentally.
+- `/games/would-you-rather` redirects to the exact embedded Play experience.
+- PR #51 merged as `6a562910`; GitHub Actions run `32924406308` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations
+  through `0052`, and the clean-Postgres API suite. Stripe remains deferred
+  and fail-closed.
+
 ## Next segments
 
-1. Absorb Would You Rather into Play while preserving its owner-scoped answer
-   history, daily cadence, and exact compatibility URL.
-2. Continue through Daily Spark, Scenarios, Predict Yourself, and Time Capsule,
-   retiring each duplicate route only after workflow and history parity.
+1. Harden Daily Spark's storage and downstream permission boundary, then absorb
+   its daily capture and owner-scoped history into Play.
+2. Continue through Scenarios, Predict Yourself, and Time Capsule, retiring each
+   duplicate route only after workflow, permission, and history parity.
 3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
