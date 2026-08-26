@@ -5813,8 +5813,9 @@ paths:
       description: |
         Returns the caller's answers to the Daily Spark deck, newest first. Each
         answer records only which option was chosen, never any free text. The
-        client computes today's question and the current streak from these. Distinct
-        questions answered feed matching readiness as a low-weight signal.
+        client computes today's question and the current streak from these.
+        Saving is storage-only. Only answers with explicit matching permission
+        contribute to matching signals.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -5839,8 +5840,8 @@ paths:
       summary: Record a Daily Spark answer
       description: |
         Records the option chosen for one question. Answering the same question
-        again updates the choice in place, so the distinct-question count stays
-        honest.
+        again updates the choice in place. All downstream permission states
+        default closed and remain unchanged when the member changes their answer.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -5869,6 +5870,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/daily-spark/{questionId}/permissions:
+    patch:
+      tags: [Matching]
+      operationId: updateDailySparkPermissions
+      summary: Update independent permissions for one owned Daily Spark answer
+      description: |
+        Saving an answer is storage-only. This operation separately controls
+        Echo use, confirmed learning, and matching use. Omitted fields remain
+        unchanged, and only the answer owner may update it.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: questionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportPermissionPatch'
+      responses:
+        '200':
+          description: Updated answer and independent permission state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailySparkAnswer'
+        '400':
+          description: No permission change was supplied.
+        '401':
+          description: Authentication required.
+        '404':
+          description: Answer not found or not owned.
 
   /me/mirror-trends:
     get:
@@ -13846,12 +13884,18 @@ components:
 
     DailySparkAnswer:
       type: object
-      required: [questionId, choice, createdAt]
+      required: [questionId, choice, echoUseAllowed, learningConfirmed, matchingUseAllowed, createdAt]
       properties:
         questionId:
           type: string
         choice:
           type: string
+        echoUseAllowed:
+          type: boolean
+        learningConfirmed:
+          type: boolean
+        matchingUseAllowed:
+          type: boolean
         createdAt:
           type: string
 
