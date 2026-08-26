@@ -72,8 +72,11 @@ segment plan.
   passed both lanes; the latter recorded 52 web files with 301 tests and 111
   API files with 983 tests, with eight optional OCR tests skipped. Eight
   apparently unrouted files were retained because My MatchLab or Play embeds
-  their experiences. `Report.tsx` remains until its copy/version-history
-  regression coverage is migrated to Profile Project.
+  their experiences. PR #89 then moved complete current/saved report
+  presentation and copy controls into Profile Project and deleted the final
+  duplicate `Report.tsx`. Exact-head Actions run `33004308126` passed 51 web
+  files with 287 tests and 111 API files with 983 tests; eight optional OCR
+  tests remained skipped. All 15 audited implementations are now resolved.
 - Authenticated mobile pages now have persistent bottom navigation for the five
   canonical destinations, with account and Trust & Data controls under the
   profile control. Echo and page content respect the mobile safe area. PR #78
@@ -249,9 +252,8 @@ verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
-environment, migrating the remaining report-history coverage into Profile Project,
-provisioning the separate visual web preview, plus authenticated accessibility and
-mobile walkthroughs, then exercising
+environment, provisioning the separate visual web preview, completing authenticated
+accessibility and mobile walkthroughs, then exercising
 Checkout/webhooks, renewal,
 cancellation, failure, and refund behavior in Stripe test mode and obtaining
 founder/legal approval before any live offer.
