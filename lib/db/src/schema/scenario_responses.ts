@@ -3,6 +3,7 @@ import {
   serial,
   varchar,
   timestamp,
+  boolean,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -10,11 +11,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 /**
- * One response to a "what would you do" scenario reel. Each scenario presents a
- * realistic relationship moment and a small set of responses; which one a person
- * reaches for reveals their communication and conflict style more honestly than
- * a stated preference, so each distinct scenario answered feeds matching
- * readiness as its own low-weight lane.
+ * One response to a "what would you do" scenario reel. The option is stored as
+ * a private first-party record. Storage, Echo use, confirmed learning, and
+ * matching use remain separate member-controlled states.
  *
  * The scenario text and the response options live in the frontend deck. The
  * server stores only the stable scenario id and the option id chosen, never any
@@ -31,6 +30,13 @@ export const scenarioResponsesTable = pgTable(
     scenarioId: varchar("scenario_id", { length: 64 }).notNull(),
     /** Stable id of the chosen response option from the frontend deck. */
     optionId: varchar("option_id", { length: 16 }).notNull(),
+    /** Saving never grants downstream use. */
+    echoUseAllowed: boolean("echo_use_allowed").notNull().default(false),
+    echoUseUpdatedAt: timestamp("echo_use_updated_at"),
+    learningConfirmed: boolean("learning_confirmed").notNull().default(false),
+    learningConfirmedAt: timestamp("learning_confirmed_at"),
+    matchingUseAllowed: boolean("matching_use_allowed").notNull().default(false),
+    matchingUseUpdatedAt: timestamp("matching_use_updated_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -52,6 +58,12 @@ export const insertScenarioResponseSchema = createInsertSchema(
   updatedAt: true,
   userId: true,
   anonymousClaimToken: true,
+  echoUseAllowed: true,
+  echoUseUpdatedAt: true,
+  learningConfirmed: true,
+  learningConfirmedAt: true,
+  matchingUseAllowed: true,
+  matchingUseUpdatedAt: true,
 });
 
 export type InsertScenarioResponse = z.infer<
