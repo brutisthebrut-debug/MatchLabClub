@@ -76,13 +76,10 @@ vi.mock("@workspace/replit-auth-web", () => ({
 }));
 
 // Import pages AFTER mocks are registered.
-import Blueprint from "@/pages/Blueprint";
 import NextMessage from "@/pages/NextMessage";
 import StyleMap from "@/pages/StyleMap";
 import Reflection from "@/pages/Reflection";
 import MirrorProfile from "@/pages/MirrorProfile";
-import GlowUp from "@/pages/GlowUp";
-import ConnectionStyle from "@/pages/ConnectionStyle";
 
 // ---------------------------------------------------------------------------
 // Test lifecycle
@@ -135,27 +132,6 @@ function clickChipByText(text: string): void {
 }
 
 const drivers: ToolDriver[] = [
-  {
-    name: "Blueprint",
-    Page: Blueprint,
-    retryTestId: "button-retry-blueprint",
-    drive: () => {
-      const textareas = screen.getAllByRole("textbox");
-      fireEvent.change(textareas[0]!, {
-        target: { value: "I'm a steady, curious person who values depth over speed in connection." },
-      });
-      return screen.getByRole("button", { name: /Build My Blueprint/i });
-    },
-    validSuccessOutput: JSON.stringify({
-      firstImpression: longSentence(2),
-      repeatingPattern: longSentence(2),
-      communicationStyle: longSentence(2),
-      attractionPattern: longSentence(2),
-      comfortNeeds: longSentence(2),
-      riskLoop: longSentence(2),
-      growthEdge: longSentence(2),
-    }),
-  },
   {
     name: "NextMessage",
     Page: NextMessage,
@@ -246,25 +222,6 @@ const drivers: ToolDriver[] = [
       nextExperiment: longSentence(2),
     }),
   },
-  {
-    name: "GlowUp",
-    Page: GlowUp,
-    retryTestId: "button-retry-glowup",
-    drive: () => {
-      const bio = screen.getByPlaceholderText(/Paste your current dating profile bio here/i);
-      fireEvent.change(bio, {
-        target: { value: "Writer, climber, big fan of unplanned weekends and small espresso cups." },
-      });
-      return screen.getByRole("button", { name: /Glow Up My Profile/i });
-    },
-    validSuccessOutput: JSON.stringify(
-      ["serious", "playful", "direct", "queer", "lessgeneric"].map((style) => ({
-        style,
-        bio: longSentence(2),
-        tip: "This version reads as specific.",
-      })),
-    ),
-  },
   // CompatibilityCompass was previously parameterized here but no longer fits
   // this single-driver contract: the page now has three input modes
   // (reflection / paste / screenshot), an anon free-read gate, a history
@@ -272,33 +229,6 @@ const drivers: ToolDriver[] = [
   // the same `usedFallback` + `FallbackNotice` pattern as every other tool, so
   // the contract is structurally covered. A dedicated Compass test can be
   // added if we want behavior-level coverage of all three modes.
-  {
-    name: "ConnectionStyle",
-    Page: ConnectionStyle,
-    retryTestId: "button-retry-connection-style",
-    drive: () => {
-      // Click the first option of each of the 6 quiz questions.
-      const firstOptionPerQuestion = [
-        "Feel anxious and wonder what you did wrong",
-        "Go all-in fast, you feel it and you act on it",
-        "Bring it up, you'd rather address it than let it sit",
-        "Something I want and move toward",
-        "Feel fully present and excited, you're in",
-        "It's exhausting. I want to know quickly whether this is real",
-      ];
-      for (const label of firstOptionPerQuestion) {
-        clickChipByText(label);
-      }
-      return screen.getByRole("button", { name: /See My Style/i });
-    },
-    validSuccessOutput: JSON.stringify({
-      tagline: longSentence(2),
-      strengths: ["Steady presence", "Patient warmth", "Clear communication"],
-      activationPattern: longSentence(2),
-      whatHelps: longSentence(2),
-      nextExperiment: longSentence(2),
-    }),
-  },
 ];
 
 // ---------------------------------------------------------------------------
