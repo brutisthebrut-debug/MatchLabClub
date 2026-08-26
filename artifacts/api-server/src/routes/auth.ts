@@ -16,11 +16,13 @@ import {
   deleteSession,
   SESSION_COOKIE,
   SESSION_TTL,
-  ISSUER_URL,
   type SessionData,
 } from "../lib/auth";
 import { notifySignInIfNew, extractClientIp } from "../lib/loginNotifications";
-import { getOidcClientId } from "../lib/runtimeConfig";
+import {
+  getOidcClientId,
+  getOidcIssuerUrl,
+} from "../lib/runtimeConfig";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
@@ -364,7 +366,7 @@ router.post(
       const callbackUrl = new URL(redirect_uri);
       callbackUrl.searchParams.set("code", code);
       callbackUrl.searchParams.set("state", state);
-      callbackUrl.searchParams.set("iss", ISSUER_URL);
+      callbackUrl.searchParams.set("iss", getOidcIssuerUrl());
 
       const tokens = await oidc.authorizationCodeGrant(config, callbackUrl, {
         pkceCodeVerifier: code_verifier,
