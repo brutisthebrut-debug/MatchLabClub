@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { buildAllowedOrigins, getOidcClientId } from "./runtimeConfig";
+import {
+  buildAllowedOrigins,
+  getOidcClientId,
+  getOidcIssuerUrl,
+} from "./runtimeConfig";
 
 describe("runtime configuration", () => {
+  it("requires an explicit provider-neutral OIDC issuer", () => {
+    expect(
+      getOidcIssuerUrl({ ISSUER_URL: "https://identity.matchlab.club" }),
+    ).toBe("https://identity.matchlab.club/");
+    expect(() => getOidcIssuerUrl({})).toThrow(
+      "ISSUER_URL environment variable is required.",
+    );
+  });
+
+  it("rejects insecure or ambiguous OIDC issuer URLs", () => {
+    expect(() =>
+      getOidcIssuerUrl({ ISSUER_URL: "http://identity.matchlab.club" }),
+    ).toThrow("ISSUER_URL must be a valid HTTPS URL.");
+    expect(() =>
+      getOidcIssuerUrl({
+        ISSUER_URL: "https://identity.matchlab.club?tenant=unexpected",
+      }),
+    ).toThrow("ISSUER_URL must be a valid HTTPS URL.");
+  });
+
   it("prefers the provider-neutral OIDC client id", () => {
     expect(
       getOidcClientId({
