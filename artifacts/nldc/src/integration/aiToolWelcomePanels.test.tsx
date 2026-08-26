@@ -158,7 +158,7 @@ vi.mock("@workspace/replit-auth-web", () => ({
   }),
 }));
 
-// Import pages AFTER mocks are registered. This suite covers still-routed tool
+// Import pages AFTER mocks are registered. This suite intentionally covers still-routed tool
 // pages only; retired compatibility redirects are covered by canonical route
 // destination and compatibility-route tests instead of keeping duplicate page
 // implementations alive.
