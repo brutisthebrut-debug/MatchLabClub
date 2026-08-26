@@ -158,13 +158,15 @@ export async function collectSignalCounts(
     .where(eq(lifePulsesTable.userId, userId));
   const lifePulseCount = Number(lifePulseRows[0]?.count ?? 0);
 
-  // Would You Rather answers. A forced binary tradeoff reveals a preference more
-  // honestly than a stated one, so distinct prompts answered feed readiness. One
-  // row per (user, prompt), so count(*) is the distinct-prompt count.
+  // Would You Rather answers count only after the member separately enables
+  // matching use. Saving a private answer never moves the matching signal.
   const wyrRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(wyrAnswersTable)
-    .where(eq(wyrAnswersTable.userId, userId));
+    .where(and(
+      eq(wyrAnswersTable.userId, userId),
+      eq(wyrAnswersTable.matchingUseAllowed, true),
+    ));
   const wyrCount = Number(wyrRows[0]?.count ?? 0);
 
   // Daily Spark answers. One small reflective question a day, answered across

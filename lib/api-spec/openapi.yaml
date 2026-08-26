@@ -5711,7 +5711,8 @@ paths:
       description: |
         Returns the caller's answers to the Would You Rather deck, newest first.
         Each answer records only which side was chosen, never any free text.
-        Distinct prompts answered feed matching readiness as a low-weight signal.
+        Saving is storage-only. Only answers with explicit matching permission
+        contribute to matching signals.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -5736,7 +5737,8 @@ paths:
       summary: Record a Would You Rather answer
       description: |
         Records the side chosen for one prompt. Answering the same prompt again
-        updates the choice in place, so the distinct-prompt count stays honest.
+        updates the choice in place. All downstream permission states default
+        closed and remain unchanged when the member changes their answer.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -5765,6 +5767,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/would-you-rather/{promptId}/permissions:
+    patch:
+      tags: [Matching]
+      operationId: updateWouldYouRatherPermissions
+      summary: Update independent permissions for one owned Would You Rather answer
+      description: |
+        Saving an answer is storage-only. This operation separately controls
+        Echo use, confirmed learning, and matching use. Omitted fields remain
+        unchanged, and only the answer owner may update it.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: promptId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportPermissionPatch'
+      responses:
+        '200':
+          description: Updated answer and independent permission state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WyrAnswer'
+        '400':
+          description: No permission change was supplied.
+        '401':
+          description: Authentication required.
+        '404':
+          description: Answer not found or not owned.
 
   /me/daily-spark:
     get:
@@ -13777,13 +13816,19 @@ components:
 
     WyrAnswer:
       type: object
-      required: [promptId, choice, createdAt]
+      required: [promptId, choice, echoUseAllowed, learningConfirmed, matchingUseAllowed, createdAt]
       properties:
         promptId:
           type: string
         choice:
           type: string
           enum: [a, b]
+        echoUseAllowed:
+          type: boolean
+        learningConfirmed:
+          type: boolean
+        matchingUseAllowed:
+          type: boolean
         createdAt:
           type: string
 
