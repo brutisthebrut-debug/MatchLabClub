@@ -59,6 +59,20 @@ segment plan.
 
 ## Verified baseline
 
+- The retired Photo Lab, Signal Check, and Diagnosis page implementations are
+  deleted after their signed-in behavior moved into Profile Project and their
+  old URLs became compatibility redirects. The API logger also uses the
+  callable named `pino-http` export. PR #83 merged as `ae896838`; Actions run
+  `33000690949` passed 52 web files with 309 tests and 111 API files with 983
+  tests on clean Postgres. Eight optional OCR tests remained skipped.
+- Authenticated mobile pages now have persistent bottom navigation for the five
+  canonical destinations, with account and Trust & Data controls under the
+  profile control. Echo and page content respect the mobile safe area. PR #78
+  and Actions run `32981344186` passed both verification lanes.
+- Persistent Echo now projects qualitative observations and next actions
+  without member-facing readiness totals, deltas, thresholds, lane percentages,
+  or points. PR #79 and Actions run `32982408409` passed both verification
+  lanes.
 - Canonical Matches owns authenticated consideration state, deliberately sent
   proposals, mutual-consent responses, conversation state, consideration
   membership, and saved matching preferences. The legacy `/matching` URL is a
@@ -207,6 +221,18 @@ segment plan.
   and fully refunded one-time purchase behavior are explicit. Account billing
   opens Stripe's customer portal, and account deletion first stops renewal.
 
+## Hosting reality
+
+- The connected Vercel team currently contains one MatchLab project, rooted at
+  `artifacts/api-server`. It is an Express API deployment, not the visual
+  member application in `artifacts/nldc`.
+- The API preview is not ready: its framework compiler currently pulls
+  browser-only shared quiz code into the server build after the repository's
+  own stricter verification has passed. No Vercel URL should be described as
+  the current member experience.
+- A current visual preview requires a separate web project rooted at
+  `artifacts/nldc`, followed by authenticated desktop/mobile verification.
+
 ## Release gate
 
 Do not represent the current repository as production-ready. Automated Phase 0
@@ -214,7 +240,8 @@ verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
-environment, completing final shell cleanup plus authenticated accessibility
-and mobile walkthroughs, then exercising Checkout/webhooks, renewal,
+environment, completing final shell cleanup, provisioning the separate visual web preview,
+plus authenticated accessibility and mobile walkthroughs, then exercising
+Checkout/webhooks, renewal,
 cancellation, failure, and refund behavior in Stripe test mode and obtaining
 founder/legal approval before any live offer.
