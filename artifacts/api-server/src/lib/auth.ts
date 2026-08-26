@@ -4,9 +4,12 @@ import { type Request, type Response } from "express";
 import { db, sessionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { AuthUser } from "@workspace/api-zod";
-import { getOidcClientId } from "./runtimeConfig";
+import {
+  getOidcClientId,
+  getOidcIssuerUrl,
+} from "./runtimeConfig";
 
-export const ISSUER_URL = process.env.ISSUER_URL ?? "https://replit.com/oidc";
+export const ISSUER_URL = process.env.ISSUER_URL;
 export const SESSION_COOKIE = "sid";
 export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
@@ -22,7 +25,7 @@ let oidcConfig: client.Configuration | null = null;
 export async function getOidcConfig(): Promise<client.Configuration> {
   if (!oidcConfig) {
     oidcConfig = await client.discovery(
-      new URL(ISSUER_URL),
+      new URL(getOidcIssuerUrl()),
       getOidcClientId(),
     );
   }
