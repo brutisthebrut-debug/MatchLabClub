@@ -3,6 +3,7 @@ import {
   serial,
   varchar,
   timestamp,
+  boolean,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -10,10 +11,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 /**
- * One answer to a Daily Spark question. A single daily reflective prompt with a
- * small set of choices builds a habit and a steady read on how someone thinks
- * about connection over time. Answering across days, not in one burst, is the
- * point, so each answer also feeds the daily consistency lane.
+ * One answer to a Daily Spark question. The choice is stored as a private
+ * first-party record. Storage, Echo use, confirmed learning, and matching use
+ * remain separate member-controlled states.
  *
  * The prompt content lives in the frontend deck; the server stores only the
  * stable question id and the option key chosen, never any free text. One row per
@@ -30,6 +30,13 @@ export const dailySparkAnswersTable = pgTable(
     questionId: varchar("question_id", { length: 64 }).notNull(),
     /** Stable key of the chosen option from the frontend deck. */
     choice: varchar("choice", { length: 64 }).notNull(),
+    /** Saving never grants downstream use. */
+    echoUseAllowed: boolean("echo_use_allowed").notNull().default(false),
+    echoUseUpdatedAt: timestamp("echo_use_updated_at"),
+    learningConfirmed: boolean("learning_confirmed").notNull().default(false),
+    learningConfirmedAt: timestamp("learning_confirmed_at"),
+    matchingUseAllowed: boolean("matching_use_allowed").notNull().default(false),
+    matchingUseUpdatedAt: timestamp("matching_use_updated_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -51,6 +58,12 @@ export const insertDailySparkAnswerSchema = createInsertSchema(
   updatedAt: true,
   userId: true,
   anonymousClaimToken: true,
+  echoUseAllowed: true,
+  echoUseUpdatedAt: true,
+  learningConfirmed: true,
+  learningConfirmedAt: true,
+  matchingUseAllowed: true,
+  matchingUseUpdatedAt: true,
 });
 
 export type InsertDailySparkAnswer = z.infer<typeof insertDailySparkAnswerSchema>;
