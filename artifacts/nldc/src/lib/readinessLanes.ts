@@ -264,7 +264,7 @@ export const BREAKDOWN_ROWS = [
     label: "Scenario reels",
     blurb:
       "Real relationship moments reveal how you communicate and handle friction when it actually shows up.",
-    href: "/games/scenarios",
+    href: "/play?game=scenarios",
     cta: "Play a scenario",
     icon: Clapperboard,
   },
