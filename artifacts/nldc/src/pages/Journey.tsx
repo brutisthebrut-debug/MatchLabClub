@@ -521,7 +521,7 @@ export default function Journey() {
 
   return (
     <AppLayout>
-      <main className="relative mx-auto w-full max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
+      <div className="relative mx-auto w-full max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-[hsl(248_62%_52%)]">Journey</p>
         <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight sm:text-5xl">Keep the thread, not a score.</h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">One private record of what happened, what you noticed, and what you want to try next.</p>
@@ -553,7 +553,7 @@ export default function Journey() {
             {records.length > 0 ? <div className="mt-5 space-y-4">{records.map((item) => <JourneyItem key={item.id} item={item} removed={recordView === "trash"} busy={busyItem === item.id} onRemove={() => { void remove(item); }} onRestore={() => { void restore(item); }} onFollowUp={() => { setNotice(null); setComposer({ kind: "follow-up", sourceItem: item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} onEdit={() => { setNotice(null); setComposer({ kind: item.kind, item }); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div> : <div className="mt-5 rounded-3xl border border-foreground/10 p-10 text-center"><Sparkles className="mx-auto h-6 w-6 text-[hsl(248_62%_52%)]" /><p className="mt-3 font-serif text-xl font-bold">{recordView === "trash" ? "Nothing is waiting to be restored." : "No saved moments match this view."}</p><p className="mt-2 text-sm text-muted-foreground">{recordView === "trash" ? "Removed moments will stay recoverable here." : "Change the filter or capture the next moment you want to keep."}</p></div>}
           </section>
         ) : null}
-      </main>
+      </div>
     </AppLayout>
   );
 }

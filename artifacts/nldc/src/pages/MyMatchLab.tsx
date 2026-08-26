@@ -97,7 +97,7 @@ export default function MyMatchLab() {
           </header>
 
           <div className="mt-9 grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.75fr)]">
-            <main className="space-y-5">
+            <div className="space-y-5">
               <section className="rounded-[2rem] border border-foreground/10 bg-background/72 p-5 shadow-sm sm:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
@@ -263,7 +263,7 @@ export default function MyMatchLab() {
                   </div>
                 </div>
               </section>
-            </main>
+            </div>
 
             <aside className="space-y-5">
               <section className="rounded-[2rem] border border-foreground/10 bg-background/75 p-5 shadow-sm">
