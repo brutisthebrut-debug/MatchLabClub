@@ -5,9 +5,8 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, Flame, Shield, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { WelcomePanel } from "@/components/WelcomePanel";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import {
   useGetPredictionResponses,
   useCreatePredictionResponse,
@@ -22,6 +21,7 @@ import {
   averageCalibrationGap,
   type PredictItem,
 } from "@/lib/predictYourself";
+import { updatePredictionPermissions, type PredictionPermissions } from "@/lib/predictionPermissions";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -51,23 +51,35 @@ function calibrationLine(gap: number, total: number): string {
   return "A real gap here. Worth noticing where your self-image and answers part ways.";
 }
 
-export default function PredictYourself() {
+interface SavedRound {
+  itemId: string;
+  predicted: number;
+  actual: number;
+  createdAt: string;
+  echoUseAllowed: boolean;
+  learningConfirmed: boolean;
+  matchingUseAllowed: boolean;
+}
+
+export function PredictYourselfExperience({ embedded = false }: { embedded?: boolean }) {
   useMeta(
     "Predict yourself",
-    "Guess how you will answer before you do, then see how close you were. The gap is a real read on self-awareness, and every round feeds your matching readiness.",
+    "Guess how you will answer before you do, with private account history and member-controlled learning, Echo, and matching permissions.",
   );
 
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: roundsData } = useGetPredictionResponses({
+  const { data: roundsData, isLoading: roundsLoading, isError: roundsFailed } = useGetPredictionResponses({
     query: {
       queryKey: getGetPredictionResponsesQueryKey(),
       enabled: isAuthenticated,
     },
   });
   const createRound = useCreatePredictionResponse();
-  const climb = useReadinessClimb({ enabled: isAuthenticated });
+  const [permissionBusy, setPermissionBusy] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const savedRounds = (roundsData ?? []) as SavedRound[];
 
   const [demoRounds, setDemoRounds] =
     useState<Record<string, { predicted: number; actual: number }>>(DEMO_ROUNDS);
@@ -79,11 +91,11 @@ export default function PredictYourself() {
     if (isDemo) {
       for (const [id, r] of Object.entries(demoRounds)) m.set(id, r);
     } else {
-      for (const r of roundsData ?? [])
+      for (const r of savedRounds)
         m.set(r.itemId, { predicted: r.predicted, actual: r.actual });
     }
     return m;
-  }, [isDemo, demoRounds, roundsData]);
+  }, [isDemo, demoRounds, savedRounds]);
 
   const answeredIds = useMemo(() => new Set(roundsMap.keys()), [roundsMap]);
 
@@ -99,8 +111,8 @@ export default function PredictYourself() {
 
   const streak = useMemo(() => {
     if (isDemo) return 2;
-    return computeDayStreak((roundsData ?? []).map((r) => r.createdAt));
-  }, [isDemo, roundsData]);
+    return computeDayStreak(savedRounds.map((r) => r.createdAt));
+  }, [isDemo, savedRounds]);
 
   const answeredCount = roundsMap.size;
   const total = PREDICT_DECK.length;
@@ -109,19 +121,16 @@ export default function PredictYourself() {
   const avgGap = useMemo(() => {
     const rounds = isDemo
       ? Object.values(demoRounds)
-      : (roundsData ?? []).map((r) => ({
+      : savedRounds.map((r) => ({
           predicted: r.predicted,
           actual: r.actual,
         }));
     return averageCalibrationGap(rounds);
-  }, [isDemo, demoRounds, roundsData]);
+  }, [isDemo, demoRounds, savedRounds]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({
       queryKey: getGetPredictionResponsesQueryKey(),
-    });
-    void queryClient.invalidateQueries({
-      queryKey: getGetMatchingStateQueryKey(),
     });
   };
 
@@ -148,18 +157,33 @@ export default function PredictYourself() {
       return;
     }
     if (createRound.isPending) return;
-    climb.snapshot();
     createRound.mutate(
       { data: { itemId: item.id, predicted: predicted ?? 0, actual } },
-      { onSuccess: invalidate },
+      { onSuccess: () => { invalidate(); setPhase("reveal"); } },
     );
-    setPhase("reveal");
   };
 
-  return (
-    <AppLayout>
-      <HubTabs hub="games" />
-      <div className="min-h-screen mesh-bg py-10 px-4">
+  const recent = useMemo(() => savedRounds.map((round) => ({
+    round,
+    item: PREDICT_DECK.find((item) => item.id === round.itemId),
+  })).filter((entry): entry is { round: SavedRound; item: PredictItem } => Boolean(entry.item)).slice(0, 8), [savedRounds]);
+
+  async function changePermission(round: SavedRound, patch: PredictionPermissions) {
+    setPermissionBusy(round.itemId);
+    setPermissionError(null);
+    try {
+      await updatePredictionPermissions(round.itemId, patch);
+      await queryClient.invalidateQueries({ queryKey: getGetPredictionResponsesQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
+    } catch (error) {
+      setPermissionError(error instanceof Error ? error.message : "Permission update failed.");
+    } finally {
+      setPermissionBusy(null);
+    }
+  }
+
+  const content = (
+      <div id="play-predict" className={embedded ? "scroll-mt-24" : "min-h-screen mesh-bg py-10 px-4"}>
         <div className="orb orb-indigo fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">
           {/* Hero */}
@@ -177,9 +201,8 @@ export default function PredictYourself() {
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
               Guess how you will answer before you read the statements, then check
-              yourself. The gap between your prediction and how you actually answer
-              is a real read on self-awareness, and it feeds your matching
-              readiness.
+              yourself. The two counts save privately first; you decide separately
+              what becomes confirmed learning, Echo context, or matching context.
             </p>
           </motion.div>
 
@@ -243,14 +266,18 @@ export default function PredictYourself() {
               icon={<Target className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to predict yourself"
               title="Play your first round"
-              description="Predict how you will answer, then see how close you were. There is no wrong number. The gap itself sharpens what I understand about you and nudges your matching readiness up."
+              description="Predict how you will answer, then see how close you were. The private round saves to your account, and you choose its downstream permissions separately."
               testId="predict-empty-state"
             />
           )}
 
           {/* Current round */}
           <AnimatePresence mode="wait">
-            {current ? (
+            {isAuthenticated && roundsLoading ? (
+              <motion.div key="rounds-loading" {...fadeUp(0.06)} className="glass border border-white/10 rounded-2xl p-6 mb-6 text-sm text-muted-foreground">Loading your saved rounds…</motion.div>
+            ) : isAuthenticated && roundsFailed ? (
+              <motion.div key="rounds-failed" {...fadeUp(0.06)} className="glass border border-destructive/30 rounded-2xl p-6 mb-6 text-sm text-destructive">Your saved rounds could not load. No sample history has been substituted.</motion.div>
+            ) : current ? (
               <motion.div
                 key={current.id + phase}
                 {...fadeUp(0.06)}
@@ -286,7 +313,7 @@ export default function PredictYourself() {
                     </div>
                     <p className="text-xs text-muted-foreground/50 mt-4">
                       {isDemo
-                        ? "Sign in to save your rounds and count them toward matching."
+                        ? "Sign in to save your rounds to your private account history."
                         : "Pick the number you honestly expect before you read on."}
                     </p>
                   </>
@@ -417,15 +444,25 @@ export default function PredictYourself() {
             )}
           </AnimatePresence>
 
-          {isAuthenticated && climb.before !== null && (
-            <motion.div {...fadeUp(0.07)} className="mb-6">
-              <ReadinessClimbReveal
-                from={climb.before}
-                to={climb.current}
-                className="glass border border-white/8 rounded-2xl p-5"
-              />
-            </motion.div>
+          {createRound.isError && <p className="mb-4 text-sm text-destructive">This round could not be saved. Your account history was not changed.</p>}
+
+          {recent.length > 0 && (
+            <div className="mb-6 space-y-2.5" aria-label="Saved prediction rounds">
+              {recent.map(({ round, item }, i) => (
+                <motion.div key={round.itemId} {...fadeUp(0.08 + i * 0.03)} className="glass border border-white/8 rounded-2xl p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(245_70%_72%)]">{item.theme}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{round.predicted} predicted · {round.actual} actually true</p>
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-white/8 pt-3">
+                    <Button size="sm" variant={round.learningConfirmed ? "default" : "outline"} disabled={permissionBusy === round.itemId} onClick={() => void changePermission(round, { learningConfirmed: !round.learningConfirmed })}>{round.learningConfirmed ? "Learning confirmed" : "Confirm learning"}</Button>
+                    <Button size="sm" variant={round.echoUseAllowed ? "default" : "outline"} disabled={permissionBusy === round.itemId} onClick={() => void changePermission(round, { echoUse: !round.echoUseAllowed })}>{round.echoUseAllowed ? "Echo allowed" : "Allow Echo"}</Button>
+                    <Button size="sm" variant={round.matchingUseAllowed ? "default" : "outline"} disabled={permissionBusy === round.itemId} onClick={() => void changePermission(round, { matchingUse: !round.matchingUseAllowed })}>{round.matchingUseAllowed ? "Matching allowed" : "Allow matching"}</Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
+
+          {permissionError && <p className="mb-4 text-sm text-destructive">{permissionError}</p>}
 
           {/* Trust note */}
           <motion.div
@@ -438,12 +475,22 @@ export default function PredictYourself() {
                 Only your two numbers are stored.
               </strong>{" "}
               We keep what you predicted and how many you marked true, never which
-              statements you picked. Your rounds count toward matching readiness
-              and you can wipe everything from your account at any time.
+              statements you picked. Saving alone does not authorize Echo,
+              confirmed learning, or matching use, and you can remove the data from your account.
             </p>
           </motion.div>
         </div>
       </div>
+  );
+
+  return embedded ? content : (
+    <AppLayout>
+      <HubTabs hub="games" />
+      {content}
     </AppLayout>
   );
+}
+
+export default function PredictYourself() {
+  return <PredictYourselfExperience />;
 }
