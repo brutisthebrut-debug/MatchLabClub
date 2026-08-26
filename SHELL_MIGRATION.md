@@ -835,9 +835,10 @@ State: merged to `main` and verified.
   Communication embeds their reusable experiences. Retained `DailySpark.tsx`,
   `PredictYourself.tsx`, `Scenarios.tsx`, `ThisOrThat.tsx`,
   `TimeCapsule.tsx`, and `WouldYouRather.tsx` because Play embeds them.
-- Retained `Report.tsx` pending a separate behavior-preserving migration:
-  current-report copy controls and previous-version viewing still have direct
-  regression coverage against that implementation.
+- At this audit checkpoint, retained `Report.tsx` for a separate
+  behavior-preserving migration because current-report copy controls and
+  previous-version viewing still had direct regression coverage against that
+  implementation. Segment 3G5 records its completed migration and retirement.
 
 ## Segment 3G5: canonical report history and final shell retirement
 
