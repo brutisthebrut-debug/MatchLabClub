@@ -921,7 +921,17 @@ State: in PR #96.
   existing environment can roll forward safely, but the release validator and
   template require only the provider-neutral names.
 - Focused tests cover precedence, missing configuration, malformed/insecure
-  origins, and rollout fallback behavior. Paid products remain fail-closed.
+  origins, and rollout fallback behavior.
+- Removed the receipts webhook's predictable `receipts-${REPL_ID}` /
+  `receipts-dev` fallback. When `RECEIPTS_WEBHOOK_SECRET` is absent, inbound
+  requests now fail closed with 401; the manual member path remains available.
+- Replaced the stale Replit environment/proxy handoff instructions and added an
+  explicit, non-authorizing release migration runbook for migrations `0041`
+  through `0056`. Paid products remain fail-closed.
+- Hosted verification is temporarily blocked outside the repository: GitHub
+  ends all three jobs before assigning a runner or executing a step, and Vercel
+  reports the Hobby team's 100-deployments-per-24-hours limit. PR #96 remains
+  unmerged until the required exact-head workflow can execute.
 
 ## Next segments
 
