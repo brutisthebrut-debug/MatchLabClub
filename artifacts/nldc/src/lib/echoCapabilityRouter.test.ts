@@ -9,7 +9,7 @@ describe("Echo capability routing", () => {
       }),
     ).toMatchObject({
       id: "quiz_lab",
-      href: "/play?game=quiz-lab",
+      href: "/play?section=quizzes",
     });
   });
 
