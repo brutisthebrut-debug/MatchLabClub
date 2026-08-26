@@ -8,15 +8,16 @@ import { useMeta } from "@/hooks/useMeta";
 import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { QUIZZES, readQuizResults, type SavedQuizResult } from "@/lib/quizzes";
 import { getDurableQuizResults, type DurableQuizResult } from "@/lib/playResults";
-import { embeddedPlayGame, PLAY_THIS_OR_THAT_HREF, PLAY_WOULD_YOU_RATHER_HREF, shouldFocusQuizCatalog, type EmbeddedPlayGame } from "@/lib/playRoutes";
+import { embeddedPlayGame, PLAY_DAILY_SPARK_HREF, PLAY_THIS_OR_THAT_HREF, PLAY_WOULD_YOU_RATHER_HREF, shouldFocusQuizCatalog, type EmbeddedPlayGame } from "@/lib/playRoutes";
 import { ThisOrThatExperience } from "@/pages/ThisOrThat";
 import { WouldYouRatherExperience } from "@/pages/WouldYouRather";
+import { DailySparkExperience } from "@/pages/DailySpark";
 import { Button } from "@/components/ui/button";
 
 const GAMES = [
   { id: "this-or-that", title: "This or That", description: "Choose quickly and notice the pattern behind your first instinct.", href: PLAY_THIS_OR_THAT_HREF, icon: Sparkles },
   { id: "would-you-rather", title: "Would You Rather", description: "Compare tradeoffs when both choices have weight.", href: PLAY_WOULD_YOU_RATHER_HREF, icon: Compass },
-  { id: "daily-spark", title: "Daily Spark", description: "Try one small prompt that makes room for curiosity today.", href: "/games/daily-spark", icon: Orbit },
+  { id: "daily-spark", title: "Daily Spark", description: "Try one small prompt that makes room for curiosity today.", href: PLAY_DAILY_SPARK_HREF, icon: Orbit },
   { id: "scenarios", title: "Scenarios", description: "Explore how you might respond when a connection becomes more real.", href: "/games/scenarios", icon: MessageCircleHeart },
   { id: "predict", title: "Predict Yourself", description: "Make a prediction, then return to what actually happened.", href: "/games/predict", icon: Award },
   { id: "time-capsule", title: "Time Capsule", description: "Leave a thought for your future self and return to it later.", href: "/games/time-capsule", icon: LockKeyhole },
@@ -99,16 +100,16 @@ export default function Play() {
             const Icon = game.icon;
             const content = <><Icon className="h-5 w-5 text-[hsl(248_62%_52%)]" /><h3 className="mt-4 font-serif text-xl font-bold">{game.title}</h3><p className="mt-2 min-h-12 text-sm leading-6 text-muted-foreground">{game.description}</p><span className="mt-4 inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)]">Play <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></>;
             const className = "group rounded-3xl border border-foreground/10 bg-background/70 p-5 text-left shadow-sm hover:border-[hsl(248_62%_52%/0.35)]";
-            return game.id === "this-or-that" || game.id === "would-you-rather"
+            return game.id === "this-or-that" || game.id === "would-you-rather" || game.id === "daily-spark"
               ? <button key={game.id} type="button" onClick={() => openGame(game.id)} className={className}>{content}</button>
               : <Link key={game.id} href={game.href} className={className}>{content}</Link>;
           })}</div>
         </section>
 
         {activeGame && (
-          <section className="relative mt-10 rounded-3xl border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-8" aria-label={activeGame === "this-or-that" ? "This or That" : "Would You Rather"}>
+          <section className="relative mt-10 rounded-3xl border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-8" aria-label={activeGame === "this-or-that" ? "This or That" : activeGame === "would-you-rather" ? "Would You Rather" : "Daily Spark"}>
             <Button aria-label="Close game" className="absolute right-4 top-4 z-20" size="icon" variant="ghost" onClick={closeGame}><X className="h-4 w-4" /></Button>
-            {activeGame === "this-or-that" ? <ThisOrThatExperience embedded /> : <WouldYouRatherExperience embedded />}
+            {activeGame === "this-or-that" ? <ThisOrThatExperience embedded /> : activeGame === "would-you-rather" ? <WouldYouRatherExperience embedded /> : <DailySparkExperience embedded />}
           </section>
         )}
       </main>
