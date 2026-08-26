@@ -897,7 +897,7 @@ State: merged to `main` and verified.
 
 ## Segment 3G8: fail-closed release environment contract
 
-State: in PR #95.
+State: merged to `main` and verified.
 
 - Added a non-secret `.env.release.example` and a value-safe validator that
   reports variable names without printing configured secrets.
@@ -906,15 +906,26 @@ State: in PR #95.
   hosts, and any non-empty `BILLING_LIVE_PRODUCTS` allowlist.
 - CI now runs focused validator regression coverage, including a proof that
   configured values cannot leak into errors.
-- The contract records two remaining runtime compatibility names honestly:
-  `REPL_ID` still carries the OIDC client id, and `REPLIT_DOMAINS` still
-  carries the trusted hostname list.
+- PR #95 merged as `f6fecaec`; exact-head Actions run `33012521120` passed
+  all three Phase 0 lanes.
+- The contract recorded the two remaining compatibility names honestly so the
+  next segment could remove them from release configuration.
+
+## Segment 3G9: provider-neutral auth and trusted origins
+
+State: in PR #96.
+
+- OIDC discovery and logout now prefer `OIDC_CLIENT_ID`; CORS and CSRF now
+  consume exact HTTPS origins from `ALLOWED_ORIGINS`.
+- The former Replit-named variables remain temporary runtime fallbacks so an
+  existing environment can roll forward safely, but the release validator and
+  template require only the provider-neutral names.
+- Focused tests cover precedence, missing configuration, malformed/insecure
+  origins, and rollout fallback behavior. Paid products remain fail-closed.
 
 ## Next segments
 
-1. Replace the remaining auth/origin compatibility names with
-   `OIDC_CLIENT_ID` and `ALLOWED_ORIGINS`, preserving compatibility during
-   deployment.
+1.
 2. Provision the separate visual Vercel project rooted at `artifacts/nldc`
    when project-creation access is available.
 3. Apply release migrations, run Stripe test-mode verification, and complete
