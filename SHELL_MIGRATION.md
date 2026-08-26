@@ -534,11 +534,56 @@ State: merged to `main` and verified.
   through `0052`, and the clean-Postgres API suite. Stripe remains deferred
   and fail-closed.
 
+## Segment 3E2B3: indirect readiness consent guard
+
+State: merged to `main` and verified.
+
+- The shared activity-day query now requires matching permission before Would
+  You Rather answers can affect the consistency readiness lane.
+- Imported sources follow the same rule and deleted imports are excluded, so a
+  private or removed source cannot raise readiness through an indirect path.
+- A query-level regression test guards both predicates.
+- PR #53 merged as `0dbdbac0`; GitHub Actions run `32924957724` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
+  the clean-Postgres API suite.
+
+## Segment 3E2C1: Daily Spark permission boundary
+
+State: merged to `main` and verified.
+
+- Migration `0053` separates private answer storage from Echo use, confirmed
+  learning, and matching use. Every downstream permission defaults closed.
+- The owner-scoped API updates the three permissions independently and returns
+  not found for cross-member attempts.
+- Daily Spark readiness counts include only answers with explicit matching
+  permission; saving or changing a private answer alone cannot move matching.
+- PR #54 merged as `9b9197ad`; GitHub Actions run `32925223014` passed
+  typecheck, lint, schema drift, voice lint, web tests, migration `0053`, and
+  the clean-Postgres API suite.
+
+## Segment 3E2C2: Daily Spark absorption into Play
+
+State: merged to `main` and verified.
+
+- Play now owns Daily Spark capture and owner-scoped durable answer history.
+- Each saved answer exposes separate confirmed-learning, Echo-use, and
+  matching-use controls. Storage-only capture no longer animates or invalidates
+  matching readiness.
+- Signed-in history loading and failure remain fail-closed; guest sample picks
+  are never substituted for account data.
+- Legacy, hub, and readiness links converge on
+  `/play?game=daily-spark`, while the former game URL remains a compatibility
+  redirect.
+- PR #55 merged as `ecf294f7`; GitHub Actions run `32925581147` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations
+  through `0053`, and the clean-Postgres API suite. Stripe remains deferred
+  and fail-closed.
+
 ## Next segments
 
-1. Harden Daily Spark's storage and downstream permission boundary, then absorb
-   its daily capture and owner-scoped history into Play.
-2. Continue through Scenarios, Predict Yourself, and Time Capsule, retiring each
-   duplicate route only after workflow, permission, and history parity.
+1. Harden Scenarios' storage and downstream permission boundary, then absorb
+   its capture and owner-scoped history into Play.
+2. Continue through Predict Yourself and Time Capsule, retiring each duplicate
+   route only after workflow, permission, and history parity.
 3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
