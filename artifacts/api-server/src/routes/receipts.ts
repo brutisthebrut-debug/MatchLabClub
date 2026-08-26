@@ -123,17 +123,15 @@ function handleFromTo(to: string): string | null {
   return m ? m[1]! : null;
 }
 
-function expectedWebhookSecret(): string {
-  return (
-    process.env.RECEIPTS_WEBHOOK_SECRET ??
-    `receipts-${process.env.REPL_ID ?? "dev"}`
-  );
+function expectedWebhookSecret(): string | null {
+  return process.env.RECEIPTS_WEBHOOK_SECRET?.trim() || null;
 }
 
 function secretMatches(provided: string | undefined): boolean {
-  if (!provided) return false;
+  const expected = expectedWebhookSecret();
+  if (!provided || !expected) return false;
   const a = Buffer.from(provided);
-  const b = Buffer.from(expectedWebhookSecret());
+  const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
 }

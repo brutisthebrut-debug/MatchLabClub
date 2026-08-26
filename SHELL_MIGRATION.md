@@ -897,7 +897,7 @@ State: merged to `main` and verified.
 
 ## Segment 3G8: fail-closed release environment contract
 
-State: in PR #95.
+State: merged to `main` and verified.
 
 - Added a non-secret `.env.release.example` and a value-safe validator that
   reports variable names without printing configured secrets.
@@ -906,16 +906,45 @@ State: in PR #95.
   hosts, and any non-empty `BILLING_LIVE_PRODUCTS` allowlist.
 - CI now runs focused validator regression coverage, including a proof that
   configured values cannot leak into errors.
-- The contract records two remaining runtime compatibility names honestly:
-  `REPL_ID` still carries the OIDC client id, and `REPLIT_DOMAINS` still
-  carries the trusted hostname list.
+- PR #95 merged as `f6fecaec`; exact-head Actions run `33012521120` passed
+  all three Phase 0 lanes.
+- The contract recorded the two remaining compatibility names honestly so the
+  next segment could remove them from release configuration.
+
+## Segment 3G9: provider-neutral auth and trusted origins
+
+State: in PR #96.
+
+- OIDC discovery, logout, and mobile token exchange now require an explicit
+  HTTPS `ISSUER_URL` and prefer `OIDC_CLIENT_ID`; CORS and CSRF consume exact
+  HTTPS origins from `ALLOWED_ORIGINS`. There is no retired-provider default.
+- The former Replit-named variables remain temporary runtime fallbacks so an
+  existing environment can roll forward safely, but the release validator and
+  template require only the provider-neutral names.
+- Native mobile auth prefers `EXPO_PUBLIC_OIDC_ISSUER_URL` and
+  `EXPO_PUBLIC_OIDC_CLIENT_ID`, preserves its former names only as rollout
+  fallbacks, and fails closed with a clear configuration error when absent.
+- Focused tests cover precedence, missing configuration, malformed/insecure
+  issuers and origins, native configuration, and rollout fallback behavior.
+- Removed the receipts webhook's predictable `receipts-${REPL_ID}` /
+  `receipts-dev` fallback. When `RECEIPTS_WEBHOOK_SECRET` is absent, inbound
+  requests now fail closed with 401; the manual member path remains available.
+- Replaced the stale Replit environment/proxy handoff instructions and added an
+  explicit, non-authorizing release migration runbook for migrations `0041`
+  through `0056`. Paid products remain fail-closed.
+- Hosted verification is temporarily blocked outside the repository: GitHub
+  ends all three jobs before assigning a runner or executing a step, and Vercel
+  reports the Hobby team's 100-deployments-per-24-hours limit. PR #96 remains
+  unmerged until the required exact-head workflow can execute.
 
 ## Next segments
 
-1. Replace the remaining auth/origin compatibility names with
-   `OIDC_CLIENT_ID` and `ALLOWED_ORIGINS`, preserving compatibility during
-   deployment.
+1. Merge PR #96 after the required exact-head GitHub runners execute
+   successfully; do not substitute Vercel or local-only evidence for that gate.
 2. Provision the separate visual Vercel project rooted at `artifacts/nldc`
-   when project-creation access is available.
+   when project-creation access is available. The refreshed Sites reference
+   visual is live at
+   `https://matchlab-echo-journey.sweetdmarlin.chatgpt.site` (version 45),
+   but it is not the authenticated production web deployment.
 3. Apply release migrations, run Stripe test-mode verification, and complete
    founder/legal release gates.
