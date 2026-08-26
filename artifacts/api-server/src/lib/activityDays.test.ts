@@ -35,5 +35,8 @@ describe("loadActivityDays consent boundaries", () => {
     expect(query?.text).toContain(
       "FROM imported_sources WHERE user_id = ? AND matching_use_allowed = true AND deleted_at IS NULL",
     );
+    expect(query?.text).toContain(
+      "FROM scenario_responses WHERE user_id = ? AND matching_use_allowed = true",
+    );
   });
 });

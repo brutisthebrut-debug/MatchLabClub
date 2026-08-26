@@ -202,13 +202,15 @@ export async function collectSignalCounts(
     return ids.size;
   })();
 
-  // Scenario reels: distinct "what would you do" scenarios responded to. One row
-  // per (user, scenario) via the unique index, so a plain count is the distinct
-  // count. We store only the option chosen, never any free text.
+  // Scenario responses count only after the member separately enables matching
+  // use. Saving a private response never moves the matching signal.
   const scenarioRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(scenarioResponsesTable)
-    .where(eq(scenarioResponsesTable.userId, userId));
+    .where(and(
+      eq(scenarioResponsesTable.userId, userId),
+      eq(scenarioResponsesTable.matchingUseAllowed, true),
+    ));
   const scenarioCount = Number(scenarioRows[0]?.count ?? 0);
 
   // Predict yourself: distinct rounds completed. One row per (user, item) via the
