@@ -169,14 +169,15 @@ export async function collectSignalCounts(
     ));
   const wyrCount = Number(wyrRows[0]?.count ?? 0);
 
-  // Daily Spark answers. One small reflective question a day, answered across
-  // days rather than in a burst, builds a steady read on how someone thinks
-  // about connection. One row per (user, question), so count(*) is the
-  // distinct-question count. We store only the option chosen, never any text.
+  // Daily Spark answers count only after the member separately enables
+  // matching use. Saving a private answer never moves the matching signal.
   const dailySparkRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(dailySparkAnswersTable)
-    .where(eq(dailySparkAnswersTable.userId, userId));
+    .where(and(
+      eq(dailySparkAnswersTable.userId, userId),
+      eq(dailySparkAnswersTable.matchingUseAllowed, true),
+    ));
   const dailySparkCount = Number(dailySparkRows[0]?.count ?? 0);
 
   // Green and red flags. The selection accumulates in a single row per user, two
