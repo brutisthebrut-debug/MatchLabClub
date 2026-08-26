@@ -6,8 +6,6 @@ import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, Flame, Shield, Check } from "lucide-react";
 import { WelcomePanel } from "@/components/WelcomePanel";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { Button } from "@/components/ui/button";
 import {
   useGetWouldYouRatherAnswers,
@@ -23,6 +21,7 @@ import {
   computeDayStreak,
   type WyrPrompt,
 } from "@/lib/wouldYouRather";
+import { updateWouldYouRatherPermissions, type WouldYouRatherPermissions } from "@/lib/wouldYouRatherPermissions";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -43,23 +42,34 @@ const DEMO_ANSWERED: Record<string, "a" | "b"> = {
   "instant-spark-vs-slow-burn": "b",
 };
 
-export default function WouldYouRather() {
+interface SavedAnswer {
+  promptId: string;
+  choice: "a" | "b";
+  createdAt: string;
+  echoUseAllowed: boolean;
+  learningConfirmed: boolean;
+  matchingUseAllowed: boolean;
+}
+
+export function WouldYouRatherExperience({ embedded = false }: { embedded?: boolean }) {
   useMeta(
     "Would You Rather",
-    "A daily forced tradeoff. What you actually pick reveals more than what you say you want, and every answer feeds your matching readiness.",
+    "A daily forced tradeoff with private account history and member-controlled learning, Echo, and matching permissions.",
   );
 
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: answersData } = useGetWouldYouRatherAnswers({
+  const { data: answersData, isLoading: answersLoading, isError: answersFailed } = useGetWouldYouRatherAnswers({
     query: {
       queryKey: getGetWouldYouRatherAnswersQueryKey(),
       enabled: isAuthenticated,
     },
   });
   const createAnswer = useCreateWouldYouRatherAnswer();
-  const climb = useReadinessClimb({ enabled: isAuthenticated });
+  const [permissionBusy, setPermissionBusy] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const savedAnswers = (answersData ?? []) as SavedAnswer[];
 
   // Local picks for the signed-out demo, so the game is playable before sign-in.
   const [demoPicks, setDemoPicks] =
@@ -72,10 +82,10 @@ export default function WouldYouRather() {
     if (isDemo) {
       for (const [id, c] of Object.entries(demoPicks)) m.set(id, c);
     } else {
-      for (const a of answersData ?? []) m.set(a.promptId, a.choice as "a" | "b");
+      for (const a of savedAnswers) m.set(a.promptId, a.choice);
     }
     return m;
-  }, [isDemo, demoPicks, answersData]);
+  }, [isDemo, demoPicks, savedAnswers]);
 
   const answeredIds = useMemo(
     () => new Set(answeredMap.keys()),
@@ -89,8 +99,8 @@ export default function WouldYouRather() {
 
   const streak = useMemo(() => {
     if (isDemo) return 3;
-    return computeDayStreak((answersData ?? []).map((a) => a.createdAt));
-  }, [isDemo, answersData]);
+    return computeDayStreak(savedAnswers.map((a) => a.createdAt));
+  }, [isDemo, savedAnswers]);
 
   const answeredCount = answeredMap.size;
   const total = WYR_DECK.length;
@@ -100,9 +110,6 @@ export default function WouldYouRather() {
     void queryClient.invalidateQueries({
       queryKey: getGetWouldYouRatherAnswersQueryKey(),
     });
-    void queryClient.invalidateQueries({
-      queryKey: getGetMatchingStateQueryKey(),
-    });
   };
 
   const pick = (prompt: WyrPrompt, choice: "a" | "b") => {
@@ -111,9 +118,6 @@ export default function WouldYouRather() {
       return;
     }
     if (createAnswer.isPending) return;
-    // Snapshot readiness first so the page can animate the real climb this
-    // answer produced.
-    climb.snapshot();
     createAnswer.mutate(
       { data: { promptId: prompt.id, choice } },
       { onSuccess: invalidate },
@@ -124,23 +128,35 @@ export default function WouldYouRather() {
   const recent = useMemo(() => {
     const orderedIds = isDemo
       ? Object.keys(demoPicks).reverse()
-      : (answersData ?? []).map((a) => a.promptId);
+      : savedAnswers.map((a) => a.promptId);
     const seen = new Set<string>();
-    const out: { prompt: WyrPrompt; choice: "a" | "b" }[] = [];
+    const out: { prompt: WyrPrompt; choice: "a" | "b"; saved?: SavedAnswer }[] = [];
     for (const id of orderedIds) {
       if (seen.has(id)) continue;
       seen.add(id);
       const prompt = WYR_DECK.find((p) => p.id === id);
       const choice = answeredMap.get(id);
-      if (prompt && choice) out.push({ prompt, choice });
+      if (prompt && choice) out.push({ prompt, choice, saved: savedAnswers.find((answer) => answer.promptId === id) });
     }
     return out.slice(0, 8);
-  }, [isDemo, demoPicks, answersData, answeredMap]);
+  }, [isDemo, demoPicks, savedAnswers, answeredMap]);
 
-  return (
-    <AppLayout>
-      <HubTabs hub="games" />
-      <div className="min-h-screen mesh-bg py-10 px-4">
+  async function changePermission(answer: SavedAnswer, patch: WouldYouRatherPermissions) {
+    setPermissionBusy(answer.promptId);
+    setPermissionError(null);
+    try {
+      await updateWouldYouRatherPermissions(answer.promptId, patch);
+      await queryClient.invalidateQueries({ queryKey: getGetWouldYouRatherAnswersQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
+    } catch (error) {
+      setPermissionError(error instanceof Error ? error.message : "Permission update failed.");
+    } finally {
+      setPermissionBusy(null);
+    }
+  }
+
+  const content = (
+      <div id="play-would-you-rather" className={embedded ? "scroll-mt-24" : "min-h-screen mesh-bg py-10 px-4"}>
         <div className="orb orb-indigo fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">
           {/* Hero */}
@@ -158,8 +174,8 @@ export default function WouldYouRather() {
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
               One forced tradeoff a day. What you actually pick reveals more than
-              what you say you want. Every answer is a real signal toward who the
-              machine pairs you with.
+              what you say you want. Your answer saves privately first; you decide
+              what becomes confirmed learning or matching context.
             </p>
           </motion.div>
 
@@ -205,14 +221,18 @@ export default function WouldYouRather() {
               icon={<Scale className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to Would You Rather"
               title="Make your first pick"
-              description="There are no wrong answers. Each forced tradeoff sharpens what I understand about what you actually value, and nudges your matching readiness up."
+              description="There are no wrong answers. Each tradeoff saves to your account, and you choose separately whether it becomes confirmed learning or matching context."
               testId="wyr-empty-state"
             />
           )}
 
           {/* Today's tradeoff */}
           <AnimatePresence mode="wait">
-            {current ? (
+            {isAuthenticated && answersLoading ? (
+              <motion.div key="answers-loading" {...fadeUp(0.06)} className="glass border border-white/10 rounded-2xl p-6 mb-6 text-sm text-muted-foreground">Loading your saved answers…</motion.div>
+            ) : isAuthenticated && answersFailed ? (
+              <motion.div key="answers-failed" {...fadeUp(0.06)} className="glass border border-destructive/30 rounded-2xl p-6 mb-6 text-sm text-destructive">Your saved answers could not load. No sample history has been substituted.</motion.div>
+            ) : current ? (
               <motion.div
                 key={current.id}
                 {...fadeUp(0.06)}
@@ -242,7 +262,7 @@ export default function WouldYouRather() {
                 </div>
                 <p className="text-center text-xs text-muted-foreground/50 mt-4">
                   {isDemo
-                    ? "Sign in to save your picks and count them toward matching."
+                    ? "Sign in to save your picks to your private account history."
                     : "Pick the one that is more true for you, even if neither is perfect."}
                 </p>
               </motion.div>
@@ -264,16 +284,6 @@ export default function WouldYouRather() {
             )}
           </AnimatePresence>
 
-          {isAuthenticated && climb.before !== null && (
-            <motion.div {...fadeUp(0.07)} className="mb-6">
-              <ReadinessClimbReveal
-                from={climb.before}
-                to={climb.current}
-                className="glass border border-white/8 rounded-2xl p-5"
-              />
-            </motion.div>
-          )}
-
           {/* What you have revealed */}
           {recent.length > 0 && (
             <div className="mb-6">
@@ -284,7 +294,7 @@ export default function WouldYouRather() {
               )}
               <div className="space-y-2.5">
                 <AnimatePresence>
-                  {recent.map(({ prompt, choice }, i) => (
+                  {recent.map(({ prompt, choice, saved }, i) => (
                     <motion.div
                       key={prompt.id}
                       {...fadeUp(0.08 + i * 0.03)}
@@ -302,12 +312,21 @@ export default function WouldYouRather() {
                       <p className="text-xs text-muted-foreground/40 mt-1">
                         over: {prompt[choice === "a" ? "b" : "a"]}
                       </p>
+                      {saved && !isDemo && (
+                        <div className="mt-3 flex flex-wrap gap-2 border-t border-white/8 pt-3">
+                          <Button size="sm" variant={saved.learningConfirmed ? "default" : "outline"} disabled={permissionBusy === saved.promptId} onClick={() => void changePermission(saved, { learningConfirmed: !saved.learningConfirmed })}>{saved.learningConfirmed ? "Learning confirmed" : "Confirm learning"}</Button>
+                          <Button size="sm" variant={saved.echoUseAllowed ? "default" : "outline"} disabled={permissionBusy === saved.promptId} onClick={() => void changePermission(saved, { echoUse: !saved.echoUseAllowed })}>{saved.echoUseAllowed ? "Echo allowed" : "Allow Echo"}</Button>
+                          <Button size="sm" variant={saved.matchingUseAllowed ? "default" : "outline"} disabled={permissionBusy === saved.promptId} onClick={() => void changePermission(saved, { matchingUse: !saved.matchingUseAllowed })}>{saved.matchingUseAllowed ? "Matching allowed" : "Allow matching"}</Button>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
             </div>
           )}
+
+          {permissionError && <p className="mb-4 text-sm text-destructive">{permissionError}</p>}
 
           {/* Trust note */}
           <motion.div
@@ -320,12 +339,22 @@ export default function WouldYouRather() {
                 Only your pick is stored.
               </strong>{" "}
               We keep which side you chose and how many tradeoffs you have
-              answered, never any free text. Your answers count toward matching
-              readiness and you can wipe everything from your account at any time.
+              answered, never any free text. Saving alone does not authorize Echo,
+              confirmed learning, or matching use, and you can remove the data from your account.
             </p>
           </motion.div>
         </div>
       </div>
+  );
+
+  return embedded ? content : (
+    <AppLayout>
+      <HubTabs hub="games" />
+      {content}
     </AppLayout>
   );
+}
+
+export default function WouldYouRather() {
+  return <WouldYouRatherExperience />;
 }

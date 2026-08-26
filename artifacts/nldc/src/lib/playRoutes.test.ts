@@ -3,6 +3,7 @@ import {
   embeddedPlayGame,
   PLAY_QUIZ_CATALOG_HREF,
   PLAY_THIS_OR_THAT_HREF,
+  PLAY_WOULD_YOU_RATHER_HREF,
   shouldFocusQuizCatalog,
 } from "./playRoutes";
 
@@ -20,5 +21,11 @@ describe("Play compatibility routing", () => {
     expect(embeddedPlayGame("/play", "?game=this-or-that")).toBe("this-or-that");
     expect(embeddedPlayGame("/play?game=unknown")).toBeNull();
     expect(shouldFocusQuizCatalog(PLAY_THIS_OR_THAT_HREF)).toBe(false);
+  });
+
+  it("reopens the canonical embedded Would You Rather history and capture", () => {
+    expect(PLAY_WOULD_YOU_RATHER_HREF).toBe("/play?game=would-you-rather");
+    expect(embeddedPlayGame(PLAY_WOULD_YOU_RATHER_HREF)).toBe("would-you-rather");
+    expect(shouldFocusQuizCatalog(PLAY_WOULD_YOU_RATHER_HREF)).toBe(false);
   });
 });
