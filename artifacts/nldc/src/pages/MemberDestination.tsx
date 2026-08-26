@@ -315,7 +315,7 @@ export default function MemberDestination() {
 
   return (
     <AppLayout>
-      <main className="relative isolate flex-1 overflow-hidden">
+      <div className="relative isolate flex-1 overflow-hidden">
         <div className="pointer-events-none absolute -right-40 -top-44 h-[34rem] w-[34rem] rounded-full bg-[hsl(326_100%_59%/0.09)] blur-3xl" />
         <div className="pointer-events-none absolute -left-48 top-48 h-[30rem] w-[30rem] rounded-full bg-[hsl(248_62%_52%/0.1)] blur-3xl" />
 
@@ -345,7 +345,7 @@ export default function MemberDestination() {
             ))}
           </section>
         </div>
-      </main>
+      </div>
     </AppLayout>
   );
 }
