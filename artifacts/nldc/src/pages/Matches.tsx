@@ -6,6 +6,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { resolveMatchListReadState } from "@/lib/matchLifecycleReadState";
 import {
   useGetConnections,
   getGetConnectionsQueryKey,
@@ -124,7 +125,7 @@ export default function Matches() {
   const { isAuthenticated, login } = useAuth();
   const isDemo = !isAuthenticated;
 
-  const { data: serverData, isLoading } = useGetConnections({
+  const { data: serverData, isLoading, isError, refetch } = useGetConnections({
     query: {
       queryKey: getGetConnectionsQueryKey(),
       enabled: isAuthenticated,
@@ -133,6 +134,12 @@ export default function Matches() {
   });
 
   const connections = isDemo ? DEMO_CONNECTIONS : (serverData ?? []);
+  const readState = resolveMatchListReadState({
+    isAuthenticated,
+    isLoading,
+    isError,
+    connectionCount: connections.length,
+  });
 
   return (
     <AppLayout>
@@ -178,13 +185,37 @@ export default function Matches() {
             </motion.div>
           )}
 
-          {!isDemo && isLoading && (
+          {readState === "loading" && (
             <p className="text-sm text-muted-foreground/60">
               Loading your matches...
             </p>
           )}
 
-          {!isDemo && !isLoading && connections.length === 0 && (
+          {readState === "error" && (
+            <div
+              className="glass mb-6 rounded-2xl border border-destructive/25 p-5"
+              role="alert"
+              data-testid="matches-error"
+            >
+              <p className="text-sm font-semibold text-foreground">
+                We couldn't load your matches.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Your account state is unchanged. Try the read again when you're ready.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-4 rounded-full"
+                onClick={() => void refetch()}
+              >
+                Try again
+              </Button>
+            </div>
+          )}
+
+          {readState === "empty" && (
             <motion.div
               {...fadeUp(0.05)}
               className="glass border border-white/10 rounded-2xl p-8 text-center"
