@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Award, Clock, Compass, Gamepad2, Loader2, LockKeyhole, MessageCircleHeart, Orbit, Sparkles } from "lucide-react";
+import { ArrowRight, Award, Clock, Compass, Gamepad2, Loader2, LockKeyhole, MessageCircleHeart, Orbit, Sparkles, X } from "lucide-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ShareButton } from "@/components/echo/ShareButton";
@@ -8,15 +8,17 @@ import { useMeta } from "@/hooks/useMeta";
 import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { QUIZZES, readQuizResults, type SavedQuizResult } from "@/lib/quizzes";
 import { getDurableQuizResults, type DurableQuizResult } from "@/lib/playResults";
-import { shouldFocusQuizCatalog } from "@/lib/playRoutes";
+import { embeddedPlayGame, PLAY_THIS_OR_THAT_HREF, shouldFocusQuizCatalog, type EmbeddedPlayGame } from "@/lib/playRoutes";
+import { ThisOrThatExperience } from "@/pages/ThisOrThat";
+import { Button } from "@/components/ui/button";
 
 const GAMES = [
-  { title: "This or That", description: "Choose quickly and notice the pattern behind your first instinct.", href: "/this-or-that", icon: Sparkles },
-  { title: "Would You Rather", description: "Compare tradeoffs when both choices have weight.", href: "/games/would-you-rather", icon: Compass },
-  { title: "Daily Spark", description: "Try one small prompt that makes room for curiosity today.", href: "/games/daily-spark", icon: Orbit },
-  { title: "Scenarios", description: "Explore how you might respond when a connection becomes more real.", href: "/games/scenarios", icon: MessageCircleHeart },
-  { title: "Predict Yourself", description: "Make a prediction, then return to what actually happened.", href: "/games/predict", icon: Award },
-  { title: "Time Capsule", description: "Leave a thought for your future self and return to it later.", href: "/games/time-capsule", icon: LockKeyhole },
+  { id: "this-or-that", title: "This or That", description: "Choose quickly and notice the pattern behind your first instinct.", href: PLAY_THIS_OR_THAT_HREF, icon: Sparkles },
+  { id: "would-you-rather", title: "Would You Rather", description: "Compare tradeoffs when both choices have weight.", href: "/games/would-you-rather", icon: Compass },
+  { id: "daily-spark", title: "Daily Spark", description: "Try one small prompt that makes room for curiosity today.", href: "/games/daily-spark", icon: Orbit },
+  { id: "scenarios", title: "Scenarios", description: "Explore how you might respond when a connection becomes more real.", href: "/games/scenarios", icon: MessageCircleHeart },
+  { id: "predict", title: "Predict Yourself", description: "Make a prediction, then return to what actually happened.", href: "/games/predict", icon: Award },
+  { id: "time-capsule", title: "Time Capsule", description: "Leave a thought for your future self and return to it later.", href: "/games/time-capsule", icon: LockKeyhole },
 ] as const;
 
 export default function Play() {
@@ -26,6 +28,7 @@ export default function Play() {
   const [localResults, setLocalResults] = useState<SavedQuizResult[]>([]);
   const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
+  const [activeGame, setActiveGame] = useState<EmbeddedPlayGame | null>(() => typeof window === "undefined" ? null : embeddedPlayGame("/play", window.location.search));
 
   // Account history is authoritative after sign-in; device storage is only an
   // anonymous continuity fallback and never substitutes for a failed API read.
@@ -50,6 +53,21 @@ export default function Play() {
   const results = useMemo(() => isAuthenticated ? durableResults : localResults, [durableResults, isAuthenticated, localResults]);
   const shareRef = user?.id ? `user-${user.id}` : "play-catalog";
 
+  function openGame(game: EmbeddedPlayGame) {
+    setActiveGame(game);
+    const url = new URL(window.location.href);
+    url.searchParams.set("game", game);
+    window.history.replaceState({}, "", url);
+    window.requestAnimationFrame(() => document.getElementById(`play-${game}`)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
+  function closeGame() {
+    setActiveGame(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("game");
+    window.history.replaceState({}, "", url);
+  }
+
   return (
     <AppLayout>
       <main className="relative mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
@@ -73,7 +91,25 @@ export default function Play() {
           })}</div>
         </section>
 
-        <section className="pt-12" aria-labelledby="games-heading"><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Small experiences</p><h2 id="games-heading" className="mt-2 font-serif text-3xl font-bold">Notice what your first instinct says.</h2><div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{GAMES.map((game) => { const Icon = game.icon; return <Link key={game.href} href={game.href} className="group rounded-3xl border border-foreground/10 bg-background/70 p-5 shadow-sm hover:border-[hsl(248_62%_52%/0.35)]"><Icon className="h-5 w-5 text-[hsl(248_62%_52%)]" /><h3 className="mt-4 font-serif text-xl font-bold">{game.title}</h3><p className="mt-2 min-h-12 text-sm leading-6 text-muted-foreground">{game.description}</p><span className="mt-4 inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)]">Play <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></Link>; })}</div></section>
+        <section className="pt-12" aria-labelledby="games-heading">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Small experiences</p>
+          <h2 id="games-heading" className="mt-2 font-serif text-3xl font-bold">Notice what your first instinct says.</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{GAMES.map((game) => {
+            const Icon = game.icon;
+            const content = <><Icon className="h-5 w-5 text-[hsl(248_62%_52%)]" /><h3 className="mt-4 font-serif text-xl font-bold">{game.title}</h3><p className="mt-2 min-h-12 text-sm leading-6 text-muted-foreground">{game.description}</p><span className="mt-4 inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)]">Play <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></>;
+            const className = "group rounded-3xl border border-foreground/10 bg-background/70 p-5 text-left shadow-sm hover:border-[hsl(248_62%_52%/0.35)]";
+            return game.id === "this-or-that"
+              ? <button key={game.id} type="button" onClick={() => openGame("this-or-that")} className={className}>{content}</button>
+              : <Link key={game.id} href={game.href} className={className}>{content}</Link>;
+          })}</div>
+        </section>
+
+        {activeGame === "this-or-that" && (
+          <section className="relative mt-10 rounded-3xl border border-foreground/10 bg-background/70 p-5 shadow-sm sm:p-8" aria-label="This or That">
+            <Button aria-label="Close This or That" className="absolute right-4 top-4 z-20" size="icon" variant="ghost" onClick={closeGame}><X className="h-4 w-4" /></Button>
+            <ThisOrThatExperience embedded />
+          </section>
+        )}
       </main>
     </AppLayout>
   );
