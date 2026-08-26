@@ -248,7 +248,20 @@ stores.scenario_responses = {
     matchingUseUpdatedAt: null,
   },
 };
-ensureStore("prediction_responses");
+stores.prediction_responses = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    echoUseAllowed: false,
+    echoUseUpdatedAt: null,
+    learningConfirmed: false,
+    learningConfirmedAt: null,
+    matchingUseAllowed: false,
+    matchingUseUpdatedAt: null,
+  },
+};
 stores.time_capsules = {
   rows: [],
   nextId: 1,
