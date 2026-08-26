@@ -141,7 +141,7 @@ export const HUBS: Record<HubId, HubDef> = {
       { name: "This or That", href: "/this-or-that", icon: Split },
       { name: "Would You Rather", href: "/games/would-you-rather", icon: Scale },
       { name: "Daily Spark", href: "/play?game=daily-spark", icon: Flame },
-      { name: "Predict", href: "/games/predict", icon: Target },
+      { name: "Predict", href: "/play?game=predict", icon: Target },
       { name: "Scenarios", href: "/play?game=scenarios", icon: Drama },
       { name: "Time Capsule", href: "/games/time-capsule", icon: Hourglass },
       { name: "Cosmic", href: "/cosmic", icon: Sparkles },
