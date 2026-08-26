@@ -238,12 +238,15 @@ segment plan.
 - The connected Vercel team currently contains one MatchLab project, rooted at
   `artifacts/api-server`. It is an Express API deployment, not the visual
   member application in `artifacts/nldc`.
-- The API preview is not ready: its framework compiler currently pulls
-  browser-only shared quiz code into the server build after the repository's
-  own stricter verification has passed. No Vercel URL should be described as
-  the current member experience.
-- A current visual preview requires a separate web project rooted at
-  `artifacts/nldc`, followed by authenticated desktop/mobile verification.
+- The repository now contains a verified visual-project configuration at
+  `artifacts/nldc/vercel.json`. Its production build creates 67 prerendered
+  route shells and the Phase 0 gate rebuilds it on every change.
+- Vercel still needs a separate project created with `artifacts/nldc` as its
+  root. Until that external project exists, no Vercel URL should be described
+  as the current member experience.
+- Authenticated desktop and phone walkthroughs already run against the real web
+  and API applications on every pull request; they do not depend on a hosted
+  preview.
 
 ## Release gate
 
@@ -252,8 +255,9 @@ verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
-environment, provisioning the separate visual web preview, completing authenticated
-accessibility and mobile walkthroughs, then exercising
-Checkout/webhooks, renewal,
-cancellation, failure, and refund behavior in Stripe test mode and obtaining
-founder/legal approval before any live offer.
+environment, provisioning the separate visual web preview, migrating the
+remaining `REPL_ID` and `REPLIT_DOMAINS` compatibility names, then exercising
+Checkout/webhooks, renewal, cancellation, failure, and refund behavior in
+Stripe test mode and obtaining founder/legal approval before any live offer.
+PR #95 adds a value-safe pre-production environment contract and CI coverage;
+it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value.

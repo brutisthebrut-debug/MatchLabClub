@@ -881,10 +881,41 @@ State: merged to `main` and verified.
   static/web verification, the clean-Postgres API suite, and both canonical
   browser walkthroughs. Stripe remains deferred and fail-closed.
 
+## Segment 3G7: visual web project build contract
+
+State: merged to `main` and verified.
+
+- Added a Vercel project configuration rooted at `artifacts/nldc`, with the
+  monorepo install command, production build output, and SPA fallback explicit.
+- Added the visual production build to the static CI lane. It generates 67
+  prerendered route shells and 214 files in `dist/public`.
+- PR #93 merged as `0f11711c`; exact-head Actions run `33010059069` passed
+  static/web verification, the clean-Postgres API suite, and the authenticated
+  canonical browser walkthrough.
+- The external Vercel project still must be created; the connected team
+  currently exposes only the API project.
+
+## Segment 3G8: fail-closed release environment contract
+
+State: in PR #95.
+
+- Added a non-secret `.env.release.example` and a value-safe validator that
+  reports variable names without printing configured secrets.
+- The pre-production gate rejects missing core runtime settings, malformed
+  ports/domains, placeholder values, the retired Replit issuer/application
+  hosts, and any non-empty `BILLING_LIVE_PRODUCTS` allowlist.
+- CI now runs focused validator regression coverage, including a proof that
+  configured values cannot leak into errors.
+- The contract records two remaining runtime compatibility names honestly:
+  `REPL_ID` still carries the OIDC client id, and `REPLIT_DOMAINS` still
+  carries the trusted hostname list.
+
 ## Next segments
 
-1. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
-   API deployment architecture and environment work explicit rather than
-   treating the current API-only Vercel project as the product preview.
-2. Execute the release-environment migration, Stripe test-mode, and
+1. Replace the remaining auth/origin compatibility names with
+   `OIDC_CLIENT_ID` and `ALLOWED_ORIGINS`, preserving compatibility during
+   deployment.
+2. Provision the separate visual Vercel project rooted at `artifacts/nldc`
+   when project-creation access is available.
+3. Apply release migrations, run Stripe test-mode verification, and complete
    founder/legal release gates.
