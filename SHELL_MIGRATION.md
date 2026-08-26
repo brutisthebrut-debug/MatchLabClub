@@ -693,10 +693,24 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
   the clean-Postgres API suite.
 
+## Segment 3F3: remaining thread read and mutation outcomes
+
+State: merged to `main` and verified.
+
+- Profile reveal and conversation-starter reads now distinguish disabled,
+  loading, failed, and ready states. Failures are explicit and retryable; no
+  profile details are substituted.
+- A starter failure leaves member-authored messaging available. Date-idea
+  failure is explicit and retryable.
+- Failed unmatch and report mutations now state that account and conversation
+  state did not change instead of failing silently.
+- PR #69 merged as `fe660bb5`; GitHub Actions run `32975076322` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
+  the clean-Postgres API suite.
+
 ## Next segments
 
-1. Harden the remaining Matches profile/coaching reads and member mutation
-   outcomes, then reconcile the proposal/waiting lifecycle with the controlled
+1. Reconcile the Matches proposal and waiting lifecycle with the controlled
    pilot contract.
 2. Complete remaining shell retirement.
 3. Run authenticated walkthroughs, accessibility checks, and mobile regression
