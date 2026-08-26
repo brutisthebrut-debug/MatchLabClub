@@ -5,9 +5,8 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clapperboard, Flame, Shield, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { WelcomePanel } from "@/components/WelcomePanel";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import {
   useGetScenarioResponses,
   useCreateScenarioResponse,
@@ -22,6 +21,7 @@ import {
   computeDayStreak,
   type Scenario,
 } from "@/lib/scenarios";
+import { updateScenarioPermissions, type ScenarioPermissions } from "@/lib/scenarioPermissions";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -41,23 +41,34 @@ const DEMO_ANSWERED: Record<string, string> = {
   "crossed-a-line": "own-it-now",
 };
 
-export default function Scenarios() {
+interface SavedResponse {
+  scenarioId: string;
+  optionId: string;
+  createdAt: string;
+  echoUseAllowed: boolean;
+  learningConfirmed: boolean;
+  matchingUseAllowed: boolean;
+}
+
+export function ScenariosExperience({ embedded = false }: { embedded?: boolean }) {
   useMeta(
     "Scenario reels",
-    "Real relationship moments, one at a time. How you respond reveals your communication and conflict style, and every response feeds your matching readiness.",
+    "Real relationship moments saved privately first, with member-controlled learning, Echo, and matching permissions.",
   );
 
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: responsesData } = useGetScenarioResponses({
+  const { data: responsesData, isLoading: responsesLoading, isError: responsesFailed } = useGetScenarioResponses({
     query: {
       queryKey: getGetScenarioResponsesQueryKey(),
       enabled: isAuthenticated,
     },
   });
   const createResponse = useCreateScenarioResponse();
-  const climb = useReadinessClimb({ enabled: isAuthenticated });
+  const [permissionBusy, setPermissionBusy] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const savedResponses = (responsesData ?? []) as SavedResponse[];
 
   // Local picks for the signed-out demo, so the reels are playable before sign-in.
   const [demoPicks, setDemoPicks] =
@@ -70,10 +81,10 @@ export default function Scenarios() {
     if (isDemo) {
       for (const [id, c] of Object.entries(demoPicks)) m.set(id, c);
     } else {
-      for (const r of responsesData ?? []) m.set(r.scenarioId, r.optionId);
+      for (const r of savedResponses) m.set(r.scenarioId, r.optionId);
     }
     return m;
-  }, [isDemo, demoPicks, responsesData]);
+  }, [isDemo, demoPicks, savedResponses]);
 
   const answeredIds = useMemo(() => new Set(answeredMap.keys()), [answeredMap]);
 
@@ -84,8 +95,8 @@ export default function Scenarios() {
 
   const streak = useMemo(() => {
     if (isDemo) return 3;
-    return computeDayStreak((responsesData ?? []).map((r) => r.createdAt));
-  }, [isDemo, responsesData]);
+    return computeDayStreak(savedResponses.map((r) => r.createdAt));
+  }, [isDemo, savedResponses]);
 
   const answeredCount = answeredMap.size;
   const total = SCENARIO_DECK.length;
@@ -95,9 +106,6 @@ export default function Scenarios() {
     void queryClient.invalidateQueries({
       queryKey: getGetScenarioResponsesQueryKey(),
     });
-    void queryClient.invalidateQueries({
-      queryKey: getGetMatchingStateQueryKey(),
-    });
   };
 
   const pick = (scenario: Scenario, optionId: string) => {
@@ -106,9 +114,6 @@ export default function Scenarios() {
       return;
     }
     if (createResponse.isPending) return;
-    // Snapshot readiness first so the page can animate the real climb this
-    // response produced.
-    climb.snapshot();
     createResponse.mutate(
       { data: { scenarioId: scenario.id, optionId } },
       { onSuccess: invalidate },
@@ -119,25 +124,36 @@ export default function Scenarios() {
   const recent = useMemo(() => {
     const orderedIds = isDemo
       ? Object.keys(demoPicks).reverse()
-      : (responsesData ?? []).map((r) => r.scenarioId);
+      : savedResponses.map((r) => r.scenarioId);
     const seen = new Set<string>();
-    const out: { scenario: Scenario; option: { id: string; label: string } }[] =
-      [];
+    const out: { scenario: Scenario; option: { id: string; label: string }; saved?: SavedResponse }[] = [];
     for (const id of orderedIds) {
       if (seen.has(id)) continue;
       seen.add(id);
       const scenario = SCENARIO_DECK.find((s) => s.id === id);
       const optionId = answeredMap.get(id);
       const option = scenario?.options.find((o) => o.id === optionId);
-      if (scenario && option) out.push({ scenario, option });
+      if (scenario && option) out.push({ scenario, option, saved: savedResponses.find((response) => response.scenarioId === id) });
     }
     return out.slice(0, 8);
-  }, [isDemo, demoPicks, responsesData, answeredMap]);
+  }, [isDemo, demoPicks, savedResponses, answeredMap]);
 
-  return (
-    <AppLayout>
-      <HubTabs hub="games" />
-      <div className="min-h-screen mesh-bg py-10 px-4">
+  async function changePermission(response: SavedResponse, patch: ScenarioPermissions) {
+    setPermissionBusy(response.scenarioId);
+    setPermissionError(null);
+    try {
+      await updateScenarioPermissions(response.scenarioId, patch);
+      await queryClient.invalidateQueries({ queryKey: getGetScenarioResponsesQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
+    } catch (error) {
+      setPermissionError(error instanceof Error ? error.message : "Permission update failed.");
+    } finally {
+      setPermissionBusy(null);
+    }
+  }
+
+  const content = (
+      <div id="play-scenarios" className={embedded ? "scroll-mt-24" : "min-h-screen mesh-bg py-10 px-4"}>
         <div className="orb orb-indigo fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">
           {/* Hero */}
@@ -154,9 +170,9 @@ export default function Scenarios() {
               Scenario reels
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
-              A real relationship moment, one at a time. How you respond when
-              things get tense reveals your communication and conflict style, and
-              every answer is a real signal toward who I can pair you with.
+              A real relationship moment, one at a time. Your response saves
+              privately first; you decide separately whether it becomes confirmed
+              learning, Echo context, or matching context.
             </p>
           </motion.div>
 
@@ -199,14 +215,18 @@ export default function Scenarios() {
               icon={<Clapperboard className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to scenario reels"
               title="Play your first scenario"
-              description="There are no wrong answers. Each moment you work through sharpens what I understand about how you communicate and handle friction, and nudges your matching readiness up."
+              description="There are no wrong answers. Each response saves to your account, and you choose separately whether it becomes confirmed learning or matching context."
               testId="scenarios-empty-state"
             />
           )}
 
           {/* Today's scenario */}
           <AnimatePresence mode="wait">
-            {current ? (
+            {isAuthenticated && responsesLoading ? (
+              <motion.div key="responses-loading" {...fadeUp(0.06)} className="glass border border-white/10 rounded-2xl p-6 mb-6 text-sm text-muted-foreground">Loading your saved responses…</motion.div>
+            ) : isAuthenticated && responsesFailed ? (
+              <motion.div key="responses-failed" {...fadeUp(0.06)} className="glass border border-destructive/30 rounded-2xl p-6 mb-6 text-sm text-destructive">Your saved responses could not load. No sample history has been substituted.</motion.div>
+            ) : current ? (
               <motion.div
                 key={current.id}
                 {...fadeUp(0.06)}
@@ -236,7 +256,7 @@ export default function Scenarios() {
                 </div>
                 <p className="text-center text-xs text-muted-foreground/50 mt-4">
                   {isDemo
-                    ? "Sign in to save your responses and count them toward matching."
+                    ? "Sign in to save your responses to your private account history."
                     : "Pick what you would actually reach for, even if it is not the polished answer."}
                 </p>
               </motion.div>
@@ -258,16 +278,6 @@ export default function Scenarios() {
             )}
           </AnimatePresence>
 
-          {isAuthenticated && climb.before !== null && (
-            <motion.div {...fadeUp(0.07)} className="mb-6">
-              <ReadinessClimbReveal
-                from={climb.before}
-                to={climb.current}
-                className="glass border border-white/8 rounded-2xl p-5"
-              />
-            </motion.div>
-          )}
-
           {/* What you have revealed */}
           {recent.length > 0 && (
             <div className="mb-6">
@@ -278,7 +288,7 @@ export default function Scenarios() {
               )}
               <div className="space-y-2.5">
                 <AnimatePresence>
-                  {recent.map(({ scenario, option }, i) => (
+                  {recent.map(({ scenario, option, saved }, i) => (
                     <motion.div
                       key={scenario.id}
                       {...fadeUp(0.08 + i * 0.03)}
@@ -296,12 +306,21 @@ export default function Scenarios() {
                       <p className="text-sm text-foreground font-medium leading-relaxed">
                         {option.label}
                       </p>
+                      {saved && !isDemo && (
+                        <div className="mt-3 flex flex-wrap gap-2 border-t border-white/8 pt-3">
+                          <Button size="sm" variant={saved.learningConfirmed ? "default" : "outline"} disabled={permissionBusy === saved.scenarioId} onClick={() => void changePermission(saved, { learningConfirmed: !saved.learningConfirmed })}>{saved.learningConfirmed ? "Learning confirmed" : "Confirm learning"}</Button>
+                          <Button size="sm" variant={saved.echoUseAllowed ? "default" : "outline"} disabled={permissionBusy === saved.scenarioId} onClick={() => void changePermission(saved, { echoUse: !saved.echoUseAllowed })}>{saved.echoUseAllowed ? "Echo allowed" : "Allow Echo"}</Button>
+                          <Button size="sm" variant={saved.matchingUseAllowed ? "default" : "outline"} disabled={permissionBusy === saved.scenarioId} onClick={() => void changePermission(saved, { matchingUse: !saved.matchingUseAllowed })}>{saved.matchingUseAllowed ? "Matching allowed" : "Allow matching"}</Button>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
             </div>
           )}
+
+          {permissionError && <p className="mb-4 text-sm text-destructive">{permissionError}</p>}
 
           {/* Trust note */}
           <motion.div
@@ -314,12 +333,22 @@ export default function Scenarios() {
                 Only your response is stored.
               </strong>{" "}
               We keep which option you chose and how many scenarios you have
-              played, never any free text. Your responses count toward matching
-              readiness and you can wipe everything from your account at any time.
+              played, never any free text. Saving alone does not authorize Echo,
+              confirmed learning, or matching use, and you can remove the data from your account.
             </p>
           </motion.div>
         </div>
       </div>
+  );
+
+  return embedded ? content : (
+    <AppLayout>
+      <HubTabs hub="games" />
+      {content}
     </AppLayout>
   );
+}
+
+export default function Scenarios() {
+  return <ScenariosExperience />;
 }
