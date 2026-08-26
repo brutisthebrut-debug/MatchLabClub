@@ -80,12 +80,18 @@ async function baselineAccessibilityIssues(page: Page): Promise<string[]> {
             .map((id) => document.getElementById(id)?.textContent ?? "")
             .join(" ")
         : "";
+      const descendantImageText = Array.from(
+        element.querySelectorAll("img[alt]"),
+      )
+        .map((image) => image.getAttribute("alt") ?? "")
+        .join(" ");
       return (
         [
           element.getAttribute("aria-label"),
           referenced,
           element.getAttribute("title"),
           element.textContent,
+          descendantImageText,
         ].find((value) => value?.trim())?.trim() ?? ""
       );
     };
