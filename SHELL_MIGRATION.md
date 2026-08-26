@@ -708,10 +708,28 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
   the clean-Postgres API suite.
 
+## Segment 3F4: controlled-pilot waiting and proposals
+
+State: merged to `main` and verified.
+
+- Canonical Matches now owns the member's real consideration state and an honest
+  waiting state. It never implies a hidden queue or available members when no
+  introduction has been sent.
+- Only server-sent proposals appear. Consideration and proposal reads fail
+  closed, remain retryable, and do not substitute a sample or empty state.
+- Members can independently say yes or pass from Matches. A conversation opens
+  only after a deliberate send and two independent yeses.
+- The canonical proposal view removes compatibility percentages, readiness
+  scores, and machine-ranking language. The legacy `/matching` route remains
+  temporarily available for preferences and pool controls.
+- PR #71 merged as `dce5647c`; GitHub Actions run `32976310572` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
+  the clean-Postgres API suite.
+
 ## Next segments
 
-1. Reconcile the Matches proposal and waiting lifecycle with the controlled
-   pilot contract.
+1. Absorb consideration controls and matching preferences into canonical
+   Matches, then retire the score-heavy legacy Matching route.
 2. Complete remaining shell retirement.
 3. Run authenticated walkthroughs, accessibility checks, and mobile regression
    evidence after the active product paths are consolidated.
