@@ -19,21 +19,37 @@ WebBrowser.maybeCompleteAuthSession();
 export const AUTH_TOKEN_KEY = "auth_session_token";
 
 export function getMobileOidcIssuerUrl(
-  env: Record<string, string | undefined> = process.env,
+  env?: Record<string, string | undefined>,
 ): string {
+  if (env) {
+    return (
+      env.EXPO_PUBLIC_OIDC_ISSUER_URL?.trim() ||
+      env.EXPO_PUBLIC_ISSUER_URL?.trim() ||
+      ""
+    );
+  }
+  // Keep direct property access so Expo can inline EXPO_PUBLIC_* values.
   return (
-    env.EXPO_PUBLIC_OIDC_ISSUER_URL?.trim() ||
-    env.EXPO_PUBLIC_ISSUER_URL?.trim() ||
+    process.env.EXPO_PUBLIC_OIDC_ISSUER_URL?.trim() ||
+    process.env.EXPO_PUBLIC_ISSUER_URL?.trim() ||
     ""
   );
 }
 
 export function getMobileOidcClientId(
-  env: Record<string, string | undefined> = process.env,
+  env?: Record<string, string | undefined>,
 ): string {
+  if (env) {
+    return (
+      env.EXPO_PUBLIC_OIDC_CLIENT_ID?.trim() ||
+      env.EXPO_PUBLIC_REPL_ID?.trim() ||
+      ""
+    );
+  }
+  // Keep direct property access so Expo can inline EXPO_PUBLIC_* values.
   return (
-    env.EXPO_PUBLIC_OIDC_CLIENT_ID?.trim() ||
-    env.EXPO_PUBLIC_REPL_ID?.trim() ||
+    process.env.EXPO_PUBLIC_OIDC_CLIENT_ID?.trim() ||
+    process.env.EXPO_PUBLIC_REPL_ID?.trim() ||
     ""
   );
 }
