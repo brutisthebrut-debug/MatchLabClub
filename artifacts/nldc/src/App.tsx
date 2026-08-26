@@ -19,7 +19,7 @@ import {
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
 import { datesCompatibilityHref, experimentsCompatibilityHref, followUpsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, winsCompatibilityHref } from "@/lib/journeyRoutes";
-import { PLAY_QUIZ_CATALOG_HREF } from "@/lib/playRoutes";
+import { PLAY_QUIZ_CATALOG_HREF, PLAY_THIS_OR_THAT_HREF } from "@/lib/playRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -79,7 +79,6 @@ const Matches = lazy(() => import("@/pages/Matches"));
 const MatchThread = lazy(() => import("@/pages/MatchThread"));
 const MatchPhotos = lazy(() => import("@/pages/MatchPhotos"));
 const SourcePaste = lazy(() => import("@/pages/SourcePaste"));
-const ThisOrThat = lazy(() => import("@/pages/ThisOrThat"));
 const VoiceIntro = lazy(() => import("@/pages/VoiceIntro"));
 const Receipts = lazy(() => import("@/pages/Receipts"));
 const DataVault = lazy(() => import("@/pages/DataVault"));
@@ -242,7 +241,9 @@ function Router() {
         <Route path="/insights" component={Insights} />
         <Route path="/integrations" component={Integrations} />
         <Route path="/connections/add/:source" component={SourcePaste} />
-        <Route path="/this-or-that" component={ThisOrThat} />
+        <Route path="/this-or-that">
+          <Redirect to={PLAY_THIS_OR_THAT_HREF} />
+        </Route>
         <Route path="/voice-intro" component={VoiceIntro} />
         <Route path="/receipts" component={Receipts} />
         <Route path="/pricing" component={Pricing} />
