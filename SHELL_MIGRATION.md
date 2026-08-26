@@ -607,11 +607,39 @@ State: merged to `main` and verified.
   through `0054`, and the clean-Postgres API suite. Stripe remains deferred
   and fail-closed.
 
+## Segment 3E2E1: Predict Yourself permission boundary
+
+State: merged to `main` and verified.
+
+- Migration `0055` separates private prediction-round storage from Echo use,
+  confirmed learning, and matching use, with every permission default closed.
+- Owner-scoped updates reject cross-member access and preserve the saved counts.
+- Both the direct self-awareness lane and shared consistency lane require
+  explicit matching permission.
+- PR #60 merged as `251006b9`; GitHub Actions run `32948026397` passed
+  typecheck, lint, schema drift, voice lint, web tests, migration `0055`, and
+  the clean-Postgres API suite.
+
+## Segment 3E2E2: Predict Yourself absorption into Play
+
+State: merged to `main` and verified.
+
+- Play now owns the full prediction flow and signed-in durable round history.
+- Completion reveal waits for successful persistence. Failed saves remain
+  visible and do not claim a durable account update.
+- Each round exposes independent confirmed-learning, Echo-use, and matching-use
+  controls. Storage-only capture does not animate or invalidate readiness.
+- Signed-in loading/failure remains fail-closed, while guest samples stay local.
+  Legacy, hub, and readiness links converge on `/play?game=predict`.
+- PR #61 merged as `c1f6310f`; GitHub Actions run `32948424537` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations
+  through `0055`, and the clean-Postgres API suite. Stripe remains deferred
+  and fail-closed.
+
 ## Next segments
 
-1. Harden Predict Yourself's storage and downstream permission boundary, then
-   absorb its capture and owner-scoped history into Play.
-2. Continue through Time Capsule, retiring its duplicate route only after
-   workflow, permission, and history parity.
-3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
-   accessibility checks, and mobile regression evidence.
+1. Harden Time Capsule's storage and downstream permission boundary, then absorb
+   its capture and owner-scoped history into Play.
+2. Complete the controlled Matches lifecycle and remaining shell retirement.
+3. Run authenticated walkthroughs, accessibility checks, and mobile regression
+   evidence after the active product paths are consolidated.
