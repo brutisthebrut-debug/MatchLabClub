@@ -1,8 +1,9 @@
 export const PLAY_QUIZ_CATALOG_HREF = "/play?section=quizzes";
 export const PLAY_THIS_OR_THAT_HREF = "/play?game=this-or-that";
 export const PLAY_WOULD_YOU_RATHER_HREF = "/play?game=would-you-rather";
+export const PLAY_DAILY_SPARK_HREF = "/play?game=daily-spark";
 
-export type EmbeddedPlayGame = "this-or-that" | "would-you-rather";
+export type EmbeddedPlayGame = "this-or-that" | "would-you-rather" | "daily-spark";
 
 function queryFor(location: string, browserSearch = ""): URLSearchParams {
   const query = location.includes("?") ? location.slice(location.indexOf("?")) : browserSearch;
@@ -15,5 +16,5 @@ export function shouldFocusQuizCatalog(location: string, browserSearch = ""): bo
 
 export function embeddedPlayGame(location: string, browserSearch = ""): EmbeddedPlayGame | null {
   const game = queryFor(location, browserSearch).get("game");
-  return game === "this-or-that" || game === "would-you-rather" ? game : null;
+  return game === "this-or-that" || game === "would-you-rather" || game === "daily-spark" ? game : null;
 }

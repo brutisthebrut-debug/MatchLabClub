@@ -5,9 +5,8 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Flame, Shield, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { WelcomePanel } from "@/components/WelcomePanel";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import {
   useGetDailySparkAnswers,
   useCreateDailySparkAnswer,
@@ -23,6 +22,7 @@ import {
   optionLabel,
   type SparkQuestion,
 } from "@/lib/dailySpark";
+import { updateDailySparkPermissions, type DailySparkPermissions } from "@/lib/dailySparkPermissions";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -42,23 +42,34 @@ const DEMO_ANSWERED: Record<string, string> = {
   "what-you-want-now": "open-to-real",
 };
 
-export default function DailySpark() {
+interface SavedAnswer {
+  questionId: string;
+  choice: string;
+  createdAt: string;
+  echoUseAllowed: boolean;
+  learningConfirmed: boolean;
+  matchingUseAllowed: boolean;
+}
+
+export function DailySparkExperience({ embedded = false }: { embedded?: boolean }) {
   useMeta(
     "Daily Spark",
-    "One small question a day. A single honest pick reveals how you actually move through dating, and every answer feeds your matching readiness.",
+    "One small question a day, saved privately first with member-controlled learning, Echo, and matching permissions.",
   );
 
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: answersData } = useGetDailySparkAnswers({
+  const { data: answersData, isLoading: answersLoading, isError: answersFailed } = useGetDailySparkAnswers({
     query: {
       queryKey: getGetDailySparkAnswersQueryKey(),
       enabled: isAuthenticated,
     },
   });
   const createAnswer = useCreateDailySparkAnswer();
-  const climb = useReadinessClimb({ enabled: isAuthenticated });
+  const [permissionBusy, setPermissionBusy] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const savedAnswers = (answersData ?? []) as SavedAnswer[];
 
   // Local picks for the signed-out demo, so the game is playable before sign-in.
   const [demoPicks, setDemoPicks] =
@@ -71,10 +82,10 @@ export default function DailySpark() {
     if (isDemo) {
       for (const [id, c] of Object.entries(demoPicks)) m.set(id, c);
     } else {
-      for (const a of answersData ?? []) m.set(a.questionId, a.choice);
+      for (const a of savedAnswers) m.set(a.questionId, a.choice);
     }
     return m;
-  }, [isDemo, demoPicks, answersData]);
+  }, [isDemo, demoPicks, savedAnswers]);
 
   const answeredIds = useMemo(
     () => new Set(answeredMap.keys()),
@@ -88,8 +99,8 @@ export default function DailySpark() {
 
   const streak = useMemo(() => {
     if (isDemo) return 2;
-    return computeDayStreak((answersData ?? []).map((a) => a.createdAt));
-  }, [isDemo, answersData]);
+    return computeDayStreak(savedAnswers.map((a) => a.createdAt));
+  }, [isDemo, savedAnswers]);
 
   const answeredCount = answeredMap.size;
   const total = SPARK_DECK.length;
@@ -99,9 +110,6 @@ export default function DailySpark() {
     void queryClient.invalidateQueries({
       queryKey: getGetDailySparkAnswersQueryKey(),
     });
-    void queryClient.invalidateQueries({
-      queryKey: getGetMatchingStateQueryKey(),
-    });
   };
 
   const pick = (question: SparkQuestion, optionId: string) => {
@@ -110,9 +118,6 @@ export default function DailySpark() {
       return;
     }
     if (createAnswer.isPending) return;
-    // Snapshot readiness first so the page can animate the real climb this
-    // answer produced.
-    climb.snapshot();
     createAnswer.mutate(
       { data: { questionId: question.id, choice: optionId } },
       { onSuccess: invalidate },
@@ -123,23 +128,35 @@ export default function DailySpark() {
   const recent = useMemo(() => {
     const orderedIds = isDemo
       ? Object.keys(demoPicks).reverse()
-      : (answersData ?? []).map((a) => a.questionId);
+      : savedAnswers.map((a) => a.questionId);
     const seen = new Set<string>();
-    const out: { question: SparkQuestion; choice: string }[] = [];
+    const out: { question: SparkQuestion; choice: string; saved?: SavedAnswer }[] = [];
     for (const id of orderedIds) {
       if (seen.has(id)) continue;
       seen.add(id);
       const question = SPARK_DECK.find((q) => q.id === id);
       const choice = answeredMap.get(id);
-      if (question && choice) out.push({ question, choice });
+      if (question && choice) out.push({ question, choice, saved: savedAnswers.find((answer) => answer.questionId === id) });
     }
     return out.slice(0, 8);
-  }, [isDemo, demoPicks, answersData, answeredMap]);
+  }, [isDemo, demoPicks, savedAnswers, answeredMap]);
 
-  return (
-    <AppLayout>
-      <HubTabs hub="games" />
-      <div className="min-h-screen mesh-bg py-10 px-4">
+  async function changePermission(answer: SavedAnswer, patch: DailySparkPermissions) {
+    setPermissionBusy(answer.questionId);
+    setPermissionError(null);
+    try {
+      await updateDailySparkPermissions(answer.questionId, patch);
+      await queryClient.invalidateQueries({ queryKey: getGetDailySparkAnswersQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
+    } catch (error) {
+      setPermissionError(error instanceof Error ? error.message : "Permission update failed.");
+    } finally {
+      setPermissionBusy(null);
+    }
+  }
+
+  const content = (
+      <div id="play-daily-spark" className={embedded ? "scroll-mt-24" : "min-h-screen mesh-bg py-10 px-4"}>
         <div className="orb orb-indigo fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">
           {/* Hero */}
@@ -156,10 +173,10 @@ export default function DailySpark() {
               Daily Spark
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
-              One small question a day. A single honest pick takes seconds and,
-              answered across days, it reveals how you actually move through
-              dating. Every answer is a real signal toward who I can pair
-              you with.
+              One small question a day. A single honest pick takes seconds and
+              can help you notice how you move through dating. Your answer saves
+              privately first; you decide what becomes confirmed learning or
+              matching context.
             </p>
           </motion.div>
 
@@ -205,14 +222,18 @@ export default function DailySpark() {
               icon={<Sparkles className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to Daily Spark"
               title="Answer your first spark"
-              description="There are no wrong answers. Each small pick sharpens what I understand about how you connect, and nudges your matching readiness up."
+              description="There are no wrong answers. Each pick saves to your account, and you choose separately whether it becomes confirmed learning or matching context."
               testId="spark-empty-state"
             />
           )}
 
           {/* Today's spark */}
           <AnimatePresence mode="wait">
-            {current ? (
+            {isAuthenticated && answersLoading ? (
+              <motion.div key="answers-loading" {...fadeUp(0.06)} className="glass border border-white/10 rounded-2xl p-6 mb-6 text-sm text-muted-foreground">Loading your saved answers…</motion.div>
+            ) : isAuthenticated && answersFailed ? (
+              <motion.div key="answers-failed" {...fadeUp(0.06)} className="glass border border-destructive/30 rounded-2xl p-6 mb-6 text-sm text-destructive">Your saved answers could not load. No sample history has been substituted.</motion.div>
+            ) : current ? (
               <motion.div
                 key={current.id}
                 {...fadeUp(0.06)}
@@ -242,7 +263,7 @@ export default function DailySpark() {
                 </div>
                 <p className="text-center text-xs text-muted-foreground/50 mt-4">
                   {isDemo
-                    ? "Sign in to save your picks and count them toward matching."
+                    ? "Sign in to save your picks to your private account history."
                     : "Pick the one that is more true for you, even if none is perfect."}
                 </p>
               </motion.div>
@@ -264,16 +285,6 @@ export default function DailySpark() {
             )}
           </AnimatePresence>
 
-          {isAuthenticated && climb.before !== null && (
-            <motion.div {...fadeUp(0.07)} className="mb-6">
-              <ReadinessClimbReveal
-                from={climb.before}
-                to={climb.current}
-                className="glass border border-white/8 rounded-2xl p-5"
-              />
-            </motion.div>
-          )}
-
           {/* What you have revealed */}
           {recent.length > 0 && (
             <div className="mb-6">
@@ -284,7 +295,7 @@ export default function DailySpark() {
               )}
               <div className="space-y-2.5">
                 <AnimatePresence>
-                  {recent.map(({ question, choice }, i) => (
+                  {recent.map(({ question, choice, saved }, i) => (
                     <motion.div
                       key={question.id}
                       {...fadeUp(0.08 + i * 0.03)}
@@ -302,12 +313,21 @@ export default function DailySpark() {
                       <p className="text-sm text-foreground font-medium leading-relaxed mt-1">
                         {optionLabel(question, choice) ?? choice}
                       </p>
+                      {saved && !isDemo && (
+                        <div className="mt-3 flex flex-wrap gap-2 border-t border-white/8 pt-3">
+                          <Button size="sm" variant={saved.learningConfirmed ? "default" : "outline"} disabled={permissionBusy === saved.questionId} onClick={() => void changePermission(saved, { learningConfirmed: !saved.learningConfirmed })}>{saved.learningConfirmed ? "Learning confirmed" : "Confirm learning"}</Button>
+                          <Button size="sm" variant={saved.echoUseAllowed ? "default" : "outline"} disabled={permissionBusy === saved.questionId} onClick={() => void changePermission(saved, { echoUse: !saved.echoUseAllowed })}>{saved.echoUseAllowed ? "Echo allowed" : "Allow Echo"}</Button>
+                          <Button size="sm" variant={saved.matchingUseAllowed ? "default" : "outline"} disabled={permissionBusy === saved.questionId} onClick={() => void changePermission(saved, { matchingUse: !saved.matchingUseAllowed })}>{saved.matchingUseAllowed ? "Matching allowed" : "Allow matching"}</Button>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
             </div>
           )}
+
+          {permissionError && <p className="mb-4 text-sm text-destructive">{permissionError}</p>}
 
           {/* Trust note */}
           <motion.div
@@ -320,12 +340,22 @@ export default function DailySpark() {
                 Only your pick is stored.
               </strong>{" "}
               We keep which option you chose and how many sparks you have
-              answered, never any free text. Your answers count toward matching
-              readiness and you can wipe everything from your account at any time.
+              answered, never any free text. Saving alone does not authorize Echo,
+              confirmed learning, or matching use, and you can remove the data from your account.
             </p>
           </motion.div>
         </div>
       </div>
+  );
+
+  return embedded ? content : (
+    <AppLayout>
+      <HubTabs hub="games" />
+      {content}
     </AppLayout>
   );
+}
+
+export default function DailySpark() {
+  return <DailySparkExperience />;
 }

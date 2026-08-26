@@ -19,7 +19,7 @@ import {
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
 import { datesCompatibilityHref, experimentsCompatibilityHref, followUpsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, winsCompatibilityHref } from "@/lib/journeyRoutes";
-import { PLAY_QUIZ_CATALOG_HREF, PLAY_THIS_OR_THAT_HREF, PLAY_WOULD_YOU_RATHER_HREF } from "@/lib/playRoutes";
+import { PLAY_DAILY_SPARK_HREF, PLAY_QUIZ_CATALOG_HREF, PLAY_THIS_OR_THAT_HREF, PLAY_WOULD_YOU_RATHER_HREF } from "@/lib/playRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -83,7 +83,6 @@ const VoiceIntro = lazy(() => import("@/pages/VoiceIntro"));
 const Receipts = lazy(() => import("@/pages/Receipts"));
 const DataVault = lazy(() => import("@/pages/DataVault"));
 const Imports = lazy(() => import("@/pages/Imports"));
-const DailySpark = lazy(() => import("@/pages/DailySpark"));
 const Flags = lazy(() => import("@/pages/Flags"));
 const Cosmic = lazy(() => import("@/pages/Cosmic"));
 const Scenarios = lazy(() => import("@/pages/Scenarios"));
@@ -350,7 +349,9 @@ function Router() {
         <Route path="/games/would-you-rather">
           <Redirect to={PLAY_WOULD_YOU_RATHER_HREF} />
         </Route>
-        <Route path="/games/daily-spark" component={DailySpark} />
+        <Route path="/games/daily-spark">
+          <Redirect to={PLAY_DAILY_SPARK_HREF} />
+        </Route>
         <Route path="/flags" component={Flags} />
         <Route path="/cosmic" component={Cosmic} />
         <Route path="/games/scenarios" component={Scenarios} />

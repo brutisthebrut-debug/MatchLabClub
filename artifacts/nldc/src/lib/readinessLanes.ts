@@ -237,7 +237,7 @@ export const BREAKDOWN_ROWS = [
     label: "Daily Spark",
     blurb:
       "One small question a day, answered in your own pace, reveals how you actually move through dating over time.",
-    href: "/games/daily-spark",
+    href: "/play?game=daily-spark",
     cta: "Answer today's spark",
     icon: Sparkles,
   },

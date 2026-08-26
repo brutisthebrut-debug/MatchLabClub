@@ -140,7 +140,7 @@ export const HUBS: Record<HubId, HubDef> = {
       { name: "Quiz", href: "/quiz", icon: Gamepad2 },
       { name: "This or That", href: "/this-or-that", icon: Split },
       { name: "Would You Rather", href: "/games/would-you-rather", icon: Scale },
-      { name: "Daily Spark", href: "/games/daily-spark", icon: Flame },
+      { name: "Daily Spark", href: "/play?game=daily-spark", icon: Flame },
       { name: "Predict", href: "/games/predict", icon: Target },
       { name: "Scenarios", href: "/games/scenarios", icon: Drama },
       { name: "Time Capsule", href: "/games/time-capsule", icon: Hourglass },
