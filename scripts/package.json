@@ -7,6 +7,8 @@
     "hello": "tsx ./src/hello.ts",
     "trim-audit-versions": "tsx ./src/trimAuditVersions.ts",
     "purge-expired-trash": "tsx ./src/purgeExpiredTrashedAudits.ts",
+    "validate-release-env": "tsx ./src/validateReleaseEnv.ts",
+    "test:release-env": "tsx --test ./src/validateReleaseEnv.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
