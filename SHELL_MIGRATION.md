@@ -579,11 +579,39 @@ State: merged to `main` and verified.
   through `0053`, and the clean-Postgres API suite. Stripe remains deferred
   and fail-closed.
 
+## Segment 3E2D1: Scenarios permission boundary
+
+State: merged to `main` and verified.
+
+- Migration `0054` separates private scenario-response storage from Echo use,
+  confirmed learning, and matching use, with all permissions default closed.
+- Owner-scoped permission updates reject cross-member access.
+- Both the direct scenario lane and shared consistency lane require explicit
+  matching permission, so private play has no indirect readiness path.
+- PR #57 merged as `18a42414`; GitHub Actions run `32947150166` passed
+  typecheck, lint, schema drift, voice lint, web tests, migration `0054`, and
+  the clean-Postgres API suite.
+
+## Segment 3E2D2: Scenarios absorption into Play
+
+State: merged to `main` and verified.
+
+- Play now owns Scenario reels capture and owner-scoped durable history.
+- Each response exposes separate confirmed-learning, Echo-use, and matching-use
+  controls. Storage-only capture does not animate or invalidate readiness.
+- Signed-in loading and failure remain fail-closed; guest sample responses are
+  never substituted for account data.
+- Legacy, hub, and readiness links converge on `/play?game=scenarios`.
+- PR #58 merged as `a7270198`; GitHub Actions run `32947415971` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations
+  through `0054`, and the clean-Postgres API suite. Stripe remains deferred
+  and fail-closed.
+
 ## Next segments
 
-1. Harden Scenarios' storage and downstream permission boundary, then absorb
-   its capture and owner-scoped history into Play.
-2. Continue through Predict Yourself and Time Capsule, retiring each duplicate
-   route only after workflow, permission, and history parity.
+1. Harden Predict Yourself's storage and downstream permission boundary, then
+   absorb its capture and owner-scoped history into Play.
+2. Continue through Time Capsule, retiring its duplicate route only after
+   workflow, permission, and history parity.
 3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
