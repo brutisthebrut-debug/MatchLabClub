@@ -664,8 +664,40 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, web tests, ordered migrations
   through `0056`, and the clean-Postgres API suite.
 
+## Segment 3F1: authenticated Matches read states
+
+State: merged to `main` and verified.
+
+- The canonical Matches list now distinguishes guest sample, loading, failed,
+  successfully empty, and ready account reads. An authenticated connection-list
+  failure cannot appear as “No matches yet.”
+- A conversation metadata failure cannot appear as “not found.” Both surfaces
+  expose retry without mutating account state.
+- PR #66 merged as `3689418c`; GitHub Actions run `32953169354` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
+  the clean-Postgres API suite.
+
+## Segment 3F2: authenticated message-history read states
+
+State: merged to `main` and verified.
+
+- Message history now distinguishes loading, failed, stale, successfully empty,
+  and ready reads. A first-load failure cannot appear as a brand-new empty
+  conversation.
+- If polling fails after a successful read, the last trusted messages remain
+  visible and are explicitly marked stale. Sending and read-state mutation stay
+  paused until the latest read succeeds.
+- Both failed and stale states expose an explicit retry path. Resolver regression
+  coverage guards the empty-state boundary.
+- PR #67 merged as `9267a558`; GitHub Actions run `32974401809` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
+  the clean-Postgres API suite.
+
 ## Next segments
 
-1. Complete the controlled Matches lifecycle and remaining shell retirement.
-2. Run authenticated walkthroughs, accessibility checks, and mobile regression
+1. Harden the remaining Matches profile/coaching reads and member mutation
+   outcomes, then reconcile the proposal/waiting lifecycle with the controlled
+   pilot contract.
+2. Complete remaining shell retirement.
+3. Run authenticated walkthroughs, accessibility checks, and mobile regression
    evidence after the active product paths are consolidated.
