@@ -244,6 +244,10 @@ segment plan.
 - Vercel still needs a separate project created with `artifacts/nldc` as its
   root. Until that external project exists, no Vercel URL should be described
   as the current member experience.
+- The refreshed design reference is published separately at
+  `https://matchlab-echo-journey.sweetdmarlin.chatgpt.site` (version 45). It
+  mirrors the five-destination visual contract but is not the authenticated
+  repository application or a substitute for the release deployment.
 - Authenticated desktop and phone walkthroughs already run against the real web
   and API applications on every pull request; they do not depend on a hosted
   preview.
@@ -255,8 +259,9 @@ verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
-environment, provisioning the separate visual web preview, configuring the provider-neutral
-`OIDC_CLIENT_ID` and `ALLOWED_ORIGINS` settings, then exercising
+environment, provisioning the separate visual web preview, configuring explicit
+provider-neutral `ISSUER_URL`, `OIDC_CLIENT_ID`, and `ALLOWED_ORIGINS`
+settings (plus the native mobile equivalents), then exercising
 Checkout/webhooks, renewal, cancellation, failure, and refund behavior in
 Stripe test mode and obtaining founder/legal approval before any live offer.
 PR #95 added a value-safe pre-production environment contract and CI coverage;
