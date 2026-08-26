@@ -15,13 +15,6 @@ const enhanceMutateAsync = vi.fn(async () => ({
   validated: false,
 }));
 
-const createAuditMutateAsync = vi.fn(async () => ({ id: 1 }));
-const generateReportMutateAsync = vi.fn(async () => ({
-  readinessScore: 70,
-  risks: ["A test risk to surface."],
-  rewrittenBio: "A rewritten test bio. With two sentences.",
-}));
-
 const createInsightMutateAsync = vi.fn(async () => ({ id: 1 }));
 const analyzeInsightMutateAsync = vi.fn(async () => ({
   communicationPatterns: [],
@@ -51,8 +44,6 @@ let winsStore: Array<{ id: number; category: string; body: string; createdAt: st
 
 vi.mock("@workspace/api-client-react", () => ({
   useEnhanceAi: () => ({ mutateAsync: enhanceMutateAsync, isPending: false }),
-  useCreateAudit: () => ({ mutateAsync: createAuditMutateAsync, isPending: false }),
-  useGenerateAuditReport: () => ({ mutateAsync: generateReportMutateAsync, isPending: false }),
   useListAudits: () => ({ data: [], isLoading: false }),
   getListAuditsQueryKey: () => ["list-audits"],
   useGetAiFallbackRate: () => ({ data: null, isLoading: false }),
@@ -167,11 +158,13 @@ vi.mock("@workspace/replit-auth-web", () => ({
   }),
 }));
 
-// Import pages AFTER mocks are registered.
+// Import pages AFTER mocks are registered. This suite intentionally covers still-routed tool
+// pages only; retired compatibility redirects are covered by canonical route
+// destination and compatibility-route tests instead of keeping duplicate page
+// implementations alive.
 import ProfileReader from "@/pages/ProfileReader";
 import NextMessage from "@/pages/NextMessage";
 import PatternBreaker from "@/pages/PatternBreaker";
-import SignalCheck from "@/pages/SignalCheck";
 import Blueprint from "@/pages/Blueprint";
 import DatingWinsLog from "@/pages/DatingWinsLog";
 import CompatibilityCompass from "@/pages/CompatibilityCompass";
@@ -194,8 +187,6 @@ beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   authState.isAuthenticated = false;
   enhanceMutateAsync.mockClear();
-  createAuditMutateAsync.mockClear();
-  generateReportMutateAsync.mockClear();
   createInsightMutateAsync.mockClear();
   analyzeInsightMutateAsync.mockClear();
   createSessionMutateAsync.mockClear();
@@ -285,53 +276,6 @@ const drivers: Driver[] = [
       );
       expect(togglers.length).toBeGreaterThan(0);
       fireEvent.click(togglers[0]!);
-    },
-  },
-  {
-    name: "Signal Check",
-    Page: SignalCheck,
-    emptyStateTestId: "signal-check-empty-state",
-    // SignalCheck doesn't display demo result content to anonymous users —
-    // it shows the input form. Use the form's hero text as the visible
-    // "anonymous" content marker.
-    anonymousDemoMatcher: /Your 3-Minute Signal Check/i,
-    runTool: async () => {
-      const bio = screen.getByTestId("textarea-signal-bio");
-      fireEvent.change(bio, {
-        target: { value: "I'm a curious, slightly bookish writer who loves long walks." },
-      });
-      const button = screen.getByTestId("button-run-signal-check");
-      fireEvent.click(button);
-      await waitFor(() => {
-        expect(createAuditMutateAsync).toHaveBeenCalled();
-      });
-      await waitFor(() => {
-        expect(generateReportMutateAsync).toHaveBeenCalled();
-      });
-    },
-  },
-  {
-    // Second welcome panel on the same SignalCheck page — uses the WelcomePanel
-    // component with testId="signalcheck-empty-state" (distinct from the
-    // inline panel "signal-check-empty-state" covered above). Both are gated
-    // by the same isBrandNewUser condition, so runTool is identical.
-    name: "Signal Check (WelcomePanel variant)",
-    Page: SignalCheck,
-    emptyStateTestId: "signalcheck-empty-state",
-    anonymousDemoMatcher: /Your 3-Minute Signal Check/i,
-    runTool: async () => {
-      const bio = screen.getByTestId("textarea-signal-bio");
-      fireEvent.change(bio, {
-        target: { value: "I'm a curious, slightly bookish writer who loves long walks." },
-      });
-      const button = screen.getByTestId("button-run-signal-check");
-      fireEvent.click(button);
-      await waitFor(() => {
-        expect(createAuditMutateAsync).toHaveBeenCalled();
-      });
-      await waitFor(() => {
-        expect(generateReportMutateAsync).toHaveBeenCalled();
-      });
     },
   },
   {
