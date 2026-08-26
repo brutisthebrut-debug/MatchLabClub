@@ -3,6 +3,7 @@ import {
   embeddedPlayGame,
   PLAY_DAILY_SPARK_HREF,
   PLAY_QUIZ_CATALOG_HREF,
+  PLAY_SCENARIOS_HREF,
   PLAY_THIS_OR_THAT_HREF,
   PLAY_WOULD_YOU_RATHER_HREF,
   shouldFocusQuizCatalog,
@@ -34,5 +35,11 @@ describe("Play compatibility routing", () => {
     expect(PLAY_DAILY_SPARK_HREF).toBe("/play?game=daily-spark");
     expect(embeddedPlayGame(PLAY_DAILY_SPARK_HREF)).toBe("daily-spark");
     expect(shouldFocusQuizCatalog(PLAY_DAILY_SPARK_HREF)).toBe(false);
+  });
+
+  it("reopens the canonical embedded Scenarios history and capture", () => {
+    expect(PLAY_SCENARIOS_HREF).toBe("/play?game=scenarios");
+    expect(embeddedPlayGame(PLAY_SCENARIOS_HREF)).toBe("scenarios");
+    expect(shouldFocusQuizCatalog(PLAY_SCENARIOS_HREF)).toBe(false);
   });
 });
