@@ -839,15 +839,31 @@ State: merged to `main` and verified.
   current-report copy controls and previous-version viewing still have direct
   regression coverage against that implementation.
 
+## Segment 3G5: canonical report history and final shell retirement
+
+State: merged to `main` and verified.
+
+- Profile Project now presents the complete score-free substance of current and
+  exact saved audit versions, including rewritten prompts and copyable suggested
+  bio, prompt, and practical-action text.
+- Replaced the legacy Report implementation tests with focused canonical
+  report-history regression coverage.
+- Deleted the final unrouted duplicate `Report.tsx`; durable
+  `/report/:id` links continue to reopen the same audit in Profile Project.
+- PR #89 merged as `001039e7`; exact-head Actions run `33004308126` passed
+  typecheck, lint, schema drift, voice lint, 51 web files with 287 tests, the
+  ordered migration chain, and 111 API files with 983 tests. Eight optional OCR
+  tests remained skipped.
+- The 15-page evidence audit is now fully resolved: seven duplicate shells were
+  retired and eight reusable experiences remain embedded in canonical
+  destinations.
+
 ## Next segments
 
-1. Move the remaining report-history regression coverage to Profile Project,
-   then retire `Report.tsx` only when current-report and previous-version
-   behavior is preserved on the canonical surface.
-2. Run authenticated desktop and mobile walkthroughs plus accessibility checks
+1. Run authenticated desktop and mobile walkthroughs plus accessibility checks
    across Today, Matches, My MatchLab, Journey, Play, Trust & Data, and Echo.
-3. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
+2. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
    API deployment architecture and environment work explicit rather than
    treating the current API-only Vercel project as the product preview.
-4. Execute the release-environment migration, Stripe test-mode, and
+3. Execute the release-environment migration, Stripe test-mode, and
    founder/legal release gates.
