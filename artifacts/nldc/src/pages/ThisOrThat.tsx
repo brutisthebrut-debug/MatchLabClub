@@ -20,8 +20,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMeta } from "@/hooks/useMeta";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 
 const ACCENT = "hsl(326 70% 58%)";
 
@@ -108,17 +106,15 @@ const PAIRS: Pair[] = [
   },
 ];
 
-export default function ThisOrThat() {
+export function ThisOrThatExperience({ embedded = false }: { embedded?: boolean }) {
   useMeta(
     "This or That | MatchLab Club",
-    "Tap through quick either-or choices. Each round reads the small instinctive preferences that quietly shape day-to-day fit.",
+    "Tap through quick either-or choices, save the source, and decide separately whether it becomes confirmed learning or matching context.",
   );
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const paste = useCreateSourcePaste();
-  const climb = useReadinessClimb();
-
   const [index, setIndex] = useState(0);
   const [picks, setPicks] = useState<string[]>([]);
   const [done, setDone] = useState<number | null>(null);
@@ -133,7 +129,6 @@ export default function ThisOrThat() {
 
   const submit = (finalPicks: string[]) => {
     if (finalPicks.length === 0) return;
-    climb.snapshot();
     paste.mutate(
       {
         data: {
@@ -151,7 +146,7 @@ export default function ThisOrThat() {
             title: "Your picks are saved",
             description: `${result.itemCount} ${
               result.itemCount === 1 ? "round" : "rounds"
-            } added to your readiness. Fills the rapid-fire preferences lane.`,
+            } saved as a private source. Review permissions before it becomes learning or matching context.`,
           });
         },
         onError: () => {
@@ -179,19 +174,16 @@ export default function ThisOrThat() {
     setIndex(0);
     setPicks([]);
     setDone(null);
-    climb.reset();
   };
 
-  return (
-    <AppLayout>
-      <HubTabs hub="games" />
-      <div className="max-w-2xl mx-auto px-4 py-10">
+  const content = (
+      <div id="play-this-or-that" className={embedded ? "scroll-mt-24" : "max-w-2xl mx-auto px-4 py-10"}>
         <Link
-          href="/connections"
+          href="/play"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Connection Center
+          Play
         </Link>
 
         <motion.div
@@ -225,23 +217,16 @@ export default function ThisOrThat() {
                 {done} {done === 1 ? "round" : "rounds"} added
               </h2>
               <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                Fills the rapid-fire preferences lane of your Match Readiness.
-                Each round adds a read on what a good day-to-day fit feels like.
+                Your choices are saved as a private source. They do not become
+                confirmed learning or matching context unless you grant those permissions.
               </p>
-              {climb.before !== null && (
-                <ReadinessClimbReveal
-                  from={climb.before}
-                  to={climb.current}
-                  className="max-w-sm mx-auto mb-6 rounded-2xl border border-foreground/10 p-6 text-left"
-                />
-              )}
               <div className="flex flex-wrap gap-3 justify-center">
                 <Button onClick={restart} variant="outline">
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Play again
                 </Button>
                 <Button asChild>
-                  <Link href="/connections">Back to Connection Center</Link>
+                  <Link href="/imports">Review source permissions</Link>
                 </Button>
               </div>
             </CardContent>
@@ -324,8 +309,8 @@ export default function ThisOrThat() {
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <p>
-                  We record which side you picked and a simple count of how many
-                  rounds you played, used to fill the lane.
+                  We store the choices you submit as a private source. Saving
+                  does not confirm learning or grant Echo or matching use.
                 </p>
                 <p>
                   Your choices are never tied back to any sensitive attribute or
@@ -337,6 +322,16 @@ export default function ThisOrThat() {
           </div>
         )}
       </div>
+  );
+
+  return embedded ? content : (
+    <AppLayout>
+      <HubTabs hub="games" />
+      {content}
     </AppLayout>
   );
+}
+
+export default function ThisOrThat() {
+  return <ThisOrThatExperience />;
 }
