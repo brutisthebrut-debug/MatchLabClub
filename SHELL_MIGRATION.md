@@ -759,11 +759,46 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, the full web suite, ordered
   migrations, and the clean-Postgres API suite.
 
+## Segment 3G1: canonical mobile member navigation
+
+State: merged to `main` and verified.
+
+- Authenticated mobile pages now keep Today, Matches, My MatchLab, Journey, and
+  Play persistently available in the approved bottom navigation.
+- The current destination remains explicit for canonical and compatibility
+  routes. Trust & Data and account controls remain under the profile control.
+- Page content, Echo's floating presence, and Echo's open panel reserve the
+  device safe area and do not sit behind the bottom navigation.
+- Accessible landmark, destination order, and compatibility-route activation
+  have regression coverage.
+- PR #78 merged as `6fc92577`; GitHub Actions run `32981344186` passed
+  typecheck, lint, schema drift, voice lint, the full web suite, ordered
+  migrations, and the clean-Postgres API suite.
+
+## Segment 3G2: score-free persistent Echo
+
+State: merged to `main` and verified.
+
+- Persistent Echo no longer renders internal readiness totals, deltas, lane
+  percentages, thresholds, or points as a measure of the member.
+- Echo retains its real conversation, notices, message review, qualitative
+  observations, and contextual next action.
+- An internal eligibility transition now invites the member to review
+  controlled consideration in Matches. It no longer claims that matching has
+  opened or implies access to another person.
+- Analytics records only the qualitative reaction tone, never the internal
+  aggregate or member content.
+- A projection boundary and regression tests prove the member-facing reaction
+  contains only a title, optional detail, and honest action.
+- PR #79 merged as `71ba5068`; GitHub Actions run `32982408409` passed
+  typecheck, lint, schema drift, voice lint, the full web suite, ordered
+  migrations, and the clean-Postgres API suite.
+
 ## Next segments
 
-1. Complete remaining shell retirement and remove obsolete implementation files
-   only after confirming no supported route imports them.
-2. Run authenticated walkthroughs, accessibility checks, and mobile regression
-   evidence across the consolidated product paths.
-3. Prepare the release environment and execute the separate deployment,
+1. Audit the remaining legacy route and implementation inventory against the
+   migration matrix, then retire only behavior already absorbed.
+2. Run authenticated desktop and mobile walkthroughs plus accessibility checks
+   across Today, Matches, My MatchLab, Journey, Play, Trust & Data, and Echo.
+3. Prepare a current hosted preview and execute the separate release-environment
    migration, Stripe test-mode, and founder/legal release gates.
