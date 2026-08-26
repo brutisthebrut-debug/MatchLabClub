@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowRight, Heart, MessageCircle, Users } from "lucide-react";
+import { Heart, MessageCircle, Users } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
