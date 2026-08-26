@@ -35,7 +35,13 @@ const report = {
   risks: ["One prompt is generic"],
   bioAudit: "The bio feels human.",
   rewrittenBio: "A clearer bio.",
-  rewrittenPrompts: [],
+  rewrittenPrompts: [
+    {
+      original: "My simple pleasures...",
+      rewritten: "Sunday markets, strong coffee, and finding the best bench.",
+      tip: "Use one concrete detail.",
+    },
+  ],
   photoGuidance: [],
   actionPlan: [
     {
@@ -81,6 +87,13 @@ describe("Profile Project records", () => {
       cautions: ["One prompt is generic"],
       bioRead: "The bio feels human.",
       suggestedBio: "A clearer bio.",
+      prompts: [
+        {
+          original: "My simple pleasures...",
+          rewritten: "Sunday markets, strong coffee, and finding the best bench.",
+          tip: "Use one concrete detail.",
+        },
+      ],
       actions: ["Tighten the opener: Lead with the specific story."],
     });
     expect(sections).not.toHaveProperty("readinessScore");
