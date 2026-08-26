@@ -7,14 +7,15 @@ GitHub Actions is the repository CI gate. The workflow at
 |---|---|---|---|
 | `static-verification` | typecheck, lint, schema drift, voice lint, web tests | no | yes |
 | `database-verification` | ordered migrations plus the full API test suite | ephemeral Postgres 16 | yes |
+| `canonical-member-walkthrough` | seeded development sign-in plus desktop and phone Playwright walkthroughs | ephemeral Postgres 16 | yes |
 
-Both jobs install with the pinned `pnpm@10.26.1` and
+All three jobs install with the pinned `pnpm@10.26.1` and
 `pnpm install --frozen-lockfile`. The database job creates a clean
 `matchlab_test` database, applies the committed Drizzle migrations in order with `migrate`, and
 then runs the API suite with `DATABASE_URL` set.
 
-Do not describe Phase 0 as release-verified until both jobs pass for the exact
-commit being considered. Stripe test-mode operations remain a separate manual
+Do not describe Phase 0 as release-verified until all three jobs pass for the
+exact commit being considered. Stripe test-mode operations remain a separate manual
 release gate because they require configured Stripe test credentials and
 dashboard webhook registration.
 
@@ -37,6 +38,14 @@ For database-backed verification:
 export DATABASE_URL="postgres://postgres:postgres@localhost:5432/matchlab_test"
 pnpm --filter @workspace/db run migrate
 pnpm --filter @workspace/api-server run test
+```
+
+For the authenticated canonical browser walkthrough, keep the same
+`DATABASE_URL` available:
+
+```sh
+pnpm --filter @workspace/e2e exec playwright install chromium
+pnpm --filter @workspace/e2e run test:canonical
 ```
 
 ## Legacy pipeline

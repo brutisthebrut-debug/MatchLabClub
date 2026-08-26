@@ -859,12 +859,32 @@ State: merged to `main` and verified.
   retired and eight reusable experiences remain embedded in canonical
   destinations.
 
+## Segment 3G6: authenticated canonical walkthrough gate
+
+State: merged to `main` and verified.
+
+- Phase 0 now starts the real API and web applications against clean Postgres,
+  signs in through the production-guarded seeded development route, and walks
+  Today, Matches, My MatchLab, Journey, Play, Trust & Data, and Echo.
+- The dedicated Chromium gate covers desktop and phone viewports. It verifies
+  the fixed five-destination mobile navigation, persistent Echo access, the
+  visible Demo account flag, route and API health, headings, document titles,
+  one application `main` landmark, horizontal fit, unique ids, image text,
+  accessible control names, and form labels.
+- The Vite development server now proxies `/api` only when
+  `API_PROXY_TARGET` is explicitly supplied, removing the former dependency
+  on Replit's port-80 proxy without changing production routing.
+- Nested page-level `main` elements were removed from My MatchLab, Journey,
+  and Play so the authenticated application shell consistently owns the
+  landmark.
+- PR #91 merged as `df9d01db`; exact-head Actions run `33009045172` passed
+  static/web verification, the clean-Postgres API suite, and both canonical
+  browser walkthroughs. Stripe remains deferred and fail-closed.
+
 ## Next segments
 
-1. Run authenticated desktop and mobile walkthroughs plus accessibility checks
-   across Today, Matches, My MatchLab, Journey, Play, Trust & Data, and Echo.
-2. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
+1. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
    API deployment architecture and environment work explicit rather than
    treating the current API-only Vercel project as the product preview.
-3. Execute the release-environment migration, Stripe test-mode, and
+2. Execute the release-environment migration, Stripe test-mode, and
    founder/legal release gates.
