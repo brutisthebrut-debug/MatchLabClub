@@ -9,11 +9,7 @@ import {
   Loader2,
   RotateCcw,
 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  useCreateSourcePaste,
-  getGetMatchingStateQueryKey,
-} from "@workspace/api-client-react";
+import { useCreateSourcePaste } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { HubTabs } from "@/components/layout/HubTabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,9 +20,8 @@ import { useMeta } from "@/hooks/useMeta";
 const ACCENT = "hsl(326 70% 58%)";
 
 // Each pair is a quick either-or. The label we record is the chosen side phrased
-// as a plain preference, so the stored count is meaningful but never tied to any
-// sensitive attribute. Raw choices are never sent to any AI prompt; only the
-// count fills the rapid-fire preferences lane of Match Readiness.
+// as a plain preference. Saving creates a private source; confirmed learning,
+// Echo use, and matching use remain separate member-controlled permissions.
 type Pair = {
   prompt: string;
   left: { label: string; pick: string };
@@ -112,7 +107,6 @@ export function ThisOrThatExperience({ embedded = false }: { embedded?: boolean 
     "Tap through quick either-or choices, save the source, and decide separately whether it becomes confirmed learning or matching context.",
   );
 
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const paste = useCreateSourcePaste();
   const [index, setIndex] = useState(0);
@@ -139,9 +133,6 @@ export function ThisOrThatExperience({ embedded = false }: { embedded?: boolean 
       {
         onSuccess: (result) => {
           setDone(result.itemCount);
-          queryClient.invalidateQueries({
-            queryKey: getGetMatchingStateQueryKey(),
-          });
           toast({
             title: "Your picks are saved",
             description: `${result.itemCount} ${
@@ -178,13 +169,15 @@ export function ThisOrThatExperience({ embedded = false }: { embedded?: boolean 
 
   const content = (
       <div id="play-this-or-that" className={embedded ? "scroll-mt-24" : "max-w-2xl mx-auto px-4 py-10"}>
-        <Link
-          href="/play"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Play
-        </Link>
+        {!embedded && (
+          <Link
+            href="/play"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Play
+          </Link>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -214,7 +207,7 @@ export function ThisOrThatExperience({ embedded = false }: { embedded?: boolean 
                 style={{ color: "hsl(142 55% 60%)" }}
               />
               <h2 className="text-xl font-semibold mb-2">
-                {done} {done === 1 ? "round" : "rounds"} added
+                {done} {done === 1 ? "round" : "rounds"} saved
               </h2>
               <p className="text-muted-foreground max-w-md mx-auto mb-6">
                 Your choices are saved as a private source. They do not become
@@ -314,8 +307,8 @@ export function ThisOrThatExperience({ embedded = false }: { embedded?: boolean 
                 </p>
                 <p>
                   Your choices are never tied back to any sensitive attribute or
-                  sold, and your raw picks are never sent to any AI prompt. Only
-                  the count moves your readiness.
+                  sold. Your raw picks are not sent to an AI prompt unless you
+                  separately enable Echo use for this source.
                 </p>
               </CardContent>
             </Card>
