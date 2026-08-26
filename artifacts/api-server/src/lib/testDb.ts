@@ -335,6 +335,15 @@ export const lifePulsesTable = makeTable("life_pulses");
 export const wingmanInvitesTable = makeTable("wingman_invites");
 export const wingmanAnswersTable = makeTable("wingman_answers");
 export const wingmanSelfRatingsTable = makeTable("wingman_self_ratings");
+ensureStore("wyr_answers");
+Object.assign(stores.wyr_answers.defaults, {
+  echoUseAllowed: false,
+  echoUseUpdatedAt: null,
+  learningConfirmed: false,
+  learningConfirmedAt: null,
+  matchingUseAllowed: false,
+  matchingUseUpdatedAt: null,
+});
 export const wyrAnswersTable = makeTable("wyr_answers");
 export const dailySparkAnswersTable = makeTable("daily_spark_answers");
 export const flagSelectionsTable = makeTable("flag_selections");
