@@ -404,7 +404,7 @@ export default function Matches() {
 
   return (
     <AppLayout>
-      <main className="min-h-screen mesh-bg py-10 px-4">
+      <div className="min-h-screen mesh-bg py-10 px-4">
         <div className="orb orb-indigo fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">
           <motion.div {...fadeUp(0)} className="mb-8">
@@ -871,7 +871,7 @@ export default function Matches() {
             ))}
           </div>
         </div>
-      </main>
+      </div>
     </AppLayout>
   );
 }
