@@ -365,6 +365,13 @@
       "when": 1788042000000,
       "tag": "0051_journey_follow_ups",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1788128400000,
+      "tag": "0052_wyr_permission_boundary",
+      "breakpoints": true
     }
   ]
 }
