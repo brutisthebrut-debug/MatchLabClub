@@ -19,6 +19,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { resolveMatchThreadReadState } from "@/lib/matchLifecycleReadState";
 import {
   Select,
   SelectContent,
@@ -218,6 +219,12 @@ export default function MatchThread() {
   const report = useReportConnection();
 
   const connection = connectionQuery.data ?? null;
+  const threadReadState = resolveMatchThreadReadState({
+    isAuthenticated,
+    isLoading: connectionQuery.isLoading,
+    isError: connectionQuery.isError,
+    hasConnection: connection !== null,
+  });
   const messages = isDemo ? DEMO_MESSAGES : (messagesQuery.data ?? []);
   const closed = connection?.status === "closed";
   const starters = isDemo
@@ -399,19 +406,41 @@ export default function MatchThread() {
     );
   }
 
-  if (!connectionQuery.isLoading && !connection) {
+  if (threadReadState !== "ready") {
+    const loadFailed = threadReadState === "error";
     return (
       <AppLayout>
         <div className="min-h-screen mesh-bg py-10 px-4">
-          <div className="max-w-2xl mx-auto relative z-10 text-center pt-16">
+          <div
+            className="max-w-2xl mx-auto relative z-10 text-center pt-16"
+            role={loadFailed ? "alert" : undefined}
+            data-testid={loadFailed ? "match-thread-error" : undefined}
+          >
             <p className="text-sm text-muted-foreground mb-4">
-              This conversation could not be found.
+              {threadReadState === "loading"
+                ? "Loading this conversation..."
+                : loadFailed
+                  ? "We couldn't load this conversation. Your account state is unchanged."
+                  : "This conversation could not be found."}
             </p>
-            <Link href="/matches">
-              <Button size="sm" className="rounded-full">
-                Back to matches
-              </Button>
-            </Link>
+            <div className="flex justify-center gap-2">
+              {loadFailed && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => void connectionQuery.refetch()}
+                >
+                  Try again
+                </Button>
+              )}
+              <Link href="/matches">
+                <Button size="sm" className="rounded-full">
+                  Back to matches
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </AppLayout>
