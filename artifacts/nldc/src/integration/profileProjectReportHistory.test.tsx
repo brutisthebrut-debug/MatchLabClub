@@ -25,6 +25,13 @@ vi.mock("@/components/profile/ProfileAuditCapture", () => ({
 
 vi.mock("@/hooks/useMeta", () => ({ useMeta: () => {} }));
 
+vi.mock("@/lib/profilePhotoLab", () => ({
+  listProfilePhotoLabRuns: vi.fn(async () => []),
+  createProfilePhotoLabRun: vi.fn(async () => ({ id: 1 })),
+  deleteProfilePhotoLabRun: vi.fn(async () => undefined),
+  presentPhotoLabRun: vi.fn(() => null),
+}));
+
 import { ProfileAuditReportView } from "@/pages/ProfileProject";
 
 function report(label: "CURRENT" | "PREVIOUS"): AuditReport {
