@@ -282,7 +282,7 @@ export const BREAKDOWN_ROWS = [
     label: "Time capsule",
     blurb:
       "Short notes toward a future partner reveal, in your own words, how clearly you can name what you are looking for.",
-    href: "/games/time-capsule",
+    href: "/play?game=time-capsule",
     cta: "Write a note",
     icon: Mail,
   },
