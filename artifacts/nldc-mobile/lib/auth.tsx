@@ -17,8 +17,26 @@ import { getSigningInDevicePushToken } from "./signInPushToken";
 WebBrowser.maybeCompleteAuthSession();
 
 export const AUTH_TOKEN_KEY = "auth_session_token";
-const ISSUER_URL =
-  process.env.EXPO_PUBLIC_ISSUER_URL ?? "https://replit.com/oidc";
+
+export function getMobileOidcIssuerUrl(
+  env: Record<string, string | undefined> = process.env,
+): string {
+  return (
+    env.EXPO_PUBLIC_OIDC_ISSUER_URL?.trim() ||
+    env.EXPO_PUBLIC_ISSUER_URL?.trim() ||
+    ""
+  );
+}
+
+export function getMobileOidcClientId(
+  env: Record<string, string | undefined> = process.env,
+): string {
+  return (
+    env.EXPO_PUBLIC_OIDC_CLIENT_ID?.trim() ||
+    env.EXPO_PUBLIC_REPL_ID?.trim() ||
+    ""
+  );
+}
 
 export interface AuthUser {
   id: string;
@@ -55,10 +73,6 @@ function getApiBaseUrl(): string {
   return "";
 }
 
-function getClientId(): string {
-  return process.env.EXPO_PUBLIC_REPL_ID || "";
-}
-
 export async function getStoredAuthToken(): Promise<string | null> {
   try {
     return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
@@ -79,12 +93,16 @@ export function AuthProvider({
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const discovery = AuthSession.useAutoDiscovery(ISSUER_URL);
+  const mobileIssuerUrl = getMobileOidcIssuerUrl();
+  const mobileClientId = getMobileOidcClientId();
+  const discovery = AuthSession.useAutoDiscovery(
+    mobileIssuerUrl || "https://invalid.invalid",
+  );
   const redirectUri = AuthSession.makeRedirectUri();
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
-      clientId: getClientId(),
+      clientId: mobileClientId,
       scopes: ["openid", "email", "profile", "offline_access"],
       redirectUri,
       prompt: AuthSession.Prompt.Login,
@@ -249,6 +267,10 @@ export function AuthProvider({
 
   const login = useCallback(async () => {
     setError(null);
+    if (!mobileIssuerUrl || !mobileClientId) {
+      setError("Sign-in configuration is incomplete.");
+      return;
+    }
     if (!request) {
       setError("Sign-in isn't ready yet. Try again in a moment.");
       return;
@@ -265,7 +287,7 @@ export function AuthProvider({
       );
       setIsSigningIn(false);
     }
-  }, [promptAsync, request]);
+  }, [mobileClientId, mobileIssuerUrl, promptAsync, request]);
 
   const logout = useCallback(async () => {
     try {
