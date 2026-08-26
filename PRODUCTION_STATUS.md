@@ -1,6 +1,6 @@
 # MatchLab production status
 
-Last verified: 2026-08-24
+Last verified: 2026-08-26
 
 This is the source of truth for what is in the repository versus what has only
 been approved in the v1 prototype. It prevents prototype decisions from being
@@ -59,6 +59,12 @@ segment plan.
 
 ## Verified baseline
 
+- Canonical Matches owns authenticated consideration state, deliberately sent
+  proposals, mutual-consent responses, conversation state, consideration
+  membership, and saved matching preferences. The legacy `/matching` URL is a
+  compatibility redirect; numeric readiness, ranking, and algorithmic discovery
+  are not routed member surfaces. PR #75 and Actions run `32979060118` passed
+  both required verification lanes.
 - Production shell migration Segment 1 adds Today, My MatchLab, Journey, Play,
   and Trust & Data routes; the existing Matches lifecycle remains canonical.
 - Consent-first onboarding keeps capture, Echo use, confirmed learning, and
@@ -207,8 +213,8 @@ Do not represent the current repository as production-ready. Automated Phase 0
 verification is green, and the founder has authorized shell migration to
 continue while Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
-gates include applying migrations `0041` through `0051` in the release
-environment, completing the shell migration and authenticated walkthroughs,
-then exercising Checkout/webhooks, renewal, cancellation, failure, and refund
-behavior in Stripe test mode and obtaining founder/legal approval before any
-live offer.
+gates include applying migrations `0041` through `0056` in the release
+environment, completing final shell cleanup plus authenticated accessibility
+and mobile walkthroughs, then exercising Checkout/webhooks, renewal,
+cancellation, failure, and refund behavior in Stripe test mode and obtaining
+founder/legal approval before any live offer.
