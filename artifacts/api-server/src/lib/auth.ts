@@ -9,7 +9,6 @@ import {
   getOidcIssuerUrl,
 } from "./runtimeConfig";
 
-export const ISSUER_URL = process.env.ISSUER_URL;
 export const SESSION_COOKIE = "sid";
 export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
