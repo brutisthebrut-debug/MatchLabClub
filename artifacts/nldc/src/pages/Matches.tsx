@@ -1,16 +1,24 @@
 import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowRight, Heart, MessageCircle, Users } from "lucide-react";
+import { Heart, MessageCircle, Users } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { resolveMatchListReadState } from "@/lib/matchLifecycleReadState";
 import {
   useGetConnections,
   getGetConnectionsQueryKey,
+  useGetMatchingState,
+  getGetMatchingStateQueryKey,
+  useGetMatchingProposals,
+  getGetMatchingProposalsQueryKey,
+  useRespondToMatchProposal,
   type Connection,
+  type MatchProposal,
 } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
@@ -49,6 +57,73 @@ const DEMO_CONNECTIONS: Connection[] = [
     lastMessagePreview: "Same, I could talk about that for hours.",
   },
 ];
+
+const PROPOSAL_STATUS: Record<string, { label: string; note: string }> = {
+  proposed: {
+    label: "Your response",
+    note: "This introduction was deliberately sent to you. Take your time.",
+  },
+  user_yes: {
+    label: "You said yes",
+    note: "Your response is saved. We are waiting for the other person and the pilot team.",
+  },
+  user_no: {
+    label: "You passed",
+    note: "This introduction is closed and will not be shown to you again.",
+  },
+  mutual_yes: {
+    label: "Mutual yes",
+    note: "Both people said yes. Your conversation opens in the connection list below.",
+  },
+  completed: {
+    label: "Introduction made",
+    note: "The introduction was completed.",
+  },
+  expired: {
+    label: "Closed",
+    note: "This introduction closed before both people opted in.",
+  },
+};
+
+function proposalSourceLabel(source: string): string {
+  if (source === "concierge") return "A considered introduction";
+  if (source === "internal") return "A controlled-pilot introduction";
+  return "A profile you asked MatchLab to read";
+}
+
+function pilotStateCopy(
+  status: string | null | undefined,
+  eligible: boolean,
+): { title: string; body: string } {
+  if (status === "paused") {
+    return {
+      title: "Consideration is paused",
+      body: "Your existing records stay private. You will not enter a new introduction while paused.",
+    };
+  }
+  if (status === "building" || status === "ready") {
+    return {
+      title: "You are in the controlled consideration pool",
+      body: "This is not a promise of an introduction. We will show one here only when the pilot can send it honestly.",
+    };
+  }
+  if (status === "concierge_only") {
+    return {
+      title: "You are in concierge consideration",
+      body: "The pilot team can consider a deliberate introduction. Nothing is shown to another member until the send step.",
+    };
+  }
+  if (eligible) {
+    return {
+      title: "You can opt into consideration",
+      body: "Your record has enough confirmed context to enter the controlled pool when you choose.",
+    };
+  }
+  return {
+    title: "We are still building the context for consideration",
+    body: "There is no score to chase. Keep confirming what feels true in My MatchLab, and choose whether matching may use it.",
+  };
+}
 
 function relativeTime(iso: string | null): string {
   if (!iso) return "";
@@ -123,6 +198,8 @@ export default function Matches() {
   );
 
   const { isAuthenticated, login } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const isDemo = !isAuthenticated;
 
   const { data: serverData, isLoading, isError, refetch } = useGetConnections({
@@ -133,6 +210,22 @@ export default function Matches() {
     },
   });
 
+  const matchingStateQuery = useGetMatchingState({
+    query: {
+      queryKey: getGetMatchingStateQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const proposalsQuery = useGetMatchingProposals({
+    query: {
+      queryKey: getGetMatchingProposalsQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const respondProposal = useRespondToMatchProposal();
+
   const connections = isDemo ? DEMO_CONNECTIONS : (serverData ?? []);
   const readState = resolveMatchListReadState({
     isAuthenticated,
@@ -140,6 +233,40 @@ export default function Matches() {
     isError,
     connectionCount: connections.length,
   });
+  const proposalList = proposalsQuery.data ?? [];
+  const pilotState = pilotStateCopy(
+    matchingStateQuery.data?.poolStatus,
+    matchingStateQuery.data?.eligible ?? false,
+  );
+
+  async function handleProposalResponse(id: string, interested: boolean) {
+    try {
+      await respondProposal.mutateAsync({ id, data: { interested } });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: getGetMatchingProposalsQueryKey(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getGetMatchingStateQueryKey(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getGetConnectionsQueryKey(),
+        }),
+      ]);
+      toast({
+        title: interested ? "Your yes is saved." : "You passed.",
+        description: interested
+          ? "Nothing opens unless the other person also says yes."
+          : "This introduction is now closed.",
+      });
+    } catch {
+      toast({
+        title: "We couldn't save your response.",
+        description: "The introduction is unchanged. Try again.",
+        variant: "destructive",
+      });
+    }
+  }
 
   return (
     <AppLayout>
@@ -185,6 +312,157 @@ export default function Matches() {
             </motion.div>
           )}
 
+
+          {!isDemo && (
+            <motion.section {...fadeUp(0.04)} className="mb-6 space-y-4">
+              <div
+                className="glass border border-white/10 rounded-2xl p-5"
+                data-testid="matches-pilot-state"
+              >
+                {matchingStateQuery.isLoading ? (
+                  <p className="text-sm text-muted-foreground">
+                    Loading your consideration state...
+                  </p>
+                ) : matchingStateQuery.isError ? (
+                  <div role="alert">
+                    <p className="text-sm font-semibold text-foreground">
+                      We couldn't load your consideration state.
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Nothing has changed. We will not guess whether you are in the pilot.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-3 rounded-full"
+                      onClick={() => void matchingStateQuery.refetch()}
+                    >
+                      Try again
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-foreground">
+                      {pilotState.title}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                      {pilotState.body}
+                    </p>
+                    <Link href="/matching">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-4 rounded-full"
+                      >
+                        Review consideration settings
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              <div
+                className="glass border border-white/10 rounded-2xl p-5"
+                data-testid="matches-introductions"
+              >
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Considered introductions
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Only introductions deliberately sent to your account appear here.
+                  </p>
+                </div>
+                {proposalsQuery.isLoading ? (
+                  <p className="text-sm text-muted-foreground">
+                    Loading introductions...
+                  </p>
+                ) : proposalsQuery.isError ? (
+                  <div role="alert">
+                    <p className="text-sm font-semibold text-foreground">
+                      We couldn't load your introductions.
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      No empty or sample state is being substituted.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-3 rounded-full"
+                      onClick={() => void proposalsQuery.refetch()}
+                    >
+                      Try again
+                    </Button>
+                  </div>
+                ) : proposalList.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No introduction has been sent to you. That is an honest waiting state, not a hidden queue of people.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {proposalList.map((proposal: MatchProposal) => {
+                      const meta = PROPOSAL_STATUS[proposal.status] ?? {
+                        label: "Introduction update",
+                        note: "This introduction has an updated state.",
+                      };
+                      return (
+                        <div
+                          key={proposal.id}
+                          className="rounded-xl border border-white/10 p-4"
+                          data-testid={`canonical-proposal-${proposal.id}`}
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {proposalSourceLabel(proposal.source)}
+                            </p>
+                            <Badge variant="secondary" className="text-[10px]">
+                              {meta.label}
+                            </Badge>
+                          </div>
+                          {proposal.summary && (
+                            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                              {proposal.summary}
+                            </p>
+                          )}
+                          <p className="mt-2 text-xs text-muted-foreground/70">
+                            {meta.note}
+                          </p>
+                          {proposal.status === "proposed" && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              <Button
+                                size="sm"
+                                className="rounded-full"
+                                disabled={respondProposal.isPending}
+                                onClick={() =>
+                                  void handleProposalResponse(proposal.id, true)
+                                }
+                              >
+                                I'm interested
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-full"
+                                disabled={respondProposal.isPending}
+                                onClick={() =>
+                                  void handleProposalResponse(proposal.id, false)
+                                }
+                              >
+                                Pass
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </motion.section>
+          )}
+
           {readState === "loading" && (
             <p className="text-sm text-muted-foreground/60">
               Loading your matches...
@@ -226,18 +504,12 @@ export default function Matches() {
                 aria-hidden="true"
               />
               <p className="text-sm font-semibold text-foreground mb-1">
-                No matches yet
+                No conversation is open
               </p>
-              <p className="text-xs text-muted-foreground/70 mb-4 max-w-sm mx-auto">
-                Keep building your Match Readiness and respond to proposals. The
-                more the machine knows you, the better it matches you.
+              <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto">
+                A conversation appears here only after a deliberately sent
+                introduction and both members independently say yes.
               </p>
-              <Link href="/matching">
-                <Button size="sm" className="rounded-full">
-                  Go to matching
-                  <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden="true" />
-                </Button>
-              </Link>
             </motion.div>
           )}
 
