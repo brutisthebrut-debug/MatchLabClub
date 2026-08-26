@@ -1,12 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// The validation workflow runs `playwright test` directly without first
-// starting the API server or the web frontend. Boot both as webServers so
-// they're available at the Replit shared proxy (localhost:80) before any
-// spec runs. The proxy itself is part of the Replit environment and routes
-// /api -> the API server on 8080 and / -> the Vite dev server.
 const API_PORT = 8080;
 const WEB_PORT = 21668;
+const API_ORIGIN = `http://localhost:${API_PORT}`;
+const WEB_ORIGIN = `http://localhost:${WEB_PORT}`;
 
 export default defineConfig({
   testDir: "./tests",
@@ -16,7 +13,7 @@ export default defineConfig({
   retries: 1,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:80",
+    baseURL: process.env.E2E_BASE_URL ?? WEB_ORIGIN,
     trace: "on-first-retry",
   },
   projects: [
@@ -32,7 +29,7 @@ export default defineConfig({
         PORT: String(API_PORT),
         DATABASE_URL: process.env.DATABASE_URL ?? "",
       },
-      url: `http://localhost:${API_PORT}/api/healthz`,
+      url: `${API_ORIGIN}/api/healthz`,
       reuseExistingServer: true,
       timeout: 120_000,
       stdout: "pipe",
@@ -43,8 +40,9 @@ export default defineConfig({
       env: {
         PORT: String(WEB_PORT),
         BASE_PATH: "/",
+        API_PROXY_TARGET: API_ORIGIN,
       },
-      url: `http://localhost:${WEB_PORT}/`,
+      url: `${WEB_ORIGIN}/`,
       reuseExistingServer: true,
       timeout: 120_000,
       stdout: "pipe",
