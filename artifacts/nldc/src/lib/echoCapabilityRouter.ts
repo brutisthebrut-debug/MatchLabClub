@@ -1,3 +1,5 @@
+import { PLAY_QUIZ_CATALOG_HREF } from "@/lib/playRoutes";
+
 export type EchoCapabilityId =
   | "today"
   | "matches"
@@ -55,7 +57,7 @@ const CAPABILITIES: Record<EchoCapabilityId, EchoCapabilityAction> = {
     id: "quiz_lab",
     label: "Find a quiz",
     detail: "Choose a Quiz Lab activity that fits what you are exploring.",
-    href: "/play?game=quiz-lab",
+    href: PLAY_QUIZ_CATALOG_HREF,
   },
   trust_data: {
     id: "trust_data",
