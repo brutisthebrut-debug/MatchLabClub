@@ -372,6 +372,13 @@
       "when": 1788128400000,
       "tag": "0052_wyr_permission_boundary",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1788214800000,
+      "tag": "0053_daily_spark_permission_boundary",
+      "breakpoints": true
     }
   ]
 }

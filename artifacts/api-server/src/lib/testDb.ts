@@ -213,7 +213,16 @@ stores.wyr_answers = {
 stores.daily_spark_answers = {
   rows: [],
   nextId: 1,
-  defaults: { userId: null, anonymousClaimToken: null },
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    echoUseAllowed: false,
+    echoUseUpdatedAt: null,
+    learningConfirmed: false,
+    learningConfirmedAt: null,
+    matchingUseAllowed: false,
+    matchingUseUpdatedAt: null,
+  },
 };
 stores.flag_selections = {
   rows: [],
