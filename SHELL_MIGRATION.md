@@ -636,10 +636,36 @@ State: merged to `main` and verified.
   through `0055`, and the clean-Postgres API suite. Stripe remains deferred
   and fail-closed.
 
+## Segment 3E2F1: Time Capsule permission boundary
+
+State: merged to `main` and verified.
+
+- Migration `0056` separates private capsule storage from Echo use, confirmed
+  learning, and matching use, with every permission default closed.
+- Owner-scoped updates reject cross-member access. Matching consumes only an
+  approved capsule count; raw note text remains owner-only.
+- Both the direct Time Capsule signal and shared activity/consistency lane
+  require explicit matching permission.
+- PR #63 merged as `c343fdc3`; GitHub Actions run `32951478614` passed
+  typecheck, lint, schema drift, voice lint, web tests, migration `0056`, and
+  the clean-Postgres API suite.
+
+## Segment 3E2F2: Time Capsule absorption into Play
+
+State: merged to `main` and verified.
+
+- Play now owns capsule capture and signed-in, owner-scoped history.
+- Each note exposes independent confirmed-learning, Echo-use, and matching-use
+  controls. Storage-only capture does not animate or invalidate readiness.
+- Signed-in loading and failure remain fail-closed; guest samples are never
+  substituted for account history.
+- Legacy, hub, and readiness links converge on `/play?game=time-capsule`.
+- PR #64 merged as `7d0d1a1d`; GitHub Actions run `32952173816` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations
+  through `0056`, and the clean-Postgres API suite.
+
 ## Next segments
 
-1. Harden Time Capsule's storage and downstream permission boundary, then absorb
-   its capture and owner-scoped history into Play.
-2. Complete the controlled Matches lifecycle and remaining shell retirement.
-3. Run authenticated walkthroughs, accessibility checks, and mobile regression
+1. Complete the controlled Matches lifecycle and remaining shell retirement.
+2. Run authenticated walkthroughs, accessibility checks, and mobile regression
    evidence after the active product paths are consolidated.
