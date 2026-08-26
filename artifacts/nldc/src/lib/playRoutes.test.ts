@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   embeddedPlayGame,
   PLAY_DAILY_SPARK_HREF,
+  PLAY_PREDICT_HREF,
   PLAY_QUIZ_CATALOG_HREF,
   PLAY_SCENARIOS_HREF,
   PLAY_THIS_OR_THAT_HREF,
@@ -41,5 +42,11 @@ describe("Play compatibility routing", () => {
     expect(PLAY_SCENARIOS_HREF).toBe("/play?game=scenarios");
     expect(embeddedPlayGame(PLAY_SCENARIOS_HREF)).toBe("scenarios");
     expect(shouldFocusQuizCatalog(PLAY_SCENARIOS_HREF)).toBe(false);
+  });
+
+  it("reopens the canonical embedded Predict Yourself history and capture", () => {
+    expect(PLAY_PREDICT_HREF).toBe("/play?game=predict");
+    expect(embeddedPlayGame(PLAY_PREDICT_HREF)).toBe("predict");
+    expect(shouldFocusQuizCatalog(PLAY_PREDICT_HREF)).toBe(false);
   });
 });
