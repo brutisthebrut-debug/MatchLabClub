@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion, useMotionValue, animate } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@workspace/replit-auth-web";
 import { trackEvent } from "@/lib/analytics";
+import {
+  ECHO_MEMBER_STATUS,
+  projectEchoReactionForMember,
+} from "@/lib/echoMemberPresentation";
 import {
   useGetCompanion,
   getGetCompanionQueryKey,
@@ -22,7 +26,6 @@ import type {
 } from "@workspace/api-client-react";
 import {
   ArrowRight,
-  ArrowUpRight,
   Bell,
   Check,
   Heart,
@@ -44,52 +47,32 @@ type EchoTurn = {
 
 type Tab = "talk" | "notices" | "review";
 
-// Animated count from one score to the next so the number feels alive when a
-// reaction lands, not just swapped out.
-function CountUp({ from, to }: { from: number; to: number }): ReactElement {
-  const mv = useMotionValue(from);
-  const [display, setDisplay] = useState(from);
-  useEffect(() => {
-    const controls = animate(mv, to, {
-      duration: 1,
-      ease: "easeOut",
-      onUpdate: (v) => setDisplay(Math.round(v)),
-    });
-    return () => controls.stop();
-  }, [mv, to]);
-  return <>{display}</>;
-}
-
 function toneAccent(tone: CompanionReaction["tone"]): {
   ring: string;
-  text: string;
   Icon: typeof TrendingUp;
 } {
   if (tone === "crossing")
     return {
       ring: "from-[#3D35CC] to-[#FF2D9B]",
-      text: "text-[hsl(326_100%_45%)]",
       Icon: Heart,
     };
   if (tone === "dip")
     return {
       ring: "from-[hsl(28_90%_55%)] to-[hsl(351_80%_55%)]",
-      text: "text-[hsl(28_90%_42%)]",
       Icon: TrendingDown,
     };
   return {
     ring: "from-[hsl(142_60%_45%)] to-[hsl(168_60%_45%)]",
-    text: "text-[hsl(142_55%_36%)]",
     Icon: TrendingUp,
   };
 }
 
 /**
  * The in-the-moment reaction card. Shown floating (when Echo is closed) and
- * inline at the top of the Talk tab (when open). Crossing the matching threshold
- * gets the loud, celebratory treatment with a link into matching; rises and dips
- * get a quieter, honest read. The score animates from where it was to where it
- * landed.
+ * inline at the top of the Talk tab (when open). A server-confirmed
+ * consideration update stays visible until the member reviews it; other
+ * qualitative observations remain quieter and temporary. Internal aggregates
+ * never render as a member score.
  */
 function ReactionCard({
   reaction,
@@ -103,7 +86,9 @@ function ReactionCard({
   variant: "floating" | "inline";
 }): ReactElement {
   const accent = toneAccent(reaction.tone);
-  const isCrossing = reaction.tone === "crossing";
+  const isConsiderationUpdate = reaction.tone === "crossing";
+  const presentation = projectEchoReactionForMember(reaction);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: variant === "floating" ? 16 : -8, scale: 0.96 }}
@@ -111,7 +96,7 @@ function ReactionCard({
       exit={{ opacity: 0, y: 8, scale: 0.96 }}
       transition={{ type: "spring", stiffness: 320, damping: 26 }}
       className={`relative overflow-hidden rounded-2xl border bg-background p-4 shadow-xl ${
-        isCrossing
+        isConsiderationUpdate
           ? "border-[hsl(326_100%_60%/0.4)]"
           : "border-foreground/12"
       } ${variant === "floating" ? "w-[min(92vw,360px)]" : ""}`}
@@ -136,87 +121,45 @@ function ReactionCard({
         <div
           className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent.ring} text-white`}
         >
-          {isCrossing ? (
-            <motion.span
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
-            >
-              <accent.Icon className="h-5 w-5" aria-hidden="true" />
-            </motion.span>
-          ) : (
-            <accent.Icon className="h-5 w-5" aria-hidden="true" />
-          )}
+          <accent.Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1 pr-4">
-          <p className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tabular-nums text-foreground">
-              <CountUp from={reaction.fromScore} to={reaction.toScore} />
-            </span>
-            {reaction.delta !== 0 && (
-              <span className={`text-xs font-semibold ${accent.text}`}>
-                {reaction.delta > 0 ? `+${reaction.delta}` : reaction.delta}
-              </span>
-            )}
-            <span className="text-[11px] text-muted-foreground">
-              readiness
-            </span>
+          <p className="text-sm font-semibold text-foreground">
+            {presentation.title}
           </p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {reaction.headline}
-          </p>
-          {reaction.nowSee && (
+          {presentation.detail && (
             <p className="mt-1.5 text-[13px] text-muted-foreground">
-              {reaction.nowSee}
+              {presentation.detail}
             </p>
           )}
         </div>
       </div>
 
-      {reaction.lanesMoved.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {reaction.lanesMoved.map((l) => (
-            <span
-              key={l.key}
-              className="inline-flex items-center gap-1 rounded-full border border-foreground/12 bg-foreground/[0.03] px-2 py-0.5 text-[11px] text-muted-foreground"
+      {presentation.action && (
+        <div className="mt-3">
+          {isConsiderationUpdate ? (
+            <button
+              type="button"
+              onClick={onGoMatching}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] px-3 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+              data-testid="echo-reaction-matching"
             >
-              {l.label}
-              <span className={`font-semibold ${accent.text}`}>
-                {l.from} to {l.to}
-              </span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-3 flex items-center gap-2">
-        {isCrossing ? (
-          <button
-            type="button"
-            onClick={onGoMatching}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] px-3 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
-            data-testid="echo-reaction-matching"
-          >
-            Matching is open
-            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        ) : (
-          reaction.nextMove && (
+              {presentation.action.label}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : (
             <Link
-              href={reaction.nextMove.href}
+              href={presentation.action.href}
               onClick={onClose}
               className="inline-flex items-center gap-1.5 rounded-xl border border-foreground/15 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/[0.04]"
               data-testid="echo-reaction-next"
             >
-              {reaction.nextMove.label}
-              <span className={`font-semibold ${accent.text}`}>
-                +{reaction.nextMove.points}
-              </span>
+              {presentation.action.label}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
-          )
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -235,7 +178,8 @@ function severityClass(severity: CompanionObservation["severity"]): string {
  * notices it has made on its own, and have it react to a message you share. It
  * renders nothing for anonymous or still-loading users so it never shows an empty
  * shell, and every reply invalidates the shared matching-state query so the
- * readiness spine updates the moment Echo moves it.
+ * shared companion state refreshes after every reply without exposing an
+ * internal score as a measure of the member.
  */
 export function EchoPresence() {
   const { isAuthenticated } = useAuth();
@@ -270,17 +214,10 @@ export function EchoPresence() {
   const [reviewDir, setReviewDir] =
     useState<"sending" | "received">("sending");
 
-  // Live readiness reaction. We watch the shared matching-state score and ask
-  // Echo to react whenever it is different from the score this mount last
-  // pulsed on. The server, not this component, is the real arbiter of whether a
-  // move happened: it owns the persisted reaction baseline, so it returns
-  // moved=false for a flat read and moved=true only for a genuine change. That
-  // is what makes the reaction survive navigation. AppLayout (and so this
-  // component) remounts on every route change, which resets the local ref, but
-  // because we pulse on the first score we see after a remount too, a move that
-  // landed while the user was navigating still surfaces on the next page
-  // instead of being silently swallowed. The local ref only dedupes re-renders
-  // that carry the same score within a single mount.
+  // The server still uses its internal signal aggregate to decide whether Echo
+  // has a genuinely new observation. The number is deliberately not projected
+  // into member copy: only the qualitative observation and next honest action
+  // render here. The local ref merely dedupes repeated reads within this mount.
   const [reaction, setReaction] = useState<CompanionReaction | null>(null);
   const lastScoreRef = useRef<number | null>(null);
   const score = matchingState?.readiness.score ?? null;
@@ -297,12 +234,10 @@ export function EchoPresence() {
         if (cancelled) return;
         if (res.reaction.moved) {
           setReaction(res.reaction);
-          // The crossing-into-matching reaction is the payoff of the
-          // readiness funnel, so we measure how often it actually fires.
-          // Derived signals only (tone + score), never user content.
+          // Measure the qualitative reaction only; never send the internal
+          // aggregate or member content with the event.
           trackEvent("echo_reaction_shown", {
             tone: res.reaction.tone,
-            score: res.reaction.toScore,
           });
         }
         qc.invalidateQueries({ queryKey: getGetCompanionQueryKey() });
@@ -317,8 +252,8 @@ export function EchoPresence() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [score, isAuthenticated]);
 
-  // Rises and dips auto-dismiss so they feel in-the-moment; crossing into
-  // matching is the payoff and stays until the user acts on or closes it.
+  // Context updates auto-dismiss; a consideration-boundary update stays until
+  // the member reviews or closes it.
   useEffect(() => {
     if (!reaction || reaction.tone === "crossing") return;
     const t = setTimeout(() => setReaction(null), 10000);
@@ -438,7 +373,7 @@ export function EchoPresence() {
                 {data.personaLabel}
               </p>
               <p className="truncate text-[11px] text-muted-foreground">
-                Readiness {data.readinessScore} of {data.threshold}
+                {ECHO_MEMBER_STATUS}
               </p>
             </div>
             <div className="flex items-center gap-1">
