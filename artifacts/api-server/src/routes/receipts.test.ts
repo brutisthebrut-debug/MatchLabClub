@@ -199,6 +199,20 @@ describe("POST /api/me/receipts (manual)", () => {
 });
 
 describe("POST /api/receipts/inbound (webhook)", () => {
+  it("fails closed instead of accepting the former predictable fallback", async () => {
+    const configured = process.env.RECEIPTS_WEBHOOK_SECRET;
+    delete process.env.RECEIPTS_WEBHOOK_SECRET;
+    try {
+      const res = await request(testApp.app)
+        .post("/api/receipts/inbound")
+        .set("x-receipts-secret", "receipts-dev")
+        .send({ to: "abc@receipts.matchlab.club", subject: "Hi" });
+      expect(res.status).toBe(401);
+    } finally {
+      process.env.RECEIPTS_WEBHOOK_SECRET = configured;
+    }
+  });
+
   it("rejects a missing or wrong shared secret", async () => {
     const noSecret = await request(testApp.app)
       .post("/api/receipts/inbound")
