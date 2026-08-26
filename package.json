@@ -8,6 +8,8 @@
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
+    "test:release-env": "pnpm --filter @workspace/scripts run test:release-env",
+    "validate:release-env": "pnpm --filter @workspace/scripts run validate-release-env",
     "lint": "eslint ."
   },
   "private": true,
