@@ -4,6 +4,7 @@ import {
   varchar,
   integer,
   timestamp,
+  boolean,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -11,11 +12,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 /**
- * One completed "predict yourself" round. Before working through a short set of
- * self-descriptive statements, the user first predicts how many will be true of
- * them. The gap between that prediction and the actual count is a deterministic
- * read on self-awareness, so each distinct round completed feeds matching
- * readiness as its own low-weight lane.
+ * One completed "predict yourself" round, stored as a private first-party
+ * record. Storage, Echo use, confirmed learning, and matching use remain
+ * separate member-controlled states.
  *
  * The prompts and statements live in the frontend deck. The server stores only
  * the stable item id, the predicted count, and the actual count, never any free
@@ -35,6 +34,13 @@ export const predictionResponsesTable = pgTable(
     predicted: integer("predicted").notNull(),
     /** How many statements the user actually marked true. */
     actual: integer("actual").notNull(),
+    /** Saving never grants downstream use. */
+    echoUseAllowed: boolean("echo_use_allowed").notNull().default(false),
+    echoUseUpdatedAt: timestamp("echo_use_updated_at"),
+    learningConfirmed: boolean("learning_confirmed").notNull().default(false),
+    learningConfirmedAt: timestamp("learning_confirmed_at"),
+    matchingUseAllowed: boolean("matching_use_allowed").notNull().default(false),
+    matchingUseUpdatedAt: timestamp("matching_use_updated_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -57,6 +63,12 @@ export const insertPredictionResponseSchema = createInsertSchema(
   updatedAt: true,
   userId: true,
   anonymousClaimToken: true,
+  echoUseAllowed: true,
+  echoUseUpdatedAt: true,
+  learningConfirmed: true,
+  learningConfirmedAt: true,
+  matchingUseAllowed: true,
+  matchingUseUpdatedAt: true,
 });
 
 export type InsertPredictionResponse = z.infer<

@@ -386,6 +386,13 @@
       "when": 1788301200000,
       "tag": "0054_scenario_permission_boundary",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1788387600000,
+      "tag": "0055_prediction_permission_boundary",
+      "breakpoints": true
     }
   ]
 }

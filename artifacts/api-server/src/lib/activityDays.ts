@@ -32,7 +32,7 @@ export async function loadActivityDays(
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM audits WHERE user_id = ${userId} AND report_generated_at IS NOT NULL
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM wyr_answers WHERE user_id = ${userId} AND matching_use_allowed = true
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM scenario_responses WHERE user_id = ${userId} AND matching_use_allowed = true
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM prediction_responses WHERE user_id = ${userId}
+      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM prediction_responses WHERE user_id = ${userId} AND matching_use_allowed = true
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM time_capsules WHERE user_id = ${userId}
       UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM wingman_invites WHERE user_id = ${userId}
     ) t
