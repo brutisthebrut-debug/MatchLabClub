@@ -485,9 +485,27 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, web/API tests, and ordered
   migrations on clean Postgres 16. Stripe remains deferred and fail-closed.
 
+## Segment 3E2A: This or That absorption into Play
+
+State: merged to `main` and verified.
+
+- The complete This or That capture flow now renders inside Play and preserves
+  the existing anonymous-claimable `preferences-paste` source path.
+- `/this-or-that` is a compatibility redirect to the canonical embedded game,
+  with an exact query deep link that reopens the same workflow.
+- Saving choices remains storage-only. Confirmed learning, Echo use, and
+  matching use are separate member-controlled permissions.
+- The obsolete readiness-climb framing and matching-state invalidation were
+  removed from this storage-only action.
+- PR #48 merged as `179bb532`; GitHub Actions run `32923437513` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
+  the clean-Postgres API suite. Stripe remains deferred and fail-closed.
+
 ## Next segments
 
-1. Absorb the individual game workflows and any reopenable results into Play,
-   retiring duplicate catalog ownership only after parity.
-2. Complete the controlled Matches lifecycle, authenticated walkthroughs,
+1. Absorb Would You Rather into Play while preserving its owner-scoped answer
+   history, daily cadence, and exact compatibility URL.
+2. Continue through Daily Spark, Scenarios, Predict Yourself, and Time Capsule,
+   retiring each duplicate route only after workflow and history parity.
+3. Complete the controlled Matches lifecycle, authenticated walkthroughs,
    accessibility checks, and mobile regression evidence.
