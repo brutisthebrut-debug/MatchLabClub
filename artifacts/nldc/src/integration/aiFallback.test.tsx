@@ -81,7 +81,6 @@ import NextMessage from "@/pages/NextMessage";
 import StyleMap from "@/pages/StyleMap";
 import Reflection from "@/pages/Reflection";
 import MirrorProfile from "@/pages/MirrorProfile";
-import GlowUp from "@/pages/GlowUp";
 import ConnectionStyle from "@/pages/ConnectionStyle";
 
 // ---------------------------------------------------------------------------
@@ -245,25 +244,6 @@ const drivers: ToolDriver[] = [
       emotionalImpression: longSentence(2),
       nextExperiment: longSentence(2),
     }),
-  },
-  {
-    name: "GlowUp",
-    Page: GlowUp,
-    retryTestId: "button-retry-glowup",
-    drive: () => {
-      const bio = screen.getByPlaceholderText(/Paste your current dating profile bio here/i);
-      fireEvent.change(bio, {
-        target: { value: "Writer, climber, big fan of unplanned weekends and small espresso cups." },
-      });
-      return screen.getByRole("button", { name: /Glow Up My Profile/i });
-    },
-    validSuccessOutput: JSON.stringify(
-      ["serious", "playful", "direct", "queer", "lessgeneric"].map((style) => ({
-        style,
-        bio: longSentence(2),
-        tip: "This version reads as specific.",
-      })),
-    ),
   },
   // CompatibilityCompass was previously parameterized here but no longer fits
   // this single-driver contract: the page now has three input modes

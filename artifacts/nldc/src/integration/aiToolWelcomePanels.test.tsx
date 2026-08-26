@@ -166,7 +166,6 @@ import ProfileReader from "@/pages/ProfileReader";
 import NextMessage from "@/pages/NextMessage";
 import PatternBreaker from "@/pages/PatternBreaker";
 import Blueprint from "@/pages/Blueprint";
-import DatingWinsLog from "@/pages/DatingWinsLog";
 import CompatibilityCompass from "@/pages/CompatibilityCompass";
 import Archetype from "@/pages/Archetype";
 import Insights from "@/pages/Insights";
@@ -175,7 +174,6 @@ import Coach from "@/pages/Coach";
 import Reflection from "@/pages/Reflection";
 import StyleMap from "@/pages/StyleMap";
 import MirrorProfile from "@/pages/MirrorProfile";
-import GlowUp from "@/pages/GlowUp";
 
 // ---------------------------------------------------------------------------
 // Test lifecycle
@@ -299,29 +297,6 @@ const drivers: Driver[] = [
       await waitFor(() => {
         expect(enhanceMutateAsync).toHaveBeenCalled();
       });
-    },
-  },
-  {
-    // Gating variant: isDemo (localStorage-backed) — panel shows for
-    // authenticated users whose localStorage has no stored wins.
-    name: "Dating Wins Log",
-    Page: DatingWinsLog,
-    emptyStateTestId: "wins-empty-state",
-    // Anonymous users also have isDemo=true (no wins in localStorage) but
-    // isBrandNewUser is false because they're not authenticated. They see
-    // the demo wins list with its "sample wins" label.
-    anonymousDemoMatcher: /Sample wins, your log starts the moment you add one/i,
-    runTool: async () => {
-      const logBtn = screen.getByRole("button", { name: /Log a win/i });
-      fireEvent.click(logBtn);
-      // AnimatePresence is mocked to render children synchronously, so the
-      // form is immediately in the DOM after the click triggers setShowForm(true).
-      const textarea = await screen.findByPlaceholderText(/You hit send/i);
-      fireEvent.change(textarea, {
-        target: { value: "Sent the message I'd been overthinking for two days." },
-      });
-      const saveBtn = screen.getByRole("button", { name: /Save win/i });
-      fireEvent.click(saveBtn);
     },
   },
   // -----------------------------------------------------------------------
@@ -494,24 +469,6 @@ const drivers: Driver[] = [
         target: { value: "I'm someone who loves honest conversations and long walks. Looking for something real." },
       });
       const button = screen.getByRole("button", { name: /Show Me My Mirror/i });
-      fireEvent.click(button);
-      await waitFor(() => {
-        expect(enhanceMutateAsync).toHaveBeenCalled();
-      });
-    },
-  },
-  {
-    name: "Glow Up",
-    Page: GlowUp,
-    emptyStateTestId: "glowup-empty-state",
-    // Anonymous users see the demo glow-up rewrites.
-    anonymousDemoMatcher: /Example rewrites, paste your bio above to get yours/i,
-    runTool: async () => {
-      const bioArea = screen.getByPlaceholderText(/Paste your current dating profile bio here/i);
-      fireEvent.change(bioArea, {
-        target: { value: "I like hiking, coffee, and honest conversations. Looking for someone real." },
-      });
-      const button = screen.getByRole("button", { name: /Glow Up My Profile/i });
       fireEvent.click(button);
       await waitFor(() => {
         expect(enhanceMutateAsync).toHaveBeenCalled();
