@@ -75,7 +75,7 @@ export default function Play() {
 
   return (
     <AppLayout>
-      <main className="relative mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
+      <div className="relative mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-[hsl(248_62%_52%)]">Play</p>
         <h1 className="mt-4 max-w-3xl font-serif text-4xl font-bold tracking-tight sm:text-5xl">Learn through curiosity.</h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">Quizzes and small, low-pressure experiences can surface a useful question. You decide what becomes part of your MatchLab.</p>
@@ -113,7 +113,7 @@ export default function Play() {
             {activeGame === "this-or-that" ? <ThisOrThatExperience embedded /> : activeGame === "would-you-rather" ? <WouldYouRatherExperience embedded /> : activeGame === "daily-spark" ? <DailySparkExperience embedded /> : activeGame === "scenarios" ? <ScenariosExperience embedded /> : activeGame === "predict" ? <PredictYourselfExperience embedded /> : <TimeCapsuleExperience embedded />}
           </section>
         )}
-      </main>
+      </div>
     </AppLayout>
   );
 }
