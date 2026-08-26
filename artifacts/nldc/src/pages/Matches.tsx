@@ -17,6 +17,7 @@ import {
   useGetMatchingProposals,
   getGetMatchingProposalsQueryKey,
   useRespondToMatchProposal,
+  useUpdateMatchingPoolMembership,
   type Connection,
   type MatchProposal,
 } from "@workspace/api-client-react";
@@ -225,6 +226,7 @@ export default function Matches() {
     },
   });
   const respondProposal = useRespondToMatchProposal();
+  const updatePool = useUpdateMatchingPoolMembership();
 
   const connections = isDemo ? DEMO_CONNECTIONS : (serverData ?? []);
   const readState = resolveMatchListReadState({
@@ -234,10 +236,38 @@ export default function Matches() {
     connectionCount: connections.length,
   });
   const proposalList = proposalsQuery.data ?? [];
-  const pilotState = pilotStateCopy(
-    matchingStateQuery.data?.poolStatus,
-    matchingStateQuery.data?.eligible ?? false,
-  );
+  const poolStatus = matchingStateQuery.data?.poolStatus ?? null;
+  const eligibleForConsideration = matchingStateQuery.data?.eligible ?? false;
+  const pilotState = pilotStateCopy(poolStatus, eligibleForConsideration);
+  const inConsideration =
+    poolStatus === "building" ||
+    poolStatus === "ready" ||
+    poolStatus === "concierge_only";
+
+  async function handleConsiderationChange(join: boolean) {
+    try {
+      await updatePool.mutateAsync({
+        data: { status: join ? "building" : "off" },
+      });
+      await queryClient.invalidateQueries({
+        queryKey: getGetMatchingStateQueryKey(),
+      });
+      toast({
+        title: join
+          ? "You joined controlled consideration."
+          : "You left controlled consideration.",
+        description: join
+          ? "This does not promise an introduction or reveal you to another member."
+          : "No new introduction will be sent while you are out.",
+      });
+    } catch {
+      toast({
+        title: "We couldn't change your consideration state.",
+        description: "Your current setting is unchanged. Try again.",
+        variant: "destructive",
+      });
+    }
+  }
 
   async function handleProposalResponse(id: string, interested: boolean) {
     try {
@@ -349,15 +379,49 @@ export default function Matches() {
                     <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                       {pilotState.body}
                     </p>
-                    <Link href="/matching">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-4 rounded-full"
-                      >
-                        Review consideration settings
-                      </Button>
-                    </Link>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {inConsideration ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full"
+                          disabled={updatePool.isPending}
+                          onClick={() => void handleConsiderationChange(false)}
+                        >
+                          Leave consideration
+                        </Button>
+                      ) : eligibleForConsideration ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="rounded-full"
+                          disabled={updatePool.isPending}
+                          onClick={() => void handleConsiderationChange(true)}
+                        >
+                          Join controlled consideration
+                        </Button>
+                      ) : (
+                        <Link href="/my-matchlab">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full"
+                          >
+                            Review My MatchLab
+                          </Button>
+                        </Link>
+                      )}
+                      <Link href="/matching">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="rounded-full"
+                        >
+                          Review matching preferences
+                        </Button>
+                      </Link>
+                    </div>
                   </>
                 )}
               </div>
