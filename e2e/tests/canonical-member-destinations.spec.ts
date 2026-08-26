@@ -81,12 +81,13 @@ async function baselineAccessibilityIssues(page: Page): Promise<string[]> {
             .join(" ")
         : "";
       return (
-        element.getAttribute("aria-label") ??
-        referenced ??
-        element.getAttribute("title") ??
-        element.textContent ??
-        ""
-      ).trim();
+        [
+          element.getAttribute("aria-label"),
+          referenced,
+          element.getAttribute("title"),
+          element.textContent,
+        ].find((value) => value?.trim())?.trim() ?? ""
+      );
     };
 
     const ids = new Map<string, number>();
