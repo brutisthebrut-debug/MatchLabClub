@@ -5,9 +5,8 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mailbox, Flame, Shield, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { WelcomePanel } from "@/components/WelcomePanel";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
-import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import {
   useGetTimeCapsules,
   useCreateTimeCapsule,
@@ -21,6 +20,7 @@ import {
   computeDayStreak,
   deriveThemes,
 } from "@/lib/timeCapsule";
+import { updateTimeCapsulePermissions, type TimeCapsulePermissions } from "@/lib/timeCapsulePermissions";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -34,18 +34,30 @@ const fadeUp = (delay = 0) => ({
 
 const MAX = 280;
 
+interface SavedNote extends TimeCapsuleDto {
+  echoUseAllowed: boolean;
+  learningConfirmed: boolean;
+  matchingUseAllowed: boolean;
+}
+
 // A couple of pre-written notes so a signed-out visitor sees a real, played
 // board instead of an empty one. The demo never writes to the server.
-const DEMO_NOTES: TimeCapsuleDto[] = [
+const DEMO_NOTES: SavedNote[] = [
   {
     id: -1,
     body: "I am learning to slow down so I can actually be there when you arrive.",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    echoUseAllowed: false,
+    learningConfirmed: false,
+    matchingUseAllowed: false,
   },
   {
     id: -2,
     body: "I hope we can disagree and still feel close by the end of the night.",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    echoUseAllowed: false,
+    learningConfirmed: false,
+    matchingUseAllowed: false,
   },
 ];
 
@@ -59,30 +71,32 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function TimeCapsule() {
+export function TimeCapsuleExperience({ embedded = false }: { embedded?: boolean }) {
   useMeta(
     "Time capsule",
-    "Write one line to the person you have not met yet, then replay your notes later. Naming what you want is a real signal of intent, and every note feeds your matching readiness.",
+    "Write one private note to the person you have not met yet, then separately control learning, Echo, and matching permissions.",
   );
 
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: notesData } = useGetTimeCapsules({
+  const { data: notesData, isLoading: notesLoading, isError: notesFailed } = useGetTimeCapsules({
     query: {
       queryKey: getGetTimeCapsulesQueryKey(),
       enabled: isAuthenticated,
     },
   });
   const createNote = useCreateTimeCapsule();
-  const climb = useReadinessClimb({ enabled: isAuthenticated });
+  const [permissionBusy, setPermissionBusy] = useState<number | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const savedNotes = (notesData ?? []) as SavedNote[];
 
   const isDemo = !isAuthenticated;
 
-  const [demoNotes, setDemoNotes] = useState<TimeCapsuleDto[]>(DEMO_NOTES);
+  const [demoNotes, setDemoNotes] = useState<SavedNote[]>(DEMO_NOTES);
   const [draft, setDraft] = useState("");
 
-  const notes = isDemo ? demoNotes : (notesData ?? []);
+  const notes = isDemo ? demoNotes : savedNotes;
   const prompt = useMemo(() => todayPrompt(), []);
 
   const streak = useMemo(
@@ -98,23 +112,19 @@ export default function TimeCapsule() {
     void queryClient.invalidateQueries({
       queryKey: getGetTimeCapsulesQueryKey(),
     });
-    void queryClient.invalidateQueries({
-      queryKey: getGetMatchingStateQueryKey(),
-    });
   };
 
   const submit = () => {
     if (!canSubmit) return;
     if (isDemo) {
       setDemoNotes((prev) => [
-        { id: -Date.now(), body: trimmed, createdAt: new Date().toISOString() },
+        { id: -Date.now(), body: trimmed, createdAt: new Date().toISOString(), echoUseAllowed: false, learningConfirmed: false, matchingUseAllowed: false },
         ...prev,
       ]);
       setDraft("");
       return;
     }
     if (createNote.isPending) return;
-    climb.snapshot();
     createNote.mutate(
       { data: { body: trimmed } },
       {
@@ -126,10 +136,22 @@ export default function TimeCapsule() {
     );
   };
 
-  return (
-    <AppLayout>
-      <HubTabs hub="games" />
-      <div className="min-h-screen mesh-bg py-10 px-4">
+  async function changePermission(note: SavedNote, patch: TimeCapsulePermissions) {
+    setPermissionBusy(note.id);
+    setPermissionError(null);
+    try {
+      await updateTimeCapsulePermissions(note.id, patch);
+      await queryClient.invalidateQueries({ queryKey: getGetTimeCapsulesQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
+    } catch (error) {
+      setPermissionError(error instanceof Error ? error.message : "Permission update failed.");
+    } finally {
+      setPermissionBusy(null);
+    }
+  }
+
+  const content = (
+      <div id="play-time-capsule" className={embedded ? "scroll-mt-24" : "min-h-screen mesh-bg py-10 px-4"}>
         <div className="orb orb-indigo fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">
           {/* Hero */}
@@ -146,9 +168,9 @@ export default function TimeCapsule() {
               Time capsule
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
-              Write one line to the person you have not met yet. Come back later
-              and replay what you wrote. Naming what you want is a real read on
-              intent, and every note nudges your matching readiness.
+              Write one line to the person you have not met yet. It saves as
+              private owner-only text; you decide separately whether the note may
+              become confirmed learning, Echo context, or matching context.
             </p>
           </motion.div>
 
@@ -187,10 +209,13 @@ export default function TimeCapsule() {
               icon={<Mailbox className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to your time capsule"
               title="Write your first note"
-              description="One honest line to the person you have not met yet. There is no wrong thing to say. Each note sharpens what I understand about what you want, and nudges your matching readiness up."
+              description="One honest line to the person you have not met yet. It saves privately, and every downstream permission stays closed until you change it."
               testId="capsule-empty-state"
             />
           )}
+
+          {isAuthenticated && notesLoading && <p className="mb-4 glass border border-white/10 rounded-2xl p-4 text-sm text-muted-foreground">Loading your private notes…</p>}
+          {isAuthenticated && notesFailed && <p className="mb-4 glass border border-destructive/30 rounded-2xl p-4 text-sm text-destructive">Your private notes could not load. No sample history has been substituted, and capture is paused.</p>}
 
           {/* Write */}
           <motion.div
@@ -205,6 +230,7 @@ export default function TimeCapsule() {
               onChange={(e) => setDraft(e.target.value.slice(0, MAX))}
               placeholder={prompt.placeholder}
               rows={3}
+              disabled={isAuthenticated && (notesLoading || notesFailed)}
               className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-foreground placeholder:text-muted-foreground/40 resize-none focus:outline-none focus:border-[hsl(245_58%_62%/0.5)]"
               data-testid="capsule-input"
             />
@@ -214,7 +240,7 @@ export default function TimeCapsule() {
               </span>
               <button
                 onClick={submit}
-                disabled={!canSubmit || (!isDemo && createNote.isPending)}
+                disabled={!canSubmit || (!isDemo && (createNote.isPending || notesLoading || notesFailed))}
                 className="rounded-2xl bg-gradient-to-r from-[hsl(245_58%_62%)] to-[hsl(280_50%_62%)] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-40"
                 data-testid="capsule-submit"
               >
@@ -223,10 +249,12 @@ export default function TimeCapsule() {
             </div>
             {isDemo && (
               <p className="text-xs text-muted-foreground/50 mt-3">
-                Sign in to save your notes and count them toward matching.
+                Sign in to save notes to your private account history.
               </p>
             )}
           </motion.div>
+
+          {createNote.isError && <p className="mb-4 text-sm text-destructive">This note could not be saved. Your account history was not changed.</p>}
 
           {/* Replay */}
           {notes.length > 0 && (
@@ -268,6 +296,13 @@ export default function TimeCapsule() {
                             </div>
                           )}
                         </div>
+                        {!isDemo && (
+                          <div className="mt-3 flex flex-wrap gap-2 border-t border-white/8 pt-3">
+                            <Button size="sm" variant={note.learningConfirmed ? "default" : "outline"} disabled={permissionBusy === note.id} onClick={() => void changePermission(note, { learningConfirmed: !note.learningConfirmed })}>{note.learningConfirmed ? "Learning confirmed" : "Confirm learning"}</Button>
+                            <Button size="sm" variant={note.echoUseAllowed ? "default" : "outline"} disabled={permissionBusy === note.id} onClick={() => void changePermission(note, { echoUse: !note.echoUseAllowed })}>{note.echoUseAllowed ? "Echo allowed" : "Allow Echo"}</Button>
+                            <Button size="sm" variant={note.matchingUseAllowed ? "default" : "outline"} disabled={permissionBusy === note.id} onClick={() => void changePermission(note, { matchingUse: !note.matchingUseAllowed })}>{note.matchingUseAllowed ? "Matching allowed" : "Allow matching"}</Button>
+                          </div>
+                        )}
                       </motion.div>
                     );
                   })}
@@ -276,15 +311,7 @@ export default function TimeCapsule() {
             </motion.div>
           )}
 
-          {isAuthenticated && climb.before !== null && (
-            <motion.div {...fadeUp(0.09)} className="mb-6">
-              <ReadinessClimbReveal
-                from={climb.before}
-                to={climb.current}
-                className="glass border border-white/8 rounded-2xl p-5"
-              />
-            </motion.div>
-          )}
+          {permissionError && <p className="mb-4 text-sm text-destructive">{permissionError}</p>}
 
           {/* Trust note */}
           <motion.div
@@ -296,13 +323,23 @@ export default function TimeCapsule() {
               <strong className="text-muted-foreground/60">
                 Your words stay yours.
               </strong>{" "}
-              Your notes are shown back only to you. Matching sees the derived
-              themes and how many you have written, never the text itself, and you
-              can wipe everything from your account at any time.
+              The raw note stays owner-only. The theme chips above are computed in
+              your browser for replay; matching receives only the count of notes
+              you explicitly allow, never the text or those displayed themes.
             </p>
           </motion.div>
         </div>
       </div>
+  );
+
+  return embedded ? content : (
+    <AppLayout>
+      <HubTabs hub="games" />
+      {content}
     </AppLayout>
   );
+}
+
+export default function TimeCapsule() {
+  return <TimeCapsuleExperience />;
 }
