@@ -814,11 +814,36 @@ State: merged to `main` and verified.
   pulls browser-only shared code into the server build, so no Vercel URL is
   represented as the current member experience.
 
+## Segment 3G4: evidence-backed top-level page retirement
+
+State: merged to `main` and verified.
+
+- Completed the evidence audit of all 15 top-level page implementations that
+  were not directly routed by `App.tsx`.
+- Deleted `DatingWinsLog.tsx` and `GlowUp.tsx` after confirming Journey and
+  Profile Project own those workflows and their compatibility routes. PR #86
+  merged as `0d655fd2`; Actions run `33002422151` passed 52 web files with
+  301 tests and 111 API files with 983 tests on clean Postgres. Eight optional
+  OCR tests remained skipped.
+- Deleted `ProgressExperiments.tsx`, `ProgressFollowUp.tsx`, `Quizzes.tsx`,
+  and `Wizard.tsx` after confirming Journey, Play, and Profile Project own the
+  corresponding behavior and durable routes. PR #87 merged as `6179f951`;
+  Actions run `33002915260` passed typecheck, lint, schema drift, voice lint,
+  52 web files with 301 tests, the ordered migration chain, and 111 API files
+  with 983 tests. Eight optional OCR tests remained skipped.
+- Retained `Blueprint.tsx` and `ConnectionStyle.tsx` because My MatchLab
+  Communication embeds their reusable experiences. Retained `DailySpark.tsx`,
+  `PredictYourself.tsx`, `Scenarios.tsx`, `ThisOrThat.tsx`,
+  `TimeCapsule.tsx`, and `WouldYouRather.tsx` because Play embeds them.
+- Retained `Report.tsx` pending a separate behavior-preserving migration:
+  current-report copy controls and previous-version viewing still have direct
+  regression coverage against that implementation.
+
 ## Next segments
 
-1. Complete the evidence audit of the 15 remaining unrouted top-level page
-   implementations and retire only the first duplicate cluster whose behavior
-   and durable links are already owned by a canonical destination.
+1. Move the remaining report-history regression coverage to Profile Project,
+   then retire `Report.tsx` only when current-report and previous-version
+   behavior is preserved on the canonical surface.
 2. Run authenticated desktop and mobile walkthroughs plus accessibility checks
    across Today, Matches, My MatchLab, Journey, Play, Trust & Data, and Echo.
 3. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
