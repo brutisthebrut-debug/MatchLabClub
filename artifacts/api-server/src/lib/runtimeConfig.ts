@@ -7,6 +7,31 @@ function splitList(raw: string | undefined): string[] {
     .filter(Boolean);
 }
 
+export function getOidcIssuerUrl(
+  env: RuntimeEnvironment = process.env,
+): string {
+  const configured = env.ISSUER_URL?.trim();
+  if (!configured) {
+    throw new Error("ISSUER_URL environment variable is required.");
+  }
+
+  try {
+    const parsed = new URL(configured);
+    if (
+      parsed.protocol !== "https:" ||
+      parsed.username ||
+      parsed.password ||
+      parsed.search ||
+      parsed.hash
+    ) {
+      throw new Error();
+    }
+    return parsed.toString();
+  } catch {
+    throw new Error("ISSUER_URL must be a valid HTTPS URL.");
+  }
+}
+
 export function getOidcClientId(
   env: RuntimeEnvironment = process.env,
 ): string {
