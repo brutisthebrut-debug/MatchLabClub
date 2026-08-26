@@ -9,8 +9,23 @@ import {
   within,
 } from "@testing-library/react";
 import type { AuditReport } from "@workspace/api-client-react";
-import { ProfileAuditReportView } from "@/pages/ProfileProject";
 import { reportSections } from "@/lib/profileProjectRecords";
+
+vi.mock("@workspace/replit-auth-web", () => ({
+  useAuth: () => ({ isAuthenticated: false, isLoading: false, user: null }),
+}));
+
+vi.mock("@/components/layout/AppLayout", () => ({
+  AppLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("@/components/profile/ProfileAuditCapture", () => ({
+  ProfileAuditCapture: () => null,
+}));
+
+vi.mock("@/hooks/useMeta", () => ({ useMeta: () => {} }));
+
+import { ProfileAuditReportView } from "@/pages/ProfileProject";
 
 function report(label: "CURRENT" | "PREVIOUS"): AuditReport {
   return {
