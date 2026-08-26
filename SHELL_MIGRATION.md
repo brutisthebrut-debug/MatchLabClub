@@ -759,11 +759,70 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, the full web suite, ordered
   migrations, and the clean-Postgres API suite.
 
+## Segment 3G1: canonical mobile member navigation
+
+State: merged to `main` and verified.
+
+- Authenticated mobile pages now keep Today, Matches, My MatchLab, Journey, and
+  Play persistently available in the approved bottom navigation.
+- The current destination remains explicit for canonical and compatibility
+  routes. Trust & Data and account controls remain under the profile control.
+- Page content, Echo's floating presence, and Echo's open panel reserve the
+  device safe area and do not sit behind the bottom navigation.
+- Accessible landmark, destination order, and compatibility-route activation
+  have regression coverage.
+- PR #78 merged as `6fc92577`; GitHub Actions run `32981344186` passed
+  typecheck, lint, schema drift, voice lint, the full web suite, ordered
+  migrations, and the clean-Postgres API suite.
+
+## Segment 3G2: score-free persistent Echo
+
+State: merged to `main` and verified.
+
+- Persistent Echo no longer renders internal readiness totals, deltas, lane
+  percentages, thresholds, or points as a measure of the member.
+- Echo retains its real conversation, notices, message review, qualitative
+  observations, and contextual next action.
+- An internal eligibility transition now invites the member to review
+  controlled consideration in Matches. It no longer claims that matching has
+  opened or implies access to another person.
+- Analytics records only the qualitative reaction tone, never the internal
+  aggregate or member content.
+- A projection boundary and regression tests prove the member-facing reaction
+  contains only a title, optional detail, and honest action.
+- PR #79 merged as `71ba5068`; GitHub Actions run `32982408409` passed
+  typecheck, lint, schema drift, voice lint, the full web suite, ordered
+  migrations, and the clean-Postgres API suite.
+
+## Segment 3G3: retired Profile Project compatibility implementations
+
+State: merged to `main` and verified.
+
+- Deleted the unrouted `PhotoLab.tsx`, `SignalCheck.tsx`, and
+  `Diagnosis.tsx` implementations after Profile Project absorbed their signed-in
+  workflows and the old URLs became tested compatibility redirects.
+- Removed obsolete Signal Check welcome-panel drivers while retaining the shared
+  audit-context mocks required by still-routed coaching pages.
+- Updated the API logger import to the callable named `pino-http` export so the
+  repository remains compatible with stricter deployment compilers.
+- PR #83 merged as `ae896838`; GitHub Actions run `33000690949` passed
+  typecheck, lint, schema drift, voice lint, 52 web files with 309 tests, the
+  ordered clean-Postgres migration chain, and 111 API files with 983 tests.
+  Eight optional OCR tests remained skipped.
+- The Vercel connection currently targets only the Express API subproject, not
+  the visual web app. Its preview remains failed because the framework compiler
+  pulls browser-only shared code into the server build, so no Vercel URL is
+  represented as the current member experience.
+
 ## Next segments
 
-1. Complete remaining shell retirement and remove obsolete implementation files
-   only after confirming no supported route imports them.
-2. Run authenticated walkthroughs, accessibility checks, and mobile regression
-   evidence across the consolidated product paths.
-3. Prepare the release environment and execute the separate deployment,
-   migration, Stripe test-mode, and founder/legal release gates.
+1. Complete the evidence audit of the 15 remaining unrouted top-level page
+   implementations and retire only the first duplicate cluster whose behavior
+   and durable links are already owned by a canonical destination.
+2. Run authenticated desktop and mobile walkthroughs plus accessibility checks
+   across Today, Matches, My MatchLab, Journey, Play, Trust & Data, and Echo.
+3. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
+   API deployment architecture and environment work explicit rather than
+   treating the current API-only Vercel project as the product preview.
+4. Execute the release-environment migration, Stripe test-mode, and
+   founder/legal release gates.
