@@ -794,11 +794,35 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, the full web suite, ordered
   migrations, and the clean-Postgres API suite.
 
+## Segment 3G3: retired Profile Project compatibility implementations
+
+State: merged to `main` and verified.
+
+- Deleted the unrouted `PhotoLab.tsx`, `SignalCheck.tsx`, and
+  `Diagnosis.tsx` implementations after Profile Project absorbed their signed-in
+  workflows and the old URLs became tested compatibility redirects.
+- Removed obsolete Signal Check welcome-panel drivers while retaining the shared
+  audit-context mocks required by still-routed coaching pages.
+- Updated the API logger import to the callable named `pino-http` export so the
+  repository remains compatible with stricter deployment compilers.
+- PR #83 merged as `ae896838`; GitHub Actions run `33000690949` passed
+  typecheck, lint, schema drift, voice lint, 52 web files with 309 tests, the
+  ordered clean-Postgres migration chain, and 111 API files with 983 tests.
+  Eight optional OCR tests remained skipped.
+- The Vercel connection currently targets only the Express API subproject, not
+  the visual web app. Its preview remains failed because the framework compiler
+  pulls browser-only shared code into the server build, so no Vercel URL is
+  represented as the current member experience.
+
 ## Next segments
 
-1. Audit the remaining legacy route and implementation inventory against the
-   migration matrix, then retire only behavior already absorbed.
+1. Complete the evidence audit of the 15 remaining unrouted top-level page
+   implementations and retire only the first duplicate cluster whose behavior
+   and durable links are already owned by a canonical destination.
 2. Run authenticated desktop and mobile walkthroughs plus accessibility checks
    across Today, Matches, My MatchLab, Journey, Play, Trust & Data, and Echo.
-3. Prepare a current hosted preview and execute the separate release-environment
-   migration, Stripe test-mode, and founder/legal release gates.
+3. Provision a separate visual web project rooted at `artifacts/nldc`; keep the
+   API deployment architecture and environment work explicit rather than
+   treating the current API-only Vercel project as the product preview.
+4. Execute the release-environment migration, Stripe test-mode, and
+   founder/legal release gates.
