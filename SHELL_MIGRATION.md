@@ -726,10 +726,24 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
   the clean-Postgres API suite.
 
+## Segment 3F5: canonical consideration membership
+
+State: merged to `main` and verified.
+
+- An eligible member can join controlled consideration directly from canonical
+  Matches, and a participating member can leave from the same state card.
+- The server remains authoritative for eligibility and membership. The member
+  surface shows no numeric readiness score and never implies that joining
+  guarantees an introduction or reveals the member to someone else.
+- Failed changes leave the prior state intact and say so explicitly.
+- PR #73 merged as `78f584ae`; GitHub Actions run `32976767997` passed
+  typecheck, lint, schema drift, voice lint, web tests, ordered migrations, and
+  the clean-Postgres API suite.
+
 ## Next segments
 
-1. Absorb consideration controls and matching preferences into canonical
-   Matches, then retire the score-heavy legacy Matching route.
+1. Absorb matching preferences into canonical Matches, then retire the
+   score-heavy legacy Matching route.
 2. Complete remaining shell retirement.
 3. Run authenticated walkthroughs, accessibility checks, and mobile regression
    evidence after the active product paths are consolidated.
