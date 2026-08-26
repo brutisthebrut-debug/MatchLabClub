@@ -389,7 +389,7 @@ export function EchoPresence() {
     <>
       {/* Floating presence */}
       {!open && (
-        <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
+        <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-3 z-40 flex flex-col items-end gap-3 md:bottom-5 md:right-5">
           <AnimatePresence>
             {reaction && (
               <ReactionCard
@@ -425,7 +425,7 @@ export function EchoPresence() {
       {/* Panel */}
       {open && (
         <div
-          className="fixed bottom-5 right-5 z-40 flex max-h-[80vh] w-[min(92vw,380px)] flex-col overflow-hidden rounded-2xl border border-foreground/10 bg-background shadow-2xl"
+          className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 flex max-h-[calc(100dvh-9rem)] flex-col overflow-hidden rounded-2xl border border-foreground/10 bg-background shadow-2xl md:inset-x-auto md:bottom-5 md:right-5 md:max-h-[80vh] md:w-[min(92vw,380px)]"
           data-testid="echo-panel"
         >
           <div className="flex items-center justify-between border-b border-foreground/8 bg-gradient-to-br from-[hsl(248_62%_52%/0.08)] to-[hsl(326_100%_60%/0.08)] px-4 py-3">
