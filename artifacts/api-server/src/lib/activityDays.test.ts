@@ -38,5 +38,8 @@ describe("loadActivityDays consent boundaries", () => {
     expect(query?.text).toContain(
       "FROM scenario_responses WHERE user_id = ? AND matching_use_allowed = true",
     );
+    expect(query?.text).toContain(
+      "FROM prediction_responses WHERE user_id = ? AND matching_use_allowed = true",
+    );
   });
 });
