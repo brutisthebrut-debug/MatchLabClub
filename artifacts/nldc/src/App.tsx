@@ -19,7 +19,7 @@ import {
   profileProjectAuditHistoryHref,
 } from "@/lib/profileProjectRoutes";
 import { datesCompatibilityHref, experimentsCompatibilityHref, followUpsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, winsCompatibilityHref } from "@/lib/journeyRoutes";
-import { PLAY_DAILY_SPARK_HREF, PLAY_QUIZ_CATALOG_HREF, PLAY_SCENARIOS_HREF, PLAY_THIS_OR_THAT_HREF, PLAY_WOULD_YOU_RATHER_HREF } from "@/lib/playRoutes";
+import { PLAY_DAILY_SPARK_HREF, PLAY_PREDICT_HREF, PLAY_QUIZ_CATALOG_HREF, PLAY_SCENARIOS_HREF, PLAY_THIS_OR_THAT_HREF, PLAY_WOULD_YOU_RATHER_HREF } from "@/lib/playRoutes";
 
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -85,7 +85,6 @@ const DataVault = lazy(() => import("@/pages/DataVault"));
 const Imports = lazy(() => import("@/pages/Imports"));
 const Flags = lazy(() => import("@/pages/Flags"));
 const Cosmic = lazy(() => import("@/pages/Cosmic"));
-const PredictYourself = lazy(() => import("@/pages/PredictYourself"));
 const TimeCapsule = lazy(() => import("@/pages/TimeCapsule"));
 const Wingman = lazy(() => import("@/pages/Wingman"));
 const WingmanRespond = lazy(() => import("@/pages/WingmanRespond"));
@@ -356,7 +355,9 @@ function Router() {
         <Route path="/games/scenarios">
           <Redirect to={PLAY_SCENARIOS_HREF} />
         </Route>
-        <Route path="/games/predict" component={PredictYourself} />
+        <Route path="/games/predict">
+          <Redirect to={PLAY_PREDICT_HREF} />
+        </Route>
         <Route path="/games/time-capsule" component={TimeCapsule} />
         <Route path="/wingman" component={Wingman} />
         <Route path="/wingman/r/:token" component={WingmanRespond} />
