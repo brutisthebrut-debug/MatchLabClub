@@ -265,7 +265,16 @@ stores.prediction_responses = {
 stores.time_capsules = {
   rows: [],
   nextId: 1,
-  defaults: { userId: null, anonymousClaimToken: null },
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    echoUseAllowed: false,
+    echoUseUpdatedAt: null,
+    learningConfirmed: false,
+    learningConfirmedAt: null,
+    matchingUseAllowed: false,
+    matchingUseUpdatedAt: null,
+  },
 };
 stores.cosmic_charts = {
   rows: [],
