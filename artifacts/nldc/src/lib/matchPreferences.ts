@@ -17,7 +17,7 @@ export const MATCH_GENDER_OPTIONS = [
 export function snapMatchRadiusKm(km: number | null | undefined): string {
   if (km == null) return "any";
 
-  let nearest = MATCH_RADIUS_PRESETS[1];
+  let nearest: (typeof MATCH_RADIUS_PRESETS)[number] = MATCH_RADIUS_PRESETS[1];
   let bestDistance = Number.POSITIVE_INFINITY;
   for (const preset of MATCH_RADIUS_PRESETS) {
     if (preset.value === "any") continue;
