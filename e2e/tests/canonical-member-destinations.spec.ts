@@ -151,7 +151,7 @@ async function verifyDestination(
     destination.heading,
   );
   await expect(page.getByRole("main")).toHaveCount(1);
-  await expect(page.locator("title")).not.toHaveText("");
+  expect(await page.title(), `${destination.path} document title`).not.toBe("");
 
   if (destination.path !== "/echo") {
     await expect(
