@@ -6,6 +6,7 @@ import {
   PLAY_QUIZ_CATALOG_HREF,
   PLAY_SCENARIOS_HREF,
   PLAY_THIS_OR_THAT_HREF,
+  PLAY_TIME_CAPSULE_HREF,
   PLAY_WOULD_YOU_RATHER_HREF,
   shouldFocusQuizCatalog,
 } from "./playRoutes";
@@ -48,5 +49,11 @@ describe("Play compatibility routing", () => {
     expect(PLAY_PREDICT_HREF).toBe("/play?game=predict");
     expect(embeddedPlayGame(PLAY_PREDICT_HREF)).toBe("predict");
     expect(shouldFocusQuizCatalog(PLAY_PREDICT_HREF)).toBe(false);
+  });
+
+  it("reopens the canonical embedded Time Capsule history and capture", () => {
+    expect(PLAY_TIME_CAPSULE_HREF).toBe("/play?game=time-capsule");
+    expect(embeddedPlayGame(PLAY_TIME_CAPSULE_HREF)).toBe("time-capsule");
+    expect(shouldFocusQuizCatalog(PLAY_TIME_CAPSULE_HREF)).toBe(false);
   });
 });
