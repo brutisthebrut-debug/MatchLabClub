@@ -6301,9 +6301,9 @@ paths:
       summary: List the signed-in user's predict-yourself rounds
       description: |
         Returns the caller's completed predict-yourself rounds, newest first.
-        Each round records only the predicted count and the actual count, never
-        which individual statements were marked true. Distinct rounds completed
-        feed matching readiness as a low-weight self-awareness signal.
+        Each round records only the predicted count and actual count, never
+        individual statements. Saving is storage-only. Only rounds with explicit
+        matching permission contribute to matching signals.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -6358,6 +6358,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/predictions/{itemId}/permissions:
+    patch:
+      tags: [Matching]
+      operationId: updatePredictionPermissions
+      summary: Update independent permissions for one owned prediction round
+      description: |
+        Saving a round is storage-only. This operation separately controls Echo
+        use, confirmed learning, and matching use. Omitted fields remain
+        unchanged, and only the response owner may update it.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportPermissionPatch'
+      responses:
+        '200':
+          description: Updated round and independent permission state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        '400':
+          description: No permission change was supplied.
+        '401':
+          description: Authentication required.
+        '404':
+          description: Response not found or not owned.
 
   /me/time-capsules:
     get:
@@ -14295,7 +14332,7 @@ components:
 
     PredictionResponse:
       type: object
-      required: [itemId, predicted, actual, createdAt]
+      required: [itemId, predicted, actual, echoUseAllowed, learningConfirmed, matchingUseAllowed, createdAt]
       properties:
         itemId:
           type: string
@@ -14307,6 +14344,12 @@ components:
           type: integer
           minimum: 0
           maximum: 100
+        echoUseAllowed:
+          type: boolean
+        learningConfirmed:
+          type: boolean
+        matchingUseAllowed:
+          type: boolean
         createdAt:
           type: string
 
