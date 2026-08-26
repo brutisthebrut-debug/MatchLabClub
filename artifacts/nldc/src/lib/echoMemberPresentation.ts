@@ -1,5 +1,5 @@
 export type EchoMemberReactionInput = {
-  tone: "crossing" | "dip" | "rise";
+  tone: "crossing" | "dip" | "rise" | "steady";
   headline: string;
   nowSee?: string | null;
   nextMove?: {
