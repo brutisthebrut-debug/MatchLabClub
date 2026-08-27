@@ -53,6 +53,24 @@ describe("Echo capability routing", () => {
     });
   });
 
+  it("keeps a safe server suggestion available before the member has typed", () => {
+    expect(
+      resolveEchoCapabilityAction({
+        message: "   ",
+        serverNextMove: {
+          label: "Go to Today",
+          detail: "Start with the one thing that matters now.",
+          href: "/today",
+        },
+      }),
+    ).toEqual({
+      id: "today",
+      label: "Go to Today",
+      detail: "Start with the one thing that matters now.",
+      href: "/today",
+    });
+  });
+
   it("canonicalizes the retired matching route and rejects unknown destinations", () => {
     expect(
       resolveEchoCapabilityAction({
