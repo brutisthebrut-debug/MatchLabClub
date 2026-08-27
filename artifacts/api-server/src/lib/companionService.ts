@@ -72,6 +72,35 @@ export interface EchoReplyResult {
   isFallback: boolean;
 }
 
+export type EchoConversationTurn = {
+  role: "user" | "echo";
+  content: string;
+};
+
+/**
+ * Keeps enough recent context for continuity without letting an old thread
+ * crowd the current question out of the model window.
+ */
+export function formatRecentConversation(
+  turns: EchoConversationTurn[],
+  maxTurns = 8,
+  maxChars = 6000,
+): string {
+  const lines = turns.slice(-maxTurns).map(
+    (turn) =>
+      `${turn.role === "user" ? "Member" : "Echo"}: ${turn.content.slice(0, 800)}`,
+  );
+  const selected: string[] = [];
+  let remaining = maxChars;
+  for (let index = lines.length - 1; index >= 0 && remaining > 0; index -= 1) {
+    const line = lines[index].slice(0, remaining);
+    if (!line) break;
+    selected.unshift(line);
+    remaining -= line.length + 1;
+  }
+  return selected.join("\n");
+}
+
 /**
  * Conversational reply. Deterministic answer is the baseline; Claude reshapes it
  * in the chosen persona voice using only the derived portrait lines.
@@ -85,7 +114,7 @@ export async function echoReply(args: {
   persona: CompanionPersona;
   candor: number;
   recentSummary: string | null;
-  recentTurns: Array<{ role: "user" | "echo"; content: string }>;
+  recentTurns: EchoConversationTurn[];
   openCommitments: string[];
 }): Promise<EchoReplyResult> {
   const {
@@ -115,11 +144,7 @@ export async function echoReply(args: {
   const nextLine = portrait.nextSignal
     ? `${portrait.nextSignal.label} (about ${portrait.nextSignal.points} points): ${portrait.nextSignal.detail}`
     : "none, the picture is fairly complete";
-  const recentConversation = recentTurns
-    .slice(-8)
-    .map((turn) => `${turn.role === "user" ? "Member" : "Echo"}: ${turn.content.slice(0, 800)}`)
-    .join("\n")
-    .slice(-6000);
+  const recentConversation = formatRecentConversation(recentTurns);
 
   const system = [
     `You are ${personaLabel(persona)} inside MatchLab Club. You are one persistent`,
