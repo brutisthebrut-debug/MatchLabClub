@@ -10304,7 +10304,6 @@ components:
           minimum: 0
         turns:
           type: array
-          maxItems: 20
           items:
             $ref: "#/components/schemas/CompanionTurn"
         settings:
