@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { EchoCapabilityAction } from './echoCapabilityAction';
 import type { CompanionCommitment } from './companionCommitment';
 
 export interface CompanionSayResult {
@@ -12,5 +13,6 @@ export interface CompanionSayResult {
   followUp: string;
   grounding: string[];
   isFallback: boolean;
+  capabilityAction: EchoCapabilityAction | null;
   commitment?: CompanionCommitment | null;
 }
