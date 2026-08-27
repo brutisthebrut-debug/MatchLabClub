@@ -252,6 +252,24 @@ segment plan.
   and API applications on every pull request; they do not depend on a hosted
   preview.
 
+## Long-lived draft divergence
+
+- Draft PR #2 is 203 commits ahead of and 270 commits behind `main`; it must not
+  be merged wholesale.
+- It contains several code-proven batches that never reached `main`, including
+  the canonical Member / Insight / Match / Guided commercial-plan engine,
+  connected-runtime safety, the first-party member-data registry, persisted
+  Matches date/debrief learning, and Play-to-Journey integration.
+- `main` still contains the retired `signal-audit`, `dating-reset`, and
+  `wingman` billing catalog. Paid products remain fail-closed, so this is
+  product-contract drift rather than an active charge risk.
+- PR #2 is now an extraction source. Each selected capability must be ported
+  onto current `main` as a small PR, reconciled with the newer shell, and pass
+  exact-head CI before its status changes to merged.
+- Draft PR #1 is older still (56 commits ahead, 270 behind) and is superseded
+  for implementation purposes; unique security evidence should be audited
+  before it is closed.
+
 ## Current unmerged verification queue
 
 - PR #97 is the clean replacement for provider-neutral release auth and the
