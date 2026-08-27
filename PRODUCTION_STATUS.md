@@ -252,6 +252,21 @@ segment plan.
   and API applications on every pull request; they do not depend on a hosted
   preview.
 
+## Current unmerged verification queue
+
+- PR #97 is the clean replacement for provider-neutral release auth and the
+  fail-closed receipts webhook. PR #96 is superseded.
+- PRs #99, #100, and #101 are the ordered Echo capability-routing and bounded
+  conversation-memory chain.
+- GitHub is accepting workflow events but assigning `runner_id: 0`; all three
+  Ubuntu jobs finish with no runner, no steps, and no logs. These are
+  infrastructure failures and are not passing evidence.
+- Vercel still exposes only the API project. The version-45 Sites URL is a
+  visual reference, not the authenticated repository app. Its inert Echo and
+  quiz controls are therefore expected and cannot be accepted as product proof.
+- The repository Quiz Lab itself is implemented; functional proof requires the
+  separate `artifacts/nldc` web project connected to the real API/auth/runtime.
+
 ## Release gate
 
 Do not represent the current repository as production-ready. Automated Phase 0
@@ -265,7 +280,7 @@ settings (plus the native mobile equivalents), then exercising
 Checkout/webhooks, renewal, cancellation, failure, and refund behavior in
 Stripe test mode and obtaining founder/legal approval before any live offer.
 PR #95 added a value-safe pre-production environment contract and CI coverage;
-it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value. PR #96
+it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value. Replacement PR #97
 moves the runtime and release contract to provider-neutral auth and trusted-origin
 names while retaining the old names only as temporary rollout fallbacks. Those
 fallback names are not accepted as substitutes by the release validator.
