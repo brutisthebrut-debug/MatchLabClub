@@ -960,6 +960,23 @@ verified because hosted runners have not executed.
   handoff. The remaining gap is connected hosting and end-to-end acceptance,
   not another quiz implementation.
 
+## Long-lived draft branch reconciliation
+
+State: audited; extraction required.
+
+- Draft PR #2 cannot be merged safely as a unit: it is 203 commits ahead of and
+  270 commits behind `main`.
+- Canonical commercial plans, runtime safety, the member-data privacy registry,
+  date/debrief learning, and Play/Journey integration remain stranded on that
+  branch even though their historical branch gates passed.
+- Current `main` still exposes the retired commercial product keys internally.
+  Billing remains fail-closed, preventing an unintended charge, but the
+  canonical Member / Insight / Match / Guided contract must be ported before
+  Stripe test-mode acceptance.
+- Extraction order after the current CI outage: canonical commercial plans and
+  entitlement policy; privacy/runtime safety; Matches and Play learning paths.
+  Each becomes its own current-main PR with fresh regression evidence.
+
 ## Next segments
 
 1. Merge replacement PR #97 after its required exact-head GitHub runners
