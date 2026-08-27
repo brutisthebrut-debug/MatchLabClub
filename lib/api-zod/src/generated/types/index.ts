@@ -117,6 +117,7 @@ export * from './companionState';
 export * from './companionTurn';
 export * from './companionTurnRole';
 export * from './companionUnreadCount';
+export * from './echoCapabilityAction';
 export * from './compassMirrorTieIn';
 export * from './compassMovement';
 export * from './compassNextSignal';
