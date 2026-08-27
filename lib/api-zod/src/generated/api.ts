@@ -4193,6 +4193,11 @@ export const GetCompanionResponse = zod.object({
   "completedAt": zod.union([zod.string(),zod.null()]).optional()
 })),
   "unreadCount": zod.number().min(getCompanionResponseUnreadCountMin),
+  "turns": zod.array(zod.object({
+  "role": zod.enum(['user', 'echo']),
+  "content": zod.string(),
+  "createdAt": zod.string()
+})),
   "settings": zod.object({
   "persona": zod.enum(['best_friend', 'tough_coach', 'witty_sibling', 'calm_mentor']),
   "candor": zod.number().min(1).max(getCompanionResponseSettingsCandorMax),
