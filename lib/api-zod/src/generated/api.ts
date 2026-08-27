@@ -7379,4 +7379,63 @@ export const ReportConnectionResponse = zod.object({
   "lastMessagePreview": zod.string().nullable()
 })
 
+/**
+ * Returns the approved Member, Insight, Match, and Guided outcome ladder,
+including prices, progression prompts, included services, and bounded
+entitlements. These are commercial packages, not numbered product
+progress levels. No authentication is required.
 
+ * @summary Get the canonical MatchLab commercial plans
+ */
+export const getCommercialPlansResponsePlansItemPricesItemAmountCentsMin = 0;
+
+export const getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMinMin = 0;
+
+export const getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMaxMin = 0;
+
+export const GetCommercialPlansResponse = zod.object({
+  plans: zod.array(
+    zod.object({
+      key: zod.enum(["member", "insight", "match", "guided"]),
+      label: zod.string(),
+      outcome: zod.string(),
+      prices: zod.array(
+        zod.object({
+          cadence: zod.enum(["free", "monthly", "annual", "quarterly"]),
+          amountCents: zod
+            .number()
+            .min(getCommercialPlansResponsePlansItemPricesItemAmountCentsMin),
+        }),
+      ),
+      monthlyRangeCents: zod.union([
+        zod.object({
+          min: zod
+            .number()
+            .min(getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMinMin),
+          max: zod
+            .number()
+            .min(getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMaxMin),
+        }),
+        zod.null(),
+      ]),
+      includes: zod.array(zod.string()),
+      upgradeCta: zod.string().nullable(),
+      nextPlanKey: zod
+        .union([
+          zod.literal("member"),
+          zod.literal("insight"),
+          zod.literal("match"),
+          zod.literal("guided"),
+          zod.literal(null),
+        ])
+        .nullable(),
+      entitlements: zod.object({
+        fullMirror: zod.boolean(),
+        expandedPlay: zod.boolean(),
+        selectedSources: zod.boolean(),
+        activeMatching: zod.boolean(),
+        humanGuidance: zod.boolean(),
+      }),
+    }),
+  ),
+});
