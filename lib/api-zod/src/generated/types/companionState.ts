@@ -9,6 +9,7 @@ import type { CompanionCommitment } from './companionCommitment';
 import type { CompanionNextMove } from './companionNextMove';
 import type { CompanionObservation } from './companionObservation';
 import type { CompanionSettings } from './companionSettings';
+import type { CompanionTurn } from './companionTurn';
 
 export interface CompanionState {
   personaLabel: string;
@@ -31,5 +32,6 @@ export interface CompanionState {
   commitments: CompanionCommitment[];
   /** @minimum 0 */
   unreadCount: number;
+  turns: CompanionTurn[];
   settings: CompanionSettings;
 }

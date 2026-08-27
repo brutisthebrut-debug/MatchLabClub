@@ -370,6 +370,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                           <button
                             key={oi}
                             onClick={() => handleAnswer(oi)}
+                            data-testid={`quiz-answer-${step}-${oi}`}
                             className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 text-sm md:text-base font-medium ${
                               isSelected
                                 ? "border-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)] text-[hsl(248_62%_40%)] dark:text-[hsl(248_62%_70%)] shadow-sm transform scale-[1.01]"
@@ -410,6 +411,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                       size="lg"
                       onClick={handleSubmit}
                       disabled={!allAnswered || submitting}
+                      data-testid="quiz-reveal"
                       className="rounded-full px-8 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
                     >
                       {submitting ? (<><Loader2 className="mr-2 w-5 h-5 animate-spin" /> Reading your pattern…</>) : (<>Reveal My Result <Sparkles className="ml-2 w-4 h-4" /></>)}

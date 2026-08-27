@@ -227,3 +227,44 @@ for (const viewport of [
     }
   });
 }
+
+test("Echo guides a seeded member into a playable quiz and result", async ({
+  page,
+  request,
+  context,
+}) => {
+  await signInAsSeededDemo(request, context);
+  await page.goto("/today", { waitUntil: "domcontentloaded" });
+
+  await page.getByRole("button", { name: "Open Echo" }).click();
+  await page.getByTestId("echo-talk-input").fill(
+    "I want to take a quiz about my attachment style.",
+  );
+  await page.getByTestId("echo-talk-send").click();
+
+  const quizAction = page.getByTestId("echo-capability-quiz_lab");
+  await expect(quizAction).toBeVisible();
+  await expect(quizAction).toHaveAttribute("href", "/play?section=quizzes");
+  await quizAction.click();
+
+  await expect(page).toHaveURL(/\/play\?section=quizzes$/);
+  await page.locator("#quizzes").getByRole("link", { name: /^Start/ }).first().click();
+  await expect(page).toHaveURL(/\/quizzes\/[^/?]+$/);
+
+  for (let question = 0; question < 20; question += 1) {
+    const reveal = page.getByTestId("quiz-reveal");
+    if (await reveal.isVisible()) break;
+
+    const answer = page.locator('[data-testid^="quiz-answer-"]').first();
+    await expect(answer).toBeVisible();
+    await answer.click();
+    await page.waitForTimeout(450);
+  }
+
+  const reveal = page.getByTestId("quiz-reveal");
+  await expect(reveal).toBeEnabled();
+  await reveal.click();
+  await expect(page.getByTestId("quizplay-mirror-learned")).toBeVisible({
+    timeout: 15_000,
+  });
+});

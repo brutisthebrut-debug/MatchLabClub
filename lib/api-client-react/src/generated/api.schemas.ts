@@ -2178,6 +2178,7 @@ export interface CompanionState {
   commitments: CompanionCommitment[];
   /** @minimum 0 */
   unreadCount: number;
+  turns: CompanionTurn[];
   settings: CompanionSettings;
 }
 

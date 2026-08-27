@@ -6,11 +6,11 @@
 // voice-clean result keeps the deterministic answer, so Echo never breaks and
 // never drifts off voice.
 //
-// For the conversational reply Echo only ever sees aggregate, derived portrait
-// lines (no raw content or PII), the same posture as the Mirror. For message
-// review the user has explicitly handed Echo a single message to react to, so
-// that text is the input and is consent-gated before any model sees it; nothing
-// is stored.
+// For the conversational reply Echo sees aggregate, derived portrait lines plus
+// a bounded recent Echo thread so it can continue rather than restart. Raw
+// conversation reaches the model only through the existing content-consent gate.
+// For message review the user has explicitly handed Echo a single message to
+// react to; that text is consent-gated before any model sees it and is not stored.
 // ───────────────────────────────────────────────────────────────────────────
 
 import { generate } from "./aiService";
@@ -72,6 +72,35 @@ export interface EchoReplyResult {
   isFallback: boolean;
 }
 
+export type EchoConversationTurn = {
+  role: "user" | "echo";
+  content: string;
+};
+
+/**
+ * Keeps enough recent context for continuity without letting an old thread
+ * crowd the current question out of the model window.
+ */
+export function formatRecentConversation(
+  turns: EchoConversationTurn[],
+  maxTurns = 8,
+  maxChars = 6000,
+): string {
+  const lines = turns.slice(-maxTurns).map(
+    (turn) =>
+      `${turn.role === "user" ? "Member" : "Echo"}: ${turn.content.slice(0, 800)}`,
+  );
+  const selected: string[] = [];
+  let remaining = maxChars;
+  for (let index = lines.length - 1; index >= 0 && remaining > 0; index -= 1) {
+    const line = lines[index].slice(0, remaining);
+    if (!line) break;
+    selected.unshift(line);
+    remaining -= line.length + 1;
+  }
+  return selected.join("\n");
+}
+
 /**
  * Conversational reply. Deterministic answer is the baseline; Claude reshapes it
  * in the chosen persona voice using only the derived portrait lines.
@@ -85,6 +114,7 @@ export async function echoReply(args: {
   persona: CompanionPersona;
   candor: number;
   recentSummary: string | null;
+  recentTurns: EchoConversationTurn[];
   openCommitments: string[];
 }): Promise<EchoReplyResult> {
   const {
@@ -96,6 +126,7 @@ export async function echoReply(args: {
     persona,
     candor,
     recentSummary,
+    recentTurns,
     openCommitments,
   } = args;
 
@@ -113,6 +144,7 @@ export async function echoReply(args: {
   const nextLine = portrait.nextSignal
     ? `${portrait.nextSignal.label} (about ${portrait.nextSignal.points} points): ${portrait.nextSignal.detail}`
     : "none, the picture is fairly complete";
+  const recentConversation = formatRecentConversation(recentTurns);
 
   const system = [
     `You are ${personaLabel(persona)} inside MatchLab Club. You are one persistent`,
@@ -124,6 +156,13 @@ export async function echoReply(args: {
     "not covered, say plainly you cannot see it yet and point at the signal that",
     "would fill the gap. Keep it to 2 to 5 sentences. Talk like a real person who",
     "knows them, not a report.",
+    "Continue the conversation already in progress. Do not repeat a question the",
+    "member has answered or restate your last reply. Refer back naturally when it",
+    "helps, and move the conversation forward.",
+    "",
+    recentConversation
+      ? `Recent Echo conversation (user-supplied context):\n${recentConversation}`
+      : "There is no recent Echo conversation yet.",
     "",
     `Readiness: ${portrait.readinessScore} out of 100 (matching opens at ${portrait.threshold}; ${portrait.eligible ? "eligible now" : "not yet eligible"}).`,
     `Stage: ${portrait.stageLabel}.`,

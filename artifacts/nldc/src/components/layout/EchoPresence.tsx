@@ -214,6 +214,7 @@ export function EchoPresence() {
   const pulse = usePulseCompanion();
 
   const [turns, setTurns] = useState<EchoTurn[]>([]);
+  const hydratedThreadRef = useRef(false);
   const [draft, setDraft] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewDir, setReviewDir] =
@@ -226,6 +227,17 @@ export function EchoPresence() {
   const [reaction, setReaction] = useState<CompanionReaction | null>(null);
   const lastScoreRef = useRef<number | null>(null);
   const score = matchingState?.readiness.score ?? null;
+
+  useEffect(() => {
+    if (hydratedThreadRef.current || !data?.turns) return;
+    hydratedThreadRef.current = true;
+    setTurns(
+      data.turns.map((turn) => ({
+        role: turn.role === "user" ? "you" : "echo",
+        text: turn.content,
+      })),
+    );
+  }, [data?.turns]);
 
   useEffect(() => {
     if (!isAuthenticated || score === null) return;

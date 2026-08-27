@@ -294,6 +294,19 @@ router.get("/me/companion", async (req, res): Promise<void> => {
     .orderBy(desc(companionObservationsTable.createdAt))
     .limit(8);
 
+  const recentTurns = (
+    await db
+      .select({
+        role: companionMessagesTable.role,
+        content: companionMessagesTable.content,
+        createdAt: companionMessagesTable.createdAt,
+      })
+      .from(companionMessagesTable)
+      .where(eq(companionMessagesTable.userId, userId))
+      .orderBy(desc(companionMessagesTable.createdAt))
+      .limit(20)
+  ).reverse();
+
   const [unread] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(companionNotificationsTable)
@@ -331,6 +344,11 @@ router.get("/me/companion", async (req, res): Promise<void> => {
         completedAt: toIsoOrNull(c.completedAt),
       })),
       unreadCount: unread?.count ?? 0,
+      turns: recentTurns.map((turn) => ({
+        role: turn.role,
+        content: turn.content,
+        createdAt: toIso(turn.createdAt),
+      })),
       settings: settingsPayload(state, prefs),
     }),
   );
@@ -371,6 +389,18 @@ router.post("/me/companion/say", async (req, res): Promise<void> => {
     })),
   });
 
+  const recentTurns = (
+    await db
+      .select({
+        role: companionMessagesTable.role,
+        content: companionMessagesTable.content,
+      })
+      .from(companionMessagesTable)
+      .where(eq(companionMessagesTable.userId, userId))
+      .orderBy(desc(companionMessagesTable.createdAt))
+      .limit(8)
+  ).reverse();
+
   const capabilityAction = resolveEchoCapabilityAction({
     message,
     serverNextMove: view.oneThing,
@@ -393,6 +423,10 @@ router.post("/me/companion/say", async (req, res): Promise<void> => {
     persona,
     candor,
     recentSummary: state?.evolvingSummary ?? null,
+    recentTurns: recentTurns.map((turn) => ({
+      role: turn.role === "echo" ? "echo" : "user",
+      content: turn.content,
+    })),
     openCommitments: openCommitments.map((c) => c.body),
   });
 

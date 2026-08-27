@@ -9227,7 +9227,7 @@ export const getSayToCompanionUrl = () => {
  * Persists the user's message and Echo's reply to the durable thread. The
 deterministic baseline always answers; when the account has granted
 content consent, Claude shapes a warmer, persona-voiced reply from
-derived signal coverage only (never raw content). If Echo detects a
+derived signal coverage and a bounded recent Echo thread. If Echo detects a
 commitment ("I'll text her back tonight") it records it to follow up on.
 Requires auth.
 
