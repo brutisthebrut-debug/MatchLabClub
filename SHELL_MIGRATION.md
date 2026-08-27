@@ -913,7 +913,7 @@ State: merged to `main` and verified.
 
 ## Segment 3G9: provider-neutral auth and trusted origins
 
-State: in PR #96.
+State: in replacement PR #97; not merged until exact-head CI executes.
 
 - OIDC discovery, logout, and mobile token exchange now require an explicit
   HTTPS `ISSUER_URL` and prefer `OIDC_CLIENT_ID`; CORS and CSRF consume exact
@@ -934,17 +934,42 @@ State: in PR #96.
   through `0056`. Paid products remain fail-closed.
 - Hosted verification is temporarily blocked outside the repository: GitHub
   ends all three jobs before assigning a runner or executing a step, and Vercel
-  reports the Hobby team's 100-deployments-per-24-hours limit. PR #96 remains
-  unmerged until the required exact-head workflow can execute.
+  reports the Hobby team's 100-deployments-per-24-hours limit. PR #97 remains
+  unmerged until the required exact-head workflow can execute. PR #96 is the
+  superseded branch and must not be merged.
+
+## Segment 3G10: Echo capability guidance and conversation continuity
+
+State: implemented across stacked PRs #99, #100, and #101; not merged or
+verified because hosted runners have not executed.
+
+- PR #99 lets free conversation suggest one safe canonical destination across
+  Today, Matches, My MatchLab, Journey, Play, Quiz Lab, and Trust & Data.
+- PR #100 moves that choice into the shared Echo package and server response,
+  records the offered capability in grounding, and keeps navigation advisory.
+  Echo still cannot silently write learning, change consent, send a message, or
+  activate matching.
+- PR #101 gives Echo bounded continuity: eight recent turns and at most 6,000
+  characters reach the consent-gated model, while the 20 most recent durable
+  turns restore when the panel reopens.
+- The Sites version-45 link remains a design reference. Its Echo input and quiz
+  controls are not the connected application and must not be used as functional
+  acceptance evidence.
+- The real repository Quiz Lab already owns playable deep links, question state,
+  scoring, deterministic results, durable result writes, and Play/Journey
+  handoff. The remaining gap is connected hosting and end-to-end acceptance,
+  not another quiz implementation.
 
 ## Next segments
 
-1. Merge PR #96 after the required exact-head GitHub runners execute
-   successfully; do not substitute Vercel or local-only evidence for that gate.
-2. Provision the separate visual Vercel project rooted at `artifacts/nldc`
+1. Merge replacement PR #97 after its required exact-head GitHub runners
+   execute successfully; close superseded PR #96.
+2. Verify and merge Echo PRs #99, #100, and #101 in order, retargeting each
+   stacked PR to `main` after its predecessor lands.
+3. Provision the separate visual Vercel project rooted at `artifacts/nldc`
    when project-creation access is available. The refreshed Sites reference
    visual is live at
    `https://matchlab-echo-journey.sweetdmarlin.chatgpt.site` (version 45),
    but it is not the authenticated production web deployment.
-3. Apply release migrations, run Stripe test-mode verification, and complete
+4. Apply release migrations, run Stripe test-mode verification, and complete
    founder/legal release gates.
