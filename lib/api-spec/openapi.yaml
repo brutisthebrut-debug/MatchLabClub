@@ -10264,6 +10264,7 @@ components:
         - observations
         - commitments
         - unreadCount
+        - turns
         - settings
       properties:
         personaLabel:
@@ -10301,6 +10302,11 @@ components:
         unreadCount:
           type: integer
           minimum: 0
+        turns:
+          type: array
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/CompanionTurn"
         settings:
           $ref: "#/components/schemas/CompanionSettings"
 
