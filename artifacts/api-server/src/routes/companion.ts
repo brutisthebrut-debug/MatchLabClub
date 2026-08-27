@@ -25,6 +25,7 @@ import {
   UpdateCompanionSettingsResponse,
   CompleteCompanionCommitmentResponse,
 } from "@workspace/api-zod";
+import { resolveEchoCapabilityAction } from "@workspace/echo";
 import { buildMirrorPortrait, type MirrorPortrait } from "../lib/aiEngine";
 import { computeNextActions } from "../lib/readiness";
 import {
@@ -370,6 +371,10 @@ router.post("/me/companion/say", async (req, res): Promise<void> => {
     })),
   });
 
+  const capabilityAction = resolveEchoCapabilityAction({
+    message,
+    serverNextMove: view.oneThing,
+  });
   const deterministic = answerCompanion(view, message);
 
   // Persist the user's turn.
@@ -391,12 +396,17 @@ router.post("/me/companion/say", async (req, res): Promise<void> => {
     openCommitments: openCommitments.map((c) => c.body),
   });
 
-  // Persist Echo's turn with the real grounding it leaned on.
+  const responseGrounding = capabilityAction
+    ? [...reply.grounding, `capability:${capabilityAction.id}`]
+    : reply.grounding;
+
+  // Persist Echo's turn with the real grounding it leaned on, including the
+  // canonical capability it offered when navigation would help.
   await db.insert(companionMessagesTable).values({
     userId,
     role: "echo",
     content: reply.answer,
-    grounding: reply.grounding as unknown as Record<string, unknown>,
+    grounding: responseGrounding as unknown as Record<string, unknown>,
   });
 
   // Record any commitment Echo heard, and surface it in the feed so the user
@@ -439,8 +449,9 @@ router.post("/me/companion/say", async (req, res): Promise<void> => {
     SayToCompanionResponse.parse({
       answer: reply.answer,
       followUp: reply.followUp,
-      grounding: reply.grounding,
+      grounding: responseGrounding,
       isFallback: reply.isFallback,
+      capabilityAction,
       commitment,
     }),
   );
