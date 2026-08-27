@@ -10325,9 +10325,22 @@ components:
         createdAt:
           type: string
 
+    EchoCapabilityAction:
+      type: object
+      required: [id, label, detail, href]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        detail:
+          type: string
+        href:
+          type: string
+
     CompanionSayResult:
       type: object
-      required: [answer, followUp, grounding, isFallback]
+      required: [answer, followUp, grounding, isFallback, capabilityAction]
       properties:
         answer:
           type: string
@@ -10339,6 +10352,10 @@ components:
             type: string
         isFallback:
           type: boolean
+        capabilityAction:
+          oneOf:
+            - $ref: "#/components/schemas/EchoCapabilityAction"
+            - type: "null"
         commitment:
           oneOf:
             - $ref: "#/components/schemas/CompanionCommitment"
