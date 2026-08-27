@@ -4227,6 +4227,12 @@ export const SayToCompanionResponse = zod.object({
   "followUp": zod.string(),
   "grounding": zod.array(zod.string()),
   "isFallback": zod.boolean(),
+  "capabilityAction": zod.union([zod.object({
+  "id": zod.string(),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string()
+}),zod.null()]),
   "commitment": zod.union([zod.object({
   "id": zod.number(),
   "body": zod.string(),
