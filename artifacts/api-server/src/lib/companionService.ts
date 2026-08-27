@@ -85,6 +85,7 @@ export async function echoReply(args: {
   persona: CompanionPersona;
   candor: number;
   recentSummary: string | null;
+  recentTurns: Array<{ role: "user" | "echo"; content: string }>;
   openCommitments: string[];
 }): Promise<EchoReplyResult> {
   const {
@@ -96,6 +97,7 @@ export async function echoReply(args: {
     persona,
     candor,
     recentSummary,
+    recentTurns,
     openCommitments,
   } = args;
 
@@ -113,6 +115,11 @@ export async function echoReply(args: {
   const nextLine = portrait.nextSignal
     ? `${portrait.nextSignal.label} (about ${portrait.nextSignal.points} points): ${portrait.nextSignal.detail}`
     : "none, the picture is fairly complete";
+  const recentConversation = recentTurns
+    .slice(-8)
+    .map((turn) => `${turn.role === "user" ? "Member" : "Echo"}: ${turn.content.slice(0, 800)}`)
+    .join("\n")
+    .slice(-6000);
 
   const system = [
     `You are ${personaLabel(persona)} inside MatchLab Club. You are one persistent`,
@@ -124,6 +131,13 @@ export async function echoReply(args: {
     "not covered, say plainly you cannot see it yet and point at the signal that",
     "would fill the gap. Keep it to 2 to 5 sentences. Talk like a real person who",
     "knows them, not a report.",
+    "Continue the conversation already in progress. Do not repeat a question the",
+    "member has answered or restate your last reply. Refer back naturally when it",
+    "helps, and move the conversation forward.",
+    "",
+    recentConversation
+      ? `Recent Echo conversation (user-supplied context):\n${recentConversation}`
+      : "There is no recent Echo conversation yet.",
     "",
     `Readiness: ${portrait.readinessScore} out of 100 (matching opens at ${portrait.threshold}; ${portrait.eligible ? "eligible now" : "not yet eligible"}).`,
     `Stage: ${portrait.stageLabel}.`,
