@@ -64,6 +64,7 @@ import type {
   CoachFollowUpRecorded,
   CoachFollowUpStats,
   CoachFollowUpTimeline,
+  CommercialPlansResponse,
   CompanionCommitment,
   CompanionMarkReadInput,
   CompanionNotificationList,
@@ -17146,3 +17147,78 @@ export const useReportConnection = <TError = ErrorType<ErrorEnvelope | AuthError
       return useMutation(getReportConnectionMutationOptions(options));
     }
 
+export const getGetCommercialPlansUrl = () => {
+
+
+
+
+  return `/api/plans`
+}
+
+/**
+ * Returns the approved Member, Insight, Match, and Guided outcome ladder,
+including prices, progression prompts, included services, and bounded
+entitlements. These are commercial packages, not numbered product
+progress levels. No authentication is required.
+
+ * @summary Get the canonical MatchLab commercial plans
+ */
+export const getCommercialPlans = async ( options?: RequestInit): Promise<CommercialPlansResponse> => {
+
+  return customFetch<CommercialPlansResponse>(getGetCommercialPlansUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCommercialPlansQueryKey = () => {
+    return [
+    `/api/plans`
+    ] as const;
+    }
+
+
+export const getGetCommercialPlansQueryOptions = <TData = Awaited<ReturnType<typeof getCommercialPlans>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCommercialPlans>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCommercialPlansQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCommercialPlans>>> = ({ signal }) => getCommercialPlans({ signal });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCommercialPlans>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCommercialPlansQueryResult = NonNullable<Awaited<ReturnType<typeof getCommercialPlans>>>
+export type GetCommercialPlansQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the canonical MatchLab commercial plans
+ */
+
+export function useGetCommercialPlans<TData = Awaited<ReturnType<typeof getCommercialPlans>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCommercialPlans>>, TError, TData>, }
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCommercialPlansQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
