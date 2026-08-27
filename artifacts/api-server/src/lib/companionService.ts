@@ -6,11 +6,11 @@
 // voice-clean result keeps the deterministic answer, so Echo never breaks and
 // never drifts off voice.
 //
-// For the conversational reply Echo only ever sees aggregate, derived portrait
-// lines (no raw content or PII), the same posture as the Mirror. For message
-// review the user has explicitly handed Echo a single message to react to, so
-// that text is the input and is consent-gated before any model sees it; nothing
-// is stored.
+// For the conversational reply Echo sees aggregate, derived portrait lines plus
+// a bounded recent Echo thread so it can continue rather than restart. Raw
+// conversation reaches the model only through the existing content-consent gate.
+// For message review the user has explicitly handed Echo a single message to
+// react to; that text is consent-gated before any model sees it and is not stored.
 // ───────────────────────────────────────────────────────────────────────────
 
 import { generate } from "./aiService";
