@@ -451,6 +451,7 @@ export const ExportMyDataResponse = zod.object({
 })),
   "postDateNotes": zod.array(zod.object({
   "id": zod.number(),
+  "connectionId": zod.string().uuid().nullable(),
   "dateAt": zod.coerce.date().nullish(),
   "personLabel": zod.string().nullish(),
   "platform": zod.string().nullish(),
@@ -1250,6 +1251,7 @@ export const DownloadEmailedExportResponse = zod.object({
 })),
   "postDateNotes": zod.array(zod.object({
   "id": zod.number(),
+  "connectionId": zod.string().uuid().nullable(),
   "dateAt": zod.coerce.date().nullish(),
   "personLabel": zod.string().nullish(),
   "platform": zod.string().nullish(),
@@ -1802,6 +1804,7 @@ export const ListPostDateNotesHeader = zod.object({
 export const ListPostDateNotesResponse = zod.object({
   "notes": zod.array(zod.object({
   "id": zod.number(),
+  "connectionId": zod.string().uuid().nullable(),
   "dateAt": zod.coerce.date().nullish(),
   "personLabel": zod.string().nullish(),
   "platform": zod.string().nullish(),
@@ -1842,6 +1845,7 @@ export const createPostDateNoteBodyFollowUpPlannedDefault = false;
 
 
 export const CreatePostDateNoteBody = zod.object({
+  "connectionId": zod.string().uuid().nullish().describe('Optional mutual connection this private debrief belongs to.'),
   "dateAt": zod.coerce.date().nullish().describe('When the date itself happened. Null = unspecified.'),
   "personLabel": zod.string().max(createPostDateNoteBodyPersonLabelMax).nullish().describe('Free-form label for the person. Copy encourages first-name-only.'),
   "platform": zod.string().max(createPostDateNoteBodyPlatformMax).nullish().describe('Origin platform (e.g. \"hinge\", \"bumble\", \"tinder\").'),
@@ -1896,6 +1900,7 @@ export const UpdatePostDateNoteBody = zod.object({
 
 export const UpdatePostDateNoteResponse = zod.object({
   "id": zod.number(),
+  "connectionId": zod.string().uuid().nullable(),
   "dateAt": zod.coerce.date().nullish(),
   "personLabel": zod.string().nullish(),
   "platform": zod.string().nullish(),
@@ -1941,6 +1946,7 @@ export const RestorePostDateNoteHeader = zod.object({
 
 export const RestorePostDateNoteResponse = zod.object({
   "id": zod.number(),
+  "connectionId": zod.string().uuid().nullable(),
   "dateAt": zod.coerce.date().nullish(),
   "personLabel": zod.string().nullish(),
   "platform": zod.string().nullish(),
@@ -7128,6 +7134,10 @@ export const GetConnectionsResponseItem = zod.object({
   "status": zod.enum(['active', 'closed']),
   "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
   "closedByYou": zod.boolean(),
+  "dateStage": zod.enum(['connected', 'date_planned', 'date_completed', 'debrief_saved']),
+  "datePlannedAt": zod.coerce.date().nullable(),
+  "dateCompletedAt": zod.coerce.date().nullable(),
+  "debriefNoteId": zod.number().nullable().describe("The signed-in member's active private debrief, never the counterpart's."),
   "unreadCount": zod.number(),
   "createdAt": zod.coerce.date(),
   "lastMessageAt": zod.coerce.date().nullable(),
@@ -7153,6 +7163,10 @@ export const GetConnectionResponse = zod.object({
   "status": zod.enum(['active', 'closed']),
   "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
   "closedByYou": zod.boolean(),
+  "dateStage": zod.enum(['connected', 'date_planned', 'date_completed', 'debrief_saved']),
+  "datePlannedAt": zod.coerce.date().nullable(),
+  "dateCompletedAt": zod.coerce.date().nullable(),
+  "debriefNoteId": zod.number().nullable().describe("The signed-in member's active private debrief, never the counterpart's."),
   "unreadCount": zod.number(),
   "createdAt": zod.coerce.date(),
   "lastMessageAt": zod.coerce.date().nullable(),
@@ -7195,6 +7209,71 @@ export const GetConnectionProfileResponse = zod.object({
   "matchSummary": zod.string().nullable().describe('Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.')
 })
 
+
+/**
+ * Three opener suggestions for the signed-in user to send. Generated only
+from reveal-safe aggregate fields (readiness phrasing, the aggregate match
+summary, the compatibility score, and the counterpart's display name when
+they turned reveal consent on). Never raw signals, lane breakdowns, or PII.
+Hybrid: a deterministic baseline always runs, with the deep AI lane layered
+on when the account opted in.
+
+ * @summary Conversation openers for a connection
+ */
+export const UpdateConnectionDateStateParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const UpdateConnectionDateStateHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const UpdateConnectionDateStateBody = zod.union([
+  zod.object({
+    action: zod.literal("plan"),
+    occurredAt: zod.coerce.date(),
+  }),
+  zod.object({
+    action: zod.literal("complete"),
+    occurredAt: zod.coerce.date().optional(),
+  }),
+]);
+
+export const UpdateConnectionDateStateResponse = zod.object({
+  id: zod.string().uuid(),
+  counterpartUserId: zod.string(),
+  status: zod.enum(["active", "closed"]),
+  closedReason: zod
+    .union([
+      zod.literal("unmatch"),
+      zod.literal("block"),
+      zod.literal("report"),
+      zod.literal(null),
+    ])
+    .nullish(),
+  closedByYou: zod.boolean(),
+  dateStage: zod.enum([
+    "connected",
+    "date_planned",
+    "date_completed",
+    "debrief_saved",
+  ]),
+  datePlannedAt: zod.coerce.date().nullable(),
+  dateCompletedAt: zod.coerce.date().nullable(),
+  debriefNoteId: zod
+    .number()
+    .nullable()
+    .describe(
+      "The signed-in member's active private debrief, never the counterpart's.",
+    ),
+  unreadCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  lastMessageAt: zod.coerce.date().nullable(),
+  lastMessagePreview: zod.string().nullable(),
+});
 
 /**
  * Three opener suggestions for the signed-in user to send. Generated only
@@ -7337,6 +7416,10 @@ export const UnmatchConnectionResponse = zod.object({
   "status": zod.enum(['active', 'closed']),
   "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
   "closedByYou": zod.boolean(),
+  "dateStage": zod.enum(['connected', 'date_planned', 'date_completed', 'debrief_saved']),
+  "datePlannedAt": zod.coerce.date().nullable(),
+  "dateCompletedAt": zod.coerce.date().nullable(),
+  "debriefNoteId": zod.number().nullable().describe("The signed-in member's active private debrief, never the counterpart's."),
   "unreadCount": zod.number(),
   "createdAt": zod.coerce.date(),
   "lastMessageAt": zod.coerce.date().nullable(),
@@ -7373,6 +7456,10 @@ export const ReportConnectionResponse = zod.object({
   "status": zod.enum(['active', 'closed']),
   "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
   "closedByYou": zod.boolean(),
+  "dateStage": zod.enum(['connected', 'date_planned', 'date_completed', 'debrief_saved']),
+  "datePlannedAt": zod.coerce.date().nullable(),
+  "dateCompletedAt": zod.coerce.date().nullable(),
+  "debriefNoteId": zod.number().nullable().describe("The signed-in member's active private debrief, never the counterpart's."),
   "unreadCount": zod.number(),
   "createdAt": zod.coerce.date(),
   "lastMessageAt": zod.coerce.date().nullable(),
