@@ -9,6 +9,11 @@ import type { PostDateOutcome } from './postDateOutcome';
 
 export interface PostDateNoteInput {
   /**
+     * Optional mutual connection this private debrief belongs to.
+     * @nullable
+     */
+  connectionId?: string | null;
+  /**
      * When the date itself happened. Null = unspecified.
      * @nullable
      */
