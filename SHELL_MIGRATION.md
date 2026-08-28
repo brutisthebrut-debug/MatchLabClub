@@ -467,6 +467,24 @@ State: merged to `main` and verified.
   ordered migrations through `0051`, and 105 API files with 951 tests on clean
   Postgres 16. The 8 skipped API tests remain the optional OCR suites.
 
+## Segment 3D3D: durable insight and introduction history
+
+State: implemented on `codex/journey-insights-introductions`, stacked on PR #107; exact-head verification and merge are pending.
+
+- Canonical Journey now includes the signed-in member's saved communication
+  insights, active compatibility reads, and real mutual introductions.
+- These sources remain read-only in Journey and link back to their canonical
+  source surfaces. They cannot be edited, removed, or selected as follow-up
+  sources from the Journey record.
+- The server performs owner-scoped reads. Journey never serializes pasted
+  conversation text, candidate raw profile text, counterpart identity, numeric
+  alignment, or readiness scores.
+- The compatibility record uses only a bounded connection-style label when one
+  exists; otherwise it presents generic saved-read language.
+- This slice depends on PR #107's server-owned Play history projection. PR #107
+  must merge first, then this branch must be rebased and verified on its exact
+  head.
+
 ## Segment 3E1: Quiz Lab absorption into Play
 
 State: merged to `main` and verified.
