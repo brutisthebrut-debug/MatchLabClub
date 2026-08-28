@@ -11,7 +11,12 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
-import { db, postDateNotesTable } from "@workspace/db";
+import {
+  db,
+  matchConnectionsTable,
+  postDateNotesTable,
+  wellnessInferencesTable,
+} from "@workspace/db";
 import {
   CreatePostDateNoteBody,
   UpdatePostDateNoteBody,
@@ -21,6 +26,7 @@ import {
   getAnonClaimToken,
   getOrCreateAnonClaimToken,
 } from "../lib/anonClaimToken";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
 
@@ -46,6 +52,7 @@ function toIso(d: Date | string | null): string | null {
 function serialize(row: Row) {
   return {
     id: row.id,
+    connectionId: row.connectionId ?? null,
     dateAt: toIso(row.dateAt),
     personLabel: row.personLabel,
     platform: row.platform,
@@ -59,6 +66,85 @@ function serialize(row: Row) {
     updatedAt: toIso(row.updatedAt) ?? "",
     deletedAt: toIso(row.deletedAt),
   };
+}
+
+function debriefInferenceText(row: Row): {
+  dimension: "boundaries" | "communication" | "emotional";
+  questionText: string;
+  suggestedAnswer: string;
+} {
+  const combined =
+    `${row.whatWentWell} ${row.whatDidnt} ${row.summary}`.toLowerCase();
+  const dimension = /pressure|judg|boundary|unsafe|uncomfortable/.test(combined)
+    ? "boundaries"
+    : /one-sided|mixed signal|conversation|communicat/.test(combined)
+      ? "communication"
+      : "emotional";
+  const questionText =
+    dimension === "boundaries"
+      ? "What boundary or feeling of safety should you carry into the next date?"
+      : dimension === "communication"
+        ? "What did this date teach you about the communication that works for you?"
+        : "What did this date teach you about when you feel most like yourself with someone?";
+  const good = row.whatWentWell.trim();
+  const off = row.whatDidnt.trim();
+  const base =
+    good && off
+      ? `I feel more like myself when ${good}; I want to notice sooner when ${off}.`
+      : good
+        ? `I want more dates where ${good}.`
+        : off
+          ? `I want to notice sooner when ${off}.`
+          : `I want to remember this from the date: ${row.summary.trim()}`;
+  const suggestedAnswer =
+    base.length > 280 ? `${base.slice(0, 277).trimEnd()}...` : base;
+  return { dimension, questionText, suggestedAnswer };
+}
+
+async function syncPendingDebriefLearning(row: Row): Promise<void> {
+  if (!row.userId || !row.connectionId || row.deletedAt) return;
+  const inferredQuestionId = `inferred:post_date:${row.id}`;
+  const learning = debriefInferenceText(row);
+  const [existing] = await db
+    .select({
+      id: wellnessInferencesTable.id,
+      status: wellnessInferencesTable.status,
+    })
+    .from(wellnessInferencesTable)
+    .where(
+      and(
+        eq(wellnessInferencesTable.userId, row.userId),
+        eq(wellnessInferencesTable.inferredQuestionId, inferredQuestionId),
+      ),
+    )
+    .limit(1);
+  if (existing?.status === "confirmed" || existing?.status === "dismissed") {
+    return;
+  }
+  if (existing) {
+    await db
+      .update(wellnessInferencesTable)
+      .set({
+        dimension: learning.dimension,
+        questionText: learning.questionText,
+        suggestedAnswer: learning.suggestedAnswer,
+        rationale: "Based on the date debrief you chose to save.",
+        updatedAt: new Date(),
+      })
+      .where(eq(wellnessInferencesTable.id, existing.id));
+    return;
+  }
+  await db.insert(wellnessInferencesTable).values({
+    userId: row.userId,
+    dimension: learning.dimension,
+    inferredQuestionId,
+    questionText: learning.questionText,
+    suggestedAnswer: learning.suggestedAnswer,
+    sourceKind: "post_date",
+    rationale: "Based on the date debrief you chose to save.",
+    mode: "deterministic",
+    status: "pending",
+  });
 }
 
 function parseIdParam(raw: string | string[] | undefined): number | null {
@@ -142,13 +228,66 @@ router.post("/post-date-notes", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user?.id;
+  const connectionId = parsed.data.connectionId ?? null;
+  let connectionDate: Date | null = null;
+  if (connectionId) {
+    if (!userId) {
+      res.status(401).json({ error: "Sign in to link a debrief to a match" });
+      return;
+    }
+    const [connection] = await db
+      .select()
+      .from(matchConnectionsTable)
+      .where(
+        and(
+          eq(matchConnectionsTable.id, connectionId),
+          or(
+            eq(matchConnectionsTable.userLowId, userId),
+            eq(matchConnectionsTable.userHighId, userId),
+          ),
+        ),
+      )
+      .limit(1);
+    if (!connection) {
+      res.status(404).json({ error: "Connection not found" });
+      return;
+    }
+    if (!connection.dateCompletedAt) {
+      res.status(409).json({
+        error: "Mark the date complete before saving a debrief",
+      });
+      return;
+    }
+    const [existingDebrief] = await db
+      .select({ id: postDateNotesTable.id })
+      .from(postDateNotesTable)
+      .where(
+        and(
+          eq(postDateNotesTable.connectionId, connectionId),
+          eq(postDateNotesTable.userId, userId),
+          isNull(postDateNotesTable.deletedAt),
+          gte(postDateNotesTable.createdAt, connection.dateCompletedAt),
+        ),
+      )
+      .limit(1);
+    if (existingDebrief) {
+      res.status(409).json({
+        error: "You already saved a debrief for this date",
+      });
+      return;
+    }
+    connectionDate = connection.dateCompletedAt;
+  }
   const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
   const [inserted] = await db
     .insert(postDateNotesTable)
     .values({
       userId: userId ?? null,
       anonymousClaimToken: anonToken,
-      dateAt: parsed.data.dateAt ? new Date(parsed.data.dateAt) : null,
+      connectionId,
+      dateAt: parsed.data.dateAt
+        ? new Date(parsed.data.dateAt)
+        : connectionDate,
       personLabel: parsed.data.personLabel ?? null,
       platform: parsed.data.platform ?? null,
       summary: parsed.data.summary,
@@ -159,6 +298,14 @@ router.post("/post-date-notes", async (req, res): Promise<void> => {
       linkedAuditId: parsed.data.linkedAuditId ?? null,
     })
     .returning();
+  await syncPendingDebriefLearning(inserted!);
+  if (connectionId && userId) {
+    void recordJourneyEvent({
+      eventType: "match_step",
+      userId,
+      props: { step: "debrief_saved" },
+    });
+  }
   res.status(201).json(serialize(inserted!));
 });
 
@@ -209,6 +356,7 @@ router.patch("/post-date-notes/:id", async (req, res): Promise<void> => {
     .set(patch)
     .where(eq(postDateNotesTable.id, id))
     .returning();
+  await syncPendingDebriefLearning(updated!);
   res.json(serialize(updated!));
 });
 
@@ -236,6 +384,20 @@ router.delete("/post-date-notes/:id", async (req, res): Promise<void> => {
     .update(postDateNotesTable)
     .set({ deletedAt: new Date() })
     .where(eq(postDateNotesTable.id, id));
+  if (req.user?.id) {
+    await db
+      .delete(wellnessInferencesTable)
+      .where(
+        and(
+          eq(wellnessInferencesTable.userId, req.user.id),
+          eq(
+            wellnessInferencesTable.inferredQuestionId,
+            `inferred:post_date:${id}`,
+          ),
+          eq(wellnessInferencesTable.status, "pending"),
+        ),
+      );
+  }
   res.json({ success: true as const, deletedId: id });
 });
 
@@ -258,6 +420,7 @@ router.post("/post-date-notes/:id/restore", async (req, res): Promise<void> => {
     .set({ deletedAt: null, updatedAt: new Date() })
     .where(eq(postDateNotesTable.id, id))
     .returning();
+  await syncPendingDebriefLearning(restored!);
   res.json(serialize(restored!));
 });
 
