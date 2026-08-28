@@ -20,6 +20,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { GUIDED_DEBRIEF_HREF } from "@/lib/journeyRoutes";
 import {
   resolveMatchMessagesReadState,
   resolveMatchSupportingReadState,
@@ -1040,7 +1041,7 @@ function DateLifecycleCard({
             Tell Echo what felt natural, what felt off, and what you want to
             remember. Echo will ask before any learning becomes profile truth.
           </p>
-          <Link href={`/copilot/debrief?connectionId=${id}`}>
+          <Link href={`${GUIDED_DEBRIEF_HREF}&connectionId=${encodeURIComponent(id)}`}>
             <Button
               size="sm"
               className="rounded-full"
