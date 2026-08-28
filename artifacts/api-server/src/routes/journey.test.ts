@@ -170,6 +170,82 @@ describe("GET /api/me/journey/record", () => {
     ]));
   });
 
+  it("adds only owner-scoped durable insights, compatibility reads, and introductions without raw data", async () => {
+    const { compatibilityReadsTable, db, emailInsightsTable, matchConnectionsTable } = await import("../lib/testDb");
+    testApp.setUser({ id: "journey-history-owner" });
+
+    await db.insert(emailInsightsTable).values([
+      {
+        userId: "journey-history-owner",
+        sourceLabel: "Saved conversation",
+        pastedContent: "OWNER RAW CONVERSATION",
+        consentGiven: true,
+        status: "complete",
+      },
+      {
+        userId: "journey-history-other",
+        sourceLabel: "Other private insight",
+        pastedContent: "OTHER RAW CONVERSATION",
+        consentGiven: true,
+        status: "complete",
+      },
+    ]);
+    await db.insert(compatibilityReadsTable).values([
+      {
+        userId: "journey-history-owner",
+        sourceKind: "paste",
+        rawText: "OWNER RAW CANDIDATE PROFILE",
+        parsedProfile: { connectionStyle: "Warm and direct", name: "Private Candidate" },
+        resultJson: { overallAlignment: 97 },
+        overallAlignment: 97,
+        mode: "fallback",
+        deletedAt: null,
+      },
+      {
+        userId: "journey-history-other",
+        sourceKind: "paste",
+        rawText: "OTHER RAW CANDIDATE PROFILE",
+        parsedProfile: { connectionStyle: "Other private style" },
+        mode: "fallback",
+        deletedAt: null,
+      },
+    ]);
+    await db.insert(matchConnectionsTable).values([
+      {
+        id: "123e4567-e89b-12d3-a456-426614174001",
+        userLowId: "journey-history-owner",
+        userHighId: "journey-history-partner",
+        status: "active",
+      },
+      {
+        id: "123e4567-e89b-12d3-a456-426614174002",
+        userLowId: "journey-history-other",
+        userHighId: "journey-history-stranger",
+        status: "active",
+      },
+    ]);
+
+    const response = await request(testApp.app).get("/api/me/journey/record");
+    expect(response.status).toBe(200);
+    expect(response.body.summary).toMatchObject({
+      total: 3,
+      insights: 1,
+      compatibility: 1,
+      introductions: 1,
+    });
+    expect(response.body.records.map((row: { kind: string }) => row.kind).sort()).toEqual([
+      "compatibility",
+      "insight",
+      "introduction",
+    ]);
+    const serialized = JSON.stringify(response.body);
+    expect(serialized).not.toContain("OWNER RAW");
+    expect(serialized).not.toContain("OTHER RAW");
+    expect(serialized).not.toContain("Private Candidate");
+    expect(serialized).not.toContain("97");
+    expect(serialized).not.toContain("Other private");
+  });
+
   it("returns only the member's removed moments in the recoverable trash view", async () => {
     const { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, postDateNotesTable } = await import("../lib/testDb");
     testApp.setUser({ id: "journey-trash-owner" });

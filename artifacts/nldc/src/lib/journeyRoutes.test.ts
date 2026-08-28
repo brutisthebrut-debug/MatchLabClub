@@ -26,6 +26,13 @@ describe("Journey compatibility routes", () => {
     expect(readJourneyRouteState("/journey?followUp=9")).toMatchObject({ source: { type: "journey_follow_up", id: 9 } });
   });
 
+  it("opens durable read-only Journey filters and rejects unknown kinds", () => {
+    expect(readJourneyRouteState("/journey?kind=insight").kind).toBe("insight");
+    expect(readJourneyRouteState("/journey?kind=compatibility").kind).toBe("compatibility");
+    expect(readJourneyRouteState("/journey?kind=introduction").kind).toBe("introduction");
+    expect(readJourneyRouteState("/journey?kind=unknown").kind).toBe("all");
+  });
+
   it("keeps old wins links focused on the canonical Journey view", () => {
     expect(winsCompatibilityHref("/progress/wins?q=courage&win=5")).toBe("/journey?kind=win&q=courage&win=5");
   });
