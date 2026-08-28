@@ -9,7 +9,8 @@ export type MemberDataDisposition = {
     | { kind: "columns"; columns: readonly string[] }
     | { kind: "email"; column: string }
     | { kind: "audit-child" }
-    | { kind: "connection-child" };
+    | { kind: "connection-child" }
+    | { kind: "session-json" };
   export: "current-contract" | "sanitized" | "omit-security-secret";
   omitColumns?: readonly string[];
   retention: "account-lifetime" | "short-lived-security";
@@ -41,7 +42,7 @@ export const MEMBER_DATA_REGISTRY: readonly MemberDataDisposition[] = [
   { table: "audit_report_versions", owner: { kind: "audit-child" }, export: "current-contract", retention: "account-lifetime", consent: "ai-derived" },
   { table: "connection_messages", owner: { kind: "connection-child" }, export: "current-contract", retention: "account-lifetime", consent: "member-record" },
   direct("oauth_tokens", ["user_id"], { export: "omit-security-secret", retention: "short-lived-security" }),
-  direct("sessions", ["user_id"], { export: "sanitized", omitColumns: ["sess"], retention: "short-lived-security" }),
+  { table: "sessions", owner: { kind: "session-json" }, export: "sanitized", omitColumns: ["sess"], retention: "short-lived-security", consent: "member-record" },
   direct("data_export_tokens", ["user_id"], { export: "omit-security-secret", retention: "short-lived-security" }),
   direct("push_tokens", ["user_id"], { export: "sanitized", omitColumns: ["token"], retention: "short-lived-security" }),
   direct("login_notifications", ["user_id"], { export: "sanitized", omitColumns: ["fingerprint"], retention: "short-lived-security" }),
@@ -125,6 +126,9 @@ function ownershipWhere(
   if (entry.owner.kind === "email") {
     if (!email) return null;
     return sql`lower(${identifier(entry.owner.column)}) = ${email.trim().toLowerCase()}`;
+  }
+  if (entry.owner.kind === "session-json") {
+    return sql`(${identifier("sess")} -> \'user\' ->> \'id\') = ${userId}`;
   }
   if (entry.owner.kind === "audit-child") {
     return sql`${identifier("audit_id")} IN (
