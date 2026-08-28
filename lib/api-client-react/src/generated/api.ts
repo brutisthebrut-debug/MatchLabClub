@@ -84,6 +84,7 @@ import type {
   CompleteCompanionCommitment401,
   CompleteCompanionCommitment404,
   Connection,
+  ConnectionDateStateInput,
   ConnectionDateIdeas,
   ConnectionMessage,
   ConnectionStarters,
@@ -16611,6 +16612,82 @@ export function useGetConnectionProfile<TData = Awaited<ReturnType<typeof getCon
 
 
 
+
+export const getUpdateConnectionDateStateUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/date-state`
+}
+
+/**
+ * Persists the shared date stage for both members. Debriefs remain private
+and are linked through PostDateNote; saving one creates a tentative Echo
+learning that must be confirmed before it becomes profile truth.
+
+ * @summary Plan or complete a date for a mutual connection
+ */
+export const updateConnectionDateState = async (id: string,
+    connectionDateStateInput: ConnectionDateStateInput, options?: RequestInit): Promise<Connection> => {
+
+  return customFetch<Connection>(getUpdateConnectionDateStateUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      connectionDateStateInput,)
+  }
+);}
+
+
+
+
+export const getUpdateConnectionDateStateMutationOptions = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConnectionDateState>>, TError,{id: string;data: BodyType<ConnectionDateStateInput>}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateConnectionDateState>>, TError,{id: string;data: BodyType<ConnectionDateStateInput>}, TContext> => {
+
+const mutationKey = ['updateConnectionDateState'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateConnectionDateState>>, {id: string;data: BodyType<ConnectionDateStateInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateConnectionDateState(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateConnectionDateStateMutationResult = NonNullable<Awaited<ReturnType<typeof updateConnectionDateState>>>
+    export type UpdateConnectionDateStateMutationBody = BodyType<ConnectionDateStateInput>
+    export type UpdateConnectionDateStateMutationError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>
+
+    /**
+ * @summary Plan or complete a date for a mutual connection
+ */
+export const useUpdateConnectionDateState = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConnectionDateState>>, TError,{id: string;data: BodyType<ConnectionDateStateInput>}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateConnectionDateState>>,
+        TError,
+        {id: string;data: BodyType<ConnectionDateStateInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateConnectionDateStateMutationOptions(options));
+    }
 
 export const getGetConnectionStartersUrl = (id: string,) => {
 

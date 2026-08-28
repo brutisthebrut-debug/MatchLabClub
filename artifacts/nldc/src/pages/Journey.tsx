@@ -21,7 +21,7 @@ import {
   type JourneyRecordResponse,
   type WinCategory,
 } from "@/lib/journeyRecord";
-import { readJourneyRouteState, shouldOpenGuidedDebrief } from "@/lib/journeyRoutes";
+import { readJourneyConnectionId, readJourneyRouteState, shouldOpenGuidedDebrief } from "@/lib/journeyRoutes";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 
 type Composer = { kind: "reflection" | "date" | "win" | "experiment" | "follow-up" | "guided-date"; item?: JourneyRecordItem; sourceItem?: JourneyRecordItem };
@@ -336,7 +336,7 @@ function DateComposer({ item, onCancel, onSaved }: { item?: JourneyRecordItem; o
   );
 }
 
-function GuidedDateComposer({ onCancel, onSaved }: { onCancel: () => void; onSaved: () => void }) {
+function GuidedDateComposer({ connectionId, onCancel, onSaved }: { connectionId: string | null; onCancel: () => void; onSaved: () => void }) {
   const [what, setWhat] = useState("");
   const [dateAt, setDateAt] = useState("");
   const [personLabel, setPersonLabel] = useState("");
@@ -361,6 +361,7 @@ function GuidedDateComposer({ onCancel, onSaved }: { onCancel: () => void; onSav
     const fallback = guidedFallback(good, off, outcome);
     try {
       const note = await saveDateDebrief({
+        ...(connectionId ? { connectionId } : {}),
         dateAt: dateAt ? new Date(`${dateAt}T12:00:00`).toISOString() : null,
         personLabel: personLabel.trim() || null,
         platform: platform.trim() || null,
@@ -395,7 +396,7 @@ function GuidedDateComposer({ onCancel, onSaved }: { onCancel: () => void; onSav
       <div className="flex items-center gap-2 text-[hsl(348_55%_55%)]"><Heart className="h-4 w-4" /><p className="text-xs font-bold uppercase tracking-[0.16em]">Saved to Journey</p></div>
       {enhance.isPending && <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Echo is reading the pattern…</p>}
       <div className="mt-5 grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-foreground/10 bg-background/70 p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pattern read</p><p className="mt-3 text-sm leading-6 text-muted-foreground">{result.patternRead}</p></div><div className="rounded-2xl border border-foreground/10 bg-background/70 p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">What to carry forward</p><p className="mt-3 text-sm leading-6 text-muted-foreground">{result.coachInsight}</p></div></div>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><Link href="/coach" className="inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)] hover:underline">Ask Echo about your next message <ArrowRight className="ml-1.5 h-4 w-4" /></Link><Button type="button" variant="outline" onClick={onCancel}>Back to Journey</Button></div>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap gap-4"><Link href="/coach" className="inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)] hover:underline">Ask Echo about your next message <ArrowRight className="ml-1.5 h-4 w-4" /></Link>{connectionId && <Link href={`/matches/${connectionId}`} className="inline-flex items-center text-sm font-bold text-[hsl(248_62%_52%)] hover:underline">Back to this match</Link>}</div><Button type="button" variant="outline" onClick={onCancel}>Back to Journey</Button></div>
     </section>
   );
 
@@ -442,6 +443,7 @@ export default function Journey() {
   const [location] = useLocation();
   const browserSearch = typeof window === "undefined" ? "" : window.location.search;
   const initialRoute = readJourneyRouteState(location, browserSearch);
+  const debriefConnectionId = readJourneyConnectionId(location, browserSearch);
   const [record, setRecord] = useState<JourneyRecordResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -539,7 +541,7 @@ export default function Journey() {
         {composer?.kind === "win" && <WinComposer key={`win-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("win")} />}
         {composer?.kind === "experiment" && <ExperimentComposer key={`experiment-${composer.item?.id ?? "new"}`} item={composer.item} onCancel={() => setComposer(null)} onSaved={() => saved("experiment")} />}
         {composer?.kind === "follow-up" && <FollowUpComposer key={`follow-up-${composer.item?.id ?? composer.sourceItem?.id ?? "new"}`} item={composer.item} sourceItem={composer.sourceItem} sources={followUpSources} onCancel={() => setComposer(null)} onSaved={() => saved("follow-up")} />}
-        {composer?.kind === "guided-date" && <GuidedDateComposer onCancel={() => setComposer(null)} onSaved={guidedSaved} />}
+        {composer?.kind === "guided-date" && <GuidedDateComposer connectionId={debriefConnectionId} onCancel={() => setComposer(null)} onSaved={guidedSaved} />}
         {notice && <p className="mt-5 rounded-2xl border border-[hsl(150_45%_45%/0.25)] bg-[hsl(150_45%_45%/0.08)] px-4 py-3 text-sm font-bold">{notice}</p>}
 
         {loading ? (

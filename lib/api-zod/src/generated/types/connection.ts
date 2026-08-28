@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ConnectionClosedReason } from './connectionClosedReason';
+import type { ConnectionDateStage } from './connectionDateStage';
 import type { ConnectionStatus } from './connectionStatus';
 
 export interface Connection {
@@ -15,6 +16,16 @@ export interface Connection {
   /** @nullable */
   closedReason?: ConnectionClosedReason;
   closedByYou: boolean;
+  dateStage: ConnectionDateStage;
+  /** @nullable */
+  datePlannedAt: Date | null;
+  /** @nullable */
+  dateCompletedAt: Date | null;
+  /**
+     * The signed-in member's active private debrief, never the counterpart's.
+     * @nullable
+     */
+  debriefNoteId: number | null;
   unreadCount: number;
   createdAt: Date;
   /** @nullable */

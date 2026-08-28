@@ -7209,6 +7209,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /me/connections/{id}/date-state:
+    patch:
+      tags: [Connections]
+      operationId: updateConnectionDateState
+      summary: Plan or complete a date for a mutual connection
+      description: |
+        Persists the shared date stage for both members. Debriefs remain private
+        and are linked through PostDateNote; saving one creates a tentative Echo
+        learning that must be confirmed before it becomes profile truth.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectionDateStateInput"
+      responses:
+        "200":
+          description: The updated connection lifecycle.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Connection"
+        "400":
+          description: Invalid date or transition.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "404":
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Conversation is closed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
   /me/connections/{id}/starters:
     get:
       tags: [Connections]
@@ -10650,6 +10706,10 @@ components:
       type: object
       required: [summary]
       properties:
+        connectionId:
+          type: [string, "null"]
+          format: uuid
+          description: Optional mutual connection this private debrief belongs to.
         dateAt:
           type: [string, "null"]
           format: date-time
@@ -10721,10 +10781,13 @@ components:
 
     PostDateNote:
       type: object
-      required: [id, summary, whatWentWell, whatDidnt, followUpPlanned, createdAt, updatedAt]
+      required: [id, connectionId, summary, whatWentWell, whatDidnt, followUpPlanned, createdAt, updatedAt]
       properties:
         id:
           type: integer
+        connectionId:
+          type: [string, "null"]
+          format: uuid
         dateAt:
           type: [string, "null"]
           format: date-time
@@ -12466,7 +12529,7 @@ components:
 
     Connection:
       type: object
-      required: [id, counterpartUserId, status, closedByYou, unreadCount, createdAt, lastMessageAt, lastMessagePreview]
+      required: [id, counterpartUserId, status, closedByYou, dateStage, datePlannedAt, dateCompletedAt, debriefNoteId, unreadCount, createdAt, lastMessageAt, lastMessagePreview]
       properties:
         id:
           type: string
@@ -12481,6 +12544,17 @@ components:
           enum: [unmatch, block, report, null]
         closedByYou:
           type: boolean
+        dateStage:
+          $ref: "#/components/schemas/ConnectionDateStage"
+        datePlannedAt:
+          type: [string, "null"]
+          format: date-time
+        dateCompletedAt:
+          type: [string, "null"]
+          format: date-time
+        debriefNoteId:
+          type: [integer, "null"]
+          description: The signed-in member's active private debrief, never the counterpart's.
         unreadCount:
           type: integer
         createdAt:
@@ -12491,6 +12565,31 @@ components:
           format: date-time
         lastMessagePreview:
           type: [string, 'null']
+
+    ConnectionDateStage:
+      type: string
+      enum: [connected, date_planned, date_completed, debrief_saved]
+
+    ConnectionDateStateInput:
+      oneOf:
+        - type: object
+          required: [action, occurredAt]
+          properties:
+            action:
+              type: string
+              const: plan
+            occurredAt:
+              type: string
+              format: date-time
+        - type: object
+          required: [action]
+          properties:
+            action:
+              type: string
+              const: complete
+            occurredAt:
+              type: string
+              format: date-time
 
     ConnectionMessage:
       type: object

@@ -42,6 +42,12 @@ reversible matching-use grant.
 The first Communication consolidation slice replaces the relationship-language
 link list with live saved Care Dialect and relationship-standard context. Either
 source can enter the same confirmed-learning review without automatic consent.
+Matches date/debrief recovery is implemented on
+`codex/matches-date-debrief-learning`: shared plan/completion state leads into
+Journey's canonical guided debrief, while the saved note and tentative Echo
+learning remain private to the author and require later member confirmation.
+This slice is not part of the verified merged baseline until exact-head checks
+execute and pass.
 See `SHELL_MIGRATION.md` for the completion standard, route matrix, and
 segment plan.
 
@@ -241,6 +247,19 @@ segment plan.
 - The three pull requests remain open and mergeable. Required Phase 0 runs `33030535683`, `33029753200`, and `33031091579` failed before runner assignment. A 2026-08-28 retry created nine replacement jobs; all nine again completed immediately with zero steps. This is unexecuted infrastructure failure, not green verification and not evidence of a code regression.
 - Do not merge the Echo stack until exact-head verification actually executes and passes. Once infrastructure is available, verify and merge #99, retarget #100 to `main`, verify and merge #100, then retarget, verify, and merge #101.
 
+## Active shell recovery slice
+
+- `codex/matches-date-debrief-learning` adds migration `0057`, shared date
+  planning/completion, canonical Journey debrief capture, owner-private linked
+  notes, and pending Echo learning.
+- The API regression suite covers shared lifecycle state, private debrief
+  visibility, membership/completion guards, duplicate prevention, and tentative
+  learning creation. The Journey route parser has focused UUID handling
+  coverage.
+- This is implemented evidence, not release evidence. It must not merge until
+  exact-head GitHub Actions actually receives a runner and passes both required
+  lanes.
+
 ## Hosting reality
 
 - The connected Vercel team currently contains one MatchLab project, rooted at
@@ -264,7 +283,7 @@ executed exact-head Phase 0 evidence because GitHub rejected every job before
 runner assignment. The founder has authorized shell migration to continue while
 Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
-gates include applying migrations `0041` through `0056` in the release
+gates include applying migrations `0041` through `0057` in the release
 environment, provisioning the separate visual web preview, migrating the
 remaining `REPL_ID` and `REPLIT_DOMAINS` compatibility names, then exercising
 Checkout/webhooks, renewal, cancellation, failure, and refund behavior in

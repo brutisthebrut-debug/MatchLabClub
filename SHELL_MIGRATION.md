@@ -759,6 +759,26 @@ State: merged to `main` and verified.
   typecheck, lint, schema drift, voice lint, the full web suite, ordered
   migrations, and the clean-Postgres API suite.
 
+## Segment 3F7: Matches date lifecycle and private debrief learning
+
+State: implemented on `codex/matches-date-debrief-learning`; exact-head verification and merge are pending.
+
+- A connection now has a shared, server-authoritative date lifecycle: connected,
+  date planned, date completed, and debrief saved. Either participant can save
+  the shared plan or mark the date complete; reopening a connection resets the
+  lifecycle.
+- After completion, each participant can create one owner-private debrief from
+  Journey's canonical guided composer. Raw debrief text and its identifier are
+  never serialized to the other participant.
+- Saving a linked debrief creates a pending Echo learning for that member only.
+  It remains tentative until the member confirms, corrects, or dismisses it;
+  matching use remains a separate decision.
+- Journey carries a validated connection id from the Match thread, and the
+  retired standalone debrief implementation remains untouched.
+- Migration `0057` adds shared date timestamps and the owner-private debrief
+  link. API regression coverage guards membership, completion, duplication,
+  privacy, lifecycle reset, and pending-learning behavior.
+
 ## Segment 3G1: canonical mobile member navigation
 
 State: merged to `main` and verified.

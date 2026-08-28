@@ -51,7 +51,13 @@ export async function ensureConnection(
     }
     const [reopened] = await db
       .update(matchConnectionsTable)
-      .set({ status: "active", closedReason: null, closedByUserId: null })
+      .set({
+        status: "active",
+        closedReason: null,
+        closedByUserId: null,
+        datePlannedAt: null,
+        dateCompletedAt: null,
+      })
       .where(eq(matchConnectionsTable.id, existing[0].id))
       .returning();
     return { connection: reopened ?? existing[0], created: false };

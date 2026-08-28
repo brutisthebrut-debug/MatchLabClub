@@ -21,10 +21,14 @@ import {
   matchPreferencesTable,
   userBlocksTable,
   userReportsTable,
+  postDateNotesTable,
+  wellnessInferencesTable,
+  journeyEventsTable,
   orderConnectionPair,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
 import connectionsRouter from "./connections";
+import postDateNotesRouter from "./postDateNotes";
 
 interface TestApp {
   app: Express;
@@ -53,6 +57,7 @@ function makeTestApp(): TestApp {
     next();
   });
   app.use("/api", connectionsRouter);
+  app.use("/api", postDateNotesRouter);
   return {
     app,
     setUser: (user) => {
@@ -104,6 +109,11 @@ async function cleanup(): Promise<void> {
     await db
       .delete(userReportsTable)
       .where(eq(userReportsTable.reportedUserId, u));
+    await db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, u));
+    await db
+      .delete(wellnessInferencesTable)
+      .where(eq(wellnessInferencesTable.userId, u));
+    await db.delete(journeyEventsTable).where(eq(journeyEventsTable.userId, u));
   }
   const conns = await db
     .select({ id: matchConnectionsTable.id })
@@ -528,5 +538,94 @@ describe("connection date ideas", () => {
       `/api/me/connections/${id}/date-ideas`,
     );
     expect(res.status).toBe(409);
+  });
+});
+
+
+describe("connection date and private debrief lifecycle", () => {
+  it("persists plan, completion, member-private debrief, and tentative Echo learning", async () => {
+    const id = await makeConnection();
+    const plannedAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    testApp.setUser({ id: USER_A });
+    const planned = await request(testApp.app)
+      .patch(`/api/me/connections/${id}/date-state`)
+      .send({ action: "plan", occurredAt: plannedAt });
+    expect(planned.status).toBe(200);
+    expect(planned.body.dateStage).toBe("date_planned");
+    expect(planned.body.datePlannedAt).toBe(plannedAt);
+
+    testApp.setUser({ id: USER_B });
+    const sharedPlan = await request(testApp.app).get(
+      `/api/me/connections/${id}`,
+    );
+    expect(sharedPlan.body.dateStage).toBe("date_planned");
+
+    testApp.setUser({ id: USER_A });
+    const completed = await request(testApp.app)
+      .patch(`/api/me/connections/${id}/date-state`)
+      .send({ action: "complete" });
+    expect(completed.status).toBe(200);
+    expect(completed.body.dateStage).toBe("date_completed");
+
+    const saved = await request(testApp.app).post("/api/post-date-notes").send({
+      connectionId: id,
+      summary: "Conversation opened up once we stopped trying to impress each other.",
+      whatWentWell: "Easy conversation, I felt like myself",
+      whatDidnt: "Mixed signals at the end",
+      outcome: "unsure",
+    });
+    expect(saved.status).toBe(201);
+    expect(saved.body.connectionId).toBe(id);
+
+    const mine = await request(testApp.app).get(
+      `/api/me/connections/${id}`,
+    );
+    expect(mine.body.dateStage).toBe("debrief_saved");
+    expect(mine.body.debriefNoteId).toBe(saved.body.id);
+
+    const [learning] = await db
+      .select()
+      .from(wellnessInferencesTable)
+      .where(eq(wellnessInferencesTable.userId, USER_A));
+    expect(learning?.status).toBe("pending");
+    expect(learning?.sourceKind).toBe("post_date");
+    expect(learning?.inferredQuestionId).toBe(
+      `inferred:post_date:${saved.body.id}`,
+    );
+
+    testApp.setUser({ id: USER_B });
+    const theirs = await request(testApp.app).get(
+      `/api/me/connections/${id}`,
+    );
+    expect(theirs.body.dateStage).toBe("date_completed");
+    expect(theirs.body.debriefNoteId).toBeNull();
+  });
+
+  it("rejects outsiders, premature debriefs, and duplicate linked debriefs", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: `conn-outsider-${suffix}` });
+    const outsider = await request(testApp.app)
+      .patch(`/api/me/connections/${id}/date-state`)
+      .send({ action: "complete" });
+    expect(outsider.status).toBe(404);
+
+    testApp.setUser({ id: USER_A });
+    const premature = await request(testApp.app)
+      .post("/api/post-date-notes")
+      .send({ connectionId: id, summary: "Not completed yet." });
+    expect(premature.status).toBe(409);
+
+    await request(testApp.app)
+      .patch(`/api/me/connections/${id}/date-state`)
+      .send({ action: "complete" });
+    const first = await request(testApp.app)
+      .post("/api/post-date-notes")
+      .send({ connectionId: id, summary: "The real debrief." });
+    expect(first.status).toBe(201);
+    const duplicate = await request(testApp.app)
+      .post("/api/post-date-notes")
+      .send({ connectionId: id, summary: "A duplicate debrief." });
+    expect(duplicate.status).toBe(409);
   });
 });
