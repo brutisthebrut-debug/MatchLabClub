@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import { db, datingWinsTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, postDateNotesTable } from "@workspace/db";
+import { db, dailySparkAnswersTable, datingWinsTable, importedSourcesTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, postDateNotesTable, scenarioResponsesTable, timeCapsulesTable, wyrAnswersTable } from "@workspace/db";
 import { summarizeUserJourney } from "../lib/journeyEvents";
+import { playJourneyMoments } from "../lib/playJourneyMoments";
 
 const router: IRouter = Router();
 
@@ -20,7 +21,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [journalEntries, dateNotes, wins, experiments, followUps] = await Promise.all([
+  const [journalEntries, dateNotes, wins, experiments, followUps, dailySpark, wouldYouRather, scenarios, timeCapsules, playImports] = await Promise.all([
     db.select().from(journalEntriesTable).where(and(
       eq(journalEntriesTable.userId, userId),
       requestedView === "trash" ? isNotNull(journalEntriesTable.deletedAt) : isNull(journalEntriesTable.deletedAt),
@@ -41,7 +42,22 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       eq(journeyFollowUpsTable.userId, userId),
       requestedView === "trash" ? isNotNull(journeyFollowUpsTable.deletedAt) : isNull(journeyFollowUpsTable.deletedAt),
     )).orderBy(desc(journeyFollowUpsTable.createdAt)),
+    db.select().from(dailySparkAnswersTable).where(eq(dailySparkAnswersTable.userId, userId)).orderBy(desc(dailySparkAnswersTable.createdAt)),
+    db.select().from(wyrAnswersTable).where(eq(wyrAnswersTable.userId, userId)).orderBy(desc(wyrAnswersTable.createdAt)),
+    db.select().from(scenarioResponsesTable).where(eq(scenarioResponsesTable.userId, userId)).orderBy(desc(scenarioResponsesTable.createdAt)),
+    db.select().from(timeCapsulesTable).where(eq(timeCapsulesTable.userId, userId)).orderBy(desc(timeCapsulesTable.createdAt)),
+    db.select().from(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)).orderBy(desc(importedSourcesTable.uploadedAt)),
   ]);
+
+  const playRecords = requestedView === "active"
+    ? playJourneyMoments({
+        dailySpark,
+        wouldYouRather,
+        scenarios,
+        timeCapsules,
+        imports: playImports,
+      })
+    : [];
 
   const records = [
     ...journalEntries.map((entry) => ({
@@ -119,6 +135,17 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       updatedAt: iso(followUp.updatedAt),
       href: `/journey?followUp=${followUp.id}`,
     })),
+    ...playRecords.map((moment) => ({
+      id: moment.id,
+      kind: "play" as const,
+      source: { type: "play_record" as const, id: moment.sourceId, label: "Play" },
+      title: moment.title,
+      body: moment.body,
+      details: { readOnly: true },
+      occurredAt: moment.occurredAt,
+      updatedAt: moment.occurredAt,
+      href: moment.href,
+    })),
   ].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
 
   res.json({
@@ -129,6 +156,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       wins: wins.length,
       experiments: experiments.length,
       followUps: followUps.length,
+      play: playRecords.length,
       headline: requestedView === "trash"
         ? (records.length === 0 ? "Nothing is waiting to be restored." : `${records.length} removed moment${records.length === 1 ? "" : "s"} can still be restored.`)
         : (records.length === 0
