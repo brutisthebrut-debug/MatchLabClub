@@ -26,6 +26,9 @@ import { startAutoProposalJob } from "./lib/autoProposalJob";
 import { startProposalExpiryJob } from "./lib/proposalExpiryJob";
 import { startCompanionNudgeJob } from "./lib/companionNudgeJob";
 import { initStripe } from "./lib/initStripe";
+import { assertConnectedBetaRuntime } from "./lib/runtimeSafety";
+
+assertConnectedBetaRuntime();
 
 Sentry.setupExpressErrorHandler(app);
 
