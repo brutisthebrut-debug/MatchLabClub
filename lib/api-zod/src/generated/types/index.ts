@@ -212,6 +212,7 @@ export * from './digestPreferencesStateFrequency';
 export * from './dismissCompanionObservation200';
 export * from './dismissCompanionObservation401';
 export * from './dismissCompanionObservation404';
+export * from './echoCapabilityAction';
 export * from './echoMatchRead';
 export * from './echoMatchReadNextStep';
 export * from './emailInsight';

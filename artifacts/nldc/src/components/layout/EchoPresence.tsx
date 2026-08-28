@@ -277,7 +277,7 @@ export function EchoPresence() {
   async function send(message: string): Promise<void> {
     const m = message.trim();
     if (!m || say.isPending) return;
-    const action = resolveEchoCapabilityAction({
+    const fallbackAction = resolveEchoCapabilityAction({
       message: m,
       serverNextMove: data.nextMove,
     });
@@ -292,7 +292,7 @@ export function EchoPresence() {
           text: res.answer,
           followUp: res.followUp,
           isFallback: res.isFallback,
-          action,
+          action: res.capabilityAction ?? fallbackAction,
         },
       ]);
       refresh();
@@ -302,7 +302,7 @@ export function EchoPresence() {
         {
           role: "echo",
           text: "I could not reach my deeper read just now. Try me again in a moment. Your signals are safe either way.",
-          action,
+          action: fallbackAction,
         },
       ]);
     }

@@ -2203,11 +2203,19 @@ export interface CompanionTurn {
   createdAt: string;
 }
 
+export interface EchoCapabilityAction {
+  id: string;
+  label: string;
+  detail: string;
+  href: string;
+}
+
 export interface CompanionSayResult {
   answer: string;
   followUp: string;
   grounding: string[];
   isFallback: boolean;
+  capabilityAction: EchoCapabilityAction | null;
   commitment?: CompanionCommitment | null;
 }
 
