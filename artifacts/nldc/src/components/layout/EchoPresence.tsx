@@ -9,6 +9,10 @@ import {
   projectEchoReactionForMember,
 } from "@/lib/echoMemberPresentation";
 import {
+  resolveEchoCapabilityAction,
+  type EchoCapabilityAction,
+} from "@/lib/echoCapabilityRouter";
+import {
   useGetCompanion,
   getGetCompanionQueryKey,
   useGetMatchingState,
@@ -43,6 +47,7 @@ type EchoTurn = {
   text: string;
   followUp?: string;
   isFallback?: boolean;
+  action?: EchoCapabilityAction | null;
 };
 
 type Tab = "talk" | "notices" | "review";
@@ -272,6 +277,10 @@ export function EchoPresence() {
   async function send(message: string): Promise<void> {
     const m = message.trim();
     if (!m || say.isPending) return;
+    const action = resolveEchoCapabilityAction({
+      message: m,
+      serverNextMove: data.nextMove,
+    });
     setTurns((t) => [...t, { role: "you", text: m }]);
     setDraft("");
     try {
@@ -283,6 +292,7 @@ export function EchoPresence() {
           text: res.answer,
           followUp: res.followUp,
           isFallback: res.isFallback,
+          action,
         },
       ]);
       refresh();
@@ -292,6 +302,7 @@ export function EchoPresence() {
         {
           role: "echo",
           text: "I could not reach my deeper read just now. Try me again in a moment. Your signals are safe either way.",
+          action,
         },
       ]);
     }
@@ -317,7 +328,7 @@ export function EchoPresence() {
     trackEvent("echo_reaction_to_matching", { tone: reaction?.tone ?? null });
     setReaction(null);
     setOpen(false);
-    navigate("/matching");
+    navigate("/matches");
   }
 
   return (
@@ -479,6 +490,22 @@ export function EchoPresence() {
                         >
                           {t.followUp}
                         </button>
+                      )}
+                      {t.role === "echo" && t.action && (
+                        <Link
+                          href={t.action.href}
+                          onClick={() => setOpen(false)}
+                          className="mt-2 block rounded-xl border border-foreground/15 bg-background px-3 py-2 text-left"
+                          data-testid={`echo-capability-${t.action.id}`}
+                        >
+                          <span className="flex items-center justify-between gap-2 text-[12px] font-semibold text-foreground">
+                            {t.action.label}
+                            <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          </span>
+                          <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                            {t.action.detail}
+                          </span>
+                        </Link>
                       )}
                     </div>
                   </div>
