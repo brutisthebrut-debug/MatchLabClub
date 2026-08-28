@@ -16,10 +16,13 @@ import {
   deleteSession,
   SESSION_COOKIE,
   SESSION_TTL,
-  ISSUER_URL,
   type SessionData,
 } from "../lib/auth";
 import { notifySignInIfNew, extractClientIp } from "../lib/loginNotifications";
+import {
+  getOidcClientId,
+  getOidcIssuerUrl,
+} from "../lib/runtimeConfig";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
@@ -338,7 +341,7 @@ router.get("/logout", async (req: Request, res: Response) => {
   await clearSession(res, sid);
 
   const endSessionUrl = oidc.buildEndSessionUrl(config, {
-    client_id: process.env.REPL_ID!,
+    client_id: getOidcClientId(),
     post_logout_redirect_uri: origin,
   });
 
@@ -363,7 +366,7 @@ router.post(
       const callbackUrl = new URL(redirect_uri);
       callbackUrl.searchParams.set("code", code);
       callbackUrl.searchParams.set("state", state);
-      callbackUrl.searchParams.set("iss", ISSUER_URL);
+      callbackUrl.searchParams.set("iss", getOidcIssuerUrl());
 
       const tokens = await oidc.authorizationCodeGrant(config, callbackUrl, {
         pkceCodeVerifier: code_verifier,

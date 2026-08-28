@@ -252,9 +252,46 @@ segment plan.
 - Vercel still needs a separate project created with `artifacts/nldc` as its
   root. Until that external project exists, no Vercel URL should be described
   as the current member experience.
+- The refreshed design reference is published separately at
+  `https://matchlab-echo-journey.sweetdmarlin.chatgpt.site` (version 45). It
+  mirrors the five-destination visual contract but is not the authenticated
+  repository application or a substitute for the release deployment.
 - Authenticated desktop and phone walkthroughs already run against the real web
   and API applications on every pull request; they do not depend on a hosted
   preview.
+
+## Long-lived draft divergence
+
+- Draft PR #2 is 203 commits ahead of and 270 commits behind `main`; it must not
+  be merged wholesale.
+- It contains several code-proven batches that never reached `main`, including
+  the canonical Member / Insight / Match / Guided commercial-plan engine,
+  connected-runtime safety, the first-party member-data registry, persisted
+  Matches date/debrief learning, and Play-to-Journey integration.
+- `main` still contains the retired `signal-audit`, `dating-reset`, and
+  `wingman` billing catalog. Paid products remain fail-closed, so this is
+  product-contract drift rather than an active charge risk.
+- PR #2 is now an extraction source. Each selected capability must be ported
+  onto current `main` as a small PR, reconciled with the newer shell, and pass
+  exact-head CI before its status changes to merged.
+- Draft PR #1 is older still (56 commits ahead, 270 behind) and is superseded
+  for implementation purposes; unique security evidence should be audited
+  before it is closed.
+
+## Current unmerged verification queue
+
+- PR #97 is the clean replacement for provider-neutral release auth and the
+  fail-closed receipts webhook. PR #96 is superseded.
+- PRs #99, #100, and #101 are the ordered Echo capability-routing and bounded
+  conversation-memory chain.
+- GitHub is accepting workflow events but assigning `runner_id: 0`; all three
+  Ubuntu jobs finish with no runner, no steps, and no logs. These are
+  infrastructure failures and are not passing evidence.
+- Vercel still exposes only the API project. The version-45 Sites URL is a
+  visual reference, not the authenticated repository app. Its inert Echo and
+  quiz controls are therefore expected and cannot be accepted as product proof.
+- The repository Quiz Lab itself is implemented; functional proof requires the
+  separate `artifacts/nldc` web project connected to the real API/auth/runtime.
 
 ## Release gate
 
@@ -265,9 +302,13 @@ runner assignment. The founder has authorized shell migration to continue while
 Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
-environment, provisioning the separate visual web preview, migrating the
-remaining `REPL_ID` and `REPLIT_DOMAINS` compatibility names, then exercising
+environment, provisioning the separate visual web preview, configuring explicit
+provider-neutral `ISSUER_URL`, `OIDC_CLIENT_ID`, and `ALLOWED_ORIGINS`
+settings (plus the native mobile equivalents), then exercising
 Checkout/webhooks, renewal, cancellation, failure, and refund behavior in
 Stripe test mode and obtaining founder/legal approval before any live offer.
-PR #95 adds a value-safe pre-production environment contract and CI coverage;
-it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value.
+PR #95 added a value-safe pre-production environment contract and CI coverage;
+it deliberately rejects any non-empty `BILLING_LIVE_PRODUCTS` value. Replacement PR #97
+moves the runtime and release contract to provider-neutral auth and trusted-origin
+names while retaining the old names only as temporary rollout fallbacks. Those
+fallback names are not accepted as substitutes by the release validator.

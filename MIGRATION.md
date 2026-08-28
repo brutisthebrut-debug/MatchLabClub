@@ -945,42 +945,39 @@ pnpm install
 
 ### 6.3 Environment variables
 
-Copy the template below into `.env` at the repo root and fill in values.
-The API server reads environment variables from the process environment.
-In development, use `dotenv` or `direnv` to load `.env` automatically.
+The repository keeps two explicit, non-secret contracts:
+
+- `.env.release.example` is the pre-production deployment template. Validate a
+  populated environment with `pnpm run validate:release-env`; the command
+  reports variable names only and never prints configured values.
+- Local development may omit optional provider credentials. Deterministic AI
+  fallbacks remain available when model keys are absent.
+
+A minimal local API environment is:
 
 ```bash
-# .env (development only — never commit this file)
-
-# Required
 DATABASE_URL=postgres://localhost:5432/matchlab_dev
 PORT=8080
 NODE_ENV=development
 
-# Auth — use placeholder values in local dev until Phase 1 is complete
-ISSUER_URL=https://replit.com/oidc         # replace in Phase 1
-REPL_ID=local-dev-placeholder              # replace in Phase 1
+# Development OIDC. Use a local/fake issuer or the selected provider's test app.
+ISSUER_URL=https://identity.example.test
+OIDC_CLIENT_ID=matchlab-local-client
 
-# Founder bootstrap (optional; server-only comma-separated email addresses)
+# Exact browser origins allowed by credentialed CORS and the CSRF origin guard.
+ALLOWED_ORIGINS=https://localhost:3000
+
+# Optional founder bootstrap; persisted database roles remain authoritative.
 FOUNDER_EMAILS=founder@example.com
-SESSION_SECRET=change-me-to-a-random-string
 
-# AI — optional in dev; deterministic fallback fires when keys are absent
-ANTHROPIC_API_KEY=
-OPENAI_API_KEY=
-
-# Object storage — optional in dev; upload routes will fail if unset
-PUBLIC_OBJECT_SEARCH_PATHS=
-PRIVATE_OBJECT_DIR=
-
-# Email — optional; logs to console when unset
-RESEND_API_KEY=
-
-# SMS — optional; logs to console when unset
-TWILIO_ACCOUNT_SID=
-TWILIO_AUTH_TOKEN=
-TWILIO_FROM_NUMBER=
+# Paid products stay closed unless the separate Stripe release gate is complete.
+BILLING_LIVE_PRODUCTS=
 ```
+
+The runtime temporarily accepts `REPL_ID`, `REPLIT_DOMAINS`, and
+`REPLIT_EXPO_DEV_DOMAIN` only as rollout fallbacks. New environments must use
+`OIDC_CLIENT_ID` and `ALLOWED_ORIGINS`; the release validator does not accept
+the legacy names as substitutes.
 
 ### 6.4 Database setup
 
@@ -1009,9 +1006,14 @@ pnpm --filter @workspace/api-server run dev
 PORT=3000 pnpm --filter @workspace/nldc run dev
 ```
 
-The web dev server proxies `/api/*` through to `http://localhost:8080` via
-Vite's dev server (no proxy config is needed; the shared reverse proxy handles
-this on Replit, and the `BASE_URL` in `customFetch` handles it locally).
+Start the web development server with an explicit API proxy target:
+
+```bash
+API_PROXY_TARGET=http://localhost:8080 PORT=3000 pnpm --filter @workspace/nldc run dev
+```
+
+The proxy is opt-in so local and CI behavior do not depend on Replit's former
+shared port-80 reverse proxy.
 
 ### 6.6 Running tests
 
