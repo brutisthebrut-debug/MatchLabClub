@@ -29,6 +29,7 @@ export interface ReflectionInput {
 export type DateOutcome = "another_date" | "no_more" | "unsure" | "ghosted";
 
 export interface DateDebriefInput {
+  connectionId?: string | null;
   dateAt: string | null;
   personLabel: string | null;
   platform: string | null;
