@@ -21,6 +21,13 @@ export function shouldOpenGuidedDebrief(location: string, browserSearch = ""): b
   return routeParams(location, browserSearch).get("capture") === "guided-date";
 }
 
+export function readJourneyConnectionId(location: string, browserSearch = ""): string | null {
+  const connectionId = routeParams(location, browserSearch).get("connectionId")?.trim() ?? "";
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(connectionId)
+    ? connectionId
+    : null;
+}
+
 export function readJourneyRouteState(location: string, browserSearch = ""): JourneyRouteState {
   const params = routeParams(location, browserSearch);
   const reflectionId = positiveId(params.get("reflection"));
