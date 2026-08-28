@@ -92,6 +92,10 @@ import { describeIpLocation } from "../lib/geoLocation";
 import { sendMail } from "../lib/mailer";
 import { getUncachableStripeClient } from "../lib/stripeClient";
 import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
+import {
+  purgeRegisteredMemberData,
+  purgeRevokedAiDerivedData,
+} from "../lib/memberDataRegistry";
 
 const router: IRouter = Router();
 
@@ -1002,6 +1006,10 @@ router.delete("/account", async (req, res): Promise<void> => {
     .delete(profilePhotosTable)
     .where(eq(profilePhotosTable.userId, userId));
 
+  // Final registry-backed safety net catches any current or future
+  // member-owned row missed by the typed legacy deletion list.
+  await purgeRegisteredMemberData(db, userId, recipient?.email ?? null);
+
   // Delete every active session belonging to this user (session JSONB
   // payload stores `user.id`).
   await db
@@ -1665,6 +1673,17 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .returning({ id: communicationRecordsTable.id });
       tables["communication_records"] = communicationRecordsDel.length;
 
+      // Registry-backed final pass catches any remaining registered row
+      // while preserving the stable per-feature receipt counts above.
+      const registryCounts = await purgeRegisteredMemberData(
+        tx,
+        userId,
+        userEmail,
+      );
+      for (const [table, count] of Object.entries(registryCounts)) {
+        tables[table] = (tables[table] ?? 0) + count;
+      }
+
       // ── Finally the user row itself ───────────────────────────────────
       const userDel = await tx
         .delete(usersTable)
@@ -1773,6 +1792,9 @@ router.post("/me/consent/ai-content", async (req, res): Promise<void> => {
       grantedAt: usersTable.aiContentConsentGrantedAt,
       revokedAt: usersTable.aiContentConsentRevokedAt,
     });
+  if (!parsed.data.granted) {
+    await purgeRevokedAiDerivedData(db, req.user.id);
+  }
   req.log.info(
     { userId: req.user.id, granted: parsed.data.granted },
     "User updated AI content consent",
