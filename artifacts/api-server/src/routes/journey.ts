@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import { db, dailySparkAnswersTable, datingWinsTable, importedSourcesTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, postDateNotesTable, scenarioResponsesTable, timeCapsulesTable, wyrAnswersTable } from "@workspace/db";
+import { and, desc, eq, isNotNull, isNull, or } from "drizzle-orm";
+import { compatibilityReadsTable, db, dailySparkAnswersTable, datingWinsTable, emailInsightsTable, importedSourcesTable, journalEntriesTable, journeyExperimentsTable, journeyFollowUpsTable, matchConnectionsTable, postDateNotesTable, scenarioResponsesTable, timeCapsulesTable, wyrAnswersTable } from "@workspace/db";
 import { summarizeUserJourney } from "../lib/journeyEvents";
 import { playJourneyMoments } from "../lib/playJourneyMoments";
+import { durableJourneyMoments } from "../lib/durableJourneyMoments";
 
 const router: IRouter = Router();
 
@@ -21,7 +22,7 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [journalEntries, dateNotes, wins, experiments, followUps, dailySpark, wouldYouRather, scenarios, timeCapsules, playImports] = await Promise.all([
+  const [journalEntries, dateNotes, wins, experiments, followUps, dailySpark, wouldYouRather, scenarios, timeCapsules, playImports, insights, compatibilityReads, connections] = await Promise.all([
     db.select().from(journalEntriesTable).where(and(
       eq(journalEntriesTable.userId, userId),
       requestedView === "trash" ? isNotNull(journalEntriesTable.deletedAt) : isNull(journalEntriesTable.deletedAt),
@@ -47,6 +48,15 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
     db.select().from(scenarioResponsesTable).where(eq(scenarioResponsesTable.userId, userId)).orderBy(desc(scenarioResponsesTable.createdAt)),
     db.select().from(timeCapsulesTable).where(eq(timeCapsulesTable.userId, userId)).orderBy(desc(timeCapsulesTable.createdAt)),
     db.select().from(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)).orderBy(desc(importedSourcesTable.uploadedAt)),
+    db.select().from(emailInsightsTable).where(eq(emailInsightsTable.userId, userId)).orderBy(desc(emailInsightsTable.createdAt)),
+    db.select().from(compatibilityReadsTable).where(and(
+      eq(compatibilityReadsTable.userId, userId),
+      isNull(compatibilityReadsTable.deletedAt),
+    )).orderBy(desc(compatibilityReadsTable.createdAt)),
+    db.select().from(matchConnectionsTable).where(or(
+      eq(matchConnectionsTable.userLowId, userId),
+      eq(matchConnectionsTable.userHighId, userId),
+    )).orderBy(desc(matchConnectionsTable.createdAt)),
   ]);
 
   const playRecords = requestedView === "active"
@@ -57,6 +67,10 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
         timeCapsules,
         imports: playImports,
       })
+    : [];
+
+  const durableHistory = requestedView === "active"
+    ? durableJourneyMoments({ insights, compatibilityReads, connections })
     : [];
 
   const records = [
@@ -146,6 +160,17 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       updatedAt: moment.occurredAt,
       href: moment.href,
     })),
+    ...durableHistory.map((moment) => ({
+      id: moment.id,
+      kind: moment.kind,
+      source: { type: moment.sourceType, id: moment.sourceId, label: moment.sourceLabel },
+      title: moment.title,
+      body: moment.body,
+      details: { readOnly: true },
+      occurredAt: moment.occurredAt,
+      updatedAt: moment.occurredAt,
+      href: moment.href,
+    })),
   ].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
 
   res.json({
@@ -157,6 +182,9 @@ router.get("/me/journey/record", async (req, res): Promise<void> => {
       experiments: experiments.length,
       followUps: followUps.length,
       play: playRecords.length,
+      insights: durableHistory.filter((moment) => moment.kind === "insight").length,
+      compatibility: durableHistory.filter((moment) => moment.kind === "compatibility").length,
+      introductions: durableHistory.filter((moment) => moment.kind === "introduction").length,
       headline: requestedView === "trash"
         ? (records.length === 0 ? "Nothing is waiting to be restored." : `${records.length} removed moment${records.length === 1 ? "" : "s"} can still be restored.`)
         : (records.length === 0
