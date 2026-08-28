@@ -1,11 +1,11 @@
-export type JourneyRecordKind = "reflection" | "date" | "win" | "experiment" | "follow-up";
+export type JourneyRecordKind = "reflection" | "date" | "win" | "experiment" | "follow-up" | "play";
 
 export type JourneySourceType = "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment";
 
 export interface JourneyRecordItem {
   id: string;
   kind: JourneyRecordKind;
-  source: { type: JourneySourceType | "journey_follow_up"; id: number; label: string };
+  source: { type: JourneySourceType | "journey_follow_up" | "play_record"; id: number | string; label: string };
   title: string;
   body: string;
   details: Record<string, unknown>;
@@ -15,7 +15,7 @@ export interface JourneyRecordItem {
 }
 
 export interface JourneyRecordResponse {
-  summary: { total: number; reflections: number; dates: number; wins: number; experiments: number; followUps: number; headline: string };
+  summary: { total: number; reflections: number; dates: number; wins: number; experiments: number; followUps: number; play: number; headline: string };
   records: JourneyRecordItem[];
 }
 
@@ -115,6 +115,7 @@ export async function saveFollowUp(input: FollowUpInput, id?: number): Promise<{
 }
 
 function sourcePath(item: JourneyRecordItem): string {
+  if (item.source.type === "play_record") throw new Error("Play history is read-only in Journey.");
   if (item.source.type === "journal_entry") return `/api/journal/${item.source.id}`;
   if (item.source.type === "post_date_note") return `/api/post-date-notes/${item.source.id}`;
   if (item.source.type === "dating_win") return `/api/me/dating-wins/${item.source.id}`;
