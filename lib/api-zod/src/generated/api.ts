@@ -7211,14 +7211,11 @@ export const GetConnectionProfileResponse = zod.object({
 
 
 /**
- * Three opener suggestions for the signed-in user to send. Generated only
-from reveal-safe aggregate fields (readiness phrasing, the aggregate match
-summary, the compatibility score, and the counterpart's display name when
-they turned reveal consent on). Never raw signals, lane breakdowns, or PII.
-Hybrid: a deterministic baseline always runs, with the deep AI lane layered
-on when the account opted in.
-
- * @summary Conversation openers for a connection
+ * Persists the shared date stage for both members. Debriefs remain private
+ * and are linked through PostDateNote; saving one creates a tentative Echo
+ * learning that must be confirmed before it becomes profile truth.
+ *
+ * @summary Plan or complete a date for a mutual connection
  */
 export const UpdateConnectionDateStateParams = zod.object({
   id: zod.coerce.string().uuid(),
