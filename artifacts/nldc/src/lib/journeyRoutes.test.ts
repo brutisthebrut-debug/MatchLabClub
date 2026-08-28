@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { datesCompatibilityHref, experimentsCompatibilityHref, followUpsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, readJourneyRouteState, shouldOpenGuidedDebrief, winsCompatibilityHref } from "./journeyRoutes";
+import { datesCompatibilityHref, experimentsCompatibilityHref, followUpsCompatibilityHref, GUIDED_DEBRIEF_HREF, journalCompatibilityHref, readJourneyConnectionId, readJourneyRouteState, shouldOpenGuidedDebrief, winsCompatibilityHref } from "./journeyRoutes";
 
 describe("Journey compatibility routes", () => {
   it("keeps the old guided debrief entry pointed at Journey", () => {
@@ -10,6 +10,13 @@ describe("Journey compatibility routes", () => {
   it("recognizes routers that expose the query through window.search", () => {
     expect(shouldOpenGuidedDebrief("/journey", "?capture=guided-date")).toBe(true);
     expect(shouldOpenGuidedDebrief("/journey", "")).toBe(false);
+  });
+
+  it("carries only valid match connection ids into the guided debrief", () => {
+    const id = "123e4567-e89b-12d3-a456-426614174000";
+    expect(readJourneyConnectionId(`${GUIDED_DEBRIEF_HREF}&connectionId=${id}`)).toBe(id);
+    expect(readJourneyConnectionId("/journey", `?capture=guided-date&connectionId=${id}`)).toBe(id);
+    expect(readJourneyConnectionId("/journey?connectionId=not-a-uuid")).toBeNull();
   });
 
   it("preserves journal and date list state through compatibility redirects", () => {
