@@ -2,7 +2,7 @@ export const GUIDED_DEBRIEF_HREF = "/journey?capture=guided-date";
 
 export interface JourneyRouteState {
   view: "active" | "trash";
-  kind: "all" | "reflection" | "date" | "win" | "experiment" | "follow-up";
+  kind: "all" | "reflection" | "date" | "win" | "experiment" | "follow-up" | "play" | "insight" | "compatibility" | "introduction";
   query: string;
   source: { type: "journal_entry" | "post_date_note" | "dating_win" | "journey_experiment" | "journey_follow_up"; id: number } | null;
 }
@@ -31,7 +31,7 @@ export function readJourneyRouteState(location: string, browserSearch = ""): Jou
   const requestedKind = params.get("kind");
   return {
     view: params.get("view") === "trash" ? "trash" : "active",
-    kind: requestedKind === "reflection" || requestedKind === "date" || requestedKind === "win" || requestedKind === "experiment" || requestedKind === "follow-up" ? requestedKind : "all",
+    kind: requestedKind === "reflection" || requestedKind === "date" || requestedKind === "win" || requestedKind === "experiment" || requestedKind === "follow-up" || requestedKind === "play" || requestedKind === "insight" || requestedKind === "compatibility" || requestedKind === "introduction" ? requestedKind : "all",
     query: params.get("q")?.trim() ?? "",
     source: reflectionId
       ? { type: "journal_entry", id: reflectionId }
