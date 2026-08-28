@@ -1,6 +1,6 @@
 # MatchLab production status
 
-Last verified: 2026-08-26
+Last verified: 2026-08-28
 
 This is the source of truth for what is in the repository versus what has only
 been approved in the v1 prototype. It prevents prototype decisions from being
@@ -233,6 +233,14 @@ segment plan.
   and fully refunded one-time purchase behavior are explicit. Account billing
   opens Stripe's customer portal, and account deletion first stops renewal.
 
+## Active Echo integration stack
+
+- PR #99 adds safe intent-to-capability guidance across Today, Matches, My MatchLab, Journey, Play, Quiz Lab, and Trust & Data. Echo proposes navigation only; it cannot silently write member learning, change consent, message another member, or activate matching.
+- PR #100 moves capability selection into the server response, validates canonical destinations, and persists the capability offered with each Echo turn. It is intentionally stacked on PR #99.
+- PR #101 adds consent-gated bounded conversation memory: eight recent turns, 800 characters per turn, 6,000 characters total, 20 hydrated durable turns, and an authenticated Echo → Quiz Lab → saved result browser path. It is intentionally stacked on PR #100.
+- The three pull requests remain open and mergeable. Required Phase 0 runs `33030535683`, `33029753200`, and `33031091579` failed before runner assignment. A 2026-08-28 retry created nine replacement jobs; all nine again completed immediately with zero steps. This is unexecuted infrastructure failure, not green verification and not evidence of a code regression.
+- Do not merge the Echo stack until exact-head verification actually executes and passes. Once infrastructure is available, verify and merge #99, retarget #100 to `main`, verify and merge #100, then retarget, verify, and merge #101.
+
 ## Hosting reality
 
 - The connected Vercel team currently contains one MatchLab project, rooted at
@@ -250,9 +258,11 @@ segment plan.
 
 ## Release gate
 
-Do not represent the current repository as production-ready. Automated Phase 0
-verification is green, and the founder has authorized shell migration to
-continue while Stripe remains deferred. Checkout stays fail-closed and no paid
+Do not represent the current repository as production-ready. The last merged
+baseline was verified, but the open Echo integration stack does not yet have
+executed exact-head Phase 0 evidence because GitHub rejected every job before
+runner assignment. The founder has authorized shell migration to continue while
+Stripe remains deferred. Checkout stays fail-closed and no paid
 product or real-member paid cutover may be activated. The remaining release
 gates include applying migrations `0041` through `0056` in the release
 environment, provisioning the separate visual web preview, migrating the
