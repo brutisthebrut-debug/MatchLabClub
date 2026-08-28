@@ -1364,6 +1364,8 @@ export const PostDateOutcome = {
 export interface PostDateNote {
   id: number;
   /** @nullable */
+  connectionId: string | null;
+  /** @nullable */
   dateAt?: string | null;
   /** @nullable */
   personLabel?: string | null;
@@ -2393,6 +2395,11 @@ export interface DeleteJournalEntryResult {
 }
 
 export interface PostDateNoteInput {
+  /**
+     * Optional mutual connection this private debrief belongs to.
+     * @nullable
+     */
+  connectionId?: string | null;
   /**
      * When the date itself happened. Null = unspecified.
      * @nullable
@@ -3906,6 +3913,15 @@ export const ConnectionClosedReason = {
   report: 'report',
 } as const;
 
+export type ConnectionDateStage = typeof ConnectionDateStage[keyof typeof ConnectionDateStage];
+
+export const ConnectionDateStage = {
+  connected: 'connected',
+  date_planned: 'date_planned',
+  date_completed: 'date_completed',
+  debrief_saved: 'debrief_saved',
+} as const;
+
 export interface Connection {
   id: string;
   counterpartUserId: string;
@@ -3913,6 +3929,16 @@ export interface Connection {
   /** @nullable */
   closedReason?: ConnectionClosedReason;
   closedByYou: boolean;
+  dateStage: ConnectionDateStage;
+  /** @nullable */
+  datePlannedAt: string | null;
+  /** @nullable */
+  dateCompletedAt: string | null;
+  /**
+     * The signed-in member's active private debrief, never the counterpart's.
+     * @nullable
+     */
+  debriefNoteId: number | null;
   unreadCount: number;
   createdAt: string;
   /** @nullable */
@@ -3920,6 +3946,16 @@ export interface Connection {
   /** @nullable */
   lastMessagePreview: string | null;
 }
+
+export type ConnectionDateStateInput =
+  | {
+      action: 'plan';
+      occurredAt: string;
+    }
+  | {
+      action: 'complete';
+      occurredAt?: string;
+    };
 
 export interface ConnectionMessage {
   id: string;
