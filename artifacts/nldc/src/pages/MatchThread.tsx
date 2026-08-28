@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
+  CalendarCheck,
   Flag,
   Heart,
   MapPin,
@@ -42,12 +43,14 @@ import {
   useGetConnectionStarters,
   getGetConnectionStartersQueryKey,
   useSuggestConnectionDateIdeas,
+  useUpdateConnectionDateState,
   useCheckOutgoingMessage,
   useSendConnectionMessage,
   useMarkConnectionRead,
   useUnmatchConnection,
   useReportConnection,
   getGetConnectionsQueryKey,
+  type Connection,
   type ConnectionMessage,
   type ConnectionStarter,
   type DateIdea,
@@ -885,9 +888,20 @@ export default function MatchThread() {
           )}
 
           {!closed && (
-            <div className="mt-4">
-              <DateIdeasCard id={id} isDemo={false} />
-            </div>
+            <>
+              <div className="mt-4">
+                <DateIdeasCard id={id} isDemo={false} />
+              </div>
+              {connection && (
+                <div className="mt-4">
+                  <DateLifecycleCard
+                    id={id}
+                    connection={connection}
+                    onChanged={invalidateThread}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <div className="mt-5 flex items-start gap-2.5">
@@ -904,6 +918,154 @@ export default function MatchThread() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+function DateLifecycleCard({
+  id,
+  connection,
+  onChanged,
+}: {
+  id: string;
+  connection: Connection;
+  onChanged: () => void;
+}) {
+  const { toast } = useToast();
+  const updateDate = useUpdateConnectionDateState();
+  const [plannedAt, setPlannedAt] = useState("");
+  const stage = connection.dateStage;
+
+  const savePlan = () => {
+    if (!plannedAt || updateDate.isPending) return;
+    const date = new Date(plannedAt);
+    if (Number.isNaN(date.getTime())) {
+      toast({ title: "Choose a valid date and time." });
+      return;
+    }
+    updateDate.mutate(
+      { id, data: { action: "plan", occurredAt: date.toISOString() } },
+      {
+        onSuccess: () => {
+          setPlannedAt("");
+          onChanged();
+          toast({ title: "Date plan saved." });
+        },
+        onError: () => toast({ title: "That date plan could not be saved." }),
+      },
+    );
+  };
+
+  const markComplete = () => {
+    if (updateDate.isPending) return;
+    updateDate.mutate(
+      { id, data: { action: "complete" } },
+      {
+        onSuccess: () => {
+          onChanged();
+          toast({ title: "Date marked complete. Echo is ready when you are." });
+        },
+        onError: () => toast({ title: "That update could not be saved." }),
+      },
+    );
+  };
+
+  return (
+    <motion.div
+      {...fadeUp(0.05)}
+      className="glass rounded-2xl border border-[hsl(326_100%_62%/0.2)] p-4"
+      data-testid="card-date-lifecycle"
+    >
+      <div className="mb-1.5 flex items-center gap-2">
+        <CalendarCheck
+          className="h-4 w-4 text-[hsl(326_100%_70%)]"
+          aria-hidden="true"
+        />
+        <p className="text-sm font-semibold text-foreground">Your next real step</p>
+      </div>
+
+      {stage === "connected" && (
+        <>
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground/70">
+            If you both make a plan, save the time here. Echo will bring you
+            back afterward without turning the date into a performance score.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="datetime-local"
+              value={plannedAt}
+              onChange={(event) => setPlannedAt(event.target.value)}
+              className="h-9 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-foreground"
+              data-testid="input-date-plan"
+            />
+            <Button
+              size="sm"
+              className="rounded-full"
+              onClick={savePlan}
+              disabled={!plannedAt || updateDate.isPending}
+              data-testid="button-save-date-plan"
+            >
+              Save the plan
+            </Button>
+          </div>
+        </>
+      )}
+
+      {stage === "date_planned" && (
+        <>
+          <p className="text-sm text-foreground">
+            Planned for{" "}
+            {connection.datePlannedAt
+              ? new Date(connection.datePlannedAt).toLocaleString()
+              : "the time you chose"}
+          </p>
+          <p className="mb-3 mt-1 text-xs text-muted-foreground/60">
+            Come back when it happened. Your private debrief is never shared
+            with the other person.
+          </p>
+          <Button
+            size="sm"
+            className="rounded-full"
+            onClick={markComplete}
+            disabled={updateDate.isPending}
+            data-testid="button-complete-date"
+          >
+            Mark the date complete
+          </Button>
+        </>
+      )}
+
+      {stage === "date_completed" && (
+        <>
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground/70">
+            Tell Echo what felt natural, what felt off, and what you want to
+            remember. Echo will ask before any learning becomes profile truth.
+          </p>
+          <Link href={`/copilot/debrief?connectionId=${id}`}>
+            <Button
+              size="sm"
+              className="rounded-full"
+              data-testid="button-start-debrief"
+            >
+              Debrief with Echo
+            </Button>
+          </Link>
+        </>
+      )}
+
+      {stage === "debrief_saved" && (
+        <>
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground/70">
+            Your debrief is saved privately. Echo has a tentative learning ready
+            for you to confirm, correct, or dismiss.
+          </p>
+          <Link href="/echo#echo-learning">
+            <Button size="sm" variant="secondary" className="rounded-full">
+              Review what Echo learned
+            </Button>
+          </Link>
+        </>
+      )}
+    </motion.div>
   );
 }
 
