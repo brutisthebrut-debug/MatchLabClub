@@ -47,6 +47,9 @@ export const matchConnectionsTable = pgTable(
     status: varchar("status").notNull().default("active"),
     closedReason: varchar("closed_reason"),
     closedByUserId: varchar("closed_by_user_id"),
+    // Shared lifecycle facts. Each member\'s debrief remains private in post_date_notes.
+    datePlannedAt: timestamp("date_planned_at", { withTimezone: true }),
+    dateCompletedAt: timestamp("date_completed_at", { withTimezone: true }),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
