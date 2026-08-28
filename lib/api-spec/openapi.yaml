@@ -7509,6 +7509,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /plans:
+    get:
+      tags: [Commerce]
+      operationId: getCommercialPlans
+      summary: Get the canonical MatchLab commercial plans
+      description: |
+        Returns the approved Member, Insight, Match, and Guided outcome ladder,
+        including prices, progression prompts, included services, and bounded
+        entitlements. These are commercial packages, not numbered product
+        progress levels. No authentication is required.
+      responses:
+        '200':
+          description: Canonical commercial plan catalog.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommercialPlansResponse'
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -9030,6 +9048,83 @@ components:
           maxLength: 2000
         context:
           $ref: "#/components/schemas/AiContextInput"
+
+    CommercialPlanPrice:
+      type: object
+      required: [cadence, amountCents]
+      properties:
+        cadence:
+          type: string
+          enum: [free, monthly, annual, quarterly]
+        amountCents:
+          type: integer
+          minimum: 0
+
+    CommercialPlanMonthlyRange:
+      type: object
+      required: [min, max]
+      properties:
+        min:
+          type: integer
+          minimum: 0
+        max:
+          type: integer
+          minimum: 0
+
+    CommercialPlanEntitlements:
+      type: object
+      required: [fullMirror, expandedPlay, selectedSources, activeMatching, humanGuidance]
+      properties:
+        fullMirror:
+          type: boolean
+        expandedPlay:
+          type: boolean
+        selectedSources:
+          type: boolean
+        activeMatching:
+          type: boolean
+        humanGuidance:
+          type: boolean
+
+    CommercialPlan:
+      type: object
+      required: [key, label, outcome, prices, monthlyRangeCents, includes, upgradeCta, nextPlanKey, entitlements]
+      properties:
+        key:
+          type: string
+          enum: [member, insight, match, guided]
+        label:
+          type: string
+        outcome:
+          type: string
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommercialPlanPrice'
+        monthlyRangeCents:
+          oneOf:
+            - $ref: '#/components/schemas/CommercialPlanMonthlyRange'
+            - type: 'null'
+        includes:
+          type: array
+          items:
+            type: string
+        upgradeCta:
+          type: [string, 'null']
+        nextPlanKey:
+          type: [string, 'null']
+          enum: [member, insight, match, guided, null]
+        entitlements:
+          $ref: '#/components/schemas/CommercialPlanEntitlements'
+
+    CommercialPlansResponse:
+      type: object
+      required: [plans]
+      properties:
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommercialPlan'
 
     BillingCheckoutInput:
       type: object

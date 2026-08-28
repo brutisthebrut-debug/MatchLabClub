@@ -1237,6 +1237,79 @@ export interface AiTestInput {
   context?: AiContextInput;
 }
 
+export type CommercialPlanPriceCadence =
+  (typeof CommercialPlanPriceCadence)[keyof typeof CommercialPlanPriceCadence];
+
+export const CommercialPlanPriceCadence = {
+  free: "free",
+  monthly: "monthly",
+  annual: "annual",
+  quarterly: "quarterly",
+} as const;
+
+export interface CommercialPlanPrice {
+  cadence: CommercialPlanPriceCadence;
+  /** @minimum 0 */
+  amountCents: number;
+}
+
+export interface CommercialPlanMonthlyRange {
+  /** @minimum 0 */
+  min: number;
+  /** @minimum 0 */
+  max: number;
+}
+
+export interface CommercialPlanEntitlements {
+  fullMirror: boolean;
+  expandedPlay: boolean;
+  selectedSources: boolean;
+  activeMatching: boolean;
+  humanGuidance: boolean;
+}
+
+export type CommercialPlanKey =
+  (typeof CommercialPlanKey)[keyof typeof CommercialPlanKey];
+
+export const CommercialPlanKey = {
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
+} as const;
+
+/**
+ * @nullable
+ */
+export type CommercialPlanNextPlanKey =
+  | (typeof CommercialPlanNextPlanKey)[keyof typeof CommercialPlanNextPlanKey]
+  | null;
+
+export const CommercialPlanNextPlanKey = {
+  member: "member",
+  insight: "insight",
+  match: "match",
+  guided: "guided",
+} as const;
+
+export interface CommercialPlan {
+  key: CommercialPlanKey;
+  label: string;
+  outcome: string;
+  prices: CommercialPlanPrice[];
+  monthlyRangeCents: CommercialPlanMonthlyRange | null;
+  includes: string[];
+  /** @nullable */
+  upgradeCta: string | null;
+  /** @nullable */
+  nextPlanKey: CommercialPlanNextPlanKey;
+  entitlements: CommercialPlanEntitlements;
+}
+
+export interface CommercialPlansResponse {
+  plans: CommercialPlan[];
+}
+
 export type BillingCheckoutInputProduct = typeof BillingCheckoutInputProduct[keyof typeof BillingCheckoutInputProduct];
 
 
