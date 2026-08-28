@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Link, useSearch } from "wouter";
+import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
@@ -92,8 +92,6 @@ export default function DebriefWhatHappened() {
   const [outcome, setOutcome] = useState("");
   const [result, setResult] = useState<DebriefResult | null>(null);
   const [step, setStep] = useState(0);
-  const search = useSearch();
-  const connectionId = new URLSearchParams(search).get("connectionId");
   const enhance = useEnhanceAi();
   const createNote = useCreatePostDateNote();
   const savedRef = useRef(false);
@@ -121,7 +119,6 @@ export default function DebriefWhatHappened() {
   createNote.mutate(
   {
   data: {
-  ...(connectionId ? { connectionId } : {}),
   summary: summary.slice(0, 20000),
   whatWentWell: feltGood.join(", ").slice(0, 20000),
   whatDidnt: feltOff.join(", ").slice(0, 20000),
@@ -159,7 +156,7 @@ export default function DebriefWhatHappened() {
   <div className="max-w-2xl mx-auto relative z-10">
 
   <motion.div {...fadeUp(0)} className="mb-6">
-  <Link href={connectionId ? `/matches/${connectionId}` : "/copilot"} className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-foreground transition-colors">
+  <Link href="/copilot" className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-foreground transition-colors">
   <ArrowLeft className="w-3.5 h-3.5" /> Wingman Studio
   </Link>
   </motion.div>
